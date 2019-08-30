@@ -31,7 +31,7 @@ This repository is a scientific product and is not official communication of the
 
 # Downloading the data
 
-In preparation for downloading and working with these data, you will need to load some additional R packages.  
+In preparation for downloading and working with these data, you will need to load some additional R packages. The 'install.packages' commands below are commented out, so if you need to install, you will need to un-comment those before running this code. 
 
 ```{r, message=F, warning=FALSE}
 
