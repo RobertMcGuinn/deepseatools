@@ -1,0 +1,242 @@
+---
+title: "Deep Sea Code Book"
+author: "Robert P. McGuinn"
+site: bookdown::bookdown_site
+documentclass: book
+output:
+  bookdown::gitbook: default 
+  # bookdown::pdf_book: default
+---
+# Introduction
+
+***
+
+*Development note*: As of `r Sys.Date()` this tutorial is under active development. Make a bookmark and check back often for additional materials and improvements to contents.   
+
+***
+
+This set of instructions is designed help the R user begin to use the National Database for Deep Sea Corals and Sponges. This is a work in progress and we invite collaboration! Please help us evolve this code-base to be easier, faster, and do more things! If you would like to reach out directly please email robert.mcguinn@noaa.gov or call 843-460-9696. For further information about deep sea corals, please visit [DeepSeaCoralData.NOAA.gov](https://deepseacoraldata.noaa.gov/)
+
+Check out this [GitHub](https://github.com/RobertMcGuinn/deepseatools) repository to collaborate directly. All of the code used in the project is available in the 'code' folder at that repository. This tutorial will eventually expand to cover most of the functionality present in that code folder.
+
+If you would rather download data using point and click in a web browser and work with these data in ArcGIS Pro, take a look at this tutorial instead. [LINK](https://learn.arcgis.com/en/projects/explore-noaas-deep-sea-coral-database/)
+
+## License
+
+Software code created by U.S. Government employees is not subject to copyright in the United States (17 U.S.C.§105). The United States/Department of Commerce reserve all rights to seek and obtain copyright protection in countries other than the United States for Software authored in its entirety by the Department of Commerce. To this end, the Department of Commerce hereby grants to Recipient a royalty-free, nonexclusive license to use,copy, and create derivative works of the Software outside of the United States.
+
+## Disclaimer
+
+This repository is a scientific product and is not official communication of the National Oceanic and Atmospheric Administration, or the United States Department of Commerce. All NOAA GitHub project code is provided on an ‘as is’ basis and the user assumes responsibility for its use. Any claims against the Department of Commerce or Department of Commerce bureaus stemming from the use of this GitHub project will be governed by all applicable Federal law. Any reference to specific commercial products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply their endorsement, recommendation or favoring by the Department of Commerce. The Department of Commerce seal and logo, or the seal and logo of a DOC bureau, shall not be used in any manner to imply endorsement of any commercial product or activity by DOC or the United States Government.
+
+# Downloading the data
+
+In preparation for downloading and working with these data, you will need to load some additional R packages.  
+
+```{r, message=F, warning=FALSE}
+
+# install.packages("dplyr")
+library(dplyr)
+# install.packages("rerddap")
+library(rerddap)
+# install.packages("leaflet")
+library(leaflet)
+# install.packages("RColorBrewer")
+library(RColorBrewer)
+# install.packages("ggplot2")
+library(ggplot2)
+# install.packages("rmarkdown")
+library(rmarkdown)
+# install.packages("knitr")
+library(knitr)
+
+```
+
+## Using ERDDAP to download data
+
+Getting data directly from ERDDAP (Environmental Resource Division Data Access Protocol) using 'rerddap' package in R.
+
+To see the meanings and valid values for all of the fields in National Database, download an Excel version of the full data dictionary following location: [LINK](https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/at_download/file) 
+
+Use the 'info' function from the 'rerddap' package to get information about the variables (fields) in the database. Note that the 'Latitude' and 'Longitude' fields are in ERDDAP as 'latitude' and 'longitude', with no capital letters. These are the only field names that differ from what is in the data dictionary.
+
+```{r}
+
+info <- info(datasetid='deep_sea_corals', 
+              url = "https://ecowatch.ncddc.noaa.gov/erddap/")
+```
+
+Now take a look at the first 5 field names using the 'head' function.
+
+```{r}
+
+head(info$variables)
+
+
+```
+
+To list all variables in the NOAA, National Database for Deep Sea Corals and Sponges , then use the following: 
+
+
+```{r, eval=F}
+
+info$variables
+
+```
+
+
+When you have the variables (fields) that you want to download in mind after reviewing the data dictionary, you can download them using the following 'tabledap' function from the 'rerddap' package. In the code below, you can see an example of setting specific geographic bounding box constraints and selecting a particular Vessel.  You can set any numeric or character-based constraint on your downloads using this basic syntax. If you set no contraints, you will download all data. *Warning*: If you add no constraints, the data download will take more time, so be patient. 
+
+You can also filter your data after downloading if you would prefer, rather than using constraints in the 'tabledap' function. This might be preferable if you want to intially download all of the data and all of the fields for exploration. The example below contains constraints.  *Note*: Character constraints must be enclosed in double quotes. So the syntax for a constraint is: 'Vessel="Okeanos Explorer R/V"'. Variables can be listed in any order desired.
+
+```{r}
+library(rerddap)
+d <- tabledap("deep_sea_corals", 'longitude<50', 'latitude>20', 'latitude<30', 
+              'Vessel="Okeanos Explorer R/V"',
+              fields=c('CatalogNumber', 'latitude', 'longitude', 'ScientificName', 'ImageURL', 
+                       'Vessel', 'RecordType', 'DatasetID', 'SurveyID', 'SampleID', 'TrackingID',
+                       'Station', 'Locality', 'ObservationYear', 'Genus', 'Phylum', 'TaxonRank',
+                       'DepthInMeters'),
+              url = "https://ecowatch.ncddc.noaa.gov/erddap/")
+              
+```
+
+Check the size of the data frame that you just downloaded using the 'dim' function. 
+
+```{r}
+
+x <- dim(d)
+x
+
+```
+
+The dataframe that you downloaded contains `r x[1]` rows (occurrences) by `r x[2]` fields.
+
+Now list the names of the fields to check that you downloaded the fields that you wanted.
+
+```{r}
+
+names(d)
+
+```
+
+Now filter the downloaded data for only those records which have images and take a look at the 'head' of the dataframe. 
+
+```{r}
+
+d <- d %>% filter(is.na(d$ImageURL) == F)
+head(d)
+
+```
+
+Use the following loop function to browse the first 5 images in the set. The 'ImageURL' variable contains the URL of the hosted images.  The 'browseURL' function will open the images in your default image editing program. Warning: Careful when using this function in a loop as it will open as many URLs as you feed it, so it could crash your computer.
+
+```{r, eval=F}
+
+for (i in head(d$ImageURL)){
+  browseURL(i)
+}
+
+```
+
+## Get data using a CSV
+
+Alternatively, you can upload data directly from CSV file into R, if you already have a subset of the National Database on your local machine that you would like to use instead.
+
+```{r, eval=F}
+
+setwd("C:/your/working/directory")
+d <- read.csv("data_records.csv", header = T)
+
+```
+
+# Creating interactive maps using Leaflet
+
+Map the downloaded and filtered data 'd' using the 'leaflet' package.
+
+```{r, message=FALSE}
+
+# add a proper link to images for map popup in leaflet
+d$ImageURLPop <- paste(sep = "", "<b><a href=", as.character(d$ImageURL),">LINK</a></b>")
+
+# build map
+m <- leaflet() %>% 
+addProviderTiles("Esri.OceanBasemap") %>%  #Esri.OceanBasemap, "CartoDB.DarkMatter" 
+addProviderTiles(providers$Hydda.RoadsAndLabels, group = 'Place names') %>%
+addCircleMarkers(data=d,
+                      lat = as.numeric(d$latitude),
+                      lng = as.numeric(d$longitude),
+                      radius=5,
+                      weight=0,
+                      fillColor= "green",
+                      fillOpacity=1,
+                      popup = paste(
+                        "CatalogNumber:", d$CatalogNumber, "<br>",
+                        "ScientificName:", d$ScientificName, "<br>",
+                        "Image:", d$ImageURLPop, "<br>",
+                        "RecordType:", d$RecordType, "<br>",
+                        "Vessel:", d$Vessel, "<br>",
+                        "DatasetID:", d$DatasetID, "<br>",
+                        "SurveyID:", d$SurveyID, "<br>",
+                        "SampleID:", d$SampleID, "<br>",
+                        "TrackingID:", d$TrackingID, "<br>",
+                        "Station:", d$Station, "<br>",
+                        "Locality:", d$Locality, "<br>",
+                        "Latitude:", d$latitude, "<br>",
+                        "Longitude:", d$longitude, "<br>",
+                        "Observation Year:", d$ObservationYear))
+m
+
+```
+
+# Creating a simple depth summary table
+
+Make a depth summary table and just take a look at the first 5 entries using the 'head' function.
+
+```{r}
+
+sum_tbl <-
+  d %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = paste(unique(Phylum), collapse= " | "),
+    ScientificName = paste(unique(ScientificName), collapse= " | "),
+    Records = n(),
+    MinDepth = min(as.numeric(DepthInMeters)),
+    MedianDepth = median(as.numeric(DepthInMeters)),
+    MaxDepth = max(as.numeric(DepthInMeters))) %>%
+  arrange(MedianDepth)
+
+kable(head(sum_tbl))
+
+```
+
+
+# Example RMarkdown Reports
+
+## Example 1: R-Markdown for Word document output.
+
+Example R-Markdown document for data QA report generation.
+
+Click this link to download the R-Markdown source code: [LINK](https://raw.githubusercontent.com/RobertMcGuinn/deepseatools/master/code/rmd_accession_qa_dashboard.Rmd)
+
+View the source code of the same R-Markdown file on GitHub: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/rmd_accession_qa_dashboard.Rmd)
+
+View the Word document output. 
+[LINK](https://robertmcguinn.github.io/deepseatools/20190329-0_DatasetID_DWH_NRDA_WS-14-06_DSCRTP_NatDB_20190308-0.doc)
+
+## Example 2: R-Markdown for web page output.
+
+See links below for example R-Markdown based report for dataset dashboarding for web publication (html output) with Leaflet interactive mapping component.
+
+Click this link to download the R-Markdown source code: [LINK](../../deepseatools/code/rmd_datasetid_cruise.Rmd)
+
+View the source code of the same R-Markdown file on GitHub: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/rmd_datasetid_cruise.Rmd)
+
+View the web page output. 
+[LINK](https://robertmcguinn.github.io/deepseatools/BOEM_PSBF3.html)
+
+
+
+
+

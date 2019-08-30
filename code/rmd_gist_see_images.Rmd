@@ -1,0 +1,28 @@
+---
+title: "see"
+author: "Robert P. McGuinn"
+date: "August 30, 2018"
+output: word_document
+---
+
+#Sample Images (if available)
+```{r pics, results = 'asis', echo=FALSE}
+
+urls <- sample(filt$ImageURL[is.na(filt$ImageURL) == FALSE], 5)
+
+for (y in urls){
+  print(browseURL(y))
+}
+  
+# setwd("/rworking/digs/outdata/imageset")
+# 
+# for (url in urls) {
+#   download.file(url, destfile = basename(url), mode = "wb")
+# }
+# 
+# files <- list.files(path = "/rworking/digs/outdata/imageset", pattern = "jpg", full.names = TRUE)
+# for (f in files) {
+#   cat(paste0("![image_label](", f, ")\n"))
+#   }
+
+```

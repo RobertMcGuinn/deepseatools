@@ -1,0 +1,440 @@
+---
+title: "Database Status Update - Figs and Tables"
+author: "Robert P. McGuinn"
+date: "Report last ran on: `r Sys.Date()`"
+output: word_document
+---
+
+```{r data_intake, echo=FALSE, warning=FALSE, message=FALSE, cache = TRUE}
+
+# setwd("C:/rworking/deepseatools/indata")
+# indata<-read.csv("DSCRTP_NatDB_20190718-0.csv", header = T)
+# filt <- indata %>%
+#   filter(Flag == "0")
+
+```
+
+```{r data_prep, echo=FALSE, warning=FALSE, message=FALSE, cache = FALSE}
+
+##### data improvements (from version DSCRTP_NatDB_20171214-0): Recorded in Redmine #####
+# filt <- filt %>% filter(ObservationYear != "-999" | 
+#                           is.na(TaxonRank) == F |
+#                           DepthInMeters != '-999') 
+# 
+# filt <- filt %>% mutate(DataProvider = 
+#                           ifelse(DataProvider == "Yoklavich, Mary",
+#                                               'NOAA, Southwest Fisheries Science Center, Santa Cruz', 
+#                                               as.character(DataProvider)))
+# filt <- filt %>% mutate(DataProvider = 
+#                           ifelse(DataProvider == "Flower Garden Banks National Marine Sanctuary (FGBNMS)",
+#                                               'NOAA, Flower Garden Banks National Marine Sanctuary', 
+#                                               as.character(DataProvider)))
+# 
+# filt <- filt %>% mutate(DataProvider = 
+#                           ifelse(DataProvider == "Hall-Spencer, Jason",
+#                                               'Hall-Spencer, J.', 
+#                                               as.character(DataProvider)))
+# 
+# 
+# filt <- filt %>% mutate(DataProvider = 
+#                           ifelse(DataProvider == "National Undersea Research Center",
+#                                               'National Undersea Research Center, University of Connecticut', 
+#                                               as.character(DataProvider)))
+# 
+# filt <- filt %>% mutate(DataProvider = 
+#                           ifelse(DataProvider == "NOAA Center for Coastal Monitoring and Assessment",
+#                                               'NOAA, Center for Coastal Monitoring and Assessment', 
+#                                               as.character(DataProvider)))
+# 
+# filt <- filt %>% mutate(LocationAccuracy = 
+#                           ifelse(LocationAccuracy == "300 m",
+#                                               '500m', 
+#           
+
+filt <- filt %>% filter(is.na(Phylum) == F)
+                         
+##### checker #####
+
+# length(filt1$CatalogNumber)
+
+# sum_tbl <- filt %>%
+#    # filter(as.numeric(IndividualCount) > 100,
+#    #        grepl('Etnoyer', PI),
+#    #        DatasetID == 'NOAA_SJ-10-08'
+#    #       ) %>%
+#   group_by(AccessionID) %>% 
+#   summarize(DataProvider = toString(unique(DataProvider)),
+#             Repository = toString(unique(Repository)),
+#             Vessel = toString(unique(Vessel)),
+#             PI = toString(unique(PI)),
+#             SampleID = toString(unique(SampleID)),
+#             ScientificName = toString(unique(ScientificName)),
+#             ImageFilePath = toString(unique(ImageFilePath)),
+#             Records = n()
+#   ) %>% 
+#   arrange(desc(Records))
+# View(sum_tbl)
+
+```
+
+```{r schema, echo=FALSE, echo=FALSE, warning=FALSE, message=FALSE, cache = FALSE}
+##### download Google Sheet version of schema for use in R  documents ##### 
+# Register and download Google Sheet
+s <- gs_title('2019_DSCRTP_National_Database_Schema')
+#s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+s <- gs_read(s)
+
+# s<- s[,-(33:35)]
+#names(s)
+
+```
+
+```{r opts, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+##### knitr options #####
+knitr::opts_chunk$set(fig.width=6.5, fig.height=4, warning = FALSE, dpi = 300, dev = c('png'), fig.path="C:/rworking/deepseatools/reports/2019_status_update_report/figures/") 
+options(scipen=10000)
+
+##### setting digit options #####
+options(digits = 0)
+```
+
+```{r variables, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+version <- '20190718-0'
+```
+
+# DRAFT - Status Update for NOAA's National Database for Deep-Sea Corals and Sponges - Figs and Tables (database version `r version`)
+
+Number of genera: `r length(unique(filt$Genus))` 
+
+
+# Changes and Additions to Database Fields
+
+Two new taxomomy related fields were added.
+
+* **VerbatimScientificName**: `r s$FieldDescription[s$FieldName == "VerbatimScientificName"]`
+* **TypeStatus**: `r s$FieldDescription[s$FieldName == "TypeStatus"]`
+
+The previous 'Size' field was changed to 'VerbatimSize' and two new fields were added to capture the minimum and maximum size. 
+
+* **VerbatimSize**: `r s$FieldDescription[s$FieldName == "VerbatimSize"]`
+* **MinimumSize**: `r s$FieldDescription[s$FieldName == "MinimumSize"]` 
+* **MaximumSize**: `r s$FieldDescription[s$FieldName == "MaximumSize"]`
+
+The following fields were added to capture key habitat characteristics using standardized terminology from the Coastal and Marine Ecological Classification Standard (CMECS).
+
+* **CMECSGeoForm**: `r s$FieldDescription[s$FieldName == "CMECSGeoForm"]`
+* **CMECSSubstrate**: `r s$FieldDescription[s$FieldName == "CMECSSubstrate"]`
+* **CMECSBiotic**:   `r s$FieldDescription[s$FieldName == "CMECSBiotic"]`
+
+The 'EntryUpdate' field was added to capture the most current date that the Program modified the record. This is in addition to the already added field called 'Modified', which captures the last date that the data provider modifed the record. 
+
+* **EntryUpdate**:  `r s$FieldDescription[s$FieldName == "EntryUpdate"]` 
+
+We added the field 'ShallowFlag' to flag occurrences that are less than 50 meters deep. These occurrences are included in our database because they represent deeper taxa that can also occur at shallower depths than our typical 50 meter cuttoff.
+
+* **ShallowFlag**:  `r s$FieldDescription[s$FieldName == "ShallowFlag"]`
+
+Several new spatially calculated depth fields were added to help ground truth the observed depths within the database.  
+
+* **gisCRMDepth**: `r s$FieldDescription[s$FieldName == "gisCRMDepth"]`
+* **gisGEBCODepth**: `r s$FieldDescription[s$FieldName == "gisGEBCODepth"]`
+* **gisEtopoDepth**: `r s$FieldDescription[s$FieldName == "gisEtopoDepth"]`
+
+The following location related fields were added to enhance the ability to describe and standarize place names. 
+
+* **gisNGIALocality**:`r s$FieldDescription[s$FieldName == "gisNGIALocality"]`
+* **gisNGIADist**:`r s$FieldDescription[s$FieldName == "gisNGIADist"]`
+* **gisGEBCOLocality**: `r s$FieldDescription[s$FieldName == "gisGEBCOLocality"]`
+* **gisGEBCODist**:`r s$FieldDescription[s$FieldName == "gisGEBCODist"]` 
+
+The following fields have been added to capture the actual spatially explicit boundar of the sample area footprint for each record. 
+
+* **footprintWKT**: `r s$FieldDescription[s$FieldName == "footprintWKT"]`  
+* **footprintSRS**: `r s$FieldDescription[s$FieldName == "footprintSRS"]`
+
+Number of 'DataProviders': `r length(unique(factor(filt$DataProvider)))` 
+
+# Schema Metrics
+
+``` {r schema_metrics, echo=FALSE}
+#total number of fields in the NDB
+a <- length(s$FieldName)
+
+#total number of published fields
+b <- s %>%
+  filter(InternalUseOnly == '0')
+b <- length(b$FieldName)
+
+#total number of unpublished fields
+c <- s %>%
+  filter(InternalUseOnly == '1')
+c <- length(c$FieldName)
+
+#PointHist required
+d <- s %>%
+  filter(PointHist == 'R')
+d <- length(d$FieldName)
+
+#PointNew required
+e <- s %>%
+  filter(PointNew == 'R')
+e <- length(e$FieldName)
+
+#PointProgram required
+f <- s %>%
+  filter(PointProgram == 'R')
+f <- length(f$FieldName)
+
+#TransHist required
+g <- s %>%
+  filter(TransHist == 'R')
+g <- length(g$FieldName)
+
+#TransNew required
+h <- s %>%
+  filter(TransNew == 'R')
+h <- length(h$FieldName)
+
+#TransProgram required
+i <- s %>%
+  filter(TransProgram == 'R')
+i <- length(i$FieldName)
+
+#TrawlHist required
+j <- s %>%
+  filter(TrawlHist == 'R')
+j <- length(j$FieldName)
+
+#TrawlNew required
+k <- s %>%
+  filter(TrawlNew == 'R')
+k <- length(k$FieldName)
+
+#TrawlProgram required
+l <- s %>%
+  filter(TrawlProgram == 'R')
+l <- length(l$FieldName)
+
+```
+
+Total number of fields: `r a` 
+Total number of published fields: `r b`
+Total number of un-published fields: `r c`
+PointHist required: `r d`
+PointNew required: `r e`
+PointProgram required: `r f`
+TransHist required: `r g`
+TransNew required: `r h`
+TransProgram required: `r i`
+TrawlHist required: `r j`
+TrawlNew required: `r k` 
+TrawlProgram required: `r l`
+
+# Size and Growth of the Database Through Time
+```{r calculations_1, echo=FALSE, cache = FALSE}
+# length of unflagged records 
+a <- round(length(filt$CatalogNumber), -4)
+
+# number of DatasetID
+b <- length(unique(filt$DatasetID))
+
+# number of DataProviders
+c <- length(unique(filt$DataProvider))
+
+# number of flagged records
+d <- length(filter(indata, Flag == '1')$CatalogNumber)
+
+# percent of unflagged records with images
+filt2 <- filter(filt, is.na(ImageURL) == F)
+e <- round((length(filt2$CatalogNumber)/(length(filt$CatalogNumber))*100),0)
+
+# number of unflagged records with images 
+f <- length(filter(filt, is.na(ImageURL) == F)$CatalogNumber)
+
+# stats on number of records per DatasetID
+y <- count(filt, DatasetID)
+g <- round(median(y$n),0)
+h <- min(y$n)
+i <- max(y$n)
+
+```
+
+Published records: `r prettyNum(a, big.mark = ",")`  
+Number of data sets: `r b` 
+Number of data providers: `r c`  
+Flagged records `r prettyNum(d, big.mark = ",")` 
+Percent of unflagged records with images: `r e`
+Number of unflagged records with images: `r prettyNum(f, big.mark = ",")`
+
+# Stats on number of records per DatasetID
+* median: `r g`
+* minimum: `r h`
+* maximum: `r i`
+
+# Distribution of Records by U.S. Fishery Management Council
+```{r region-counts, echo=FALSE, cache = FALSE}
+a <- filt %>% 
+  filter(
+    is.na(FishCouncilRegion) == T
+    ) 
+a <- length(a$CatalogNumber)/length(filt$CatalogNumber)
+a <- round(a*100, 0)
+
+```
+
+Percent of records without FishCouncilRegion assignments: `r prettyNum(a, big.mark = ",")`
+
+
+# Images Associated with Records
+Per `r e`% or `r prettyNum(f, big.mark = ",")` records have full resolution images available. 
+
+# Depth Distribution
+```{r depth_fields, echo=FALSE, cache = FALSE}
+x <- s %>%
+  filter(
+    DSCRTPGroup == 'Location-Depth Metric',
+    InternalUseOnly == "0", 
+    DSCRTPCategory != "GIS Enhancement" 
+  )
+x <- toString(x$FieldName)
+
+y <- s %>%
+  filter(DSCRTPGroup == 'Location-Depth Metric', InternalUseOnly == "0", DSCRTPCategory == "GIS Enhancement" )
+y <- toString(y$FieldName)
+
+##### checker ##### 
+# z <- filt %>% 
+#   filter(DepthInMeters == "-999") %>% 
+#   group_by(DatasetID) %>% 
+#   summarize(
+#     DepthInMeters = toString(unique(DepthInMeters)),
+#     DataProvider = toString(unique(DataProvider)),
+#     n = n()
+#     )
+# #View(z)
+# #length(z$CatalogNumber)
+# #[1] 3992
+```
+
+Depth fields (not gis-derived): `r x`
+Depth fields (gis-derived): `r y`
+
+# ObservationYear 
+Range of 'Observation Year': `r min(filt$ObservationYear)` to `r max(filt$ObservationYear)`
+Median'Observation Year':`r median(filt$ObservationYear)`
+
+# Individual Count
+Records having IndividualCount values:
+`r round((length(filter(filt, IndividualCount != '-999')$CatalogNumber)/length(filt$CatalogNumber))*100,2)` % or `r length(filter(filt, IndividualCount != '-999')$CatalogNumber)`
+Maximum 'IndividualCount': `r max(filt$IndividualCount)` 
+Median 'IndividualCount': `r median(filt$IndividualCount)` 
+
+# Size
+
+``` {r SizeCalc, echo=FALSE, cache = FALSE, warning = FALSE}
+yo <- filt %>% 
+  filter(
+    MinimumSize != "-999",
+    MaximumSize != "-999",
+    MinimumSize != '0',
+    is.na(Phylum) == F
+    )
+
+yo$AverageSize <- (yo$MinimumSize + yo$MaximumSize)/2
+yo$SizeDiff <- (yo$MaximumSize - yo$MinimumSize)
+
+x <- length(yo$CatalogNumber)
+y <- length(filt$CatalogNumber)
+z <- max(yo$AverageSize)
+
+```
+
+'MinimumSize' and 'MaximumSize' values reported: `r round((x/y) *100,1)` % of all records (n = `r x`). The maximum average size is `r z`.
+
+
+# Condition
+```{r ConditionCalc, echo=FALSE, cache = FALSE}
+
+condition <- filt$Condition %in% c('Live','Damaged','Dead')
+x <- length(condition[condition == T])
+y <- filter(filt, is.na(filt$Condition) == FALSE)
+y <- length(y$Condition)
+z <- filter(filt, is.na(filt$Condition) == TRUE)
+z <- length(z$Condition)
+t <- length(filt$Condition)
+
+```
+
+Condition values reported: `r round((y/t) *100,1)` % of all records (n = `r y`)   
+Percent valid: `r round((x/y) * 100,1)`   
+
+# Habitat and Substrate
+Records with 'Substrate' values: `r (length(filter(filt, is.na(Substrate) == F)$CatalogNumber)/length(filt$CatalogNumber))*100` % or `r length(filter(filt, is.na(Substrate) == F)$CatalogNumber)` 
+
+Records with 'Habitat' values:
+`r (length(filter(filt, is.na(Habitat) == F)$CatalogNumber)/length(filt$CatalogNumber))*100` % or `r length(filter(filt, is.na(Habitat) == F)$CatalogNumber)` records have 'Habitat' values.
+
+# Taxonomy 
+```{r taxonomy_fields, echo=FALSE, cache = FALSE}
+z <- s %>%
+  filter(DSCRTPGroup == 'Taxonomy Metadata', InternalUseOnly == "0", FieldName != 'AssociatedTaxa', FieldName != 'Synonyms')
+z <-toString(z$FieldName)
+
+```
+Taxononmic qualifier and descriptive fields: `r z`. 
+
+# RecordType
+
+``` {r recordtype_calc, echo = FALSE}
+valid <- filt$RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'video transect','notation', 'catch record')
+
+# number of records with valid values
+x <- length(valid[valid == T])
+
+# number of records where the specified value is non-null 
+y <- filter(filt, is.na(filt$RecordType) == FALSE)
+y <- length(y$RecordType)
+
+# number of records where the specified value is null
+z <- filter(filt, is.na(filt$RecordType) == TRUE)
+z <- length(z$RecordType)
+
+# total number of unflagged records
+t <- length(filt$RecordType)
+
+```
+
+Values reported for 'RecordType': `r round((y/t) *100,1)` % of all records (n = `r y`) have .  
+Percent valid values for 'RecordType: `r round((x/y) * 100,1)` %
+
+# SamplingEquipment
+
+``` {r SamplingEquipmentCalcs, echo = FALSE}
+valid <- filt$SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA')
+
+#schema %>% filter(FieldName == "SamplingEquipment") %>% dplyr::select(ValidValues)
+#View(table(filt$SamplingEquipment))
+
+# number of records with valid values
+x <- length(valid[valid == T])
+
+# number of records where the specified value is non-null 
+y <- filter(filt, is.na(filt$SamplingEquipment) == FALSE)
+y <- length(y$SamplingEquipment)
+
+# number of records where the specified value is null
+z <- filter(filt, is.na(filt$SamplingEquipment) == TRUE)
+z <- length(z$SamplingEquipment)
+
+# total number of unflagged records
+t <- length(filt$SamplingEquipment)
+
+```
+
+`r round((y/t) *100,1)` % of all records (n = `r y`) have 'SamplingEquipment' values reported.  Of those records that have reported values, `r round((x/y) * 100,1)` % comply with the list of valid values specified in the data dictionary. 
+
+# Appendix 3: DatasetID Dashboards
+Each of the data sets in the database has unique 'DatasetID'. There are currently `r length(filt$CatalogNumber)` records in the database composed of `r length(unique(filt$DatasetID))` individual data sets from `r length(unique(filt$DataProvider))` different data providers. You will find an an interactive dashboard for each data set at the following location: LINK (not live yet, see reviewer note below) 
+
+
+

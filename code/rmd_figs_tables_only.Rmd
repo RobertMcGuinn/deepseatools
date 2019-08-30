@@ -1,0 +1,988 @@
+---
+title: "Database Status Update - Figs and Tables Only"
+author: "Robert P. McGuinn"
+date: "Report last ran on: `r Sys.Date()`"
+output: word_document
+---
+
+``` {r setup_data_intake, echo=FALSE, message=FALSE, warning=FALSE}
+
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20190718-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+```
+
+``` {r setup_data_prep, echo=FALSE, warning=FALSE, message=FALSE}
+
+filt <- filt %>% filter(is.na(Phylum) == F)
+                         
+##### checker #####
+
+# length(filt1$CatalogNumber)
+
+# sum_tbl <- filt %>%
+#    # filter(as.numeric(IndividualCount) > 100,
+#    #        grepl('Etnoyer', PI),
+#    #        DatasetID == 'NOAA_SJ-10-08'
+#    #       ) %>%
+#   group_by(AccessionID) %>% 
+#   summarize(DataProvider = toString(unique(DataProvider)),
+#             Repository = toString(unique(Repository)),
+#             Vessel = toString(unique(Vessel)),
+#             PI = toString(unique(PI)),
+#             SampleID = toString(unique(SampleID)),
+#             ScientificName = toString(unique(ScientificName)),
+#             ImageFilePath = toString(unique(ImageFilePath)),
+#             Records = n()
+#   ) %>% 
+#   arrange(desc(Records))
+# View(sum_tbl)
+
+```
+
+``` {r setup_schema, echo=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+##### download Google Sheet version of schema for use in R  documents ##### 
+# Register and download Google Sheet
+s <- gs_title('2019_DSCRTP_National_Database_Schema')
+#s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+s <- gs_read(s)
+
+# s<- s[,-(33:35)]
+#names(s)
+
+```
+
+``` {r setup_opts, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+##### knitr options #####
+knitr::opts_chunk$set(fig.width=6.5, fig.height=4, warning = FALSE, dpi = 300, dev = c('png'), fig.path="C:/rworking/deepseatools/reports/2019_status_update_report/figures/") 
+options(scipen=10000)
+
+##### setting digit options #####
+options(digits = 0)
+```
+
+``` {r setup_variables,  echo=FALSE, warning=FALSE, message=FALSE}
+version <- '20190718-0'
+```
+
+``` {r setup_schema_metrics, echo=FALSE}
+#total number of fields in the NDB
+a <- length(s$FieldName)
+
+#total number of published fields
+b <- s %>%
+  filter(InternalUseOnly == '0')
+b <- length(b$FieldName)
+
+#total number of unpublished fields
+c <- s %>%
+  filter(InternalUseOnly == '1')
+c <- length(c$FieldName)
+
+#PointHist required
+d <- s %>%
+  filter(PointHist == 'R')
+d <- length(d$FieldName)
+
+#PointNew required
+e <- s %>%
+  filter(PointNew == 'R')
+e <- length(e$FieldName)
+
+#PointProgram required
+f <- s %>%
+  filter(PointProgram == 'R')
+f <- length(f$FieldName)
+
+#TransHist required
+g <- s %>%
+  filter(TransHist == 'R')
+g <- length(g$FieldName)
+
+#TransNew required
+h <- s %>%
+  filter(TransNew == 'R')
+h <- length(h$FieldName)
+
+#TransProgram required
+i <- s %>%
+  filter(TransProgram == 'R')
+i <- length(i$FieldName)
+
+#TrawlHist required
+j <- s %>%
+  filter(TrawlHist == 'R')
+j <- length(j$FieldName)
+
+#TrawlNew required
+k <- s %>%
+  filter(TrawlNew == 'R')
+k <- length(k$FieldName)
+
+#TrawlProgram required
+l <- s %>%
+  filter(TrawlProgram == 'R')
+l <- length(l$FieldName)
+
+```
+
+``` {r dataprovider_table, echo=FALSE, caption = 'test caption'}
+options(scipen=999)
+
+x <-
+  filt %>%
+  group_by(DataProvider) %>%
+  summarize(
+    Number_Datasets = length(unique(DatasetID)),
+    Records = n()
+            )
+
+colkeys <- names(x[,-1])
+ft <- flextable(x) %>% 
+  theme_box() %>% #booktabs, vanilla, box, tron, tron_legacy
+  set_header_labels(Number_Datasets = "# of Data Sets", Records = "# of Records") %>% 
+  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  font(fontname = "Cambria", part = "all")  %>% #header, body, all
+  autofit() %>% 
+  width(j = ~ DataProvider, width = 4.2)
+  
+
+ft
+
+read_docx() %>% 
+  body_add_flextable(ft) %>% 
+  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/dataprovider_table.docx")
+
+
+
+```
+
+``` {r public_fields_table, echo=FALSE}
+
+s$DSCRTPCategory <- factor(s$DSCRTPCategory, levels = c("Survey Data","Event Data","Observation Data","TaxonomicID","Environment","Occurrence Detail","GIS Enhancement","Metadata","Record Keeping","Flag"))
+
+x <-
+  s %>% arrange(FieldName) %>% 
+  filter(InternalUseOnly == '0') %>%
+  group_by(DSCRTPCategory) %>% 
+  summarize(Field_Names = toString(unique(FieldName)),
+            n = n())
+
+
+colkeys <- names(x[,-1])
+ft <- flextable(x) %>% 
+  theme_vanilla() %>% #booktabs, vanilla, box, tron, tron_legacy
+  set_header_labels(Field_Names = "Field Name", n = "# of Records", DSCRTPCategory = "DSCRTP Category") %>% 
+  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  font(fontname = "Cambria", part = "all")  %>% #header, body, all
+  fontsize(size = 10, part = "body") %>% 
+  autofit() %>% 
+  width(j = ~ n, width = 1.2) %>% 
+  width(j = ~ DSCRTPCategory, width = 1.5) %>% 
+  width(j = ~ Field_Names, width = 4) %>% 
+  align(align = "left") %>% 
+  align_text_col(align = "left") %>% 
+  align_nottext_col(align = "right")
+
+
+ft
+
+read_docx() %>% 
+  body_add_flextable(ft) %>% 
+  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/public_fields_table.docx")
+
+
+
+
+# sum_tbl <- kable(sum_tbl, 
+#                  row.names = F, 
+#                  digits = 2,
+#                  col.names = c('Field Category', 'Field Name', 'Number of Fields'))
+# 
+# options(scipen=10000)
+# sum_tbl
+
+#setwd("C:/rworking/digs/outdata")
+#write.csv(sum_tbl,"20180216_0_Field_Summary_Schema_20180216-0.csv", row.names = F, quote = T)
+
+```
+
+``` {r required_desired_points_table, echo=FALSE,  warning=FALSE}
+x <-
+  s %>%
+  filter(InternalUseOnly == '0',
+         PointHist == 'R' | PointNew == 'R' | PointProgram == 'R'
+         ) %>%
+  group_by(DSCRTPCategory, FieldName) %>% 
+  summarize(PointHist = unique(PointHist),
+            PointNew = unique(PointNew),
+            PointProgram = unique(PointProgram)
+                        )
+colkeys <- names(x[,-1])
+
+ft <- flextable(x) %>% 
+  theme_vanilla() %>% #booktabs, vanilla, box, tron, tron_legacy
+ # set_header_labels(Field_Names = "Field Name", n = "# of Records") %>% 
+  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  set_header_labels(FieldName = "Field Name",
+                    DSCRTPCategory = "DSCRTP Category") %>% 
+  font(fontname = "Cambria", part = "all") %>% #header, body, all
+  fontsize(size = 10, part = "body") %>% 
+  autofit() 
+
+
+
+
+  
+  
+
+ft
+
+read_docx() %>% 
+  body_add_flextable(ft) %>% 
+  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/required_desired_points_table.docx")
+
+```
+
+``` {r required_desired_transects_table, echo=FALSE}
+x <-
+  s %>%
+  filter(InternalUseOnly == '0',
+         TransHist == 'R' | TransNew == 'R' | TransProgram == 'R'
+         ) %>%
+  group_by(DSCRTPCategory, FieldName) %>% 
+  summarize(TransHist = unique(TransHist),
+            TransNew = unique(TransNew),
+            TransProgram = unique(TransProgram)
+                        ) %>% 
+  arrange(DSCRTPCategory)
+
+colkeys <- names(x[,-1])
+
+ft <- flextable(x) %>% 
+  theme_vanilla() %>% #booktabs, vanilla, box, tron, tron_legacy
+ # set_header_labels(Field_Names = "Field Name", n = "# of Records") %>% 
+  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  set_header_labels(FieldName = "Field Name",
+                    DSCRTPCategory = "DSCRTP Category") %>% 
+  font(fontname = "Cambria", part = "all") %>% #header, body, all
+  fontsize(size = 10, part = "body") %>% 
+  autofit() 
+
+ft
+
+read_docx() %>% 
+  body_add_flextable(ft) %>% 
+  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/required_desired_transects_table.docx")
+
+
+```
+
+``` {r required_desired_trawl_table, echo=FALSE}
+x <-
+  s %>%
+  filter(InternalUseOnly == '0',
+         TrawlHist == 'R' | TrawlNew == 'R' | TrawlProgram == 'R'
+         ) %>%
+  group_by(DSCRTPCategory, FieldName) %>% 
+  summarize(TrawlHist = unique(TrawlHist),
+            TrawlNew = unique(TrawlNew),
+            TrawlProgram = unique(TrawlProgram)
+                        ) 
+
+colkeys <- names(x[,-1])
+
+ft <- flextable(x) %>% 
+  theme_vanilla() %>% #booktabs, vanilla, box, tron, tron_legacy
+ # set_header_labels(Field_Names = "Field Name", n = "# of Records") %>% 
+  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  set_header_labels(FieldName = "Field Name",
+                    DSCRTPCategory = "DSCRTP Category") %>% 
+  font(fontname = "Cambria", part = "all") %>% #header, body, all
+  fontsize(size = 10, part = "body") %>% 
+  autofit() 
+
+ft
+
+read_docx() %>% 
+  body_add_flextable(ft) %>% 
+  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/required_desired_trawl_table.docx")
+
+
+```
+  
+``` {r obis_table, echo=FALSE}
+options(scipen=999)
+x <-
+  s %>% arrange(DarwinCoreTerm) %>% 
+  filter(ReleaseToOBIS == '1') %>% 
+  group_by(FieldName) %>%
+  summarize(
+    DarwinCoreTerm = toString(unique(DarwinCoreTerm))
+            )
+
+colkeys <- names(x)
+
+ft <- flextable(x) %>% 
+  theme_box() %>% #booktabs, vanilla, box, tron, tron_legacy
+  set_header_labels(DarwinCoreTerm = "DarwinCore Term",
+                    FieldName = "DSCRTP Field Name"
+                    ) %>% 
+  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  font(fontname = "Cambria", part = "all") %>% #header, body, all
+  fontsize(size = 10, part = "body") %>% 
+  autofit() %>% 
+  width(j = ~ DarwinCoreTerm, width = 2.2) %>% 
+  width(j = ~ FieldName, width = 2.2) %>% 
+  #width(j = ~ DSCRTPCategory, width = 2) %>% 
+  align(align = "right", part = 'all') 
+  
+ft
+
+read_docx() %>% 
+  body_add_flextable(ft) %>% 
+  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/obis_table.docx")
+```
+
+``` {r calculations, echo=FALSE}
+# length of unflagged records 
+a <- round(length(filt$CatalogNumber), -4)
+
+# number of DatasetID
+b <- length(unique(filt$DatasetID))
+
+# number of DataProviders
+c <- length(unique(filt$DataProvider))
+
+# number of flagged records
+d <- length(filter(indata, Flag == '1')$CatalogNumber)
+
+# percent of unflagged records with images
+filt2 <- filter(filt, is.na(ImageURL) == F)
+e <- round((length(filt2$CatalogNumber)/(length(filt$CatalogNumber))*100),0)
+
+# number of unflagged records with images 
+f <- length(filter(filt, is.na(ImageURL) == F)$CatalogNumber)
+
+# stats on number of records per DatasetID
+y <- count(filt, DatasetID)
+g <- round(median(y$n),0)
+h <- min(y$n)
+i <- max(y$n)
+
+```
+
+``` {r GrowthThroughTime, echo=FALSE, cache = TRUE, dpi=300}
+
+# ordering factors
+filt2 <- filt %>%
+  filter(as.Date(EntryDate) > as.Date('2010-01-01'))
+options(scipen=10000)
+g <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
+  stat_bin(data = subset(filt2, Phylum =="Porifera"),aes(y=cumsum(..count..)),geom="line", binwidth = 2, size = 2) +
+  stat_bin(data = subset(filt2, Phylum =="Cnidaria"),aes(y=cumsum(..count..)),geom="line", binwidth = 2, size = 2) +
+  ylab("Cumulative Number of Records") + 
+  xlab("Year Record Added") + 
+  guides(fill=FALSE) + 
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+# write to file
+
+# x <- g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+# 
+# png(file = "C:/rworking/deepseatools/reports/2019_status_update_report/growththroughtime.png",
+#     width = 1200, height = 800, 
+#     units = "px", pointsize = 12, res = 150)
+# 
+# x
+# 
+# dev.off()
+
+```
+
+``` {r region-counts, echo=FALSE}
+a <- filt %>% 
+  filter(
+    is.na(FishCouncilRegion) == T
+    ) 
+a <- length(a$CatalogNumber)/length(filt$CatalogNumber)
+a <- round(a*100, 0)
+
+```
+
+``` {r FishCouncilRegion, echo=FALSE}
+# ordering factors
+
+filt2 <- filt %>% 
+  filter(is.na(Phylum) == F , 
+         is.na(FishCouncilRegion) == F , 
+         FishCouncilRegion != 'NA')
+options(scipen=10000)
+
+#table(filt2$FishCouncilRegion, useNA = 'always')
+
+filt2$FishCouncilRegion <- factor(filt2$FishCouncilRegion, levels = c('Pacific', 'North Pacific','Western Pacific','New England','Mid-Atlantic','South Atlantic', 'Gulf of Mexico','Caribbean'))
+
+g <- ggplot(filt2, aes(FishCouncilRegion, fill = Phylum)) +
+  geom_bar() + 
+  coord_flip() + 
+  theme(text = element_text(size=20)) + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+# write to file
+# x <- g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+# 
+# png(file = "C:/rworking/deepseatools/reports/2019_status_update_report/fishcouncilregion.png",
+#     width = 1200, height = 800, 
+#     units = "px", pointsize = 12, res = 150)
+# 
+# x
+# 
+# dev.off()
+
+
+
+```
+
+``` {r DepthCalc, echo=FALSE}
+x <- s %>%
+  filter(
+    DSCRTPGroup == 'Location-Depth Metric',
+    InternalUseOnly == "0", 
+    DSCRTPCategory != "GIS Enhancement" 
+  )
+x <- toString(x$FieldName)
+
+y <- s %>%
+  filter(DSCRTPGroup == 'Location-Depth Metric', InternalUseOnly == "0", DSCRTPCategory == "GIS Enhancement" )
+y <- toString(y$FieldName)
+
+##### checker ##### 
+# z <- filt %>% 
+#   filter(DepthInMeters == "-999") %>% 
+#   group_by(DatasetID) %>% 
+#   summarize(
+#     DepthInMeters = toString(unique(DepthInMeters)),
+#     DataProvider = toString(unique(DataProvider)),
+#     n = n()
+#     )
+# #View(z)
+# #length(z$CatalogNumber)
+# #[1] 3992
+```
+
+``` {r depth_vernacularname, echo=FALSE}
+##### Boxplot of depth by FishCouncilRegion #####
+filt2 <- filt %>% 
+  filter(DepthInMeters != "-999")
+  
+g <- ggplot(filt2, aes(factor(FishCouncilRegion), as.numeric(DepthInMeters), color = Phylum)) +   geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("FishCouncilRegion") + 
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = -.01))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r DepthDensity, echo=FALSE,  dpi = 300}
+filt2 <- filt %>% 
+  filter(DepthInMeters != "-999")
+options(scipen=10000)
+
+g <- ggplot(filt2, aes(DepthInMeters, fill = Phylum)) +
+  geom_density(alpha = 0.5) + 
+  xlim(0,7000) +
+  ylab("Proportion of Records") + 
+  xlab('DepthInMeters') + 
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+```
+
+``` {r ObservationYear, echo=FALSE,  dpi = 300}
+# ordering factors
+filt2 <- filt %>% 
+  filter(is.na(ObservationYear) == F, ObservationYear != "-999", is.na(Phylum) == F)
+filt2$TaxonRank <- factor(filt2$TaxonRank, levels = c("phylum", "class", "subclass", "order", "suborder","family","subfamily", "genus","subgenus","species","subspecies","forma","variety"))
+options(scipen=10000)
+
+g <- ggplot(filt2, aes(ObservationYear, fill = Phylum)) +
+  geom_bar() + 
+  ylab("Number of Records")  +
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r IndividualCount, echo=FALSE,  dpi = 300}
+# ordering factors
+filt2 <- filt %>% 
+  filter(is.na(IndividualCount) == F, 
+         IndividualCount != '0',
+         IndividualCount != '-999', 
+         is.na(Phylum) == F, 
+         IndividualCount < 50
+         )
+
+options(scipen=10000)
+
+g <- ggplot(filt2, aes(IndividualCount, fill = Phylum)) +
+  geom_histogram(binwidth = 1) + 
+  ylab("Number of Records")  +
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r SizeCalc, echo=FALSE,  warning = FALSE}
+yo <- filt %>% 
+  filter(
+    MinimumSize != "-999",
+    MaximumSize != "-999",
+    MinimumSize != '0',
+    is.na(Phylum) == F
+    )
+
+yo$AverageSize <- (yo$MinimumSize + yo$MaximumSize)/2
+yo$SizeDiff <- (yo$MaximumSize - yo$MinimumSize)
+
+x <- length(yo$CatalogNumber)
+y <- length(filt$CatalogNumber)
+```
+
+``` {r Size, echo=FALSE,  warning = FALSE, dpi = 300}
+yo <- yo %>%
+  filter(
+   AverageSize < 100  
+    )
+
+# ordering factors
+options(scipen=10000)
+g <- ggplot(yo, aes(as.numeric(AverageSize), fill = Phylum)) +
+  geom_histogram(bins = 50) + 
+  #coord_cartesian(ylim = c(1, 20000)) +
+  ylab("Number of Records") + 
+  xlab("Average Size (cm)")  +
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r ConditionCalc, echo=FALSE}
+
+condition <- filt$Condition %in% c('Live','Damaged','Dead')
+x <- length(condition[condition == T])
+y <- filter(filt, is.na(filt$Condition) == FALSE)
+y <- length(y$Condition)
+z <- filter(filt, is.na(filt$Condition) == TRUE)
+z <- length(z$Condition)
+t <- length(filt$Condition)
+
+```
+
+``` {r Condition, echo=FALSE,  dpi = 300}
+yo <- filt %>% 
+  filter(
+    Condition %in% c('Live','Damaged','Dead') 
+    #Condition != 'Live'
+         )
+
+# ordering factors
+yo$Condition <- factor(yo$Condition, 
+                       levels = c('Live','Damaged','Dead'))
+
+
+options(scipen=10000)
+g <- ggplot(yo, aes(Condition, fill = Phylum)) +
+  geom_bar() + 
+  coord_flip() + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r Location, echo=FALSE}
+z <- s %>%
+  filter(DSCRTPGroup == 'Taxonomy Metadata', InternalUseOnly == "0", FieldName != 'AssociatedTaxa', FieldName != 'Synonyms')
+z <-toString(z$FieldName)
+
+```
+
+``` {r taxonranksum, echo=FALSE,  dpi = 300}
+# ordering factors
+filt2 <- filt %>% 
+  filter(is.na(TaxonRank) == F, is.na(Phylum) == F)
+
+filt2$TaxonRank <- factor(filt2$TaxonRank, levels = c("phylum", "class", "subclass", "order", "suborder","family","subfamily", "genus","subgenus","species","subspecies","forma","variety"))
+options(scipen=10000)
+
+g <- ggplot(filt2, aes(TaxonRank, fill = Phylum)) +
+  geom_bar() + 
+  coord_flip() + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+```
+
+``` {r recordtype, echo = FALSE}
+valid <- filt$RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'video transect','notation', 'catch record')
+
+# number of records with valid values
+x <- length(valid[valid == T])
+
+# number of records where the specified value is non-null 
+y <- filter(filt, is.na(filt$RecordType) == FALSE)
+y <- length(y$RecordType)
+
+# number of records where the specified value is null
+z <- filter(filt, is.na(filt$RecordType) == TRUE)
+z <- length(z$RecordType)
+
+# total number of unflagged records
+t <- length(filt$RecordType)
+
+```
+
+``` {r RecordTypePlotSouth, echo=FALSE,  dpi = 300}
+yo <- filt %>% 
+  filter(RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'notation', 'catch record'))
+
+yo <- within(yo, 
+             RecordType <- factor(RecordType, 
+                                  levels=names(sort(table(RecordType), decreasing=TRUE))))
+
+options(scipen=10000)
+yo <- yo %>% filter(FishCouncilRegion == 'South Atlantic'| FishCouncilRegion == 'Gulf of Mexico')
+#table(yo$FishCouncilRegion)
+
+g <- ggplot(yo, aes(RecordType, fill = Phylum)) +
+    geom_bar() + 
+  coord_flip() + 
+  facet_wrap(~FishCouncilRegion) + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r RecordTypePlotPacific, echo=FALSE,  dpi = 300}
+yo <- filt %>% 
+  filter(RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'notation', 'catch record'))
+
+yo <- within(yo, 
+             RecordType <- factor(RecordType, 
+                                  levels=names(sort(table(RecordType), decreasing=TRUE))))
+
+options(scipen=10000)
+yo <- yo %>% filter(FishCouncilRegion == 'Pacific'| FishCouncilRegion == 'North Pacific' | FishCouncilRegion == 'Western Pacific')
+#table(yo$FishCouncilRegion)
+
+g <- ggplot(yo, aes(RecordType, fill = Phylum)) +
+  geom_bar() + 
+  coord_flip() + 
+  facet_wrap(~FishCouncilRegion) + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r RecordTypePlotNewEngland, echo=FALSE,  dpi = 300}
+yo <- filt %>% 
+  filter(RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'notation', 'catch record'))
+
+yo <- within(yo, 
+             RecordType <- factor(RecordType, 
+                                  levels=names(sort(table(RecordType), decreasing=TRUE))))
+
+options(scipen=10000)
+yo <- yo %>% filter(FishCouncilRegion == 'New England'| FishCouncilRegion == 'Mid-Atlantic' | FishCouncilRegion == 'Caribbean')
+#table(yo$FishCouncilRegion)
+
+g <- ggplot(yo, aes(RecordType, fill = Phylum)) +
+   geom_bar() + 
+  coord_flip() + 
+  facet_wrap(~FishCouncilRegion) + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r RecordTypePlotbyRegion, echo=FALSE,  dpi = 300}
+yo <- filt %>% 
+  filter(RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'notation', 'catch record'))
+
+yo <- within(yo, 
+             RecordType <- factor(RecordType, 
+                                  levels=names(sort(table(RecordType), decreasing=TRUE))))
+
+options(scipen=10000)
+#yo <- yo %>% filter(FishCouncilRegion == 'South Atlantic'| FishCouncilRegion == 'Caribbean')
+#table(yo$FishCouncilRegion)
+
+# ordering factors
+options(scipen=10000)
+g <- ggplot(yo, aes(RecordType, fill = Phylum)) +
+  geom_bar() + 
+  coord_flip() + 
+  #facet_wrap(~FishCouncilRegion) + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r SamplingEquipmentCalcs, echo = FALSE}
+valid <- filt$SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA')
+
+#schema %>% filter(FieldName == "SamplingEquipment") %>% dplyr::select(ValidValues)
+#View(table(filt$SamplingEquipment))
+
+# number of records with valid values
+x <- length(valid[valid == T])
+
+# number of records where the specified value is non-null 
+y <- filter(filt, is.na(filt$SamplingEquipment) == FALSE)
+y <- length(y$SamplingEquipment)
+
+# number of records where the specified value is null
+z <- filter(filt, is.na(filt$SamplingEquipment) == TRUE)
+z <- length(z$SamplingEquipment)
+
+# total number of unflagged records
+t <- length(filt$SamplingEquipment)
+
+```
+
+``` {r SamplingEquipmentPlot, echo=FALSE,  dpi = 300}
+yo <- filt %>% 
+  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA'))
+
+yo <- within(yo, 
+             SamplingEquipment <- factor(SamplingEquipment, 
+                                  levels=names(sort(table(SamplingEquipment), decreasing=TRUE))))
+
+# ordering factors
+options(scipen=10000)
+#yo <- yo %>% filter(FishCouncilRegion == 'South Atlantic'| FishCouncilRegion == 'Gulf of Mexico' | FishCouncilRegion == 'Caribbean')
+#table(yo$FishCouncilRegion)
+
+g <- ggplot(yo, aes(SamplingEquipment, fill = Phylum)) +
+  geom_bar() + 
+  coord_flip() +
+  #facet_wrap(~ FishCouncilRegion) +
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r SamplingEquipmentPlotbyRegionPacific, echo=FALSE,  dpi = 300}
+yo <- filt %>% 
+  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA'))
+
+yo <- within(yo, 
+             SamplingEquipment <- factor(SamplingEquipment, 
+                                  levels=names(sort(table(SamplingEquipment), decreasing=TRUE))))
+
+# ordering factors
+options(scipen=10000)
+yo <- yo %>% filter(FishCouncilRegion == 'North Pacific'| FishCouncilRegion == 'Pacific' | FishCouncilRegion == 'Western Pacific')
+#table(yo$FishCouncilRegion)
+g <- ggplot(yo, aes(SamplingEquipment, fill = Phylum)) +
+  geom_bar() + 
+  coord_flip() + 
+  facet_wrap(~FishCouncilRegion) + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+ 
+``` {r SamplingEquipmentPlotbyRegionSouth, echo=FALSE,  dpi = 300}
+yo <- filt %>% 
+  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA'))
+
+yo <- within(yo, 
+             SamplingEquipment <- factor(SamplingEquipment, 
+                                  levels=names(sort(table(SamplingEquipment), decreasing=TRUE))))
+
+options(scipen=10000)
+yo <- yo %>% filter(FishCouncilRegion == 'South Atlantic'| FishCouncilRegion == 'Gulf of Mexico' | FishCouncilRegion == 'Caribbean')
+g <- ggplot(yo, aes(SamplingEquipment, fill = Phylum)) +
+  geom_bar() + 
+  coord_flip() + 
+  facet_wrap(~FishCouncilRegion) + 
+    ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+ 
+``` {r SamplingEquipmentPlotbyRegionNewEngland, echo=FALSE,  dpi = 300}
+yo <- filt %>% 
+  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA'))
+
+yo <- within(yo, 
+             SamplingEquipment <- factor(SamplingEquipment, 
+                                  levels=names(sort(table(SamplingEquipment), decreasing=TRUE))))
+
+# ordering factors
+options(scipen=10000)
+yo <- yo %>% filter(FishCouncilRegion == 'New England'| FishCouncilRegion == 'Mid-Atlantic')
+#table(yo$FishCouncilRegion)
+g <- ggplot(yo, aes(SamplingEquipment, fill = Phylum)) +
+  geom_bar() + 
+  coord_flip() + 
+  facet_wrap(~FishCouncilRegion) + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+``` {r genus_by_family_coral_table, echo=FALSE}
+x <-
+ arrange(filt, Genus) %>% filter(Phylum == 'Cnidaria') %>%
+  group_by(Family) %>% 
+  summarize(Genus_n = length(unique(Genus)),
+            n = n(),
+            Genera = toString(unique(Genus)))
+
+colkeys <- names(x[,-1])
+ft <- flextable(x) %>% 
+  theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, vader
+  set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
+  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  font(fontname = "Cambria", part = "all")  %>% #header, body, all
+  autofit() %>% 
+  width(j = ~ Genera, width = 3.5) %>% 
+  width(j = ~ Genus_n + n + Family, width = 1.2) %>% 
+  width(j = ~ Family, width = 1.5)
+
+ft
+
+read_docx() %>% 
+  body_add_flextable(ft) %>% 
+  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/genus_by_family_coral_table.docx")
+```
+
+``` {r genus_by_family_sponge_table, echo=FALSE}
+x <-
+  arrange(filt, Genus) %>% filter(Phylum == 'Porifera') %>% 
+  group_by(Family) %>% 
+  summarize(Genus_n = length(unique(Genus)),
+            n = n(),
+            Genera = toString(unique(Genus)))
+
+colkeys <- names(x[,-1])
+ft <- flextable(x) %>% 
+  theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, zebra
+  set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
+  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  font(fontname = "Cambria", part = "all")  %>% #header, body, all
+  autofit() %>% 
+  width(j = ~ Genera, width = 3.5) %>% 
+  width(j = ~ Genus_n + n + Family, width = 1.2) %>% 
+  width(j = ~ Family, width = 1.5)
+
+  
+
+ft
+
+read_docx() %>% 
+  body_add_flextable(ft) %>% 
+  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/genus_by_family_sponge_table.docx")
+```
+
+``` {r data_dictionary_table, echo=FALSE}
+x <-
+  s %>% filter(InternalUseOnly == '0') %>% 
+  group_by(FieldName) %>% 
+  summarize(Field_Definition = toString(unique(FieldDescription)),
+            Valid_Values = toString(unique(ValidValues)))
+
+colkeys <- names(x[,-1])
+ft <- flextable(x) %>% 
+  theme_box() %>% #booktabs, vanilla, box, tron, tron_legacy, zebra
+  set_header_labels(Field_Definition = "Field Definition", 
+                  Valid_Values = "Valid Values",
+                    FieldName = "Field Name") %>% 
+  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  font(fontname = "Cambria", part = "all")  %>% #header, body, all
+  fontsize(size = 10, part = "body") %>% 
+  autofit() %>% 
+  width(j = ~ FieldName , width = 1.7) %>%
+  width(j = ~ Field_Definition, width = 3.5) %>% 
+  width(j = ~ Valid_Values, width = 2) %>%
+  align(align = "left", part = 'all')
+  
+
+
+  #width(j = ~ DSCRTPCategory, width = 2) %>% 
+  
+
+ft
+
+read_docx() %>% 
+  body_add_flextable(ft) %>% 
+  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/data_dictionary_table.docx")
+
+```
+
+``` {r data_dictionary_livetext, echo=FALSE}
+
+read_docx() %>% 
+  body_add_flextable(ft) %>% 
+  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/data_dictionary_table.docx")
+
+```
+

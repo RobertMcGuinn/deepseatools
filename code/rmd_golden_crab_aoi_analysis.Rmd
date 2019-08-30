@@ -1,0 +1,541 @@
+---
+title: "Golden Crab EFP Taxonomic Tables"
+author: "Robert P. McGuinn"
+date: "October 19, 2018"
+output: word_document
+#html_document
+---
+
+``` {r variables_and_paths, echo=FALSE}
+version <- "20181005-0"
+fgdb_path <- 'C:/data/aprx/GoldenCrab/GoldenCrab.gdb'
+```
+
+``` {r creating_aoi_poly, echo = FALSE}
+##### _____ Creating aoi polygon from bounding coordinates #####
+minLon <- -85.4
+maxLon <- -84.2
+minLat <- 25
+maxLat <- 28
+
+e <- as(raster::extent(minLon, maxLon, minLat, maxLat), "SpatialPolygons")
+proj4string(e) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+data = data.frame(f=99.9)
+aoibox = SpatialPolygonsDataFrame(e,data)
+# 
+# setwd("C:/data/BaseLayers/GoldenCrabAOIp2")
+# writeOGR(aoibox, dsn="aoibox", 
+#          layer= "aoibox", 
+#          driver = "ESRI Shapefile",
+#          overwrite_layer = T)
+
+fgdb_path <- 'C:/data/aprx/GoldenCrab/GoldenCrab.gdb'
+arc.write(file.path(fgdb_path, 'one'), data=aoibox)
+
+```
+
+``` {r elevation, echo=FALSE}
+##### _____ get ETOPO1  and CRM data from NCEI #####
+
+##### set 'aoi' bounding box ##### 
+# minLon <- -85.4
+# maxLon <- -84.2
+# minLat <- 25
+# maxLat <- 28
+# 
+# setwd("C:/data/BaseLayers/GoldenCrabAOIp2")
+# url <- paste("http://maps.ngdc.noaa.gov/mapviewer-support/wcs-proxy/",
+#                 "wcs.groovy?filename=etopo1_bedrock.tif&",
+#                 "request=getcoverage&version=1.0.0&service=wcs&",
+#                 "coverage=etopo1_bedrock&CRS=EPSG:4326&format=geotiff&",
+#                 "resx=0.000833333333333334&resy=0.000833333333333334&bbox=",
+#                 minLon, ",", minLat, ",", maxLon, ",", maxLat, sep="")
+# fname <- "etopo_temp.tif"
+# download.file(url, fname, mode="wb", cacheOK="false")
+# etopo <- raster(fname)
+# 
+# setwd("C:/data/BaseLayers/GoldenCrabAOIp2")
+# writeRaster(etopo,'etopo.tif', overwrite=TRUE)
+# 
+######_____  get CRM data from NCEI #####
+# setwd("C:/data/BaseLayers/GoldenCrabAOIp2")
+# url.hi <- paste("http://maps.ngdc.noaa.gov/mapviewer-support/wcs-proxy/",
+#                 "wcs.groovy?filename=crm.tif&",
+#                 "request=getcoverage&version=1.0.0&service=wcs&",
+#                 "coverage=crm&CRS=EPSG:4326&format=geotiff&",
+#                 "resx=0.000833333333333334&resy=0.000833333333333334&bbox=",
+#                 minLon, ",", minLat, ",", maxLon, ",", maxLat, sep="")
+# fname.hi <- "crm.temp.tif"
+# 
+# download.file(url.hi, fname.hi, mode="wb", cacheOK="false")
+# 
+# crm <- raster::raster(fname.hi)
+# 
+# setwd("C:/data/BaseLayers/GoldenCrabAOIp2")
+# writeRaster(crm,'crm.tif', overwrite=TRUE)
+
+##### reclassify CRM data to create proper depth zone (see reclass matrix, 'rclmat') #####
+# depth zone of interest 548.6-792.4 (class 2 below)
+# crm_flip_sign <- crm * -1
+# m <- c(0.0, 548.0, 1,  549.0, 792.0, 2,  793.0, 3500.0, 3)
+# rclmat <- matrix(m, ncol=3, byrow=TRUE)
+# rc <- reclassify(crm_flip_sign, rclmat)
+# 
+# setwd("C:/data/BaseLayers/GoldenCrabAOIp2")
+# writeRaster(rc,'crm_rc.tif', overwrite=TRUE)
+```
+
+``` {r subset_db_data, echo=FALSE}
+#####_____ setting bounding boxes #####
+##### set 'aoi' bounding box ##### 
+minLon <- -85.4 
+maxLon <- -84.2
+minLat <- 25 #25
+maxLat <- 28
+
+##### subsetting NDB with 'aoi' extent #####
+db_aoi <- subset(filt, as.numeric(Latitude) > minLat & 
+                   as.numeric(Latitude) < maxLat & 
+                   as.numeric(Longitude) < maxLon &
+                   as.numeric(Longitude) > minLon)
+
+##### set 'big' bounding box ##### 
+minLon <- -98
+maxLon <- -64
+minLat <- 15
+maxLat <- 37
+
+##### subsetting NDB with 'big' extent #####
+db_big <- subset(filt, as.numeric(Latitude) > minLat & 
+                   as.numeric(Latitude) < maxLat & 
+                   as.numeric(Longitude) < maxLon &
+                   as.numeric(Longitude) > minLon)
+
+
+```
+
+``` {r input_extra_data, echo=FALSE}
+##### reading from feature class (after some GIS selection), creates 'arc.feature_impl'object ##### 
+fgdb_path <- 'C:/data/aprx/GoldenCrab/GoldenCrab.gdb'
+reed <- arc.open(file.path(fgdb_path, 'reed'))
+ex1803 <- arc.open(file.path(fgdb_path, 'ex1803'))
+ex1711 <- arc.open(file.path(fgdb_path, 'ex1711'))
+nf1708 <- arc.open(file.path(fgdb_path, 'nf1708'))
+
+##### checking ##### 
+# class(ex1803)
+# # [1] "arc.feature_impl"
+# # attr(,"package")
+# # [1] "arcgisbinding"
+
+##### _____ creating 'sp' spatial polygon dataframes of the polygons ##### 
+
+reed <- arc.select(reed)
+##### checking ####
+# > class(reed)
+# [1] "arc.data"   "data.frame"
+# > reed <- arc.data2sp(reed)
+
+reed <- arc.data2sp(reed)
+# > class(reed)
+# [1] "SpatialPointsDataFrame"
+# attr(,"package")
+# [1] "sp"
+
+ex1803 <- arc.select(ex1803)
+ex1803 <- arc.data2sp(ex1803)
+
+ex1711 <- arc.select(ex1711)
+ex1711 <- arc.data2sp(ex1711)
+
+nf1708 <- arc.select(nf1708)
+nf1708 <- arc.data2sp(nf1708)
+
+##### checking ######
+# proj4string(ex1803)
+# proj4string(nf1708)
+# proj4string(ex1711)
+# proj4string(reed)
+
+```
+
+``` {r rbinding_newdata_to_db, echo = FALSE}
+##### ____ rbinding operations for reedbuffer (output is 'yo') #####  
+
+# setdiff(names(reedbuffer), names(aoi))
+# setdiff(names(aoi), names(reedbuffer))
+
+##### rename specific column name (#reassign) ####
+x <-which(colnames(reed) == 'Order_')
+colnames(reed)[x] <- 'Order'
+
+##### output of new reedbuffer1 #####
+reedbuffer1 <- reedbuffer[,c(names(aoi))]
+
+##### checking ##### 
+# setdiff(names(reedbuffer1), names(aoi))
+# setdiff(names(aoi), names(reedbuffer1))
+
+##### bind filt and reedbuffer1 #####
+yo<-rbind(aoi, reedbuffer1)
+
+##### _____ rbinding operations for NF1708 (output is 'yo1') #####  
+##### checking #####
+# setdiff(names(NF1708buffer), names(filt))
+# setdiff(names(filt), names(NF1708buffer))
+
+##### rename specific column name (#reassign) ####
+x <-which(colnames(NF1708buffer) == 'Order_')
+colnames(NF1708buffer)[x] <- 'Order'
+
+##### output of new reedbuffer1 #####
+NF1708buffer1 <- NF1708buffer[,c(names(aoi))]
+
+##### bind yo and NF1708buffer1 #####
+yo1<-rbind(yo, NF1708buffer1)
+
+##### checking row numbers ##### 
+# x <- length(NF1708buffer1$ScientificName)
+# y <- length(yo$ScientificName)
+# z <- length(yo1$ScientificName)
+# x
+# y
+# x+y
+# z
+
+##### _____ rbinding operations for ex1803buffer  (output is 'yo2') #####  
+##### checking #####
+# setdiff(names(ex1803buffer), names(yo1))
+# setdiff(names(yo1), names(ex1803buffer))
+
+##### ______ create a new Latitude and Longitude field ##### 
+ex1803buffer$Latitude <- (ex1803buffer$StartLat + ex1803buffer$EndLat)/2
+ex1803buffer$Longitude <- (ex1803buffer$StartLon + ex1803buffer$EndLon)/2
+
+##### _____ create a new 'DepthInMeters' field ##### 
+ex1803buffer$DepthInMeters <- (ex1803buffer$StartDepth + ex1803buffer$EndDepth)/2
+
+##### _____ create a new 'Habitat' field #####
+ex1803buffer$Habitat <- paste(ex1803buffer$PrimSubstrate, ex1803buffer$SecSubstrate, sep = ',')
+
+##### output of new ex1803buffer1) #####
+i <- intersect(names(yo1), names(ex1803buffer))
+ex1803buffer1 <- ex1803buffer[,c(i)]
+
+##### add all the column names #####
+namevector<-setdiff(names(yo1), names(ex1803buffer1))
+for(i in namevector)
+  ex1803buffer1[,i] <- NA
+
+##### checking #####
+# setdiff(names(ex1803buffer1), names(yo1))
+# setdiff(names(yo1), names(ex1803buffer1))
+
+##### 
+yo2 <-rbind(yo1, ex1803buffer1)
+
+##### checking ##### 
+# x <- length(ex1803buffer1$ScientificName)
+# y <- length(yo1$ScientificName)
+# z <- length(yo2$ScientificName)
+# x
+# y
+# x+y
+# z
+
+##### _____ rbinding operations for ex1711buffer  (output is 'yo3') #####  
+# setdiff(names(ex1711buffer), names(yo1))
+# setdiff(names(yo1), names(ex1711buffer))
+
+##### ______ create a new Latitude and Longitude field ##### 
+ex1711buffer$Latitude <- (ex1711buffer$StartLat + ex1711buffer$EndLat)/2
+ex1711buffer$Longitude <- (ex1711buffer$StartLon + ex1711buffer$EndLon)/2
+
+##### _____ create a new 'DepthInMeters' field ##### 
+ex1711buffer$DepthInMeters <- (ex1711buffer$StartDepth + ex1711buffer$EndDepth)/2
+
+##### output of new ex1711buffer1) #####
+i <- intersect(names(yo1), names(ex1711buffer))
+ex1711buffer1 <- ex1711buffer[,c(i)]
+
+##### add all the missing column names #####
+namevector<-setdiff(names(yo1), names(ex1711buffer1))
+for(i in namevector)
+  ex1711buffer1[,i] <- NA
+
+# setdiff(names(ex1711buffer1), names(yo1))
+# setdiff(names(yo1), names(ex1711buffer1))
+
+##### 
+yo3 <- rbind(yo2, ex1711buffer1)
+
+##### checking ##### 
+# x <- length(ex1711buffer1$ScientificName)
+# y <- length(yo2$ScientificName)
+# z <- length(yo3$ScientificName)
+# x
+# y
+# x+y
+# z
+
+# names(ex1711buffer)
+
+###### ______ export final rbind result to ArcGIS ###### 
+
+##### exporting a shapefile of 'yo3' ##### 
+# coordinates(yo3) <- c("Longitude", "Latitude")
+# proj4string(yo3) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+# 
+# setwd("C:/data/BaseLayers/GoldenCrabAOIp2")
+# writeOGR(yo3, dsn="yo3",
+#          layer= "yo3",
+#          driver = "ESRI Shapefile",
+#          dataset_options=c("NameField=CatalogNumber"),
+#          overwrite_layer = T)
+
+##### checking ##### 
+length(ex1803buffer$ScientificName)
+length(ex1711buffer)
+length(reedbuffer)
+length(NF1708buffer)
+
+table(factor(yo3$ScientificName))
+length
+
+```
+
+``` {r output_expanded_db_data, echo=FALSE}
+##### _____ output routines ##### 
+##### _____ output of NDB subsets #####
+##### exporting the 'big' and 'aoi' data subsets as a CSV #####
+# setwd("C:/rworking/digs/outdata")
+# write.csv(db_big,"20181019_0_big_geo_subset_NatDB_20181005-0_RPMcGuinn.csv", row.names = F, quote = T)
+# 
+# setwd("C:/rworking/digs/outdata")
+# write.csv(db_aoi,"20181019_0_aoi_geo_subset_NatDB_20181005-0_RPMcGuinn.csv", row.names = F, quote = T)
+
+##### exporting 
+##### exporting db_big and db_aoi as an sp objects through the arcgisbinding to point featureclass #####
+coordinates(db_big) <- c("Longitude", "Latitude")
+proj4string(db_big) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+arc.write(file.path(fgdb_path, 'db_big'), data=db_big, overwrite = TRUE )
+
+coordinates(db_aoi) <- c("Longitude", "Latitude")
+proj4string(db_aoi) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+arc.write(file.path(fgdb_path, 'db_aoi'), data=db_aoi, overwrite = TRUE)
+
+##### exporting a shapefile of 'db_big' ##### 
+# coordinates(db_big) <- c("Longitude", "Latitude")
+# proj4string(db_big) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+# 
+# setwd("C:/data/BaseLayers/GoldenCrabAOIp2")
+# writeOGR(db_big, dsn="big", 
+#          layer= "big", 
+#          driver = "ESRI Shapefile",
+#          dataset_options=c("NameField=CatalogNumber"), 
+#          overwrite_layer = T)
+
+##### exporting a shapefile of 'db_aoi' ##### 
+# coordinates(db_aoi) <- c("Longitude", "Latitude")
+# proj4string(db_aoi) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+# 
+# setwd("C:/data/BaseLayers/GoldenCrabAOIp2")
+# writeOGR(db_aoi, dsn="db_aoi", 
+#          layer= "db_aoi", 
+#          driver = "ESRI Shapefile",
+#          dataset_options=c("NameField=CatalogNumber"), 
+#          overwrite_layer = T)
+
+```
+
+``` {r input_obis, echo = FALSE}
+##### _____ getting OBIS data #####
+##### setting bounding box for 'aoi' #####
+minLon <- -85.4
+maxLon <- -84.2
+minLat <- 25
+maxLat <- 28
+
+##### pinging OBIS for data #####
+library(spocc)
+bounds <- c(minLon, minLat, maxLon, maxLat)
+out <- occ(geometry = bounds, from = 'obis')
+obis <- as.data.frame(out$obis$data)
+
+##### check ##### 
+# summary(obis$longitude)
+# plot(obis$longitude)
+# names(obis)
+# View(obis)
+# table(obis$phylum)
+# table(obis$species)
+
+```
+
+``` {r output_obis, echo = FALSE}
+##### make a shapefile with the OGR driver #####
+# library(rgdal)
+# coordinates(obis) <- c("longitude", "latitude")
+# proj4string(obis) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+# 
+# setwd("C:/data/BaseLayers/GoldenCrabAOIp2")
+# writeOGR(obis, dsn="obis", 
+#          layer= "obis", 
+#          driver = "ESRI Shapefile",
+#          dataset_options=c("NameField=CatalogNumber"), 
+#          overwrite_layer = T)
+``` 
+
+``` {r read_in_extent_polys, echo=FALSE}
+##### _____ bringing in aoi, target, and target_buffer using arc2R bridge #####
+##### reading from feature class (after some GIS selection), creates 'arc.feature_impl'object ##### 
+fgdb_path <- 'C:/data/aprx/GoldenCrab/GoldenCrab.gdb'
+aoi_poly <- arc.open(file.path(fgdb_path, 'aoi'))
+target_buffer_poly <- arc.open(file.path(fgdb_path, 'target_Buffer'))
+target_poly <- arc.open(file.path(fgdb_path, 'target'))
+
+##### creating 'sp' spatial polygon dataframes of the polygons ##### 
+target_poly <- arc.select(target_poly)
+target_poly <- arc.data2sp(target_poly)
+target_buffer_poly <- arc.select(target_buffer_poly)
+target_buffer_poly <- arc.data2sp(target_buffer_poly)
+aoi_poly <- arc.select(aoi_poly)
+aoi_poly <- arc.data2sp(aoi_poly)
+
+##### checking #####
+# plot(aoi_poly)
+# plot(target_buffer_poly)
+# plot(target_poly)
+
+```
+
+``` {r intersects, echo = FALSE}
+##### another way to make target internal to R #####
+library(rgdal)
+coordinates(db_aoi) <- c("Longitude", "Latitude")
+proj4string(db_aoi) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+##### intersect db points in aoi with 'target_poly' ##### 
+x <-over(db_aoi, target_poly)
+# assign the intersection results back to aoio
+db_aoi$Id <- x$Id
+db_aoi <- as.data.frame(db_aoi)
+aoi_target <- db_aoi %>% filter(Id == "1")
+coordinates(aoi_target) <- c("Longitude", "Latitude")
+proj4string(aoi_target) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+fgdb_path <- 'C:/data/aprx/GoldenCrab/GoldenCrab.gdb'
+arc.write(file.path(fgdb_path, 'aoi_target'), data=aoi_target)
+
+```
+
+# Analysis details
+
+Target fishing area boundaries:
+
+* Depth zone 548.6 to 792.4 meters
+* Bounding box
++ minimum longitude: `r minLon`
++ maximum longitude: `r maxLon`
++ minimum latitude: `r minLat`
++ maximum lataitude: `r maxLat`
+
+Databases used for species occurrences:
+
+* NOAA National Database for Deep Sea Corals and Sponges version: `r version`
+* Ocean Biogeographic Informaton System (OBIS) data accessed on 2018-10-19.
+* Other data: Reed, NF
+
+# Within the fishing target area
+
+## List of Coral Taxa Grouped by 'VernacularNameCategory' (from National Database)
+
+``` {r CoralByVernacularNameCategoryTarget, echo=FALSE }
+target <- as.data.frame(target)
+sum_tbl <-
+  target %>%
+  filter(Phylum == "Cnidaria") %>% 
+  group_by(VernacularNameCategory) %>%
+  summarize(
+    Taxa = toString(unique(ScientificName)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+```
+
+## List of Coral Taxa Grouped by 'VernacularNameCategory' (from National Database)
+
+``` {r SpongeByVernacularNameCategoryTarget, echo=FALSE }
+target <- as.data.frame(target)
+sum_tbl <-
+  target %>%
+  filter(Phylum == "Porifera") %>% 
+  group_by(VernacularNameCategory) %>%
+  summarize(
+    Taxa = toString(unique(ScientificName)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+```
+
+## List of Taxa Grouped by Order (From OBIS)
+
+``` {r TaxaByOrderTargetOBIS, echo=FALSE }
+sum_tbl <-
+  obis %>%
+  group_by(order_) %>%
+  summarize(
+    Taxa = toString(unique(name)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+```
+
+# Within the fishing target area plus 5000m buffer zone
+
+## List of Coral Taxa Grouped by 'VernacularNameCategory' (From National Database)
+
+``` {r CoralByVernacularNameCategoryBuffer, echo=FALSE }
+buffer <- as.data.frame(buffer)
+sum_tbl <-
+  buffer %>%
+  filter(Phylum == "Cnidaria") %>% 
+  group_by(VernacularNameCategory) %>%
+  summarize(
+    Taxa = toString(unique(ScientificName)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+```
+
+## List of Sponge Taxa Grouped by 'VernacularNameCategory' (From National Database)
+
+``` {r SpongeByVernacularNameCategoryBuffer, echo=FALSE }
+sum_tbl <-
+  buffer %>%
+  filter(Phylum == "Porifera") %>% 
+  group_by(VernacularNameCategory) %>%
+  summarize(
+    Taxa = toString(unique(ScientificName)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+```
+
+## List of Taxa Grouped by Order (From OBIS)
+
+``` {r TaxaByOrderBufferOBIS, echo=FALSE }
+sum_tbl <-
+  obisbuffer %>%
+  group_by(order_) %>%
+  summarize(
+    Taxa = toString(unique(name)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+```

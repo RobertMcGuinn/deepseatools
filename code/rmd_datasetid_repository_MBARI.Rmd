@@ -1,0 +1,283 @@
+---
+title: "NOAA's National Database for Deep-Sea Corals and Sponges: Data Set Dashboard (Repository)"
+author: "NOAA Deep Sea Coral Research and Technology Program (DSCRTP)"
+date: "Report last ran on `r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: hpstr
+    highlight: github
+
+---
+```{r setup, include=FALSE}
+
+opts_chunk$set(fig.width=8, fig.height=4)
+
+```
+
+```{r enhance, echo=FALSE}
+##### creating an automated Citation #####
+sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ',  
+                         min(sub$ObservationYear[sub$ObservationYear != "-999"]),' to ',
+                         max(sub$ObservationYear[sub$ObservationYear != "-999"]),'. ',
+                         'Coral or sponge occurrence observations submitted to the NOAA National Database for Deep Sea Corals and Sponges (www.deepseacoraldata.noaa.gov)', '. ',
+                         #'DSCRTP Accession ID: ',sub$AccessionID, '. ',
+                         #'Record type: ', sub$RecordType, '. ',
+                         #'Vessel(s): ', sub$Vessel,'. ',
+                         #'Sampling vehicle: ', sub$VehicleName,'. ',
+                         #'Survey ID: ', sub$SurveyID,'. ',
+                         # 'Principal investigator: ', sub$PI,'. ',
+                         'DSCRTP Dataset ID: ', sub$DatasetID, '. ',
+                         'Database version: ', version, '. ',
+                         #'Data contact: ', sub$DataContact,'. ',
+                         #'Reporter: ', sub$Reporter,'. ', 
+                         #'Repository: ', sub$Repository,'. ',
+                         # 'Web site [last accessed on YYYY-MM-DD]: ', sub$WebSite,'.', 
+                         sep = '')
+
+##### creating the datasetID dashboard url#####
+sub$dash <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Summaries/",sub$DatasetID,".html", sep = '')
+
+##### creating a ERDDAP tabledap query url #####
+sub$erddap <- paste("https://ecowatch.ncddc.noaa.gov/erddap/tabledap/deep_sea_corals.csv?CatalogNumber%2CVernacularNameCategory%2CVernacularName%2CScientificName%2CVerbatimScientificName%2CTaxonRank%2CAphiaID%2CPhylum%2CClass%2CSubclass%2COrder%2CSuborder%2CFamily%2CSubfamily%2CGenus%2CSubgenus%2CSpecies%2CSubspecies%2CScientificNameAuthorship%2CTypeStatus%2CSynonyms%2CIdentificationComments%2CIdentifiedBy%2CIdentificationDate%2CIdentificationQualifier%2CAssociatedSequences%2CIndividualCount%2CCategoricalAbundance%2CDensity%2CCover%2CVerbatimSize%2CMinimumSize%2CMaximumSize%2CWeightInKg%2CCondition%2CAssociatedTaxa%2COccurrenceComments%2CSubstrate%2CHabitat%2CCMECSGeoForm%2CCMECSSubstrate%2CCMECSBiotic%2CTemperature%2CSalinity%2COxygen%2CpH%2CpHscale%2CpCO2%2CTA%2CDIC%2COcean%2CLargeMarineEcosystem%2CCountry%2CFishCouncilRegion%2CLocality%2CStation%2CObservationDate%2CObservationYear%2CObservationTime%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CShallowFlag%2CgisEtopoDepth%2CgisGEBCODepth%2CgisCRMDepth%2CStartLatitude%2CStartLongitude%2CEndLatitude%2CEndLongitude%2CMinimumDepthInMeters%2CMaximumDepthInMeters%2CVerbatimLatitude%2CVerbatimLongitude%2CLocationAccuracy%2CNavType%2CLocationComments%2CSurveyID%2CVessel%2CPI%2CPIAffiliation%2CPurpose%2CSurveyComments%2CEventID%2CSamplingEquipment%2CVehicleName%2CSampleAreaInSquareMeters%2CfootprintWKT%2CfootprintSRS%2COtherData%2CEntryDate%2CReporter%2CReporterEmail%2CReporterComments%2CDataProvider%2CDataContact%2CModified%2CRecordType%2CRepository%2CCitation%2CSampleID%2CTrackingID%2CDatasetID%2CWebSite%2CImageURL&", "DatasetID", "=%22",
+                  sub$DatasetID, "%22", sep = '')
+
+##### creating the xml metadata file url #####
+sub$meta <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Metadata/", sub$DatasetID, ".xml", sep = '')
+
+```
+
+```{r, some_variable_setup, echo=FALSE}
+
+x <- unique(sub$erddap)
+y <- unique(sub$meta)
+z <- unique(sub$abstract)
+all <- sub
+sub <- all[all$Flag == "0",]
+
+```
+
+Go back to data set index page: [LINK](https://deepseacoraldata.noaa.gov/DatasetID_Table/DatasetID_Table_20190418-0.html)
+
+**Please send [feedback](https://deepseacoraldata.noaa.gov/about-us/feedback) if you notice any problems with this data set.**
+
+# `r unique(factor(sub$title))`
+
+* **Dataset ID:** `r unique(factor(sub$DatasetID))`
+* **Database Version:** `r version`
+* **Data Provider:** `r unique(sub$DataProvider)`
+* **Data Contact:** `r unique(sub$DataContact)`
+
+# Locator Map
+
+```{r, map, echo = FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=TRUE, fig.align='center'}
+
+# # ##### Using ggmap libary #####
+# #getting rid of  missing lat/long data
+#library(ggmap)
+sub2 <- sub %>%
+  filter(Latitude != '-999' , Longitude != '-999')
+# 
+# # use this when not crossing dateline
+# xpos <- sub2$Longitude
+# # also use this additional calculation to transforming longitudes to 0-360 if crossing dateline as in Western AK and HI
+# xpos <- ifelse(xpos < 0, (180 + xpos) + 180, xpos)
+# 
+# myLocation <- c(lon = mean(xpos), lat = mean(sub2$Latitude))
+# #manually set center longitude if in an area that crosses dateline
+# myLocation <- c(lon = 180, lat = mean(sub2$Latitude))
+# 
+# p <- get_map(location=myLocation, maptype = "watercolor", source = 'stamen', crop=FALSE, zoom=2)
+# # # put transLong below if
+# ggmap(p)+
+# geom_point(aes(x = xpos, y = Latitude), data = sub2,
+#  alpha = .5, color="darkred", size = 3)
+# 
+# 
+# #> converting bounding box to center/zoom specification. (experimental)
+# #> Map from URL : http://maps.googleapis.com/maps/api/staticmap?center=34.75309,-119.751995&zoom=16&size=640x640&scale=2&maptype=satellite&language=en-EN&sensor=false
+# ggmap(sq_map) + geom_point(data = sub2, mapping = aes(x = Longitude, y = Latitude), color = "red")
+# #> Warning: Removed 3 rows containing missing values (geom_point).
+
+
+###### this will make a simple maps if you have problems with the method above #####
+# library(dplyr)
+# library(ggplot2)
+gis<-sub2
+coordinates(gis) <- c("Longitude", "Latitude", "DepthInMeters")
+proj4string(gis) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+x<-bbox(gis)
+
+m <- map_data("world") #, xlim = c(x[1,1]-1,x[1,2]+1), ylim = c(x[2,1]-1,x[2,2]+1))
+
+z <- ggplot(m, aes(x = long, y = lat, group = group)) +
+  geom_polygon()
+
+z + geom_point(data=sub2,
+               color = "red",
+               size = 1,
+               aes(x=Longitude, y = Latitude), inherit.aes = FALSE)
+```
+
+
+# Geographic Range
+
+* **Ocean:** `r unique(sub$Ocean)`
+* **Fishery Management Council Region(s):** `r unique(sub$FishCouncilRegion[is.na(sub$FishCouncilRegion) == FALSE])`
+* **Large Marine Ecosystem(s):** `r unique(sub$LargeMarineEcosystem[is.na(sub$LargeMarineEcosystem) == FALSE])`
+* **Marine Ecoregion(s):** `r unique(sub$gisMEOW[is.na(sub$gisMEOW) == FALSE])`
+
+### Bounding box
+
+Coordinates are in WGS 84: [EPSG:4326](https://spatialreference.org/ref/epsg/wgs-84/)
+
+* **Minimum Latitude:** `r min(sub$Latitude)`
+* **Maximum Latitude:** `r max(sub$Latitude)`
+* **Minimum Longitude:** `r min(sub$Longitude)`
+* **Maximum Longitude:** `r max(sub$Longitude)`
+
+# Overview
+*Note:* The numbers below only reflect published records. Additional records may be retained by the Program for further review (see "Data Quality" section below).
+
+* **Number of records:** `r prettyNum(length(sub$CatalogNumber), big.mark = ",")`
+* **Number of coral records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Cnidaria"]), big.mark = ",")` 
+* **Number of sponge records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Porifera"]), big.mark = ",")`
+* **Records with images:** `r length(sub$ImageURL[is.na(sub$ImageURL) == FALSE])`
+* **Record type(s):** `r toString(unique(sub$RecordType))`
+* **Minimum depth (meters):** `r prettyNum(min(sub[sub$DepthInMeters != "-999",]$DepthInMeters), big.mark = ",")`
+* **Maximum depth (meters):** `r prettyNum(max(sub[sub$DepthInMeters != "-999",]$DepthInMeters), big.mark = ",")`
+* **Number of records flagged as <50 meters depth**: `r prettyNum(length(sub$ShallowFlag[sub$ShallowFlag == 1]), big.mark = ",")`
+* **Time frame:** `r min(sub$ObservationYear)` to `r max(sub$ObservationYear)`
+
+**Data Set Description:** `r unique(sub$abstract[1])`
+
+### Collection methodogy details: 
+
+`r sub$method_text[1]`  
+Link: `r unique(sub$method_link[1])`
+
+### Download comma delimited file: [LINK](`r x`)
+
+Download data dictionary: [LINK](https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/at_download/file)
+
+**Note:** When importing CSV files into Excel, use the data import wizard (under the 'data' tab) and set all column types to 'text' to avoid data tranformation issues. This step will prevent the automated alteration of dates in Excel.
+
+### Download ISO metadata as xml: [LINK](`r y`)
+
+# Data Set Level Citation
+`r unique(sub$CitationMaker[1])`
+
+*Note:* Individual records within a data set may have additional citations in the 'Citation' field.
+
+# Data Quality
+
+Records flagged for potential data quality issues (not released to the public): `r length(all$CatalogNumber[all$Flag == "1"])`
+
+# Taxonomic Summary
+Percent of coral and sponge records by lowest taxonomic rank.
+
+##Corals  
+
+**Number of coral records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Cnidaria"]), big.mark = ",")` 
+```{r taxsummary_coral, echo=FALSE}
+sub$TaxonRank <- factor(sub$TaxonRank, levels = c("phylum", "class", "subclass", "order", "suborder","family","subfamily", "genus","subgenus","species","subspecies","forma","variety"))
+
+sum_tbl <-
+  sub %>%
+  filter(Phylum == "Cnidaria") %>% 
+  group_by(TaxonRank) %>%
+  summarize(
+    Percent_of_Records = paste(round(n()/length(sub$CatalogNumber[sub$Phylum == "Cnidaria"])*100, digits = 0), "%")
+    ) %>%
+  arrange(TaxonRank)
+
+if(nrow(sum_tbl) == 0){
+  cat('None Missing')
+} else{
+  kable(sum_tbl, row.names = F, digits = 2, col.names = c('Taxon rank','Percent of all<br/> coral records'))
+}
+
+# sum_tbl <- kable(sum_tbl, row.names = F, digits = 2, col.names = c('Taxon rank','Percent of all<br/> coral records'))
+# sum_tbl
+
+```
+
+##Sponges   
+
+**Number of sponge records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Porifera"]), big.mark = ",")` 
+```{r taxsummary_sponges, echo=FALSE}
+sub$TaxonRank <- factor(sub$TaxonRank, levels = c("phylum", "class", "subclass", "order", "suborder","family","subfamily", "genus","subgenus","species","subspecies","forma","variety"))
+
+sum_tbl <-
+  sub %>%
+  filter(Phylum == "Porifera") %>% 
+  group_by(TaxonRank) %>%
+  summarize(
+    Percent_of_Records = paste(round(n()/length(sub$CatalogNumber[sub$Phylum == "Porifera"])*100, digits = 0), "%")
+    ) %>%
+  arrange(TaxonRank)
+
+if(nrow(sum_tbl) == 0){
+  cat('No sponge records in this data set.')
+} else{
+  kable(sum_tbl, row.names = F, digits = 2, col.names = c('Taxon rank','Percent of all<br/> sponge records'))
+}
+# sum_tbl <- kable(sum_tbl, row.names = F, digits = 2, col.names = c('Taxon rank','Percent of all<br/> sponge records'))
+# sum_tbl
+
+```
+
+# Coral Taxa Observed
+
+*Note:* Nothing will appear here if no coral taxa were observed.
+
+``` {r CoralByScientificName, echo=FALSE }
+sum_tbl <-
+  sub %>%
+  filter(Phylum == "Cnidaria") %>% 
+  group_by(ScientificName) %>%
+  summarize(
+    AphiaID = toString(unique(AphiaID)),
+    Order = toString(unique(Order)),
+    Family = toString(unique(Family)),
+    Records = n()) %>%
+  arrange(ScientificName)
+
+if(nrow(sum_tbl) == 0){
+  cat('No coral records in this data set.')
+} else{
+  kable(sum_tbl, row.names = F, digits = 2)
+}
+
+# sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+# sum_tbl
+
+```
+
+# Sponge Taxa Observed
+
+*Note:* Nothing will appear here if no sponge taxa were observed.
+
+``` {r SpongeByScientificName, echo=FALSE }
+sum_tbl <-
+  sub %>%
+  filter(Phylum == "Porifera") %>% 
+  group_by(ScientificName) %>%
+  summarize(
+    AphiaID = toString(unique(AphiaID)),
+    Order = toString(unique(Order)),
+    Family = toString(unique(Family)),
+    Records = n()) %>%
+  arrange(ScientificName)
+
+if(nrow(sum_tbl) == 0){
+  cat('No sponge records in this data set.')
+} else{
+  kable(sum_tbl, row.names = F, digits = 2)
+}
+# sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+# sum_tbl
+```
+
+**Please send [feedback](https://deepseacoraldata.noaa.gov/about-us/feedback) if you notice any problems with this data set.**
+
+Go back to data set index page: [LINK](https://deepseacoraldata.noaa.gov/DatasetID_Table/DatasetID_Table_20190418-0.html)

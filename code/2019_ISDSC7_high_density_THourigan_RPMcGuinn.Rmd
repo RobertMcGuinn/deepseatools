@@ -1,0 +1,726 @@
+---
+title: "CAPSTONE High Density Communities"
+author: "Robert.McGuinn@NOAA.gov; 843-460-9696"
+date: '`r Sys.Date()`'
+output: word_document
+always_allow_html: yes
+---
+
+```{r import_data, echo=FALSE, cache=TRUE}
+x <- "20190719_0_CAPSTONE_AnalysisHiDensity_THourigan.xlsx"
+setwd("C:/rworking/deepseatools/indata")
+d <- read.xlsx(x, sheet = 1)
+d <- d %>% filter(EventID != 'D2-EX1605L1-13', 
+                  is.na(ScientificName) == F)
+
+```
+
+```{r setup, include=FALSE}
+opts_chunk$set(fig.height = 9,
+               fig.width = 17, 
+               dpi = 90)
+```
+
+# Analysis Log
+
+* Google Drive project folder location: [LINK](https://drive.google.com/open?id=1whEwRDsH7d5-nUNoo3ZbkE1Yer6Mx6CU)
+* Dataset used in this analysis provided by Tom Hourigan: [LINK](https://drive.google.com/open?id=1Taw4GrBYern873oUAmU2dGK8UIKEqerj)
+
+## Conservation targets and threat analysis goals.   
+
+The conservation targets are the high-density coral and sponge habitats encountered on the CAPSTONE expeditions.    
+
+Community metrics: 
+
+* Composition
+* Diversity
+
+The conservation threat: future deep-sea mining
+
+## Data: Coral & sponge records from all of the CAPSTONE with high density dives
+
+The density ranks are per 'EventID' (dive)
+
+* High-Density (3000-9000 corals & sponges/km)
+* Very High Density (>10000/km)
+
+## Excel Summaries by EventID
+
+Question: What taxa (i.e., ScientificName) are represented in each dive (EventID), and in what numbers? How diverse is each dive?
+
+#### Table: Coral and Sponge Summary by EventID (limit: taxonrank is below genus)
+
+For an Excel file of the table click here: [LINK](https://drive.google.com/open?id=1S-ELcAaK60VNnvjX0nIRFRY1iPWzdHOA)
+
+Coral and sponge occurrences per EventID (dive) where TaxonRank is limited to 'genus, species, or subspecies'. Table arranged in descending order of the sum of the IndividualCount. Note: The Excel includes the following variables grouped by EventID. 
+
+* EventID
+* Densities
+* Taxa
+* Richness
+* Locality
+* MinimumDepth
+* MaximumDepth
+* NumberRecords
+* IndividualCount_sum
+
+
+```{r table_corals_sponges_species_write, echo=FALSE} 
+x <- d %>%
+  filter(
+    TaxonRank == 'genus' |
+      TaxonRank == 'species' |
+      TaxonRank == 'subspecies',
+    #Phylum == 'Cnidaria'
+  ) %>%
+  arrange(ScientificName) %>%
+  group_by(EventID) %>%
+  summarize(
+    Densities = paste(unique(Density), collapse = ' | '),
+    Taxa = paste(unique(ScientificName), collapse= ' | '),
+    Richness = length(unique(ScientificName)),
+    Locality = paste(unique(Locality), collapse= ' | '),
+    MinimumDepth = min(DepthInMeters),
+    MaximumDepth = max(DepthInMeters), 
+    NumberRecords = n(),
+    IndividualCount_sum = sum(IndividualCount)
+  )
+
+x <- x %>% arrange(desc(IndividualCount_sum))
+
+setwd("C:/rworking/deepseatools/reports")
+write.xlsx(x, '20190719-0_Summary_of_Corals_and_Sponges_by_EventID.xlsx')  
+```
+
+
+#### Table: Coral Summary by EventID (limit: taxonrank is below genus)
+
+For an Excel file of the table click here: [LINK](https://drive.google.com/open?id=16GSehUv7KtahtfjJFdIzreCgwAba205s)
+For an Excel file **without** taxonomic limits see: [LINK](https://drive.google.com/open?id=1Htn_tkVOmJCI-wjjWE972qwiW1c55a7a)
+
+Coral occurrences per EventID (dive) where TaxonRank is limited to 'genus, species, or subspecies'. Table arranged in descending order of the sum of the IndividualCount. Note: The Excel includes the following variables grouped by EventID.  
+
+* EventID
+* Densities
+* Taxa
+* Richness
+* Locality
+* MinimumDepth
+* MaximumDepth
+* NumberRecords
+* IndividualCount_sum
+
+
+```{r table_corals_species_write, echo=FALSE} 
+x <- d %>%
+  filter(
+    TaxonRank == 'genus' |
+      TaxonRank == 'species' |
+      TaxonRank == 'subspecies',
+    Phylum == 'Cnidaria'
+  ) %>%
+  arrange(ScientificName) %>%
+  group_by(EventID) %>%
+  summarize(
+    Densities = paste(unique(Density), collapse = ' | '),
+    Taxa = paste(unique(ScientificName), collapse= ' | '),
+    Richness = length(unique(ScientificName)),
+    Locality = paste(unique(Locality), collapse= ' | '),
+    MinimumDepth = min(DepthInMeters),
+    MaximumDepth = max(DepthInMeters), 
+    NumberRecords = n(),
+    IndividualCount_sum = sum(IndividualCount)
+  )
+
+x <- x %>% arrange(desc(IndividualCount_sum))
+
+setwd("C:/rworking/deepseatools/reports")
+write.xlsx(x, '20190719-0_Summary_of_Corals_by_EventID.xlsx')  
+```
+
+
+#### Table: Sponge Summary by EventID (limit: taxonrank is below genus)
+
+For an Excel file of the table click here: [LINK](https://drive.google.com/open?id=1OP2fI1qzKphxafAUBqIy6l5O88AMZW0t)
+For an Excel file **without** taxonomic limits see: [LINK](https://drive.google.com/open?id=1kJooXt2O3O-H1jFdxDyi4oydGxYVny0z)
+
+Sponge occurrences per EventID (dive) where TaxonRank is limited to 'genus, species, or subspecies'. Table arranged in descending order of the sum of the IndividualCount. Note: The Excel includes the following variables grouped by EventID.  
+
+* EventID
+* Densities
+* Taxa
+* Richness
+* Locality
+* MinimumDepth
+* MaximumDepth
+* NumberRecords
+* IndividualCount_sum
+
+
+```{r table_sponges_species_write, echo=FALSE} 
+x <- d %>%
+  filter(
+    TaxonRank == 'genus' |
+      TaxonRank == 'species' |
+      TaxonRank == 'subspecies',
+    Phylum == 'Porifera'
+  ) %>%
+  arrange(ScientificName) %>%
+  group_by(EventID) %>%
+  summarize(
+    Densities = paste(unique(Density), collapse = ' | '),
+    Taxa = paste(unique(ScientificName), collapse= ' | '),
+    Richness = length(unique(ScientificName)),
+    Locality = paste(unique(Locality), collapse= ' | '),
+    MinimumDepth = min(DepthInMeters),
+    MaximumDepth = max(DepthInMeters), 
+    NumberRecords = n(),
+    IndividualCount_sum = sum(IndividualCount)
+  )
+
+x <- x %>% arrange(desc(IndividualCount_sum))
+#View(x)
+
+
+setwd("C:/rworking/deepseatools/reports")
+write.xlsx(x, '20190719-0_Summary_of_Sponges_by_EventID.xlsx')  
+```
+
+## Coral summary by 4 distinct zones defined by region and depth. 
+
+1. North - Shallow 
+2. North - Deep
+3. South - Shallow
+4. South - Deep
+
+North: > 10 degrees latitude  
+South: < 10 degrees latitude  
+Shallow: 0-1000 m  
+Deep: > 1000 m
+
+#### Figure: Coral community (North - Shallow) 
+
+``` {r north_shallow, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+latlimit <- 10
+depthlimit <- 1000
+
+x <- d %>% filter(
+  #is.na(Genus) == T,
+  # Order != "Alcyonacea",
+  Phylum == "Cnidaria", 
+  as.numeric(Latitude) > latlimit,
+  as.numeric(DepthInMeters) < depthlimit,
+  # grepl('Wake', Locality)
+  )
+
+# limit x by count
+nlimit <- 100
+counts <- x %>% group_by(ScientificName) %>% summarize(IndividualCount_sum = sum(IndividualCount))
+counts <- counts %>% filter(IndividualCount_sum > nlimit)
+counts$abundance_cat <- NA
+counts$abundance_cat[counts$IndividualCount_sum > 0 & counts$IndividualCount_sum <= 1000] <- "0-1,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 1000 & counts$IndividualCount_sum <= 2000] <- "1,001-2,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 2000 & counts$IndividualCount_sum <= 3000] <- "2,001-3,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 3000 & counts$IndividualCount_sum <= 4000] <- "3,001-4,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 4000 & counts$IndividualCount_sum <= 5000] <- "4,001-5,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 5000 & counts$IndividualCount_sum <= 6000] <- "5,001-6,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 6000 & counts$IndividualCount_sum <= 7000] <- "6,001-7,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 7000 & counts$IndividualCount_sum <= 10000] <- "7,001-10,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 10000 & counts$IndividualCount_sum <= 20000] <- "10,001- 20,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 20000] <- "> 20,000 Individuals"
+counts$abundance_cat <- factor(counts$abundance_cat, levels = c("0-1,000 Individuals", "1,001-2,000 Individuals", "2,001-3,000 Individuals", "3,001-4,000 Individuals", "4,001-5,000 Individuals", "5,001-6,000 Individuals", "6,001-7,000 Individuals", "7,001-10,000 Individuals", "10,001- 20,000 Individuals", "> 20,000 Individuals"))
+
+x <- x %>% filter(ScientificName %in% counts$ScientificName)
+x <- merge(x,counts)
+# table(x$Genus)
+
+# plot
+g <- ggplot(x, aes(reorder(ScientificName, as.numeric(DepthInMeters), FUN=median), as.numeric(DepthInMeters),fill=abundance_cat)) + 
+  geom_boxplot() +
+  scale_y_reverse() +
+  # ylim(2000,1500) +
+  ylab("Depth (meters)") + 
+  xlab("Taxon") +
+  labs(fill = "Abundance Classes") +
+  theme_bw(base_size = 22, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0, face = 'italic'))#  +
+  #geom_hline(yintercept = 300, col = 'grey')
+
+g + scale_fill_manual(values = rev(brewer.pal(10,'Spectral')))
+# set.seed(8)
+# g + scale_fill_manual(values = sample(big_palette))
+# g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+```
+
+#### Figure: Coral community (North - Deep) 
+
+``` {r north_deep, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+latlimit <- 10
+depthlimit <- 1000
+
+x <- d %>% filter(
+  #is.na(Genus) == T,
+  # Order != "Alcyonacea",
+  Phylum == "Cnidaria", 
+  as.numeric(Latitude) > latlimit,
+  as.numeric(DepthInMeters) > depthlimit,
+  # grepl('Wake', Locality)
+  )
+
+# limit x by count
+nlimit <- 100
+counts <- x %>% group_by(ScientificName) %>% summarize(IndividualCount_sum = sum(IndividualCount))
+counts <- counts %>% filter(IndividualCount_sum > nlimit)
+counts$abundance_cat <- NA
+counts$abundance_cat[counts$IndividualCount_sum > 0 & counts$IndividualCount_sum <= 1000] <- "0-1,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 1000 & counts$IndividualCount_sum <= 2000] <- "1,001-2,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 2000 & counts$IndividualCount_sum <= 3000] <- "2,001-3,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 3000 & counts$IndividualCount_sum <= 4000] <- "3,001-4,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 4000 & counts$IndividualCount_sum <= 5000] <- "4,001-5,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 5000 & counts$IndividualCount_sum <= 6000] <- "5,001-6,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 6000 & counts$IndividualCount_sum <= 7000] <- "6,001-7,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 7000 & counts$IndividualCount_sum <= 10000] <- "7,001-10,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 10000 & counts$IndividualCount_sum <= 20000] <- "10,001- 20,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 20000] <- "> 20,000 Individuals"
+counts$abundance_cat <- factor(counts$abundance_cat, levels = c("0-1,000 Individuals", "1,001-2,000 Individuals", "2,001-3,000 Individuals", "3,001-4,000 Individuals", "4,001-5,000 Individuals", "5,001-6,000 Individuals", "6,001-7,000 Individuals", "7,001-10,000 Individuals", "10,001- 20,000 Individuals", "> 20,000 Individuals"))
+
+x <- x %>% filter(ScientificName %in% counts$ScientificName)
+x <- merge(x,counts)
+# table(x$Genus)
+
+# plot
+g <- ggplot(x, aes(reorder(ScientificName, as.numeric(DepthInMeters), FUN=median), as.numeric(DepthInMeters),fill=abundance_cat)) + 
+  geom_boxplot() +
+  scale_y_reverse() +
+  # ylim(2000,1500) +
+  ylab("Depth (meters)") + 
+  xlab("Taxon") +
+  labs(fill = "Abundance Classes") +
+  theme_bw(base_size = 22, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0, face = 'italic'))#  +
+  #geom_hline(yintercept = 300, col = 'grey')
+
+g + scale_fill_manual(values = rev(brewer.pal(10,'Spectral')))
+# set.seed(8)
+# g + scale_fill_manual(values = sample(big_palette))
+# g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+```
+
+
+#### Figure: Coral community (South - Shallow) 
+
+``` {r south_shallow, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+latlimit <- 10
+depthlimit <- 1000
+
+x <- d %>% filter(
+  #is.na(Genus) == T,
+  # Order != "Alcyonacea",
+  Phylum == "Cnidaria", 
+  as.numeric(Latitude) < latlimit,
+  as.numeric(DepthInMeters) < depthlimit,
+  # grepl('Wake', Locality)
+  )
+
+# limit x by count
+nlimit <- 10
+counts <- x %>% group_by(ScientificName) %>% summarize(IndividualCount_sum = sum(IndividualCount))
+counts <- counts %>% filter(IndividualCount_sum > nlimit)
+counts$abundance_cat <- NA
+counts$abundance_cat[counts$IndividualCount_sum > 0 & counts$IndividualCount_sum <= 1000] <- "0-1,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 1000 & counts$IndividualCount_sum <= 2000] <- "1,001-2,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 2000 & counts$IndividualCount_sum <= 3000] <- "2,001-3,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 3000 & counts$IndividualCount_sum <= 4000] <- "3,001-4,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 4000 & counts$IndividualCount_sum <= 5000] <- "4,001-5,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 5000 & counts$IndividualCount_sum <= 6000] <- "5,001-6,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 6000 & counts$IndividualCount_sum <= 7000] <- "6,001-7,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 7000 & counts$IndividualCount_sum <= 10000] <- "7,001-10,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 10000 & counts$IndividualCount_sum <= 20000] <- "10,001- 20,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 20000] <- "> 20,000 Individuals"
+counts$abundance_cat <- factor(counts$abundance_cat, levels = c("0-1,000 Individuals", "1,001-2,000 Individuals", "2,001-3,000 Individuals", "3,001-4,000 Individuals", "4,001-5,000 Individuals", "5,001-6,000 Individuals", "6,001-7,000 Individuals", "7,001-10,000 Individuals", "10,001- 20,000 Individuals", "> 20,000 Individuals"))
+
+x <- x %>% filter(ScientificName %in% counts$ScientificName)
+x <- merge(x,counts)
+# table(x$Genus)
+
+# plot
+g <- ggplot(x, aes(reorder(ScientificName, as.numeric(DepthInMeters), FUN=median), as.numeric(DepthInMeters),fill=abundance_cat)) + 
+  geom_boxplot() +
+  scale_y_reverse() +
+  # ylim(2000,1500) +
+  ylab("Depth (meters)") + 
+  xlab("Taxon") +
+  labs(fill = "Abundance Classes") +
+  theme_bw(base_size = 22, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0, face = 'italic'))#  +
+  #geom_hline(yintercept = 300, col = 'grey')
+
+g + scale_fill_manual(values = rev(brewer.pal(10,'Spectral')))
+# set.seed(8)
+# g + scale_fill_manual(values = sample(big_palette))
+# g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+```
+
+#### Figure: Coral community (South - Deep) 
+
+``` {r south_deep, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+latlimit <- 10
+depthlimit <- 1000
+
+x <- d %>% filter(
+  # is.na(Genus) == T,
+  # Order != "Alcyonacea",
+  Phylum == "Cnidaria", 
+  as.numeric(Latitude) < latlimit,
+  as.numeric(DepthInMeters) > depthlimit,
+  # grepl('Wake', Locality)
+  )
+
+# limit x by count
+nlimit <- 10
+counts <- x %>% group_by(ScientificName) %>% summarize(IndividualCount_sum = sum(IndividualCount))
+counts <- counts %>% filter(IndividualCount_sum > nlimit)
+counts$abundance_cat <- NA
+counts$abundance_cat[counts$IndividualCount_sum > 0 & counts$IndividualCount_sum <= 1000] <- "0-1,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 1000 & counts$IndividualCount_sum <= 2000] <- "1,001-2,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 2000 & counts$IndividualCount_sum <= 3000] <- "2,001-3,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 3000 & counts$IndividualCount_sum <= 4000] <- "3,001-4,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 4000 & counts$IndividualCount_sum <= 5000] <- "4,001-5,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 5000 & counts$IndividualCount_sum <= 6000] <- "5,001-6,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 6000 & counts$IndividualCount_sum <= 7000] <- "6,001-7,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 7000 & counts$IndividualCount_sum <= 10000] <- "7,001-10,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 10000 & counts$IndividualCount_sum <= 20000] <- "10,001- 20,000 Individuals"
+counts$abundance_cat[counts$IndividualCount_sum > 20000] <- "> 20,000 Individuals"
+counts$abundance_cat <- factor(counts$abundance_cat, levels = c("0-1,000 Individuals", "1,001-2,000 Individuals", "2,001-3,000 Individuals", "3,001-4,000 Individuals", "4,001-5,000 Individuals", "5,001-6,000 Individuals", "6,001-7,000 Individuals", "7,001-10,000 Individuals", "10,001- 20,000 Individuals", "> 20,000 Individuals"))
+
+x <- x %>% filter(ScientificName %in% counts$ScientificName)
+x <- merge(x,counts)
+# table(x$Genus)
+
+# plot
+g <- ggplot(x, aes(reorder(ScientificName, as.numeric(DepthInMeters), FUN=median), as.numeric(DepthInMeters),fill=abundance_cat)) + 
+  geom_boxplot() +
+  scale_y_reverse() +
+  # ylim(2000,1500) +
+  ylab("Depth (meters)") + 
+  xlab("Taxon") +
+  labs(fill = "Abundance Classes") +
+  theme_bw(base_size = 22, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0, face = 'italic'))#  +
+  #geom_hline(yintercept = 300, col = 'grey')
+
+g + scale_fill_manual(values = rev(brewer.pal(10,'Spectral')))
+# set.seed(8)
+# g + scale_fill_manual(values = sample(big_palette))
+# g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+```
+
+
+```{r setdepthclass, echo=FALSE, cache = FALSE} 
+
+##### setting depth categories ##### 
+d$DepthCat[as.numeric(d$DepthInMeters) <= 1000] <- "shallow"
+d$DepthCat[as.numeric(d$DepthInMeters) > 1000] <- "deep"
+d$DepthCat <- factor(d$DepthCat, levels = c("shallow", "deep"))
+
+##### setting location categories ##### 
+d$loc[as.numeric(d$Latitude) > 10] <- "north"
+d$loc[as.numeric(d$Latitude) < 10] <- "south"
+
+##### setting temperature categories #####
+d$temp_cat[as.numeric(d$Temperature) > 5] <- "warm: > 5"
+d$temp_cat[as.numeric(d$Temperature) >= 3 & as.numeric(d$Temperature) <= 5] <- "cold: 3 to 5"
+d$temp_cat[as.numeric(d$Temperature) < 3] <- "colder: less than 3"
+d$temp_cat <- factor(d$temp_cat, levels = c("warm: > 5", "cold: 3 to 5", "colder: less than 3"))
+
+##### setting oxygen categories #####
+# qplot(as.numeric(d$Oxygen))
+d$ox_cat[as.numeric(d$Oxygen) >= 4] <- "rich"
+d$ox_cat[as.numeric(d$Oxygen) < 4] <- "poor"
+
+##### longitude cat #####
+d$longloc[as.numeric(d$Longitude) > 90] <- "west"
+d$longloc[as.numeric(d$Longitude) < 90] <- "east"
+
+```
+
+### Figure: NMDS Plots (all dives)
+Each dive is represented by a colored dot. Taxa are represented by the '+' signs.  In the first figure, categorical depth is used for coloring the dive dots. Depth breaks used were; shallow: 0-1000m, deep: 1000m and below. In the second figure, categorical temperature is used to color the dots.  It is obvious from these plots the main determinant of differences in community composition is depth and it is likely a proxy for temperature.  It is much less clear at this point what is driving the separation along NMDS2. In the third figure, dots are colored by whether the site was located at greater than 10 degrees latitude (north) or less than 10 degrees latitude (south).  The community separation is not clear in this last one. Also, more shallow sites were sampled in the south and a greater number of the dives in the north were at deeper sites.    
+
+
+``` {r NMDS, echo=FALSE, cache = FALSE, dpi=300, warning=FALSE, message=FALSE, results='hide', cache=T}
+
+x <- d %>% 
+  filter(
+    #DepthCat == 'deep',
+    #EventID != "D2-EX1605L1-13"
+    #Phylum == "Porifera"
+  )
+
+##### create site X species matrix #####
+library(vegan)
+site.sp <- dcast(x, EventID ~ ScientificName, value.var = "IndividualCount", fun.aggregate = sum)
+
+# setwd("C:/rworking/digs/outdata")
+# write.csv(site.sp, 'site.sp.csv')
+
+# creating a site variable
+site.sp$site <- site.sp$EventID
+
+# getting rid of non-needed variables
+site.sp <- site.sp %>%
+  dplyr::select(-EventID)
+
+# # moving the site variable to the beginning
+# col_idx <- grep("site", names(site.sp))
+# site.sp <- site.sp[, c(col_idx, (1:ncol(site.sp))[-col_idx])]
+# # names(site.sp)
+
+# set the site as the row.names
+row.names(site.sp) <- site.sp$site
+
+# remove the site variable
+site.sp <- site.sp %>%
+  dplyr::select(-site)
+
+# making it a matrix
+site.sp <- as.matrix(site.sp)
+
+##### running NMDS starting with site X species matrix #####
+#install.packages("vegan")
+library(vegan)
+NMDS <- metaMDS(site.sp, distance = "jaccard", binary = F, k=3, trymax = 30)
+
+##### extracting the site and species scores for use with ggplot2 ##### 
+#Using the scores function from vegan to extract the site scoresand convert to a data.frame
+site.scores <- as.data.frame(scores(NMDS))  
+site.scores$site <- rownames(site.scores)  # create a column of site names, from the rownames of data.scores
+# head(site.scores)  #look at the data
+# merge information from d (to get categories)
+site.scores <- merge(site.scores, x, by.x = 'site', by.y = 'EventID')
+site.scores <- site.scores %>% group_by(site) %>% summarise(NMDS1 = NMDS1[1],
+                                                            NMDS2 = NMDS2[1],
+                                                            DepthCat = DepthCat[1],
+                                                            temp_cat = temp_cat[1],
+                                                            loc = loc[1])
+
+
+# extracting species scores
+species.scores <- as.data.frame(scores(NMDS, "species"))  #Using the scores function from vegan to extract the species scores and convert to a data.frame
+species.scores$species <- rownames(species.scores)  # create a column of species, from the rownames of species.scores
+# head(species.scores)  #look at the data
+species.scores$spec_code <- 1:(length(species.scores$species))
+
+NMDS
+
+##### plotting NMDS ##### 
+ggplot() +
+  geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=DepthCat), size=5) + # add the point markers
+  geom_text(data=site.scores,aes(x=NMDS2,y=NMDS1, label = site), size=4, position = position_nudge(y = .0001)) + # add the text
+  #geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3, size=4) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+
+ggplot() +
+  geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=temp_cat), size=5) + # add the point markers
+  geom_text(data=site.scores,aes(x=NMDS2,y=NMDS1, label = site), size=4, position = position_nudge(y = .0001)) + # add the text
+  #geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3, size=4) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+ggplot() +
+  geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=loc), size=5) + # add the point markers
+  geom_text(data=site.scores,aes(x=NMDS2,y=NMDS1, label = site), size=4, position = position_nudge(y = .0001)) + # add the text
+  #geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3, size=4) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+
+ggplot() +
+  #geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=loc), size=5) + # add the point markers
+  geom_text(data=species.scores,aes(x=NMDS2,y=NMDS1, label = spec_code), size=4, position = position_nudge(y = .0001)) + # add the text
+  geom_point(data=species.scores,aes(x=NMDS2,y=NMDS1), shape = 3, size=4) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+print(NMDS)
+```
+
+Table of species codes (key to the lables in the species score NMDS plot above)
+
+```{r spec_codes, echo=F}
+x <- species.scores %>%  dplyr::select(spec_code)
+
+kable(x)
+
+```
+
+## Diversity estimates.
+
+##### Table: Shannon diversity per EventID
+All taxa (both coral and sponges at all taxonomic ranks included in estimates): [LINK](https://drive.google.com/open?id=1PWfh5Tc6Fk8mM4jHeNe31XesLXDzW1np)
+
+```{r diversity, echo=F}
+
+plots <- diversity(site.sp, index = "shannon") #makes an object
+#that the diversity values #are written to.
+# summary(plots) #gives summary statistics for the plots
+# median(plots) #gives the median
+# mean(plots) #gives the mean
+# class(plots)
+# max(plots[1:30])
+# # View(plots)
+
+# creating plots
+plots_df <- data.frame(plots)
+# View(plots_df)
+plots_df$EventID <- row.names(plots_df)
+# names(d)
+d <- merge(d, plots_df, all.x = T)
+# length(d$EventID)
+# length(unique(d$EventID))
+x <- d %>% group_by(EventID, plots) %>% summarize(n=n(), 
+                                                 Latitude = paste(mean(as.numeric(Latitude)), collapse = ' | '), 
+                                                 Longitude = paste(mean(as.numeric(Longitude)), collapse = ' | '))
+#View(x)
+
+setwd("C:/rworking/deepseatools/reports")
+write.xlsx(x, '20190725-0_Summary_of_Corals_and_Sponges_Diversity_by_EventID.xlsx') 
+
+## Calculating various Diversity Indices
+
+# H <- diversity(site.sp)
+# simp <- diversity(site.sp, "simpson")
+# invsimp <- diversity(site.sp, "inv")
+# ## Unbiased Simpson (Hurlbert 1971, eq. 5) with rarefy:
+# unbias.simp <- rarefy(site.sp, 2) - 1
+# ## Fisher alpha
+# alpha <- fisher.alpha(site.sp)
+# ## Plot all
+# pairs(cbind(H, simp, invsimp, unbias.simp, alpha, J), pch="+", col="blue")
+# ## Species richness (S) and Pielou's evenness (J):
+# S <- specnumber(site.sp) ## rowSums(site.sp > 0) does the same...
+# J <- H/log(S)
+
+
+
+```
+
+
+```{r mapping_diversity , echo=FALSE, eval=F}
+
+
+x$Latitude <- as.numeric(x$Latitude)
+x$Longitude <- as.numeric(x$Longitude)
+
+pal <- colorNumeric(
+  palette = "Reds",
+  domain = x$plots)
+
+
+m <- leaflet()
+m <- addProviderTiles(m, "Esri.OceanBasemap") #Esri.OceanBasemap, "CartoDB.DarkMatter"
+m <- addCircleMarkers(m, data=x,
+                      radius=5,
+                      weight=0,
+                      #fillColor= "green",
+                      color = ~pal(plots),
+                      fillOpacity=1,
+                      popup = paste("EventID:", x$EventID, "<br>"))
+                                   
+m
+
+```
+
+
+## Summary of community composition at each EventID.  
+
+#### Figure: 56 figures follow, one per each EventID. (To find a specific EventID use ctrl-F in Word.)
+
+Figures are arranged by ascending order of EventID. Each figure represents 'top 10' taxa in each EventID. The list (legend) on the side of the figure is in rank order and the color blocks are also in rank order by sum of IndividualCount as a proportion of total.Colors between figures m represent different taxa, because there are differing Top 10 taxa. All taxa, sponges and corals, were used regardless of TaxonRank. To find a specific EventID use ctrl-F in Word.
+
+```{r communities_by_eventID, echo=F, eval=F}
+
+z <- d %>% 
+  filter(EventID == "D2-EX1504L2-02" |
+           EventID == "D2-EX1504L2-06" |
+           EventID == "D2-EX1504L2-07") %>%
+  arrange(EventID)
+
+for (id in unique(z$EventID)){
+  
+x <- d %>% filter(EventID == id) %>% 
+  group_by(EventID, ScientificName) %>% 
+  summarize(IndividualCount_sum = sum(IndividualCount)) %>% 
+  arrange(desc(IndividualCount_sum))
+
+x <- x[1:10,]
+
+y <- d %>% filter(ScientificName %in% x$ScientificName,
+                  EventID == id)
+
+y$ScientificName <- factor(y$ScientificName, levels = c(x$ScientificName))
+
+# Stacked Percent
+print(
+  ggplot(y, aes(x <- EventID, y = IndividualCount, fill = ScientificName)) + 
+  geom_bar(stat = 'identity', position = 'fill') + 
+  scale_fill_brewer(palette = "Spectral") +
+  ylab("Individual Count (proportion)") + 
+  #xlab("EventID") +
+  labs(fill = "Taxa") +
+  theme_bw(base_size = 22, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 0, hjust = .5, vjust = 0, face = 'italic'), 
+        axis.title.x = element_blank()) + 
+    guides(fill = guide_legend(label.theme = element_text(face = 'italic', family = "Cambria", size = 16)))
+     
+)
+
+print(unique(y$EventID))
+
+}
+
+
+```
+

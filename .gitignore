@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+/github
+/bookdown-minimal-master
+/indata
+/reports
+.httr-oauth
+

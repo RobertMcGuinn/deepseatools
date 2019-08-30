@@ -1,0 +1,106 @@
+---
+title: "Data Holdings: MBARI and Pacific FMC"
+author: "Robert P. McGuinn"
+date: "Report last ran on: `r Sys.Date()`"
+output: word_document
+---
+
+```{r opts, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(fig.width=6.5, fig.height=4, warning = FALSE, dpi = 300) 
+options(scipen=10000)
+```
+
+```{r variables, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+version <- '20181005_0'
+```
+
+```{r filters, echo=FALSE}
+# filter
+db <- filt
+pac <- db %>% filter(FishCouncilRegion == "Pacific")
+mbari <- db %>% filter(DatasetID == "MBARI")
+```
+
+### Database Version:
+`r version` 
+
+### Number of records in entire National Database:
+`r prettyNum(length(db$CatalogNumber), big.mark = ",")` 
+
+### Number of records within the Pacific Fishery Management Council Region:
+`r prettyNum(length(pac$CatalogNumber), big.mark = ",")`
+
+### Number of records contributed by MBARI:
+`r prettyNum(length(mbari$CatalogNumber), big.mark = ",")`
+
+### Depth distribution by Fishery Management Council Region in entire database:
+*Note*: Depths shallower than 50m in the database are flagged (see 'ShallowFlag' variable in the database)
+
+``` {r depth_db, echo=FALSE}
+##### Boxplot of depth by FishCouncilRegion #####
+filt2 <- filt %>% 
+  filter(DepthInMeters != "-999")
+  
+g <- ggplot(db, aes(factor(FishCouncilRegion), as.numeric(DepthInMeters), color = Phylum)) +   geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("FishCouncilRegion") + 
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+
+# Whole Database
+
+###Minimum Depth in Database: 
+`r min(as.numeric(db$DepthInMeters))` meters
+
+###Median Depth in Database: 
+`r median(db$DepthInMeters)` meters
+
+###Maximum Depth in Database: 
+`r max(db$DepthInMeters)` meters
+
+
+# Pacific
+
+###Depth distribution within Pacific Fishery Management Council Region:
+``` {r depth_pacific, echo=FALSE}
+##### Boxplot of depth by FishCouncilRegion #####
+
+g <- ggplot(pac, aes(factor(FishCouncilRegion), as.numeric(DepthInMeters), color = Phylum)) +   geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("FishCouncilRegion") + 
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+###Minimum Depth in Pacific Fishery Management Council Region: 
+`r min(pac$DepthInMeters)` meters
+
+###Median Depth in Pacific Fishery Management Council Region: 
+`r median(pac$DepthInMeters)` meters
+
+###Maximum Depth in Pacific Fishery Management Council Region: 
+`r max(pac$DepthInMeters)` meters
+
+
+# MBARI
+
+###Minimum observation date for MBARI records: 
+`r min(as.Date(mbari$ObservationDate))`
+
+###Median observation date for MBARI records: 
+`r median(as.Date(mbari$ObservationDate))`
+
+###Maximum observation date for MBARI records: 
+`r max(as.Date(mbari$ObservationDate))`

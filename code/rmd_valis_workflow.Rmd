@@ -1,0 +1,1434 @@
+---
+title: "Southeast US Deep Sea Community Analysis"
+author: "Robert P. McGuinn"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: word_document
+---
+
+```{r installpackages, echo = FALSE, warning=FALSE, message=FALSE, cache=FALSE}
+#install.packages("pacman")
+# library(pacman)
+# #pacman::p_load(captioner, bundesligR)
+# library(captioner, bundesligR)
+# #install.packages("beanplot")
+# library(beanplot)
+# #install.packages("stringr")
+# library(stringr)
+# install.packages("knitr")
+# library(knitr)
+# #install.packages("tidyr")
+# library(tidyr)
+#install.packages("sp")
+library(sp)
+# #install.packages("maptools")
+# library(maptools)
+# #install.packages("maps")
+# library(maps)
+# #install.packages("reshape")
+# library(reshape)
+# #install.packages("reshape2")
+# library(reshape2)
+# #install.packages("psych")
+# library(psych)
+# install.packages("ggplot2")
+# library(ggplot2)
+# #install.packages("data.table")
+# library(data.table)
+# install.packages("tidyverse")
+library(tidyverse)
+# #install.packages("car")
+# library(car)
+# #install.packages("gdata")
+# library(gdata)
+# #install.packages("digest")
+# library(digest)
+# #install.packages("rgdal")
+# library(rgdal)
+# #install.packages("ggmap")
+# library(ggmap)
+# #install.packages("rerddap")
+# library(rerddap)
+# #install.packages("raster")
+# library(raster)
+# #install.packages("rworldxtra")
+# library(rworldxtra)
+# #install.packages("ggrepel")
+# library(ggrepel)
+# #install.packages("xtable")
+# library(xtable)
+# library(taxize)
+# library(rgdal)
+# library(dplyr)
+# #install.packages("tidyverse")
+# library(tidyverse)
+# install.packages('leaflet')
+library(leaflet)
+# install.packages('extrafont')
+library(extrafont)
+# install.packages('RColorBrewer')
+library(RColorBrewer)
+# install.packages('googlesheets')
+library(googlesheets)
+# install.packages('googledrive')
+library(googledrive)
+library(rmarkdown)
+library(knitr)
+#install.packages("maps")
+library(maps)
+#install.packages("rgdal")
+library(rgdal)
+#install('raster')
+library(raster)
+#install.packages("spocc")
+library(spocc)
+library(arcgisbinding)
+arc.check_product()
+
+```
+
+```{r dataprep, cache = FALSE, echo=FALSE}
+
+##### _____ Import data from precurser file
+
+# setwd("C:/rworking/valis/indata")
+# d <-read.csv("C:/rworking/valis/indata/20170129_0_DSCRTP_NatDB_20171214_0_Subset_Plus_Ocean_Sciencies_RPMcGuinn.csv")
+# 
+# ##### bringing in and modifying join table ##### 
+# setwd('C:/rworking/valis/indata')
+# d <- read.csv('join_protected_20180206_0.csv', header = T)
+# 
+# d$Ecoregion <- d$Ecoregn
+# d$Join_Count <- as.character(d$Join_Count)
+# d2 <- d %>% mutate(Join_Count = ifelse(Join_Count == '1' | Join_Count == '2', '1', as.character(Join_Count)))
+# d2 <- d2 %>% mutate(Join_Count = ifelse(Join_Count == '1', 'Inside Managed Area', as.character(Join_Count)))
+# d2 <- d2 %>% mutate(Join_Count = ifelse(Join_Count == '0', 'Outside Managed Area', as.character(Join_Count)))
+# d2 <- d2 %>% mutate(Ecoregion = ifelse(Ecoregion == 'N_Carolinean', 'North Carolinian', as.character(Ecoregion)))
+# d2 <- d2 %>% mutate(Ecoregion = ifelse(Ecoregion == 'South Carolinean', 'South Carolinian', as.character(Ecoregion)))
+
+##### _____ Import data from tom hourigan #####
+setwd("C:/rworking/valis/indata")
+d <- read.csv('20180130_0_Genus_NoFlag_TH.csv')
+
+d <- d %>%
+  filter(Flag == '0' | Flag == '2', 
+         ObservationYear != "-999",
+         DepthInMeters != "-999", 
+         is.na(Phylum)== F)
+options(digits = 1)
+
+# ##### merge data #####
+# x <- merge(d2,filt, by.x = 'CtlgNmb', by.y = 'CatalogNumber', all.x = TRUE )
+
+# changing levels of 'Ecoregion'
+d <- d %>% mutate(Ecoregion = ifelse(Ecoregion == 'N_Carolinean', 'North Carolinian', as.character(Ecoregion)))
+d <- d %>% mutate(Ecoregion = ifelse(Ecoregion == 'South Carolinean', 'South Carolinian', as.character(Ecoregion)))
+
+# ##### creating a geographic bounding box (south atlantic) ##### 
+# minLon <- -84
+# maxLon <- -73 
+# minLat <- 22
+# maxLat <- 37
+# 
+# ##### filtering data by bounding box #####
+# geofilt <- 
+#   filt2 %>% filter(as.numeric(Latitude) > minLat, 
+#                        as.numeric(Latitude) < maxLat, 
+#                        as.numeric(Longitude) < maxLon,
+#                        as.numeric(Longitude) > minLon)
+
+##### writing data to geodatabase #####
+
+# fgdb_path <- 'C:/data/aprx/explore/explore.gdb'
+# arc.write(file.path(fgdb_path, 'natdb/sub'), data=geofilt, coords=c('Longitude', 'Latitude', 'DepthInMeters'),
+#           shape_info=list(type='Point',hasZ=TRUE, WKID=4326), overwrite = TRUE)
+# 
+# fgdb_path <- 'C:/data/aprx/explore/explore.gdb'
+# arc.write(file.path(fgdb_path, 'natdb/sub2'), data=filt2, coords=c('Longitude', 'Latitude', 'DepthInMeters'),
+#           shape_info=list(type='Point',hasZ=TRUE, WKID=4326), overwrite = TRUE)
+# 
+# fgdb_path <- 'C:/data/aprx/explore/explore.gdb'
+# arc.write(file.path(fgdb_path, 'natdb/sub5'), data=x, coords=c('Longitude', 'Latitude', 'DepthInMeters'),
+#           shape_info=list(type='Point',hasZ=TRUE, WKID=4326), overwrite = TRUE)
+```
+
+``` {r DepthClassTable, echo=FALSE, cache = FALSE} 
+##### setting depth class DepthCat2 - 2 class #####
+d$DepthCat2[d$DepthInMeters <= 300] <- "0-300 m"
+d$DepthCat2[d$DepthInMeters > 300 & d$DepthInMeters <= 2000] <- "300-2000 m"
+d$DepthCat2 <- factor(d$DepthCat2, levels = c("0-300 m", "300-2000 m"))
+
+##### checking ##### 
+# table(d$DepthCat2)
+
+##### setting depth class DepthCat4 - 4 class ##### 
+d$DepthCat4[d$DepthInMeters < 150] <- "< 150 m"
+d$DepthCat4[d$DepthInMeters > 150 & d$DepthInMeters <= 300] <- "150-300 m"
+d$DepthCat4[d$DepthInMeters > 300 & d$DepthInMeters <= 600] <- "300-600 m"
+d$DepthCat4[d$DepthInMeters > 600] <- "> 600 m"
+d$DepthCat4 <- factor(d$DepthCat4, levels = c("< 150 m", "150-300 m","300-600 m", "> 600 m" ))
+
+##### checking ##### 
+# table(d$DepthCat4)
+# qplot(d$DepthInMeter, binwidth=1)
+# qplot(d$DepthCat2)
+# qplot(d$DepthCat4)
+
+
+```
+
+``` {r genera_list echo=FALSE}
+##### creating list of specific genera from Tom #####
+genera_1 <- c('Phyllangia',
+              'Renilla',
+              'Leptogorgia',
+              'Titanideum',
+              'Balanophyllia',
+              'Stichopathes',
+              'Ellisella',
+              'Tanacetipathes',
+              'Diodogorgia', 
+              'Nidalia',
+              'Telesto',
+              'Oculina',
+              'Cladocora',
+              'Thesea',
+              'Paracyathus',
+              'Dasmosmilia',
+              'Polymyces')
+
+genera_2 <- c('Bathypathes',
+              'Stylaster',
+              'Paramuricea',
+              'Plumarella',
+              'Thecopsammia',
+              'Leiopathes',
+              'Deltocyathus',
+              'Madrepora',
+              'Lophelia',
+              'Enallopsammia',
+              'Bathypsammia',
+              'Swiftia',
+              'Javania',
+              'Pseudodrifa',
+              'Clavularia',
+              'Anthomastus',
+              'Acanella',
+              'Keratoisis',
+              'Eunicella'
+)
+
+genera <- c('Phyllangia',
+            'Renilla',
+            'Leptogorgia',
+            'Titanideum',
+            'Balanophyllia',
+            'Stichopathes',
+            'Ellisella',
+            'Tanacetipathes',
+            'Diodogorgia', 
+            'Nidalia',
+            'Telesto',
+            'Oculina',
+            'Cladocora',
+            'Thesea',
+            'Paracyathus',
+            'Dasmosmilia',
+            'Polymyces',
+            'Bathypathes',
+            'Stylaster',
+            'Paramuricea',
+            'Plumarella',
+            'Thecopsammia',
+            'Leiopathes',
+            'Deltocyathus',
+            'Madrepora',
+            'Lophelia',
+            'Enallopsammia',
+            'Bathypsammia',
+            'Swiftia',
+            'Javania',
+            'Pseudodrifa',
+            'Clavularia',
+            'Anthomastus',
+            'Acanella',
+            'Keratoisis',
+            'Eunicella'
+)
+
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      #fig.height = 4.5,
+                      #fig.width = 7.5,
+                      fig.height = 9.5,
+                      fig.width = 17
+                      )
+
+```
+
+```{r building_pallette, echo=FALSE}
+
+##### building big pallette #####
+# display.brewer.all()
+# to get the colors from a palette:
+palette1 <- brewer.pal(9,"Set1")
+palette2 <- brewer.pal(8,"Set2")
+palette3 <- brewer.pal(9,"Set3")
+palette4 <- brewer.pal(8,"Dark2")
+palette5 <- brewer.pal(8,"Accent")
+
+# We can just stick a few color palettes together
+big_palette <- c(palette1,palette2,palette3, palette4, palette5)
+
+image(1:40,1,as.matrix(1:40),col=big_palette,xlab="big",
+ylab="",xaxt="n",yaxt="n",bty="n")
+
+set.seed(10)
+image(1:40,1,as.matrix(1:40),col=sample(big_palette),xlab="big",
+ylab="",xaxt="n",yaxt="n",bty="n")
+
+# Classic palette BuPu, with 4 colors
+coul4 = brewer.pal(4, "BuPu") 
+image(1:4,1,as.matrix(1:4),col=coul4,xlab="coul",
+ylab="",xaxt="n",yaxt="n",bty="n")
+ 
+# I can add more tones to this palette :
+coul25 = colorRampPalette(coul4)(25)
+image(1:25,1,as.matrix(1:25),col=coul25,xlab="coul25",
+ylab="",xaxt="n",yaxt="n",bty="n")
+
+# display.brewer.all()
+
+# Classic palette BuPu, with 4 colors
+set4 = brewer.pal(4, "Set1") 
+image(1:4,1,as.matrix(1:4),col=set4,xlab="set4",
+ylab="",xaxt="n",yaxt="n",bty="n")
+ 
+# I can add more tones to this palette :
+set50 = colorRampPalette(set4)(50)
+image(1:50,1,as.matrix(1:50),col=set50,xlab="set50",
+ylab="",xaxt="n",yaxt="n",bty="n")
+
+```
+
+```{r depthsummarytable}
+sum_tbl <-
+  as.data.frame(d) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(MedianDepth)
+options(scipen=10000)
+#View(sum_tbl)
+
+# sum_tbl <- sum_tbl %>%
+#   filter(Records > 30)
+
+##### write sub_tbl #####
+#View(sum_tbl)
+setwd("C:/rworking/valis/outdata")
+write.csv(sum_tbl, "20181107_taxa_by_depth_summary_south_atlantic_RPMcGuinn.csv")
+
+```
+
+######Figure 1: North Carolinean ecoregion - all depths. These data are filtered for genera that have more than 30 occurrence.  
+
+``` {r ordered histograms1, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+d2 <- d %>%
+  filter(Genus %in% genera, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'North Carolinian',
+         as.numeric(DepthInMeters) < 1250 )
+
+g <- ggplot(d2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 14, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+  #geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey')# +
+  #geom_hline(yintercept = 600, col = 'grey')
+
+# g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+set.seed(8)
+g + scale_fill_manual(values = sample(big_palette))
+
+set.seed(2)
+pie<-pie(rep(1, length(sample(big_palette)), col = sample(big_palette) , main="")) 
+
+```
+
+######Figure 2: South Carolinean ecoregion - all depths. These data are filtered for genera that have more than 30 occurrences.  
+
+``` {r ordered histograms2, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+##### summarize at the genera level ##### 
+sum_tbl <-
+  as.data.frame(d) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+# filter to those genera where we have greater than 30 records
+sum_tbl <- sum_tbl %>%
+  filter(Records > 30)
+
+
+d2 <- as.data.frame(d) %>%
+  filter(Genus %in% sum_tbl$Genus, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'South Carolinian',
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) < 1250 )
+
+# 'fill = Order' below is optional and you can control your pallette
+
+g <- ggplot(d2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters), fill = Order)) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 14, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  + 
+  #geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey')# +
+  #geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+levels(d2$Order)
+```
+
+######Figure 3: Floridian ecoregion - all depths. These data are filtered for genera that have more than 30 occurrences.
+
+``` {r ordered histograms3, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+sum_tbl <-
+  as.data.frame(d) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 30)
+
+d2 <- as.data.frame(d) %>%
+  filter(Genus %in% sum_tbl$Genus, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'Floridian',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) < 1250 )
+g <- ggplot(d2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 14, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey')# +
+#  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+```
+
+######Figure 4: Bean plots of 'DepthInMeters' by 'Genus'. This depicts the genera ranked 1-6 by number of records within the study region.
+
+```{r Genus1, echo=FALSE, cache = FALSE, dpi=300}
+sum_tbl <-
+  as.data.frame(d) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    Records = n()) %>%
+  arrange(desc(Records))
+
+d2 <- as.data.frame(d) %>%
+  filter(Genus %in% sum_tbl$Genus[2:7])
+g <- ggplot(d2, aes(factor(Genus), as.numeric(DepthInMeters))) +   
+  geom_violin() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  facet_wrap(~Order) +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5)])
+
+```
+
+######Figure 5: Bean plots of 'DepthInMeters' by 'Genus'. This depicts the genera ranked 7-12 by number of records within the study region.
+
+
+```{r Genus2, echo=FALSE, cache = FALSE, dpi=300}
+d2 <- as.data.frame(d) %>%
+  filter(Genus %in% sum_tbl$Genus[8:13])
+
+g <- ggplot(d2, aes(factor(Genus), as.numeric(DepthInMeters))) +   geom_violin() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  facet_wrap(~Order) +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5)])
+```
+
+######Figure 6: Bean plots of 'DepthInMeters' by 'Genus'. This depicts the genera ranked 13-18 by number of records within the study region.  
+
+```{r Genus3, echo=FALSE, cache = FALSE, dpi=300}
+d2 <- as.data.frame(d) %>%
+  filter(Genus %in% sum_tbl$Genus[14:19])
+g <- ggplot(d2, aes(factor(Genus), as.numeric(DepthInMeters))) +   
+  geom_violin() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  facet_wrap(~Order) +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5)])
+```
+
+######Figure 7: Bean plots of 'DepthInMeters' by 'Genus'. This depicts the genera ranked 19-24 by number of records within the study region.  
+
+```{r Genus4, echo=FALSE, cache = FALSE, dpi=300}
+
+d2 <- as.data.frame(d) %>%
+  filter(Genus %in% sum_tbl$Genus[20:25])
+g <- ggplot(d2, aes(factor(Genus), as.numeric(DepthInMeters))) +   geom_violin() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  facet_wrap(~Order) +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5)])
+```
+
+######Figure 8: Shows the number of records within each Depth Category regardless of subregion. 
+
+``` {r DepthClassPlotFacet, echo=FALSE, cache = FALSE, dpi=300} 
+
+options(scipen=10000)
+d <- as.data.frame(d) %>%
+  filter(Ecoregion != 'Virginian' , is.na(Ecoregion) == F)
+g <- ggplot(as.data.frame(d), aes(DepthCat4, fill = Order)) +
+  geom_bar() + 
+  coord_flip() + 
+  theme(text = element_text(size=20)) + 
+  ylab("Number of Records") + 
+    xlab("Depth Zone") + 
+    scale_x_discrete(limits = rev(levels(d$DepthCat4))) + 
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+set.seed(8)
+g + scale_fill_manual(values = sample(big_palette))
+
+```
+
+######Figure 9: shows the number of records within each Depth Category, faceted by Ecoregion.
+ 
+``` {r DepthClassPlot, echo=FALSE, cache = FALSE, dpi=300} 
+png(file="mygraphic.png",width=1000,height=623)
+options(scipen=10000)
+d$Ecoregion <- factor(d$Ecoregion, levels = c('North Carolinian', 'South Carolinian', 'Floridian'))
+d <- as.data.frame(d) %>%
+  filter(Ecoregion != 'Virginian' , is.na(Ecoregion) == F)
+g <- ggplot(as.data.frame(d), aes(DepthCat4, fill = Order)) +
+  geom_bar() + 
+  coord_flip() + 
+  theme(text = element_text(size=20)) + 
+  facet_wrap(~Ecoregion) +
+  ylab("Number of Records") + 
+    xlab("Depth Zone") + 
+    scale_x_discrete(limits = rev(levels(d$DepthCat4))) +
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+set.seed(8)
+g + scale_fill_manual(values = sample(big_palette))
+dev.off()
+```
+
+######Figure 10: NMDS results on 12 sites (4 Depth zones, by 3 Ecoregions)
+
+``` {r NMDS, echo=FALSE, cache = FALSE, dpi=300, warning=FALSE, message=FALSE, results='hide'}
+
+##### start empty subset varialble #####
+d$rep <- NA
+
+##### summarize unique genera and set threshold#####
+sum_tbl <-
+  as.data.frame(d) %>%
+  group_by(Genus) %>%
+  summarize(
+    Records = n()
+  )
+sum_tbl <- sum_tbl %>%
+  filter(Records > 30)
+
+# select threshold for number of occurrences 
+# over the project area of interest.
+##### Select only genera to be included as specfied above #####
+d2 <- d %>%
+  filter(Genus %in% sum_tbl$Genus)
+
+# setdiff(unique(d2$Genus), genera_1)
+# setdiff(genera_1, unique(d2$Genus))
+
+##### Populate IndividualCount with 1 #####
+
+d2$IndividualCount = 1
+
+##### create site X species matrix #####
+library(vegan)
+site.sp <- cast(d2, Ecoregion + DepthCat4 ~ Genus, 
+                value='IndividualCount',
+                sum)
+
+site.sp <- as.data.frame(site.sp)
+
+# setwd("C:/rworking/digs/outdata")
+# write.csv(site.sp, 'site.sp.csv')
+
+# creating a site variable
+site.sp$site <- paste(site.sp$Ecoregion, site.sp$DepthCat4, sep = '|')
+
+# getting rid of non-needed variables
+site.sp <- site.sp %>%
+  dplyr::select(-Ecoregion, -DepthCat4)
+
+# # moving the site variable to the beginning
+# col_idx <- grep("site", names(site.sp))
+# site.sp <- site.sp[, c(col_idx, (1:ncol(site.sp))[-col_idx])]
+# # names(site.sp)
+
+# set the site as the row.names
+row.names(site.sp) <- site.sp$site
+
+# remove the site variable
+site.sp <- site.sp %>%
+  dplyr::select(-site)
+
+# making it a matrix
+site.sp <- as.matrix(site.sp)
+
+# # limit to sites that actually have more than X observations
+# site.sp <- site.sp[apply(site.sp, 1, sum) > 200,]
+# dim(site.sp)
+
+# making site numeric
+# site.sp$site <- as.numeric(factor(site.sp$site))
+# str(site.sp)
+
+
+##### running NMDS starting with site X species matrix #####
+#install.packages("vegan")
+library(vegan)
+NMDS <- metaMDS(site.sp, distance = "jaccard", binary = T, k=2)
+
+##### creating a group variable for Ecoregion ##### 
+site.sp2 <- cast(d2, Ecoregion + DepthCat4 ~ Genus, 
+                 value='IndividualCount',
+                 sum)
+
+site.sp2 <- as.data.frame(site.sp2)
+Ecoregion <- site.sp2$Ecoregion
+
+##### extracting the site and species scores for use with ggplot2 ##### 
+# extracting site scores 
+site.scores <- as.data.frame(scores(NMDS))  #Using the scores function from vegan to extract the site scores and convert to a data.frame
+site.scores$site <- rownames(site.scores)  # create a column of site names, from the rownames of data.scores
+site.scores$Ecoregion <- Ecoregion  #  add the Ecoregion variable created earlier
+head(site.scores)  #look at the data
+
+# extracting species scores
+species.scores <- as.data.frame(scores(NMDS, "species"))  #Using the scores function from vegan to extract the species scores and convert to a data.frame
+species.scores$species <- rownames(species.scores)  # create a column of species, from the rownames of species.scores
+head(species.scores)  #look at the data
+
+##### create a hull around the grouping variable Ecoregion #####
+Ecoregion.a <- site.scores[site.scores$Ecoregion == "Floridian", ][chull(site.scores[site.scores$Ecoregion == 
+                                                                           "Floridian", c("NMDS1", "NMDS2")]), ]  # hull values for Ecoregion A
+Ecoregion.b <- site.scores[site.scores$Ecoregion == "South Carolinean", ][chull(site.scores[site.scores$Ecoregion == 
+                                                                                  "South Carolinean", c("NMDS1", "NMDS2")]), ]  # hull values for Ecoregion B
+Ecoregion.c <- site.scores[site.scores$Ecoregion == "North Carolinean", ][chull(site.scores[site.scores$Ecoregion == 
+                                                                                  "North Carolinean", c("NMDS1", "NMDS2")]), ]  # hull values for Ecoregion A
+
+hull.data <- rbind(Ecoregion.a, Ecoregion.b, Ecoregion.c)  #combine groups
+hull.data
+
+
+##### creating a group variable for depthCat##### 
+site.sp2 <- cast(d2, Ecoregion + DepthCat4 ~ Genus, 
+                 value='IndividualCount',
+                 sum)
+
+site.sp2 <- as.data.frame(site.sp2)
+Depth_Zone <- site.sp2$DepthCat4
+
+##### extracting the species scores for use with ggplot2 ##### 
+# extracting site scores 
+site.scores <- as.data.frame(scores(NMDS))  #Using the scores function from vegan to extract the site scores and convert to a data.frame
+site.scores$site <- rownames(site.scores)  # create a column of site names, from the rownames of data.scores
+site.scores$Depth_Zone <- Depth_Zone  #  add the Depth_Zone variable created earlier
+head(site.scores)  #look at the data
+
+# extracting species scores
+species.scores <- as.data.frame(scores(NMDS, "species"))  #Using the scores function from vegan to extract the species scores and convert to a data.frame
+species.scores$species <- rownames(species.scores)  # create a column of species, from the rownames of species.scores
+head(species.scores)  #look at the data
+
+##### create a hull around the grouping variable DepthCat ##### 
+Depth_Zone.a <- site.scores[site.scores$Depth_Zone == "< 150 m", ][chull(site.scores[site.scores$Depth_Zone == 
+                                                                         "< 150 m", c("NMDS1", "NMDS2")]), ]  # hull values for Depth_Zone A
+Depth_Zone.b <- site.scores[site.scores$Depth_Zone == "150-300 m", ][chull(site.scores[site.scores$Depth_Zone == 
+                                                                      "150-300 m", c("NMDS1", "NMDS2")]), ]  # hull values for Depth_Zone B
+Depth_Zone.c <- site.scores[site.scores$Depth_Zone == "300-600 m", ][chull(site.scores[site.scores$Depth_Zone == 
+                                                                         "300-600 m", c("NMDS1", "NMDS2")]), ]  # hull values for Depth_Zone A
+Depth_Zone.d <- site.scores[site.scores$Depth_Zone == "> 600 m", ][chull(site.scores[site.scores$Depth_Zone == 
+                                                                      "> 600 m", c("NMDS1", "NMDS2")]), ]  # hull values for Depth_Zone B
+hull.data <- rbind(Depth_Zone.a, Depth_Zone.b, Depth_Zone.c, Depth_Zone.d)  #combine groups
+hull.data
+
+##### cleaned up plot with hulls groups = DepthCat ##### 
+ggplot() + 
+  geom_polygon(data=hull.data,aes(x=NMDS1,y=NMDS2,fill=Depth_Zone,group=Depth_Zone),alpha=0.30) + # add the convex hulls
+  geom_text(data=species.scores,aes(x=NMDS1,y=NMDS2,label=species),
+            alpha=0.5, 
+            fontface = "bold", 
+            size=3.2#,
+            #position=position_jitter(width=.5,height=.5)
+            ) +  # add the species labels
+  # geom_point(data=site.scores,aes(x=NMDS1,y=NMDS2,colour=Depth_Zone),size=4) +
+  #   scale_colour_manual(values = c('< 150 m' = 'blue',
+  #                                '150-300 m' = 'red', 
+  #                                '300-600 m' = 'green', 
+  #                                '> 600 m' = 'black')) +
+  geom_point(data=site.scores,aes(x=NMDS1,y=NMDS2,shape=Ecoregion),size=3) + # add the point markers
+  geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+```
+
+######Figure 12a: All ecoregions, shallow (< 300m).  
+
+``` {r ordered allregionshallow, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+sum_tbl <-
+  as.data.frame(d) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 25)
+
+d2 <- as.data.frame(d) %>%
+  filter(Genus %in% genera_1, 
+         Phylum == "Cnidaria", 
+         #Ecoregion == 'Floridian',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) < 300 )
+g <- ggplot(d2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') #+
+#  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+##### 
+set.seed(6)
+# build a color matching data frame
+colormatchdf <- data.frame(Genus = genera_1, color = sample(big_palette[20:length(big_palette)], length(genera_1)))
+#get a summary vector of Genus Counts
+GenusCounts <- summary(d2$Genus)
+# limit by count
+GenusCounts <- GenusCounts[GenusCounts>50]
+# make count into data frame  
+GenusCounts <- data.frame(Genus=names(GenusCounts), value=GenusCounts, row.names=NULL)
+# merge to get color field into cound summary dataframe
+GenusCountsColor <- merge(GenusCounts, colormatchdf, by = "Genus")
+# sort by value to make prettyer chart
+GenusCountsColor <- GenusCountsColor[order(as.numeric(GenusCountsColor$value)),] 
+# make color vector
+colors <- as.vector(GenusCountsColor$color)
+# set pallete
+palette(colors)
+# make pie chart
+pie(GenusCountsColor$value,labels = GenusCountsColor$Genus, col = c(1:length(GenusCountsColor$value)), cex = .7)
+```
+
+######Figure 12b: All ecoregions, deep (> 300m).  
+
+``` {r ordered allregiondeep, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+sum_tbl <-
+  as.data.frame(d) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 25)
+
+d2 <- as.data.frame(d) %>%
+  filter(Genus %in% genera_2, 
+         Phylum == "Cnidaria", 
+         #Ecoregion == 'Floridian',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) > 300,
+         as.numeric(DepthInMeters < 1250))
+
+g <- ggplot(d2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') #+
+#  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+##### 
+set.seed(3)
+# build a color matching data frame
+colormatchdf <- data.frame(Genus = genera_2, color = sample(big_palette[1:19], length(genera_2)))
+#get a summary vector of Genus Counts
+GenusCounts <- summary(d2$Genus)
+# limit by count
+GenusCounts <- GenusCounts[GenusCounts>50]
+# make count into data frame  
+GenusCounts <- data.frame(Genus=names(GenusCounts), value=GenusCounts, row.names=NULL)
+# merge to get color field into cound summary dataframe
+GenusCountsColor <- merge(GenusCounts, colormatchdf, by = "Genus")
+# sort by value to make prettyer chart
+GenusCountsColor <- GenusCountsColor[order(as.numeric(GenusCountsColor$value)),] 
+# make color vector
+colors <- as.vector(GenusCountsColor$color)
+# set pallete
+palette(colors)
+# make pie chart
+pie(GenusCountsColor$value,labels = GenusCountsColor$Genus, col = c(1:length(GenusCountsColor$value)), cex = .7)
+
+```
+
+######Figure 13: All ecoregions, all depths.  
+
+``` {r ordered_allregion, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+sum_tbl <-
+  as.data.frame(d) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 25)
+
+d2 <- as.data.frame(d) %>%
+  filter(Genus %in% genera, 
+         Phylum == "Cnidaria", 
+         #Ecoregion == 'Floridian',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) > 0,
+         as.numeric(DepthInMeters < 1250))
+
+g <- ggplot(d2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters),fill=Order)) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 22, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0, face = 'italic'))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') #+
+#  geom_hline(yintercept = 600, col = 'grey')
+  
+set.seed(8)
+g + scale_fill_manual(values = sample(big_palette))
+#g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+#####
+set.seed(3)
+# build a color matching data frame
+colormatchdf <- data.frame(Genus = genera_2, color = sample(big_palette[1:19], length(genera_2)))
+#get a summary vector of Genus Counts
+GenusCounts <- summary(d2$Genus)
+# limit by count
+GenusCounts <- GenusCounts[GenusCounts>50]
+# make count into data frame
+GenusCounts <- data.frame(Genus=names(GenusCounts), value=GenusCounts, row.names=NULL)
+# merge to get color field into cound summary dataframe
+GenusCountsColor <- merge(GenusCounts, colormatchdf, by = "Genus")
+# sort by value to make prettyer chart
+GenusCountsColor <- GenusCountsColor[order(as.numeric(GenusCountsColor$value)),]
+# make color vector
+colors <- as.vector(GenusCountsColor$color)
+# set pallete
+palette(colors)
+# make pie chart
+pie(GenusCountsColor$value,labels = GenusCountsColor$Genus, col = c(1:length(GenusCountsColor$value)), cex = .7)
+
+```
+
+######Figure 14: North Carolinean Ecoregion (< 300 m)
+
+``` {r ordered northcarolineanshallow, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+##### OR Selecting genera with greater X number of occurrences #####
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  filter(Ecoregion == 'North Carolinean',#,
+         as.numeric(DepthInMeters) < 300) %>% 
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 10)
+
+#### filtering to meet one of the conditions above (list vs. frequency of occurence threshold)
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% genera_1, 
+         Phylum == "Cnidaria",
+         Ecoregion == 'North Carolinean',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) < 300)
+
+g <- ggplot(geofilt2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') #+
+#  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+##### 
+set.seed(6)
+# build a color matching data frame
+colormatchdf <- data.frame(Genus = genera_1, color = sample(big_palette[20:length(big_palette)], length(genera_1)))
+
+#get a summary vector of Genus Counts
+GenusCounts <- summary(geofilt2$Genus)
+# limit by count
+GenusCounts <- GenusCounts[GenusCounts>0]
+# make count into data frame  
+GenusCounts <- data.frame(Genus=names(GenusCounts), value=GenusCounts, row.names=NULL)
+# merge to get color field into cound summary dataframe
+GenusCountsColor <- merge(GenusCounts, colormatchdf, by = "Genus")
+# sort by value to make prettyer chart
+GenusCountsColor <- GenusCountsColor[order(as.numeric(GenusCountsColor$value)),] 
+# make color vector
+colors <- as.vector(GenusCountsColor$color)
+# set pallete
+palette(colors)
+# make pie chart
+pie(GenusCountsColor$value,labels = GenusCountsColor$Genus, col = c(1:length(GenusCountsColor$value)), cex = .7, font=3)
+```
+
+######Figure 15: North Carolinean Ecoregion (> 300 m)
+
+``` {r ordered northcarolinean2, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  filter(Ecoregion == 'North Carolinean',#,
+         as.numeric(DepthInMeters) > 300,
+         as.numeric(DepthInMeters < 1250)) %>% 
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 4)
+
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% genera_2, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'North Carolinean',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) > 300,
+         as.numeric(DepthInMeters < 1250))
+
+g <- ggplot(geofilt2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') #+
+#  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+# Pie charts
+##### 
+set.seed(3)
+# build a color matching data frame
+colormatchdf <- data.frame(Genus = genera_2, color = sample(big_palette[1:19], length(genera_2)))
+#get a summary vector of Genus Counts
+GenusCounts <- summary(geofilt2$Genus)
+# limit by count
+GenusCounts <- GenusCounts[GenusCounts>3]
+# make count into data frame  
+GenusCounts <- data.frame(Genus=names(GenusCounts), value=GenusCounts, row.names=NULL)
+# merge to get color field into cound summary dataframe
+GenusCountsColor <- merge(GenusCounts, colormatchdf, by = "Genus")
+# sort by value to make prettyer chart
+GenusCountsColor <- GenusCountsColor[order(as.numeric(GenusCountsColor$value)),] 
+# make color vector
+colors <- as.vector(GenusCountsColor$color)
+# set pallete
+palette(colors)
+# make pie chart
+pie(GenusCountsColor$value,labels = GenusCountsColor$Genus, col = c(1:length(GenusCountsColor$value)), cex = .7, font=3)
+
+
+```
+
+######Figure 16: South Carolinean Ecoregion (< 300 m)
+
+``` {r ordered southcarolinean, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  filter(Ecoregion == 'South Carolinean',#,
+         as.numeric(DepthInMeters) < 300) %>% 
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 0)
+
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% genera_1, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'South Carolinean',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) < 300)
+
+g <- ggplot(geofilt2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') #+
+#  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+##### 
+set.seed(6)
+# build a color matching data frame
+colormatchdf <- data.frame(Genus = genera_1, color = sample(big_palette[20:length(big_palette)], length(genera_1)))
+
+#get a summary vector of Genus Counts
+GenusCounts <- summary(geofilt2$Genus)
+# limit by count
+GenusCounts <- GenusCounts[GenusCounts>25]
+# make count into data frame  
+GenusCounts <- data.frame(Genus=names(GenusCounts), value=GenusCounts, row.names=NULL)
+# merge to get color field into cound summary dataframe
+GenusCountsColor <- merge(GenusCounts, colormatchdf, by = "Genus")
+# sort by value to make prettyer chart
+GenusCountsColor <- GenusCountsColor[order(as.numeric(GenusCountsColor$value)),] 
+# make color vector
+colors <- as.vector(GenusCountsColor$color)
+# set pallete
+palette(colors)
+# make pie chart
+pie(GenusCountsColor$value,labels = GenusCountsColor$Genus, col = c(1:length(GenusCountsColor$value)), cex = .7, font=3)
+
+```
+
+######Figure 17: South Carolinean Ecoregion (> 300 m)
+
+``` {r ordered southcarolinean2, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  filter(Ecoregion == 'South Carolinean',#,
+         as.numeric(DepthInMeters) > 300,
+         as.numeric(DepthInMeters < 1250)) %>% 
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 0)
+
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% genera_2, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'South Carolinean',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) > 300,
+         as.numeric(DepthInMeters < 1250))
+
+g <- ggplot(geofilt2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') #+
+#  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+# Pie charts
+##### 
+set.seed(3)
+# build a color matching data frame
+colormatchdf <- data.frame(Genus = genera_2, color = sample(big_palette[1:19], length(genera_2)))
+#get a summary vector of Genus Counts
+GenusCounts <- summary(geofilt2$Genus)
+# limit by count
+GenusCounts <- GenusCounts[GenusCounts>25]
+# make count into data frame  
+GenusCounts <- data.frame(Genus=names(GenusCounts), value=GenusCounts, row.names=NULL)
+# merge to get color field into cound summary dataframe
+GenusCountsColor <- merge(GenusCounts, colormatchdf, by = "Genus")
+# sort by value to make prettyer chart
+GenusCountsColor <- GenusCountsColor[order(as.numeric(GenusCountsColor$value)),] 
+# make color vector
+colors <- as.vector(GenusCountsColor$color)
+# set pallete
+palette(colors)
+# make pie chart
+pie(GenusCountsColor$value,labels = GenusCountsColor$Genus, col = c(1:length(GenusCountsColor$value)), cex = .7, font=3)
+```
+
+######Figure 18: Floridian Ecoregion (< 300 m)
+
+``` {r ordered floridian, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  filter(Ecoregion == 'Floridian',#,
+         as.numeric(DepthInMeters) < 300) %>% 
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 20)
+
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% genera_1, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'Floridian',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) < 300)
+
+g <- ggplot(geofilt2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') #+
+#  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+##### 
+set.seed(6)
+# build a color matching data frame
+colormatchdf <- data.frame(Genus = genera_1, color = sample(big_palette[20:length(big_palette)], length(genera_1)))
+
+#get a summary vector of Genus Counts
+GenusCounts <- summary(geofilt2$Genus)
+# limit by count
+GenusCounts <- GenusCounts[GenusCounts>10]
+# make count into data frame  
+GenusCounts <- data.frame(Genus=names(GenusCounts), value=GenusCounts, row.names=NULL)
+# merge to get color field into cound summary dataframe
+GenusCountsColor <- merge(GenusCounts, colormatchdf, by = "Genus")
+# sort by value to make prettyer chart
+GenusCountsColor <- GenusCountsColor[order(as.numeric(GenusCountsColor$value)),] 
+# make color vector
+colors <- as.vector(GenusCountsColor$color)
+# set pallete
+palette(colors)
+# make pie chart
+pie(GenusCountsColor$value,labels = GenusCountsColor$Genus, col = c(1:length(GenusCountsColor$value)), cex = .7, font=3)
+```
+
+######Figure 19: Floridian Ecoregion (> 300 m)
+
+``` {r ordered floridian2, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  filter(Ecoregion == 'Floridian',#,
+         as.numeric(DepthInMeters) > 300,
+         as.numeric(DepthInMeters < 1250)) %>% 
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 35)
+
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% genera_2, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'Floridian',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) > 300,
+         as.numeric(DepthInMeters < 1250))
+
+g <- ggplot(geofilt2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') #+
+#  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+##### 
+set.seed(3)
+# build a color matching data frame
+colormatchdf <- data.frame(Genus = genera_2, color = sample(big_palette[1:19], length(genera_2)))
+#get a summary vector of Genus Counts
+GenusCounts <- summary(geofilt2$Genus)
+# limit by count
+GenusCounts <- GenusCounts[GenusCounts>30]
+# make count into data frame  
+GenusCounts <- data.frame(Genus=names(GenusCounts), value=GenusCounts, row.names=NULL)
+# merge to get color field into cound summary dataframe
+GenusCountsColor <- merge(GenusCounts, colormatchdf, by = "Genus")
+# sort by value to make prettyer chart
+GenusCountsColor <- GenusCountsColor[order(as.numeric(GenusCountsColor$value)),] 
+# make color vector
+colors <- as.vector(GenusCountsColor$color)
+# set pallete
+palette(colors)
+# make pie chart
+pie(GenusCountsColor$value,labels = GenusCountsColor$Genus, col = c(1:length(GenusCountsColor$value)), cex = .7, font=3)
+
+
+```
+
+######Table 1: Table of records by depth category grouped by Ecoregion.  The 'Genera' column is simply the number of unique genera and 'n' is the number of records.
+
+
+``` {r DepthClassPlotFacetByMEOW, echo=FALSE, cache = FALSE, dpi=300}
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  filter(is.na(DepthInMeters) != '-999')%>%
+  group_by(Ecoregion, DepthCat4) %>%
+  summarize(
+    Genera_n = length(unique(na.omit(Genus))),
+    n = n()
+  )
+kable <- kable(sum_tbl, row.names = F, digits = 2)
+kable
+
+```
+
+######Table 2: Frequency table of the number of records within each genera within the study area.  Table is descending order by the *frequency of occurrence* within each genera.
+
+``` {r ByGenusCount, echo=FALSE }
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(desc(Records))
+kable <- kable(sum_tbl, row.names = F, digits = 2)
+kable
+
+```
+
+######Table 3:  Frequency table grouped by 'Genus'. Arranged in *ascending order by median depth* of each genera. 
+
+``` {r ByGenusMedianDepth, echo=FALSE }
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(MedianDepth)
+kable <- kable(sum_tbl, row.names = F, digits = 2)
+kable
+```
+
