@@ -156,7 +156,7 @@ render("2019_ISDSC7_high_density_THourigan_RPMcGuinn.Rmd",
 # install.packages("rmarkdown")
 library(rmarkdown)
 # add the prefix of the dataset you want to report on
-x <- "20190828-0_NOAA_NEFSC_Connecticut_ISIS2_TowCam_Packer_Part_2_and_3_2013_2013"
+x <- "20190830-2_NOAA_NEFSC_Connecticut_ISIS2_TowCam_Packer_Part_2_and_3_2013_2013"
 # "20190819-4_NOAA_NEFSC_Connecticut_ISIS2_TowCam_Packer_Part_3_2013_2013"
 
 render("C:/rworking/deepseatools/code/rmd_accession_qa_dashboard.rmd",

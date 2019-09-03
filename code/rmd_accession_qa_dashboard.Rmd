@@ -950,9 +950,9 @@ sum_tbl
 ```
 
 # Depth
-Minimum Depth: `r min(sub[sub$DepthInMeters != '-999',]$DepthInMeters)`
-Median Depth: `r median(sub[sub$DepthInMeters != '-999',]$DepthInMeters)`
-Maximum Depth: `r max(sub[sub$DepthInMeters != '-999',]$DepthInMeters)`
+* Minimum Depth: `r min(sub[sub$DepthInMeters != '-999',]$DepthInMeters)`  
+* Median Depth: `r median(sub[sub$DepthInMeters != '-999',]$DepthInMeters)`  
+* Maximum Depth: `r max(sub[sub$DepthInMeters != '-999',]$DepthInMeters)`  
 
 ## Histogram of Depth Distribution
 ``` {r Coral_Depth_Summary_Boxplots, echo=FALSE, message=FALSE, warning=FALSE,fig.width=7, fig.height=3.5, dpi=300, cache=FALSE}
