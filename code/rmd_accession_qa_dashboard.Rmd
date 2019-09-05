@@ -106,7 +106,7 @@ ft
 
 ```
 
-# Static Map
+# Static Maps
 ## Locator Map
 
 ```{r, map, echo = FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=TRUE, fig.align='center'}

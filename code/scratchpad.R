@@ -709,7 +709,7 @@ table(s$DSCRTPCategory, useNA = 'always')
 ##### _____ valid values #####
 x <- s %>%
   filter(
-    grepl("VerbatimScientificName", FieldName)
+    grepl("Condition", FieldName)
   ) %>%
   group_by(
     FieldName
@@ -1195,7 +1195,7 @@ write.csv(sub,"20181130-0_PSU_ECOGIG_MultiVessel_ROV_CordesFisher_2011_2017.csv"
 ##### ____ load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 
-n <- '20190718-0'
+n <- '20190828-0'
 
 taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
 gs_browse(taxfl)
@@ -1242,10 +1242,13 @@ list <- 'Bullagummizoanthus emilyacadiaarum'
 list <- 'Octocorallia'
 list <- 'Hydrozoa'
 list <- 'Botrucnidifer sp.'
+list <- 'Primnoidae'
+list <- 'Antipathes caribbeanus'
 
 
 ##### compare list of taxa of interest to current taxonomy tables (must be exact to use it this way) #####
 # is it on a list?
+setdiff(list, sub$ScientificName)
 setdiff(list, filt$ScientificName)
 setdiff(list, tax$ScientificName)
 setdiff(list, taxch$VerbatimScientificName)
