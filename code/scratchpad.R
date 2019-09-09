@@ -57,6 +57,8 @@ indata<-read.csv("DSCRTP_NatDB_20190718-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0")
 
+# # save the R workspace
+# save.image("C:/rworking/deepseatools/.RData")
 # #from table delimited text file (from David Sallis on 20190307)
 # indata <- read.table("DSCRTP_NatDB_20190306-0.txt", header = T, sep="\t", fill = TRUE)
 

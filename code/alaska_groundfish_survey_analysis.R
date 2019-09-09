@@ -1,8 +1,8 @@
 ##### Header #####
 # Author: Robert P. McGuinn
 # Started on: 20190620
-# Purpose: looking at invertebrate data from Alaska Groundfish Survey
-
+# Purpose: looking at invertebrate data fromAlaska Groundfish Su rvey
+##### Project Log #####
 ##### install.packages #####
 library(tidyverse)
 
@@ -12,14 +12,14 @@ setwd("C:/rworking/digs/indata")
 d <- read.table("20190620-0_invertebrates_groundfish_observer_data_RPMcGuinn.txt", header = T, sep=",", fill = TRUE)
 
 ##### checking #####
-# class(d)
-# dim(d)
-# table(d$YEAR)
-# table(d$SPECIES, useNA = 'always')
-# table(d$SPECN, useNA = 'always')
-# names(d)
-# table(d$LAT400SQKM, useNA = 'always')
-# table(d$LON400SQKM, useNA = 'always')
+class(d)
+dim(d)
+table(d$YEAR)
+table(d$SPECIES, useNA = 'always')
+table(d$SPECN, useNA = 'always')
+names(d)
+table(d$LAT400SQKM, useNA = 'always')
+table(d$LON400SQKM, useNA = 'always')
 
 
 ##### species #####
@@ -31,7 +31,7 @@ d <- read.table("20190620-0_invertebrates_groundfish_observer_data_RPMcGuinn.txt
 # *** Hydroids Unidentified	835 (do not use)
 # *** Invertebrate Unidentified	902 (do not use)
 # Red Tree Coral	833
-# Sea Pen-Sea Whip Unidentified	58
+# Sea Pen-Sea Whip Unidentified	58 (do not use)
 # Soft Coral	819
 # *** Sponge unidentified	26 (use separately)
 # Stony Coral	816
@@ -41,7 +41,6 @@ y <- d %>% filter(SPECN == '818' |
                     SPECN == '817' |
                     SPECN == '815' |
                     SPECN == '833' |
-                    SPECN == '58' |
                     SPECN == '819' |
                     SPECN == '816'
 )
@@ -53,7 +52,7 @@ y$SPECIES <- factor(y$SPECIES)
 setwd("C:/documents/management_area_analyses/20190620-0_Alaska_Mapping_Priorities/tabular_data")
 
 y %>%
-  write.csv("20190621-0_corals_only_RPMcGuinn.csv", row.names = FALSE)
+  write.csv("20190904-0_corals_only_RPMcGuinn.csv", row.names = FALSE)
 
 ##### #####
 
@@ -62,21 +61,24 @@ names(y)
 
 ##### summary grouped by SPECIES/SPECN #####
 
-names(d)
+#names(d)
 
-x <- d %>%
-  filter(SPECIES == "Red Tree Coral") %>%
-  group_by(SPECIES, SPECN, LAT400SQKM, LON400SQKM) %>%
+x <- y %>%
+  filter(SPECIES == 'Red Tree Coral') %>%
+  group_by(LAT400SQKM, LON400SQKM) %>%
   summarise(n=n(),
-           sum_kg = sum(KG))
+            median_kg = median(KG),
+            species = paste(unique(SPECIES), collapse=" | "),
+            years = paste(YEAR, collapse=" | ")
+           )
 
+View(x)
+
+##### write it #####
 setwd("C:/documents/management_area_analyses/20190620-0_Alaska_Mapping_Priorities/tabular_data")
 
 x %>%
-  write.csv("20190620-0_red_tree_coral_observer_data_RPMcGuinn.csv", row.names = FALSE)
-
-
-#View(x)
+  write.csv("20190905-0_coral_observer_data_red_tree_coral_RPMcGuinn.csv", row.names = FALSE)
 
 
 ##### build an extraction from the national database #####
@@ -97,7 +99,7 @@ m <- addCircleMarkers(m, data=x,
                       lat = x$LAT400SQKM,
                       lng = x$LON400SQKM,
                       radius= ~ log(sum_kg),
-                      weight=0,
+                      #weight=0,
                       fillColor= "green",
                       fillOpacity=1,
                       popup = paste(
