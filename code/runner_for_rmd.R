@@ -156,8 +156,7 @@ render("2019_ISDSC7_high_density_THourigan_RPMcGuinn.Rmd",
 # install.packages("rmarkdown")
 library(rmarkdown)
 # add the prefix of the dataset you want to report on
-x <- "20190822-0_NOAA_CBNMS_Nautilus_Graiff_2017_2017"
-# "20190819-4_NOAA_NEFSC_Connecticut_ISIS2_TowCam_Packer_Part_3_2013_2013"
+x <- "20190910-1_NOAA_NCCOS_NF-18-04_ROV_NancyFoster_Battista_Etnoyer_Shuler_2018_2018"
 
 render("C:/rworking/deepseatools/code/rmd_accession_qa_dashboard.rmd",
        output_file =  paste(x,".doc", sep=''),
@@ -170,7 +169,6 @@ x <- "20180705-1_NOAA_OER_EX1606_Kelley_2016_2016"
 render("C:/rworking/digs/code/20180524_0_accession_qa_dashboard_RPMcGuinn.rmd",
        output_file =  paste(x,".doc", sep=''),
        output_dir = 'C:/rworking/digs/reports')
-
 
 ##### species pages #####
 d <- indata
