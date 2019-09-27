@@ -3512,9 +3512,10 @@ yo <- rbind(x,y)
 z <- filt %>% filter(DatasetID == "NOAA_CT-13-07")
 
 ##### checking #####
-yo %>% filter(ScientificName == 'Alcyonacea') %>%
-  group_by(ScientificName, Flag, FlagReason) %>%
-  summarize(n = n())
+filt %>% filter(grepl('Messing', PI) | grepl('Messing', IdentifiedBy)) %>%
+  arrange(ObservationYear) %>%
+  group_by(DatasetID, PI, IdentifiedBy, Vessel, ObservationYear, Locality) %>%
+  summarize(n = n()) %>% View()
 
 ##### checking #####
 # DSCRTP_NatDB_20181012-1
