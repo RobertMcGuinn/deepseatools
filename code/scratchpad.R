@@ -53,7 +53,7 @@ library(devtools)
 #   filter(Flag == "0")
 
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20190718-0.csv", header = T)
+indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0")
 
@@ -3352,12 +3352,11 @@ cor(y$DepthInMeters, y$alpha)
 
 ##### calling erddap #####
 library(rerddap)
-d <- tabledap("deep_sea_corals", 'longitude<50', 'latitude>20', 'latitude<30',
-              'Vessel="Okeanos Explorer R/V"',
+d <- tabledap("deep_sea_corals",
               fields=c('CatalogNumber', 'latitude', 'longitude', 'ScientificName', 'ImageURL',
                        'Vessel', 'RecordType', 'DatasetID', 'SurveyID', 'SampleID', 'TrackingID',
                        'Station', 'Locality', 'ObservationYear', 'Genus', 'Phylum', 'TaxonRank',
-                       'DepthInMeters'),
+                       'DepthInMeters', 'ScientificNameAuthorship'),
               url = "https://ecowatch.ncddc.noaa.gov/erddap/")
 
 ##### creating a summary statistics table #####
@@ -3533,6 +3532,24 @@ filt %>% filter(CatalogNumber == '458474') %>%
 filt %>% filter(Station == '11-Mar') %>%
   group_by(CatalogNumber, Station, ObservationDate, Locality) %>%
   summarize(n = n()) %>% View
+
+
+
+
+##### Muriceides kÃ¼kenthali #####
+filt %>% filter(grepl('kenthali', ScientificName)) %>%
+  group_by(ScientificName, CatalogNumber) %>% summarize(n=n()) %>% View()
+  )
+
+##### list of taxa #####
+
+x <- wm_records_taxamatch(name = c("Adelogorgia cf. phyllosclera", "Putamayo", "Adelogorgia", "Lophelia pertusa"))
+bind_rows(x, .id = "column_label")
+
+
+
+
+
 
 
 

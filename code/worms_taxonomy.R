@@ -1,40 +1,42 @@
 ##### Header #####
 # purpose: Pulling WoRMS taxonomic information into NOAA's National Database for Deep Sea Corals
 # author: Robert P. McGuinn, rpm@alumni.duke.edu
-# date started: 
-# 
+# date started:
+#
 
 ##### resources and references #####
 # https://cran.r-project.org/web/packages/worms/worms.pdf
 
-##### installing 'worms' package ##### 
+
+##### installing 'worms' package #####
 #install.packages('worms')
 library(worms)
+library(worrms)
 
-##### load the most current taxonomy from Google Sheets ##### 
+##### load the most current taxonomy from Google Sheets #####
 
-taxfl <- gs_title('20190304-0_taxonomy_to_flag')
+taxfl <- gs_title('20190909-0_taxonomy_to_flag')
 taxfl <- gs_read(taxfl)
 
-taxch <- gs_title('20190304-0_taxonomy_to_change')
+taxch <- gs_title('20190909-0_taxonomy_to_change')
 taxch <- gs_read(taxch)
 
-tax <- gs_title('20190304-0_taxonomy')
+tax <- gs_title('20190909-0_taxonomy')
 tax <- gs_read(tax)
 
 
-# ##### load most current taxonomic tables by CSV #####
+##### load most current taxonomic tables by CSV #####
 # setwd("C:/rworking/digs/indata")
 # tax <- read.csv("20181130-0_taxonomy.csv", header = T)
 # taxch <- read.csv("20181130-0_taxonomy_to_change.csv", header = T)
 # taxfl <- read.csv("20181130-0_taxonomy_to_flag.csv", header = T)
-# 
+#
 # setwd("C:/rworking/digs/indata")
 # tax2 <- read.csv("20181127-0_taxonomy.csv", header = T)
 # taxch2 <- read.csv("20181127-0_taxonomy_to_change.csv", header = T)
 # taxfl2 <- read.csv("20181127-0_taxonomy_to_flag.csv", header = T)
 
-##### get rid of taxa with cf in front ##### 
+##### get rid of taxa with cf in front #####
 cleantax <- tax[!grepl("^cf.", tax$ScientificName),]
 
 ##### create the taxon names list with the clean data #####
@@ -47,11 +49,21 @@ write.csv(taxon_names1,"20181204_0_Taxonomy_Table_names1_version_20181130-0.csv"
 ##### worms matching #####
 
 taxa <- 'Coralidae'
-match <- wormsbymatchnames(taxa, ids = FALSE, verbose = TRUE,
+match <- wormsbymatchnames(taxa, ids = TRUE, verbose = TRUE,
              chunksize = 50, marine_only = "true",
              sleep_btw_chunks_in_sec = 0.2)
-
 View(match)
+
+#####  taxa #####
+
+x <- wm_records_taxamatch(name = c("Adelogorgia cf. phyllosclera", "Putamayo", "Adelogorgia", "Lophelia pertusa"),
+                          ids = TRUE, ids = TRUE, verbose = TRUE, chunksize = 50, marine_only = "true",
+                          sleep_btw_chunks_in_sec = 0.2))
+z <- bind_rows(x, .id = "column_label")
+View(z)
+
+
+
 
 
 

@@ -68,7 +68,8 @@ library(flextable)
 library(officer)
 #install.packages("kableExtra")
 #library(kableExtra)
-
+#install.packages("worrms")
+library(worrms)
 
 
 
