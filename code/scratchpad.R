@@ -47,10 +47,10 @@ library(devtools)
 
 ##### _____ Bringing in database #####
 
-# setwd("C:/rworking/digs/indata")
-# indata1<-read.csv("DSCRTP_NatDB_20190418-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
-# filt <- indata1 %>%
-#   filter(Flag == "0")
+setwd("C:/rworking/digs/indata")
+indata1<-read.csv("DSCRTP_NatDB_20190620-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+filt1 <- indata1 %>%
+  filter(Flag == "0")
 
 setwd("C:/rworking/deepseatools/indata")
 indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
@@ -2634,7 +2634,7 @@ yo <- key %>%
 # length(yo$DatasetID)
 # # [1] 226
 
-yo2 <- merge(yo, y, all.x = T)
+yo2 <- merge(id, col3 , all.x = T)
 
 # checking
 names(yo2)
@@ -3533,9 +3533,6 @@ filt %>% filter(Station == '11-Mar') %>%
   group_by(CatalogNumber, Station, ObservationDate, Locality) %>%
   summarize(n = n()) %>% View
 
-
-
-
 ##### Muriceides kÃ¼kenthali #####
 filt %>% filter(grepl('kenthali', ScientificName)) %>%
   group_by(ScientificName, CatalogNumber) %>% summarize(n=n()) %>% View()
@@ -3545,6 +3542,33 @@ filt %>% filter(grepl('kenthali', ScientificName)) %>%
 
 x <- wm_records_taxamatch(name = c("Adelogorgia cf. phyllosclera", "Putamayo", "Adelogorgia", "Lophelia pertusa"))
 bind_rows(x, .id = "column_label")
+
+##### DepthChecking loop (getting things out of the loop with a data.frame) #####
+
+setwd("C:/rworking/deepseatools/indata")
+master <- read.csv("master.csv", header = T)
+incoming <- read.csv("incoming.csv", header = T)
+incoming$index <- seq(1:length(incoming$ScientificName))
+
+df <- data.frame(ScientificName = character(),
+                 index = numeric(),
+                 test1 = character(),
+                 test2 = character(),
+                 stringsAsFactors=FALSE)
+
+for (id in incoming$index){
+  x <- incoming %>% filter(index == id)
+  y <- master %>% filter(ScientificName == x$ScientificName)
+  z <- x$DepthInMeters > y$MinimumDepthInMeters  # if this is true and
+  r <- x$DepthInMeters < y$MaximumDepthInMeters # this is true, then all is good
+  d <- data.frame(ScientificName=x$ScientificName,
+                  index = x$index,
+                  test1 = z,
+                  test2 = r,
+                  stringsAsFactors=FALSE)
+  df <- rbind(df, d)
+}
+
 
 
 

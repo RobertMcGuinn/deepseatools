@@ -6,10 +6,10 @@ output: word_document
 ---
 ```{r settings_data, echo=FALSE}
 
-quarter <- "Q2, FY-2019"
-version <- "DSCRTP_NatDB_20190418-0"
-releasedate <- "2019-04-25"
-corrections <- 271243
+quarter <- "Q4, FY-2019"
+version <- "DSCRTP_NatDB_20190920-0"
+releasedate <- "2019-09-30"
+corrections <- 19596
 ```
 
 ```{r load_functions, warning = FALSE, message=FALSE, echo=FALSE}
@@ -33,13 +33,10 @@ TrimAll <- function(x){
 ```
 
 ```{r filter_big_data, echo=FALSE, cache=FALSE}
-# this is used to filter out only those records with an EntryDate later than some date
+# this is used to filter to only the new records
 
-x <- indata %>% 
-  filter(
-    Flag == "0", 
-    as.Date(EntryDate) > '2019-04-01'
-  )
+x <- filt %>% 
+  filter(CatalogNumber > 950223)
 
 # check
 # table(factor(x$DatasetID))
@@ -52,7 +49,8 @@ x <- indata %>%
 
 ```
 
-#Quarterly update for: `r quarter`
+# Quarterly update for: `r quarter`
+## Database Version: `r version`
 
 The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(length(unique(x$DatasetID)), big.mark = ',')`** new datasets were added with a total of **`r prettyNum(length(x$CatalogNumber), big.mark = ',')`** new records, for a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
 
@@ -63,7 +61,7 @@ https://deepseacoraldata.noaa.gov/website/AGSViewers/DeepSeaCorals/mapSites.htm
 
 Please see the following tables and figures for additional detail regarding this update.  
 
-#This Update by the Numbers
+# This Update by the Numbers
 
 * Total number of records now in database: **`r  prettyNum(length(filt$CatalogNumber), big.mark=",")`**
 
@@ -79,7 +77,7 @@ Please see the following tables and figures for additional detail regarding this
 
 * Date live on map portal: **`r paste("posted on", releasedate, sep = " ")`**
 
-#Overview map
+# Overview map
 
 ```{r, map, echo = FALSE, message = FALSE, warning=FALSE, fig.width=8, fig.height=5, dpi=300, cache=FALSE}
 
@@ -153,14 +151,14 @@ z <- ggplot(m, aes(x = long, y = lat, group = group)) +
 
 z + geom_point(data=x, 
                color = "red", 
-               size = .5, 
+               size = 1, 
                aes(x=Longitude, y = Latitude), inherit.aes = FALSE) + 
   scale_color_manual(values=c("#999999", "#E69F00")) + theme_bw(base_size = 15, base_family = "Times New Roman")
 ```
 
 -----
 
-#Where?
+# Where?
 
 ``` {r Ocean, echo=FALSE}
 x <- x %>% mutate(Country = ifelse(is.na(Country) == T, 'International Waters', as.character(Country)))
@@ -180,7 +178,7 @@ sum_tbl
 
 -----
 
-#Corals vs. sponges
+# Corals vs. sponges
 
 ```{r corals_sponges, echo=FALSE, cache = FALSE, dpi=300, fig.height=3, fig.width=8}
 #library(extrafont)
@@ -200,7 +198,7 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(8,7)])
 
 -----
 
-#Distribution of Taxa by Order
+# Distribution of Taxa by Order
 
 ```{r orders, echo=FALSE, cache = FALSE, dpi=300, fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
 ##### building big pallette #####
@@ -235,7 +233,7 @@ g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_
 
 -----
 
-#Who Contributed to this Update?
+# Who Contributed to this Update?
 
 ``` {r DataProvider, echo=FALSE}
 
@@ -266,7 +264,7 @@ sum_tbl
 
 -----
 
-#Expedition Details
+# Expedition Details
 
 ``` {r Vessel, echo=FALSE}
 sum_tbl <-

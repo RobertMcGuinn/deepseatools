@@ -209,8 +209,8 @@ render("C:/rworking/digs/code/golden_crab.Rmd" ,
 library(rmarkdown)
 library(knitr)
 
-setwd("C:\\rworking\\digs\\code")
-x <- "20190424-0_Quarterly_Report_for_Database_Update_RPMcGuinn"
-render("C:/rworking/digs/code/20190424-0_Quarterly_Report_for_Database_Update_RPMcGuinn.Rmd" ,
+setwd("C:\\rworking\\deepseatools\\code")
+x <- "20190920-0_Quarterly_Report_for_Database_Update_RPMcGuinn"
+render("C:/rworking/deepseatools/code/rmd_quarterly_report_for_database_update.Rmd" ,
        output_file =  paste(x,".doc", sep=''),
-       output_dir = 'C:/rworking/digs/reports')
+       output_dir = 'C:/rworking/deepseatools/reports')

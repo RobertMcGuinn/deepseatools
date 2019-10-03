@@ -4,9 +4,12 @@
 # Purpose: Execute RMarkdown documents on dashboards for each DatasetID.
 #   4 groups: Cruise, Literature, Program, Repository
 
+##### set an option #####
+options(lifecycle_disable_warnings = TRUE)
+
 ##### _____ Bringing in database #####
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20190718-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
 filt <- indata %>%
   filter(Flag == "0")
 
@@ -14,18 +17,18 @@ filt <- indata %>%
 version <- unique(indata$DatabaseVersion)
 version <- as.character(version)
 
-##### bringing in datasetID key #####
+##### bringing in datasetID key from xls stored on drive #####
 # create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20190719-0_DatasetID_Key_DSCRTP'")
+x <- drive_find(q = "name contains '20190920-0_DatasetID_Key_DSCRTP'")
 
-# browse to it
-drive_find(q = "name contains '20190719-0_DatasetID_Key_DSCRTP'") %>% drive_browse()
+# # browse to it
+# x %>% drive_browse()
 
 # getting the id as a character string
 y <- x$id
 
-# this downloads the file to the s○pecified path
-dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20190709-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
+# this downloads the file to the specified path
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20190920-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
 
 # read the file into R as a data frame
 key <- read.xlsx(dl$local_path)
@@ -41,15 +44,13 @@ setdiff(key$DatasetID, filt$DatasetID)
 ##### subsetting of indata to d (optional step for testing purposes) #####
 d <- indata %>%
   filter(
-    # Flag == "0",
-    # DatasetID %in% head(unique(DatasetID), n=15),
-    DatasetID == "MBARI"# | #Repository
-    # DatasetID == 'Hall-Spencer_etal_2007' | # Literature
-    # DatasetID == 'SOI_FK006C' | #Cruise
-    # DatasetID == 'NOAA_AFSC_Longline_Survey' #Program
+    DatasetID == 'MCZ_IZ' | # Repository
+    DatasetID == 'Hall-Spencer_etal_2007' | # Literature
+    DatasetID == 'SOI_FK006C' | #Cruise
+    DatasetID == 'NOAA_AFSC_Longline_Survey' #Program
   )
 
-##### OR - full run set indata to d #####
+##### ***OR*** full run set indata to d #####
 d <- indata
 
 ##### checking #####
@@ -58,56 +59,54 @@ d <- indata
 # table(unique(factor(d$DataContact)))
 # table(factor(d$DatasetID), useNA = 'always')
 #
-yo <- key %>%
-  # filter(class == 'Cruise') %>%
-  group_by(class) %>%
-  summarise(DatasetID = paste(unique(DatasetID), collapse = " | "),
-            n=n())
-View(yo)
-
-
+# yo <- key %>%
+#   # filter(class == 'Cruise') %>%
+#   group_by(class) %>%
+#   summarise(DatasetID = paste(unique(DatasetID), collapse = " | "),
+#             n=n())
+# View(yo)
 
 
 ##### checking #####
-x <- d %>%
-  arrange(ObservationYear) %>%
-  filter(DatasetID %in% setdiff(indata$DatasetID, filt$DatasetID)) %>%
-  group_by(DatasetID) %>%
-  summarize(
-      RecordType_list = toString(unique(RecordType)),
-      N_Records=n(),
-      # DatasetID_list = toString(unique(DatasetID)),
-      DataProvider_list = toString(unique(DataProvider)),
-      Repository_list = toString(unique(Repository)),
-      ObservationYear_list = toString(unique(ObservationYear)),
-      Vessel_list = toString(unique(Vessel)),
-      VehicleName_list = toString(unique(VehicleName)),
-      WebSite_list = toString(unique(WebSite)),
-      #ImageURL = toString(unique(ImageURL)),
-      PI_list = toString(unique(PI)),
-      PIAffiliation_list = toString(unique(PIAffiliation)),
-      Citation_list = toString(unique(Citation)),
-      DataContact_list = toString(unique(DataContact)),
-      Reporter_list = toString(unique(Reporter)),
-      SurveyID_list = toString(unique(SurveyID))
-    )
-
-View(x)
+# x <- d %>%
+#   arrange(ObservationYear) %>%
+#   filter(DatasetID %in% setdiff(indata$DatasetID, filt$DatasetID)) %>%
+#   group_by(DatasetID) %>%
+#   summarize(
+#       RecordType_list = toString(unique(RecordType)),
+#       N_Records=n(),
+#       # DatasetID_list = toString(unique(DatasetID)),
+#       DataProvider_list = toString(unique(DataProvider)),
+#       Repository_list = toString(unique(Repository)),
+#       ObservationYear_list = toString(unique(ObservationYear)),
+#       Vessel_list = toString(unique(Vessel)),
+#       VehicleName_list = toString(unique(VehicleName)),
+#       WebSite_list = toString(unique(WebSite)),
+#       #ImageURL = toString(unique(ImageURL)),
+#       PI_list = toString(unique(PI)),
+#       PIAffiliation_list = toString(unique(PIAffiliation)),
+#       Citation_list = toString(unique(Citation)),
+#       DataContact_list = toString(unique(DataContact)),
+#       Reporter_list = toString(unique(Reporter)),
+#       SurveyID_list = toString(unique(SurveyID))
+#     )
+#
+# View(x)
 
 ##### Fixing DatasetID Problems (optional) #####
-d <- d %>% mutate(DatasetID =
-                    ifelse(DatasetID == "MCZ_IZ_1968_1880",
-                           'MCZ_IZ',
-                           as.character(DatasetID)))
-d <- d %>% mutate(DatasetID =
-                    ifelse(DatasetID == "NMNH-IZ",
-                           'NMNH_IZ',
-                           as.character(DatasetID)))
-
-d <- d %>% mutate(DatasetID =
-                    ifelse(DatasetID == "CT-13-07",
-                           'NOAA_CT-13-07',
-                           as.character(DatasetID)))
+# d <- d %>% mutate(DatasetID =
+#                     ifelse(DatasetID == "MCZ_IZ_1968_1880",
+#                            'MCZ_IZ',
+#                            as.character(DatasetID)))
+# d <- d %>% mutate(DatasetID =
+#                     ifelse(DatasetID == "NMNH-IZ",
+#                            'NMNH_IZ',
+#                            as.character(DatasetID)))
+#
+# d <- d %>% mutate(DatasetID =
+#                     ifelse(DatasetID == "CT-13-07",
+#                            'NOAA_CT-13-07',
+#                            as.character(DatasetID)))
 
 ##### checking #####
 setdiff(d$DatasetID, key$DatasetID)
@@ -117,13 +116,13 @@ setdiff(key$DatasetID, d$DatasetID)
 d <- merge(d, key, all.x = TRUE)
 
 ##### check #####
-table(d$class, useNA = 'always')
-
-x <- d %>%
-  group_by(class) %>%
-  summarize(DatasetsbyClass = length(unique(DatasetID)),
-    n = n())
-View(x)
+# table(d$class, useNA = 'always')
+#
+# x <- d %>%
+#   group_by(class) %>%
+#   summarize(DatasetsbyClass = length(unique(DatasetID)),
+#     n = n())
+# View(x)
 
 # setdiff(d$DatasetID, key$DatasetID)
 # setdiff(key$DatasetID, d$DatasetID)
@@ -205,17 +204,32 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/repository')
 }
 
+## repository:MBARI
+yo <- d %>%
+  filter(
+    DatasetID == 'MBARI'
+  )
+
+library("rmarkdown")
+for (id in unique(yo$DatasetID)){
+  sub <- yo[yo$DatasetID == id,]
+  render("C:/rworking/deepseatools/code/rmd_datasetid_repository_MBARI.rmd" ,
+         output_file =  paste(id,".html", sep=''),
+         output_dir = 'C:/rworking/deepseatools/reports/datasetid/repository')
+}
+
 ##### checking #####
 cruise <- list.files('C:/rworking/deepseatools/reports/datasetid/cruise/')
 literature <- list.files('C:/rworking/deepseatools/reports/datasetid/literature/')
 program <- list.files('C:/rworking/deepseatools/reports/datasetid/program/')
 repository <- list.files('C:/rworking/deepseatools/reports/datasetid/repository/')
 
-
 length(cruise)
 length(literature)
 length(program)
 length(repository)
+
+
 
 biglist <- c(cruise, literature, program, repository)
 biglist <- gsub(pattern = "\\.html$", "", biglist)
@@ -236,9 +250,7 @@ x <- d %>% group_by(DatasetID, class) %>%
 View(x)
 
 ##### write CSV of x #####
-
 setwd("C:/rworking/deepseatools/indata")
-
 x %>%
   write.csv(paste("20190718-0_DatasetID_Dashboard_Review",".csv", sep = ''), row.names = FALSE)
 
@@ -248,3 +260,6 @@ x %>%
 
 
 
+
+
+##### updating DatasetID with new numbers #####

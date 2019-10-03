@@ -4,7 +4,7 @@
 # robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 # 843-460-9696, 843-830-8845
 
-##### Installation/Loading of Packages ##### 
+##### Installation/Loading of Packages #####
 #install.packages('xlsx')
 library(xlsx)
 #install.packages("beanplot")
@@ -73,16 +73,16 @@ taxfl <- read.csv("20181011-1_taxonomy_to_flag.csv", header = T)
 # this step removes 'NA'
 taxfl <- taxfl %>% filter(Flag == "1")
 #View(taxfl)
-##### clean up original taxonomy table where Phylum is null (n=2) ##### 
-tax <- tax %>% 
+##### clean up original taxonomy table where Phylum is null (n=2) #####
+tax <- tax %>%
   filter(is.na(tax$Phylum) == F)
 
-##### load data set of interest (d) ##### 
+##### load data set of interest (d) #####
 setwd("C:/rworking/digs/indata")
 d <- read.csv("20181109-0_NOAA_OER_EX1702_EX1703_EX1705_EX1706_Kelley_West_Pacific_2017_2017.csv", header = T)
 
-##### filter data ##### 
-cors <- d %>% 
+##### filter data #####
+cors <- d %>%
   filter(
     Phylum == 'Cnidaria' |
       Phylum == 'Porifera'
@@ -109,7 +109,6 @@ nomatch <- read.csv('nomatch.csv', header = T)
 #create a list from the filtered data
 list <- factor(nomatch$ScientificName)
 
-
 ##### -OR- load a single species to a list #####
 #list <- "Cladocora arbuscula"
 ##### *** END *** #####
@@ -131,7 +130,7 @@ listmatch <- listmatch %>% filter(listmatch$ScientificName %in% cors_nomatch)
 # setdiff(listmatch$ScientificName, listmatch$ScientificName_accepted)
 
 ##### working on 'taxa to change' list #####
-# creating an empty taxch table 
+# creating an empty taxch table
 newtaxch <- taxch[0,]
 
 #adding enough empty rows
@@ -140,13 +139,13 @@ newtaxch$ScientificName <- listmatch$ScientificName_accepted
 newtaxch$VerbatimScientificName <- listmatch$ScientificName
 newtaxch$Genus <- listmatch$Genus
 newtaxch$Species <- listmatch$Species
-genus_fix <- newtaxch %>% 
-  filter(is.na(Species) == T, 
+genus_fix <- newtaxch %>%
+  filter(is.na(Species) == T,
          is.na(Genus) == F
   )
 
-genus_nofix <- newtaxch %>% 
-  filter(is.na(Species) == F, 
+genus_nofix <- newtaxch %>%
+  filter(is.na(Species) == F,
          is.na(Genus) == F
   )
 
@@ -163,7 +162,7 @@ newtaxch <- rbind(genus_fix, genus_nofix)
 newtaxch <- newtaxch[,1:2]
 #newtaxch
 
-# combine new taxa with original file (output: taxch2) 
+# combine new taxa with original file (output: taxch2)
 taxch2 <- rbind(taxch, newtaxch)
 
 # this makes the levels match between the two varibles you are comparing
@@ -174,15 +173,15 @@ taxch2$VerbatimScientificName <- factor(taxch2$VerbatimScientificName, levels = 
 # this actually makes the comparison and removes the rows that match
 taxch2 <- taxch2[which(taxch2[,1] != taxch2[,2]), ]
 
-# writing the new joint taxonomy table to disc (output: new csv of taxonomy table) 
+# writing the new joint taxonomy table to disc (output: new csv of taxonomy table)
 setwd("C:/rworking/digs/outdata")
 write.csv(taxch2,"20180927-0_taxonomy_to_change.csv", row.names = F, quote = T)
 
 ##### split: splitting matched file between taxa with accepted names unaccepted #####
-listmatch_acc <- listmatch %>% 
+listmatch_acc <- listmatch %>%
   filter(Taxon.status == "accepted")
 
-listmatch_unacc <- listmatch %>% 
+listmatch_unacc <- listmatch %>%
   filter(Taxon.status == "unaccepted")
 
 # checking
@@ -218,17 +217,17 @@ newtax$Subspecies <- listmatch_acc$Subspecies
 newtax <- newtax[is.na(newtax$AphiaID) == FALSE, ]
 
 # # view itView(newtax)
-# 
+#
 
 ##### split/apply/combine: work on Genus 'sp.' issue and TaxonRank in the accepted 'newtaxa' (output: 'newtax') #####
 
-genus_fix <- newtax %>% 
-  filter(is.na(Species) == T, 
+genus_fix <- newtax %>%
+  filter(is.na(Species) == T,
          is.na(Genus) == F
          )
 
-genus_nofix <- newtax %>% 
-  filter(is.na(Species) == F, 
+genus_nofix <- newtax %>%
+  filter(is.na(Species) == F,
          is.na(Genus) == F
   )
 
@@ -248,14 +247,14 @@ genus_nofix$TaxonRank <- 'species'
 newtax <- rbind(genus_fix, genus_nofix)
 
 # #check
-# View(genus_fix) 
+# View(genus_fix)
 # View(genus_nofix)
 # View(newtax)
 # newtax %>% dplyr::select(Genus, Species)
 
 ##### filter out duplicates with existing taxonomy table #####
 newtax_nodups <- newtax[newtax$ScientificName %in% tax$ScientificName == F,]
-newtax_nodups$SynonymAphiaID <- '-999' 
+newtax_nodups$SynonymAphiaID <- '-999'
 ##### *** Export list of accepted ScientificNames from original unaccepted names for matching at Worms *** #####
 list <- factor(listmatch_unacc$ScientificName_accepted)
 
@@ -311,13 +310,13 @@ newtax_un <- newtax_un[is.na(newtax_un$AphiaID) == FALSE, ]
 
 ##### split/apply/combine: work on Genus 'sp.' issue and TaxonRank in the unaccepted 'newtax_un' (output: 'newtax_un') #####
 
-genus_fix <- newtax_un %>% 
-  filter(is.na(Species) == T, 
+genus_fix <- newtax_un %>%
+  filter(is.na(Species) == T,
          is.na(Genus) == F
   )
 
-genus_nofix <- newtax_un %>% 
-  filter(is.na(Species) == F, 
+genus_nofix <- newtax_un %>%
+  filter(is.na(Species) == F,
          is.na(Genus) == F
   )
 
@@ -337,7 +336,7 @@ genus_nofix$TaxonRank <- 'species'
 newtax_un <- rbind(genus_fix, genus_nofix)
 
 # #check
-# View(genus_fix) 
+# View(genus_fix)
 # View(genus_nofix)
 # View(newtax_un)
 # newtax %>% dplyr::select(Genus, Species)
@@ -391,7 +390,7 @@ list <- setdiff(list, taxch2$VerbatimScientificName)
 list <- setdiff(list, taxfl$ScientificName)
 
 ##### filtering existing data to include only taxa in the list #####
-d2 <- d %>% 
+d2 <- d %>%
   filter(
     ScientificName %in% list
   )
@@ -403,10 +402,10 @@ length(d2$ScientificName)
 
 ##### creating a taxonomy table from existing data #####
 x <- d2 %>%
-  group_by(VernacularNameCategory, VernacularName, ScientificName, 
-           TaxonRank, AphiaID, Phylum, Class, Subclass, Order, Suborder, Family, 
+  group_by(VernacularNameCategory, VernacularName, ScientificName,
+           TaxonRank, AphiaID, Phylum, Class, Subclass, Order, Suborder, Family,
            Subfamily, Genus, Subgenus, Species, Subspecies, ScientificNameAuthorship, Synonyms) %>%
-  summarize(n = n()) 
+  summarize(n = n())
 
 View(x)
 
@@ -425,7 +424,7 @@ setwd("C:/rworking/digs/outdata")
 write.csv(tax2,"20180830-0_taxonomy_RPMcGuinn.csv", row.names = F, quote = T)
 
 ##### adding records to Taxa_to_Flag #####
-# #checking 
+# #checking
 # names(taxfl)
 # table(taxfl$FlagReason, )
 

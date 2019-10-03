@@ -7,7 +7,9 @@
 #install.packages('openxlsx')
 library(openxlsx)
 library(sp)
+#install.packages("tidyverse")
 library(tidyverse)
+#install.packages("rerddap")
 library(rerddap)
 #install.packages('leaflet')
 library(leaflet)
@@ -70,6 +72,10 @@ library(officer)
 #library(kableExtra)
 #install.packages("worrms")
 library(worrms)
+# install.packages("taxize")
+library(taxize)
+
+
 
 
 

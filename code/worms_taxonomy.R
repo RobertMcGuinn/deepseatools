@@ -7,12 +7,6 @@
 ##### resources and references #####
 # https://cran.r-project.org/web/packages/worms/worms.pdf
 
-
-##### installing 'worms' package #####
-#install.packages('worms')
-library(worms)
-library(worrms)
-
 ##### load the most current taxonomy from Google Sheets #####
 
 taxfl <- gs_title('20190909-0_taxonomy_to_flag')
@@ -24,43 +18,25 @@ taxch <- gs_read(taxch)
 tax <- gs_title('20190909-0_taxonomy')
 tax <- gs_read(tax)
 
+##### create the taxon names list #####
+taxa <- as.character(tax$ScientificName[1:10])
+#taxa <- c("Adelogorgia cf. phyllosclera", "Putamayo", "Adelogorgia", "Lophelia pertusa")
 
-##### load most current taxonomic tables by CSV #####
-# setwd("C:/rworking/digs/indata")
-# tax <- read.csv("20181130-0_taxonomy.csv", header = T)
-# taxch <- read.csv("20181130-0_taxonomy_to_change.csv", header = T)
-# taxfl <- read.csv("20181130-0_taxonomy_to_flag.csv", header = T)
-#
-# setwd("C:/rworking/digs/indata")
-# tax2 <- read.csv("20181127-0_taxonomy.csv", header = T)
-# taxch2 <- read.csv("20181127-0_taxonomy_to_change.csv", header = T)
-# taxfl2 <- read.csv("20181127-0_taxonomy_to_flag.csv", header = T)
+##### match taxa #####
 
-##### get rid of taxa with cf in front #####
-cleantax <- tax[!grepl("^cf.", tax$ScientificName),]
-
-##### create the taxon names list with the clean data #####
-taxon_names1 <- as.character(tax$ScientificName[1:1499])
+x <- wm_records_taxamatch(name = taxa,
+                          #ids = TRUE,
+                          verbose = TRUE,
+                          marine_only = TRUE
+                          #sleep_btw_chunks_in_sec = 0.2
+                          )
+z <- bind_rows(x, .id = "column_label")
+View(z)
 
 ##### write taxon names #####
 setwd("C:/rworking/digs/outdata")
 write.csv(taxon_names1,"20181204_0_Taxonomy_Table_names1_version_20181130-0.csv", row.names = F, quote = T)
 
-##### worms matching #####
-
-taxa <- 'Coralidae'
-match <- wormsbymatchnames(taxa, ids = TRUE, verbose = TRUE,
-             chunksize = 50, marine_only = "true",
-             sleep_btw_chunks_in_sec = 0.2)
-View(match)
-
-#####  taxa #####
-
-x <- wm_records_taxamatch(name = c("Adelogorgia cf. phyllosclera", "Putamayo", "Adelogorgia", "Lophelia pertusa"),
-                          ids = TRUE, ids = TRUE, verbose = TRUE, chunksize = 50, marine_only = "true",
-                          sleep_btw_chunks_in_sec = 0.2))
-z <- bind_rows(x, .id = "column_label")
-View(z)
 
 
 
@@ -70,3 +46,10 @@ View(z)
 
 
 
+
+
+
+##### use taxize instead #####
+
+
+uids <- get_uid(taxa)
