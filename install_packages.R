@@ -74,6 +74,12 @@ library(officer)
 library(worrms)
 # install.packages("taxize")
 library(taxize)
+# install.packages("devtools")
+library(devtools)
+#devtools::install_github("iobis/obistools")
+library(obistools)
+
+
 
 
 

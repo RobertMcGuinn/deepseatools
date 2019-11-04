@@ -47,10 +47,10 @@ library(devtools)
 
 ##### _____ Bringing in database #####
 
-setwd("C:/rworking/digs/indata")
-indata1<-read.csv("DSCRTP_NatDB_20190620-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
-filt1 <- indata1 %>%
-  filter(Flag == "0")
+# setwd("C:/rworking/digs/indata")
+# indata1<-read.csv("DSCRTP_NatDB_20190620-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+# filt1 <- indata1 %>%
+#   filter(Flag == "0")
 
 setwd("C:/rworking/deepseatools/indata")
 indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
@@ -62,10 +62,10 @@ filt <- indata %>%
 # #from table delimited text file (from David Sallis on 20190307)
 # indata <- read.table("DSCRTP_NatDB_20190306-0.txt", header = T, sep="\t", fill = TRUE)
 
-##### _____ Create standardized tables of key variables at latest DB version #####
+##### _____ Cre╤ate standardized tables of key variables at latest DB version #####
 # IdentificationQualifier
 
-version <- '20190718-0'
+version <- '20190920-0'
 
 x <- filt %>%
   arrange(ObservationYear) %>%
@@ -1783,7 +1783,7 @@ ggplot() + geom_point(data = afil, aes(lon, lat, size = n, colour = depth)) +
 ##### get OBIS data #####
 require(leaflet)
 
-data <- occurrence("Leiopathes")
+data <- occurrence("Myctophiformes")
 
 # QC Flagging
 qcflag <- function(qc, number) {
@@ -3569,8 +3569,108 @@ for (id in incoming$index){
   df <- rbind(df, d)
 }
 
+##### species accumulation curves #####
+data(BCI)
+sp1 <- specaccum(BCI)
+sp2 <- specaccum(BCI, "random")
+sp2
+summary(sp2)
+plot(sp1, ci.type="poly", col="blue", lwd=2, ci.lty=0, ci.col="lightblue")
+boxplot(sp2, col="yellow", add=TRUE, pch="+")
+
+##### obistools #####
+#match_taxa()performs interactive taxon matching with the World Register of Marine Species.
+names <- c("Madracis", "Lophelia")
+match_taxa(names)
+
+##### woods hole oceanographic institute #####
+
+filt %>% filter(grepl('Woods Hole', DataProvider) |
+                  grepl('Woods Hole', PIAffiliation) |
+                  grepl('WHOI_AT', DatasetID)) %>%
+                  group_by(DatasetID, PIAffiliation, DataProvider, PI, Vessel, gisMEOW, ObservationYear) %>%
+                  summarize(n=n()) %>% View()
 
 
+
+
+
+
+
+
+##### #####
+##### get OBIS data #####
+
+obisdata <- occurrence("Bathypterois")
+obisdata <- occurrence("Ipnopidae")
+
+##### _____ filter data in OBIS #####
+
+# table(obisdata$collectionCode, useNA = 'always')
+
+x <- obisdata# %>%
+  #filter(collectionCode == 'DEEPWATER SYSTEMATICS') # 'ARC' 'SAE Biological records'
+
+#table(x$decimalLatitude, useNA = 'always')
+x$decimalLatitude <- as.numeric(x$decimalLatitude)
+x$decimalLongitude <- as.numeric(x$decimalLongitude)
+
+##### map OBIS data in leaflet #####
+library(leaflet)
+m <- leaflet()
+m <- addProviderTiles(m, "Esri.OceanBasemap") #Esri.OceanBasemap, "CartoDB.DarkMatter"
+m <- addCircleMarkers(m, data=x,
+                      lat = x$decimalLatitude,
+                      lng = x$decimalLongitude,
+                      radius=5,
+                      weight=0,
+                      fillColor=colors,
+                      fillOpacity=1,
+                      popup = paste("scientificName:", x$scientificName, "<br>",
+                                    "basisOfRecord:", x$basisOfRecord, "<br>",
+                                    "bibliographicCitation:", x$bibliographicCitation, "<br>",
+                                    "depth:", x$depth, "<br>",
+                                    "locality:", x$locality, "<br>",
+                                    "datasetName:", x$datasetName, "<br>",
+                                    "collectionCode:", x$collectionCode, "<br>",
+                                    "eventDate:", x$eventDate, "<br>",
+                                    "institutionID:", x$institutionID, "<br>",
+                                    "footprintWKT:", x$footprintWKT, "<br>",
+                                    "ownerInstitutionCode:", x$ownerInstitutionCode,"<br>",
+                                    "associatedMedia:", x$associatedMedia))
+m
+
+##### _____ DarwinCore emof #####
+
+##### bring in emof table #####
+
+setwd("C:/rworking/deepseatools/indata")
+emof <- read.csv("DSCRTP_EMOF_Subset_2019-10-11.csv", header = T)
+
+##### extract a single numerical variable and summarize #####
+
+table(emof$measurementType)
+var <- "cover"
+x <- emof %>% filter(measurementType == var)
+View(table(x$measurementValue))
+
+##### extract just records of a particular level of measurementValue #####
+
+y <- x %>% filter(measurementValue == 'DeepWorker 6 DSR/V')
+length(y$occurrenceID)
+
+##### extract a single numerical variable and summarize #####
+
+table(emof$measurementType)
+var <- "temperature"
+x <- emof %>% filter(measurementType == var)
+x$measurementValue <- as.character(x$measurementValue)
+x$measurementValue <- as.numeric(x$measurementValue)
+summary(x$measurementValue)
+hist(x$measurementValue)
+
+
+##### workin#####
 
 
 

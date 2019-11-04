@@ -2,7 +2,8 @@
 # Author: Robert P. McGuinn
 # Date started: 2018-08-14
 # Purpose: Execute RMarkdown documents on dashboards for each DatasetID.
-#   4 groups: Cruise, Literature, Program, Repository
+#   4 groups: Cruise, Literature, Program, Repository, and then Repository-MBARI
+#(because it is so huge it can't have an interactive map)
 
 ##### set an option #####
 options(lifecycle_disable_warnings = TRUE)
@@ -19,7 +20,7 @@ version <- as.character(version)
 
 ##### bringing in datasetID key from xls stored on drive #####
 # create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20190920-0_DatasetID_Key_DSCRTP'")
+x <- drive_find(q = "name contains '20190920-1_DatasetID_Key_DSCRTP'")
 
 # # browse to it
 # x %>% drive_browse()
@@ -28,7 +29,7 @@ x <- drive_find(q = "name contains '20190920-0_DatasetID_Key_DSCRTP'")
 y <- x$id
 
 # this downloads the file to the specified path
-dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20190920-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20190920-1_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
 
 # read the file into R as a data frame
 key <- read.xlsx(dl$local_path)
@@ -229,8 +230,6 @@ length(literature)
 length(program)
 length(repository)
 
-
-
 biglist <- c(cruise, literature, program, repository)
 biglist <- gsub(pattern = "\\.html$", "", biglist)
 
@@ -262,4 +261,21 @@ x %>%
 
 
 
-##### updating DatasetID with new numbers #####
+##### updating DatasetID key with new 'n' #####
+
+# build a frequency table by DatasetID
+x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
+names(key)
+
+# strip n from fieds
+y <- key[,1:8]
+names(y)
+
+# merge new numbers
+z <- merge(y,x)
+names(z)
+
+# write out result
+write.xlsx(z, "C:/rworking/deepseatools/indata/20190920-0_DatasetID_Key_DSCRTP.xlsx",
+overwrite = TRUE)
+
