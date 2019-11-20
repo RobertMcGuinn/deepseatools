@@ -116,7 +116,7 @@ ft
 # #getting rid of  missing lat/long data
 #library(ggmap)
 sub2 <- sub %>%
-  filter(Latitude != '-999' , Longitude != '-999')
+  filter(Latitude != '-999' , Longitude != '-999', Longitude != '-887.22488')
 # 
 # # use this when not crossing dateline
 # xpos <- sub2$Longitude
@@ -724,7 +724,7 @@ g <- ggplot(sub2, aes(Oxygen, fill = Phylum)) +
   theme_bw(base_size = 15, base_family = "Cambria")
 
 #display.brewer.all(colorblindFriendly=TRUE)
-g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+g + scale_fill_manual(values = brewer.pal(12, "Paired"))#[c(10,9)])
 
 
 ```
@@ -1226,6 +1226,47 @@ sum_tbl
 
 ```
 
+# Standardized Variable Checks
 
+``` {r standardized_table_checks, echo=FALSE}
+Vessel <- setdiff(unique(sub$Vessel), unique(filt$Vessel))
+VehicleName <- setdiff(unique(sub$VehicleName), unique(filt$VehicleName))
+PI <- setdiff(unique(sub$PI), unique(filt$PI))
+PIAffiliation <- setdiff(unique(sub$PIAffiliation), unique(filt$PIAffiliation))
+Repository <- setdiff(unique(sub$Repository), unique(filt$Repository))
+IdentifiedBy <- setdiff(unique(sub$IdentifiedBy), unique(filt$IdentifiedBy))
+IdentificationQualifier <- setdiff(unique(sub$IdentificationQualifier), unique(filt$IdentificationQualifier))
+DataProvider <- setdiff(unique(sub$DataProvider), unique(filt$DataProvider))
+DatasetID <- setdiff(unique(sub$DatasetID), unique(filt$DatasetID))
+SurveyID <- setdiff(unique(sub$SurveyID), unique(filt$SurveyID))
+```
 
+If name appears below after variable, then it does not match the standard name.
 
+* Vessel: `r Vessel`
+* VehicleName: `r VehicleName`
+* PI: `r PIAffiliation`
+* Repository: `r Repository`
+* IdentifiedBy: `r IdentifiedBy`
+* IdentificationQualifier: `r IdentificationQualifier`
+* DataProvider: `r DataProvider`
+* DatasetID: `r DatasetID`
+* SurveyID: `r SurveyID`
+
+# SurveyIDs for the same Vessel
+``` {r standardized_SurveyID_check, echo=FALSE, cache = FALSE}
+
+SurveyIDPattern <- filt %>% filter(Vessel %in% unique(sub$Vessel)) %>% group_by(DatasetID, Vessel, SurveyID, ObservationDate, PI) %>% summarize(n=n())
+sum_tbl <- kable(SurveyIDPattern, row.names = F, digits = 2)
+sum_tbl
+
+```
+
+# DatasetIDs for the same Vessel
+``` {r standardized_DatasetID_check, echo=FALSE}
+
+DatasetIDPattern <- filt %>% filter(Vessel %in% unique(sub$Vessel)) %>% group_by(DatasetID, Vessel, SurveyID, ObservationDate, PI) %>% summarize(n=n())
+sum_tbl <- kable(DatasetIDPattern, row.names = F, digits = 2)
+sum_tbl
+
+```

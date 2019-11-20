@@ -78,6 +78,11 @@ library(taxize)
 library(devtools)
 #devtools::install_github("iobis/obistools")
 library(obistools)
+library(jsonlite) #https://cran.r-project.org/web/packages/jsonlite/
+library(httr)
+install.packages("rgbif")
+library("rgbif")
+library(rgbif)
 
 
 

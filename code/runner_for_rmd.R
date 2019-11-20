@@ -156,11 +156,17 @@ render("2019_ISDSC7_high_density_THourigan_RPMcGuinn.Rmd",
 # install.packages("rmarkdown")
 library(rmarkdown)
 # add the prefix of the dataset you want to report on
-x <- "20190910-1_NOAA_NCCOS_NF-18-04_ROV_NancyFoster_Battista_Etnoyer_Shuler_2018_2018"
+x <- "20191111-0_University_of_Hawaii_Smith_Durden_Kilo_Moana_KM1808_2018_2018"
 
 render("C:/rworking/deepseatools/code/rmd_accession_qa_dashboard.rmd",
        output_file =  paste(x,".doc", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
+
+##### load in subset alone without running QA dash #####
+
+x <- "20191112-1_HBOI_Walton_Smith_Cuba_Reed_Farrington_2017_2017"
+setwd("C:/rworking/deepseatools/indata")
+sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
 ##### render the QA dashboard (museum)  #####
 library(rmarkdown)

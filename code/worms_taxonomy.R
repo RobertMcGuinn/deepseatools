@@ -22,10 +22,13 @@ tax <- gs_read(tax)
 taxa <- as.character(tax$ScientificName[1:10])
 #taxa <- c("Adelogorgia cf. phyllosclera", "Putamayo", "Adelogorgia", "Lophelia pertusa")
 
+taxa <- as.character(setdiff(unique(sub1$ScientificName), tax$ScientificName))
+taxa1 <- taxa[1:50]
+taxa2 <- taxa[51:66]
 ##### match taxa #####
 
-x <- wm_records_taxamatch(name = taxa,
-                          #ids = TRUE,
+x <- wm_records_taxamatch(name = taxa1,
+                          ids = TRUE,
                           verbose = TRUE,
                           marine_only = TRUE
                           #sleep_btw_chunks_in_sec = 0.2

@@ -57,12 +57,14 @@ indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0")
 
+# save.image("C:/rworking/deepseatools/.RData")
+
 # # save the R workspace
 # save.image("C:/rworking/deepseatools/.RData")
 # #from table delimited text file (from David Sallis on 20190307)
 # indata <- read.table("DSCRTP_NatDB_20190306-0.txt", header = T, sep="\t", fill = TRUE)
 
-##### _____ Cre╤ate standardized tables of key variables at latest DB version #####
+##### _____ Create standardized tables of key variables at latest DB version #####
 # IdentificationQualifier
 
 version <- '20190920-0'
@@ -506,8 +508,8 @@ names(DataProvider_tab)
 
 ##### _____ get modified and original dataset from CSV #####
 setwd("C:/rworking/deepseatools/indata")
-x <- read.csv("20190328-0_Q2-2019_corrections_DatasetID_dashboard_review.csv", header = T)
-y <- read.csv("20190819-4_NOAA_NEFSC_Connecticut_ISIS2_TowCam_Packer_Part_3_2013_2013.csv", header = T)
+x <- read.csv("deep_sea_corals_9f76_ffe0_3edf.csv", header = T)
+#y <- read.csv("20190819-4_NOAA_NEFSC_Connecticut_ISIS2_TowCam_Packer_Part_3_2013_2013.csv", header = T)
 
 # 20190815-0_NOAA_NEFSC_Connecticut_ISIS2_TowCam_Packer_Part_2_2013_2013
 # 20190819-4_NOAA_NEFSC_Connecticut_ISIS2_TowCam_Packer_Part_3_2013_2013
@@ -521,7 +523,7 @@ sub <- read.table("", header = T, sep="\t", fill = TRUE)
 
 ##### _____ get modified and original datasets via Excel #####
 setwd("C:/rworking/deepseatools/indata")
-indata <- read.xlsx('DSCRTP_NatDB_20150526-0.xlsx', sheet = 1)
+sub <- read.xlsx('20191108-1_NOAA_OER_EX1806_NCarolina_Morrison_Sautter_2018_2018-TH.xlsx', sheet = 1)
 
 #sub2 <- read.csv()
 
@@ -711,7 +713,7 @@ table(s$DSCRTPCategory, useNA = 'always')
 ##### _____ valid values #####
 x <- s %>%
   filter(
-    grepl("Condition", FieldName)
+    grepl("VernacularNameCategory", FieldName)
   ) %>%
   group_by(
     FieldName
@@ -2503,13 +2505,13 @@ write.xlsx(d,'20190522_Subset_DSCRTP_NatDB_20190418-0_RPMcGuinn', row.names = FA
 ##### images to folder operations #####
 
 # getting urls from file
-d <- filt %>% filter(is.na(ImageURL) == F)
+d <- filt %>% filter(is.na(ImageURL) == F, ScientificName == 'Lophelia pertusa')
 d <- d[sample(nrow(d), 10),]
 length(d$CatalogNumber)
 urls <- d$ImageURL
 
 # just using part of the URL for the file name
-setwd("C:/rworking/digs/outdata/imageset")
+setwd("C:/rworking/deepseatools/outdata/imageset")
 for (url in urls) {
   download.file(url, destfile = basename(url), mode = "wb")
 }
@@ -3360,7 +3362,6 @@ d <- tabledap("deep_sea_corals",
               url = "https://ecowatch.ncddc.noaa.gov/erddap/")
 
 ##### creating a summary statistics table #####
-
 # Here’s another example that again uses the states.csv dataset.
 
 # Say we wanted to create a table with summary statistics for five of the variables in this dataset:
@@ -3669,11 +3670,105 @@ x$measurementValue <- as.numeric(x$measurementValue)
 summary(x$measurementValue)
 hist(x$measurementValue)
 
+##### checking on depth issues #####
 
-##### workin#####
+x <- sub %>% filter(CatalogNumber == '971624') #%>%
+  #dplyr::select(Ocean, CatalogNumber, Flag, Ocean, Latitude, Longitude, DepthInMeters,
+                gisCRMDepth, gisGEBCODepth, gisEtopoDepth, gisIHOSeas)
 
 
+###### map it ######
+
+library(leaflet)
+m <- leaflet()
+m <- addProviderTiles(m, "Esri.OceanBasemap") #Esri.OceanBasemap, "CartoDB.DarkMatter"
+m <- addCircleMarkers(m, data=x,
+                     # lat = x$LatitudeInDD,
+                      # lng = x$LongitudeInDD,
+                      radius=5,
+                      weight=0,
+                      fillColor= "green",
+                      fillOpacity=1,
+                      popup = paste(
+                        "CatalogNumber:", x$CatalogNumber, "<br>",
+                        "DepthInMeters:", x$DepthInMeters, "<br>",
+                        "gisCRMDepth:", x$gisCRMDepth, "<br>",
+                        "gisGEBCODepth:", x$gisGEBCODepth, "<br>",
+                        "gisLandCheck:", x$gisLandCheck, "<br>",
+                        "Latitude:", x$Latitude, "<br>",
+                        "Longitude:", x$Longitude, "<br>",
+                        "ImageURL:", x$ImageURL
+                      ))
+m
+
+##### write x to shapefile #####
+#install.packages('arcgisbinding')
+library(arcgisbinding)
+arc.check_product()
+
+x <- sub %>% filter(VernacularNameCategory == 'gorgonian coral')
+x_geo <- x
+
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+fgdb_path <- 'C:/data/aprx/geozones/geozones.gdb'
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
 
 
+##### checking incoming against standardized tables #####
+Vessel <- length(setdiff(unique(sub$Vessel), unique(filt$Vessel)))
+VehicleName <- length(setdiff(unique(sub$VehicleName), unique(filt$VehicleName)))
+PI <- length(setdiff(unique(sub$PI), unique(filt$PI)))
+PIAffiliation <- length(setdiff(unique(sub$PIAffiliation), unique(filt$PIAffiliation)))
+Repository <- length(setdiff(unique(sub$Repository), unique(filt$Repository)))
+IdentifiedBy <- length(setdiff(unique(sub$IdentifiedBy), unique(filt$IdentifiedBy)))
+IdentificationQualifier <- length(setdiff(unique(sub$IdentificationQualifier), unique(filt$IdentificationQualifier)))
+DataProvider <- length(setdiff(unique(sub$DataProvider), unique(filt$DataProvider)))
+DatasetID <- length(setdiff(unique(sub$DatasetID), unique(filt$DatasetID)))
+SurveyID <- length(setdiff(unique(sub$SurveyID), unique(filt$SurveyID)))
+
+filt %>% filter(Vessel == unique(sub$Vessel)) %>% group_by(SurveyID) %>% summarize(n=n())
+filt %>% filter(Vessel == unique(sub$Vessel)) %>% group_by(DatasetID) %>% summarize(n=n())
+
+##### Rearranging Columns #####
+
+##### find missing variables #####
+namevector<-setdiff(names(tax), names(x))
+
+for(i in namevector)
+  indata[,i] <- NA
+
+## Step 12: Match Template Column Order #####
+indata<-indata[,c(TMPL_FullVariables)]
+
+##### _____ get modified and original datasets via Excel #####
+setwd("C:/rworking/deepseatools/indata")
+sub <- read.xlsx('20191108-1_NOAA_OER_EX1806_NCarolina_Morrison_Sautter_2018_2018-TH.xlsx', sheet = 1)
+
+##### workin on checking identifiedby #####
+
+x <- sub %>% filter(sub$RecordType == 'specimen') %>%
+  group_by(IdentifiedBy) %>%
+  summarize(RecordType = paste(unique(RecordType), collapse=" | "),
+            Class = paste(unique(Class), collapse=" | "),
+            Order = paste(unique(Order), collapse=" | "),
+            ScientificName = paste(unique(ScientificName), collapse = " | "),
+            SampleID = paste(unique(SampleID), collapse = " | "))
+
+
+##### write file to csv
+setwd("C:/rworking/deepseatools/indata")
+x %>%
+  write.csv("20191118-0_summary of IdentifiedBy at version 20191108-1_RPMcGuinn.csv", row.names = FALSE)
+
+#####  #####
+x <- occ_search(scientificName = "Ursus americanus", limit = 50)
+
+setwd("C:/rworking/deepseatools/indata/dwca-nmnh_extant_dwc-a-v1.25")
+sub <- read.table("occurrence.txt", header = T, fill = TRUE)
+
+
+d <- data.frame(x$data)
 
 

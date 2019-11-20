@@ -4,445 +4,204 @@
 # robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 # 843-460-9696, 843-830-8845
 
-##### Installation/Loading of Packages #####
-#install.packages('xlsx')
-library(xlsx)
-#install.packages("beanplot")
-library(beanplot)
-#install.packages("stringr")
-library(stringr)
-#install.packages("knitr")
-library(knitr)
-#install.packages("tidyr")
-library(tidyr)
-#install.packages("sp")
-library(sp)
-#install.packages("maptools")
-library(maptools)
-#install.packages("maps")
-library(maps)
-#install.packages("reshape")
-library(reshape)
-#install.packages("reshape2")
-library(reshape2)
-#install.packages("psych")
-library(psych)
-#install.packages("ggplot2")
-library(ggplot2)
-#install.packages("data.table")
-library(data.table)
-#install.packages("dplyr")
-library(dplyr)
-#install.packages("car")
-library(car)
-#install.packages("gdata")
-library(gdata)
-#install.packages("digest")
-library(digest)
-#install.packages("rgdal")
-library(rgdal)
-#install.packages("ggmap")
-library(ggmap)
-#install.packages("rerddap")
-library(rerddap)
-#install.packages("raster")
-library(raster)
-#install.packages("rworldxtra")
-library(rworldxtra)
-#install.packages("ggrepel")
-library(ggrepel)
-#install.packages("xtable")
-library(xtable)
-library(taxize)
-library(rgdal)
-library(dplyr)
-#install.packages("tidyverse")
-library(tidyverse)
+##### load the most current taxonomy from Google Sheets #####
+
+# https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
+
+n <- '20191111-0'
+
+taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
+gs_browse(taxfl)
+taxfl <- gs_read(taxfl)
+
+taxch <- gs_title(paste(n, '_taxonomy_to_change', sep = ''))
+gs_browse(taxch)
+taxch <- gs_read(taxch)
+
+tax <- gs_title(paste(n, '_taxonomy', sep = ''))
+gs_browse(tax)
+tax <- gs_read(tax)
 
 
-##### *** RUN *** #####
-##### *** loading files *** #####
-##### load current taxonomy tables #####
-# see Google Drive folder: https://drive.google.com/drive/folders/0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
-setwd("C:/rworking/digs/indata")
-tax <- read.csv("20181011-1_taxonomy.csv", header = T)
-taxch <- read.csv("20181011-1_taxonomy_to_change.csv", header = T)
-taxfl <- read.csv("20181011-1_taxonomy_to_flag.csv", header = T)
+##### load the subset of data in question #####
+##### load in subset alone without running QA dash #####
 
-##### clean up taxfl #####
-# this step removes 'NA'
-taxfl <- taxfl %>% filter(Flag == "1")
-#View(taxfl)
-##### clean up original taxonomy table where Phylum is null (n=2) #####
-tax <- tax %>%
-  filter(is.na(tax$Phylum) == F)
+x <- "20191112-1_HBOI_Walton_Smith_Cuba_Reed_Farrington_2017_2017"
+setwd("C:/rworking/deepseatools/indata")
+sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
-##### load data set of interest (d) #####
-setwd("C:/rworking/digs/indata")
-d <- read.csv("20181109-0_NOAA_OER_EX1702_EX1703_EX1705_EX1706_Kelley_West_Pacific_2017_2017.csv", header = T)
+##### get records where mismatch to master taxonomy table #####
 
-##### filter data #####
-cors <- d %>%
-  filter(
-    Phylum == 'Cnidaria' |
-      Phylum == 'Porifera'
-  )
+sub1 <- sub %>% filter(FlagReason == "Insufficient taxonomic information")
 
-##### setdiff to get corals and sponges out of nomatch list #####
-not_cors <- setdiff(d$ScientificName, cors$ScientificName)
-length(cors$ScientificName)
-length(d$ScientificName)
-length(not_cors)
-length(nomatch$ScientificName)
-cors_nomatch <- setdiff(nomatch$ScientificName, not_cors)
-listmatch
+##### checking #####
 
+length(setdiff(unique(sub1$ScientificName), tax$ScientificName))
 
-##### load taxa of interest via CSV #####
-#csv of ScientificNames of interest
-setwd("C:/rworking/digs/indata")
-nomatch <- read.csv('nomatch.csv', header = T)
+##### create a character vector of non-matching taxa #####
 
-# #check
-# table(nomatch$ScientificName)
+taxa <- as.character(setdiff(unique(sub1$ScientificName), tax$ScientificName))
 
-#create a list from the filtered data
-list <- factor(nomatch$ScientificName)
+# taxa
+# length(taxa)
 
-##### -OR- load a single species to a list #####
-#list <- "Cladocora arbuscula"
-##### *** END *** #####
-##### *** RUN *** #####
-##### *** add matched records from worms to taxonomic table *** #####
-##### bringing in matched list from WoRMS (output: listmatch) #####
-# list matching function at WoRMS: http://www.marinespecies.org/aphia.php?p=match
-setwd("C:/rworking/digs/indata")
-listmatch <- read.csv("nomatch_matched.csv",header=T, na.strings=c("","NA"))
+#### break them into chunks for WoRMs interface #####
+taxa1 <- taxa[1:50]
+taxa2 <- taxa[51:66]
 
-##### modifying listmatch to include only coral and sponge records ####
-listmatch <- listmatch %>% filter(listmatch$ScientificName %in% cors_nomatch)
+##### checking #####
 
-# # # check
-# names(listmatch)
-# View(listmatch)
-# table(factor(listmatch$Match.type), useNA = 'always')
-# listmatch[listmatch$Taxon.status == "unaccepted",] %>% dplyr::select(ScientificName, ScientificName.1, ScientificName_accepted, Genus, Species)
-# setdiff(listmatch$ScientificName, listmatch$ScientificName_accepted)
+length(taxa1)
+length(taxa2)
 
-##### working on 'taxa to change' list #####
-# creating an empty taxch table
-newtaxch <- taxch[0,]
+##### match chunks with with WoRMS database 50 at a time then rbind them #####
 
-#adding enough empty rows
-newtaxch[1:length(listmatch$ScientificName),] <- NA
-newtaxch$ScientificName <- listmatch$ScientificName_accepted
-newtaxch$VerbatimScientificName <- listmatch$ScientificName
-newtaxch$Genus <- listmatch$Genus
-newtaxch$Species <- listmatch$Species
-genus_fix <- newtaxch %>%
-  filter(is.na(Species) == T,
-         is.na(Genus) == F
-  )
+x <- wm_records_taxamatch(name = taxa1,
+                          ids = TRUE,
+                          verbose = TRUE,
+                          marine_only = TRUE,
+                          sleep_btw_chunks_in_sec = 0.2
+)
 
-genus_nofix <- newtaxch %>%
-  filter(is.na(Species) == F,
-         is.na(Genus) == F
-  )
+# create a proper data frame from the list
 
-# check
-# genus_fix %>% dplyr::select(Genus, Species)
-# genus_nofix %>% dplyr::select(Genus, Species)
+x <- bind_rows(x, .id = "column_label")()
 
+# merge back to get original submitted names
 
-# apply changes to genus_fix and genus_nofix
-genus_fix$ScientificName <- paste(genus_fix$ScientificName, "sp.")
+y <- merge(taxa1, x, by.x = "row.names", by.y = 'column_label')
 
-# combine
-newtaxch <- rbind(genus_fix, genus_nofix)
-newtaxch <- newtaxch[,1:2]
-#newtaxch
+x <- wm_records_taxamatch(name = taxa2,
+                          ids = TRUE,
+                          verbose = TRUE,
+                          marine_only = TRUE,
+                          sleep_btw_chunks_in_sec = 0.2
+)
 
-# combine new taxa with original file (output: taxch2)
-taxch2 <- rbind(taxch, newtaxch)
+# create a proper data frame from the list
 
-# this makes the levels match between the two varibles you are comparing
-levels <- sort(unique(unlist(taxch2[, c('VerbatimScientificName', 'ScientificName')])))
-taxch2$ScientificName <- factor(taxch2$ScientificName, levels = levels)
-taxch2$VerbatimScientificName <- factor(taxch2$VerbatimScientificName, levels = levels)
+x <- bind_rows(x, .id = "column_label")
 
-# this actually makes the comparison and removes the rows that match
-taxch2 <- taxch2[which(taxch2[,1] != taxch2[,2]), ]
+# merge back to get original submitted names
 
-# writing the new joint taxonomy table to disc (output: new csv of taxonomy table)
-setwd("C:/rworking/digs/outdata")
-write.csv(taxch2,"20180927-0_taxonomy_to_change.csv", row.names = F, quote = T)
+z <- merge(taxa2, x, by.x = "row.names", by.y = 'column_label')
 
-##### split: splitting matched file between taxa with accepted names unaccepted #####
-listmatch_acc <- listmatch %>%
-  filter(Taxon.status == "accepted")
+# bind the two files together
 
-listmatch_unacc <- listmatch %>%
-  filter(Taxon.status == "unaccepted")
+match <- rbind(y,z)
 
-# checking
-# listmatch_acc %>% dplyr::select(Genus, Species)
-# listmatch_unacc %>% dplyr::select(Genus, Species)
+##### getting rid of unaccepted taxa #####
 
-##### creating an empty taxonomy table (using information from accepted names) to populate (output: newtax) #####
-newtax <- tax[0,]
-
-#adding enough empty rows
-newtax[1:length(listmatch_acc$ScientificName),]<-NA
-
-#checking
-#View(newtax)
-
-##### adding information from (listmatch_acc from Worms) to taxonomy table
-newtax$ScientificName <- listmatch_acc$ScientificName_accepted
-newtax$AphiaID <- listmatch_acc$AphiaID_accepted
-newtax$ScientificNameAuthorship <- listmatch_acc$Authority_accepted
-newtax$Phylum <- listmatch_acc$Phylum
-newtax$Class <- listmatch_acc$Class
-newtax$Order <- listmatch_acc$Order
-newtax$Family <- listmatch_acc$Family
-newtax$Genus <- listmatch_acc$Genus
-newtax$Subgenus <- listmatch_acc$Subgenus
-newtax$Species <- listmatch_acc$Species
-newtax$Subspecies <- listmatch_acc$Subspecies
-
-# # view it
-# View(newtax)
-
-# get rid of non-matched where NA in ScientificName
-newtax <- newtax[is.na(newtax$AphiaID) == FALSE, ]
-
-# # view itView(newtax)
-#
-
-##### split/apply/combine: work on Genus 'sp.' issue and TaxonRank in the accepted 'newtaxa' (output: 'newtax') #####
-
-genus_fix <- newtax %>%
-  filter(is.na(Species) == T,
-         is.na(Genus) == F
-         )
-
-genus_nofix <- newtax %>%
-  filter(is.na(Species) == F,
-         is.na(Genus) == F
-  )
-
-# check
-# genus_fix %>% dplyr::select(Genus, Species)
-# genus_nofix %>% dplyr::select(Genus, Species)
-
-
-# apply changes to genus_fix and genus_nofix
-
-genus_fix$ScientificName <- paste(genus_fix$ScientificName, "sp.")
-genus_fix$TaxonRank <- 'genus'
-genus_nofix$TaxonRank <- 'species'
-
-# combine
-
-newtax <- rbind(genus_fix, genus_nofix)
-
-# #check
-# View(genus_fix)
-# View(genus_nofix)
-# View(newtax)
-# newtax %>% dplyr::select(Genus, Species)
-
-##### filter out duplicates with existing taxonomy table #####
-newtax_nodups <- newtax[newtax$ScientificName %in% tax$ScientificName == F,]
-newtax_nodups$SynonymAphiaID <- '-999'
-##### *** Export list of accepted ScientificNames from original unaccepted names for matching at Worms *** #####
-list <- factor(listmatch_unacc$ScientificName_accepted)
-
-# Extact only taxa that are not duplicated in the original taxonomic file
-list <-  list[list %in% tax$ScientificName == F]
-
-# export list for matching
-setwd("C:/rworking/digs/outdata")
-write.csv(list, "list.csv", row.names = F)
-
-##### bringing in matched list from WoRMS (from unaccepted list) (output: listmatch2) #####
-# list matching function at WoRMS: http://www.marinespecies.org/aphia.php?p=match
-setwd("C:/rworking/digs/indata")
-listmatch2 <- read.csv("list_matched.csv",header=T, na.strings=c("","NA"))
-
-# # # check
-# names(listmatch)
-# View(listmatch)
-# table(factor(listmatch$Match.type), useNA = 'always')
-# listmatch[listmatch$Taxon.status == "unaccepted",] %>% dplyr::select(ScientificName, ScientificName.1, ScientificName_accepted, Genus, Species)
-# setdiff(listmatch$ScientificName, listmatch$ScientificName_accepted)
+names(match)
+table(match$status)
+match <- match %>% filter(status != 'nomen dubium')
 
 ##### creating an empty taxonomy table (using information from accepted names) to populate (output: newtax_un) #####
 newtax_un <- tax[0,]
 
 #adding enough empty rows
-newtax_un[1:length(listmatch2$ScientificName),]<-NA
+newtax_un[1:length(match$scientificname),] <- NA
 
 #checking
 #View(newtax_un)
 
-##### adding information from (listmatch_acc from Worms) to taxonomy table
-newtax_un$ScientificName <- listmatch2$ScientificName_accepted
-newtax_un$AphiaID <- listmatch2$AphiaID_accepted
-newtax_un$ScientificNameAuthorship <- listmatch2$Authority_accepted
-newtax_un$Phylum <- listmatch2$Phylum
-newtax_un$Class <- listmatch2$Class
-newtax_un$Order <- listmatch2$Order
-newtax_un$Family <- listmatch2$Family
-newtax_un$Genus <- listmatch2$Genus
-newtax_un$Subgenus <- listmatch2$Subgenus
-newtax_un$Species <- listmatch2$Species
-newtax_un$Subspecies <- listmatch2$Subspecies
-
-# # view it
-# View(newtax_un)
-
-# get rid of non-matched where NA in ScientificName
-newtax_un <- newtax_un[is.na(newtax_un$AphiaID) == FALSE, ]
-
-# # view it
-# View(newtax)
-
-##### split/apply/combine: work on Genus 'sp.' issue and TaxonRank in the unaccepted 'newtax_un' (output: 'newtax_un') #####
-
-genus_fix <- newtax_un %>%
-  filter(is.na(Species) == T,
-         is.na(Genus) == F
-  )
-
-genus_nofix <- newtax_un %>%
-  filter(is.na(Species) == F,
-         is.na(Genus) == F
-  )
-
-# check
-# genus_fix %>% dplyr::select(Genus, Species)
-# genus_nofix %>% dplyr::select(Genus, Species)
+##### adding information from (match from Worms) to taxonomy table #####
+newtax_un$ScientificName <- match$valid_name
+newtax_un$AphiaID <- match$valid_AphiaID
+newtax_un$ScientificNameAuthorship <- match$valid_authority
+newtax_un$Phylum <- match$phylum
+newtax_un$Class <- match$class
+newtax_un$Order <- match$order
+newtax_un$Family <- match$family
+newtax_un$Genus <- match$genus
+newtax_un$TaxonRank <- match$rank
+newtax_un$SynonymAphiaID <- "-999"
+newtax_un$HigherTaxonNameAuthorship <- NA
 
 
-# apply changes to genus_fix and genus_nofix
 
-genus_fix$ScientificName <- paste(genus_fix$ScientificName, "sp.")
-genus_fix$TaxonRank <- 'genus'
-genus_nofix$TaxonRank <- 'species'
 
-# combine
 
-newtax_un <- rbind(genus_fix, genus_nofix)
 
-# #check
-# View(genus_fix)
-# View(genus_nofix)
-# View(newtax_un)
-# newtax %>% dplyr::select(Genus, Species)
 
-##### filter out duplicates with existing taxonomy table #####
-newtax_un_nodups <- newtax_un[newtax_un$ScientificName %in% tax$ScientificName == F,]
-newtax_un_nodups$SynonymAphiaID <- '-999'
+##### binding new taxonomy table with existing #####
 
-##### combine new taxa with original file (output: tax2) #####
-tax2<-rbind(tax, newtax_nodups)#, newtax_un_nodups)
-tax2<-rbind(tax, newtax)#, newtax_un_nodups)
-##### writing the new joint taxonomy table to disc (output: new csv of taxonomy table) #####
-setwd("C:/rworking/digs/outdata")
-write.csv(tax2,"20181109-0_taxonomy.csv", row.names = F, quote = T)
+newtax <- rbind(tax, newtax_un)
 
-##### *** END *** #####
-##### write 'list' to CSV file output to csv file #####
-setwd("C:/rworking/digs/outdata")
-write.csv(list,"list.csv", row.names = F, quote = T)
+# # checking
+#
+# length(tax$VernacularNameCategory)
+# length(newtax_un$Class)
+# length(newtax$VernacularNameCategory)
 
-##### get full classification databases using taxize #####
-classification(list, db = "eol")
-classification(list, db = "ncbi")
-classification(list, db = "col")
-classification(list, db = "gbif")
-classification(list, db = "tropicos")
-classification(list, db = "gbif")
-classification(list, db = "nbn")
-classification(list, db = "natserv")
-classification(list, db = "worms")
 
-##### get full classification just from WoRMS #####
-classification(list, db = "worms")
+##### write out new file #####
+setwd("C:/rworking/deepseatools/indata")
 
-##### resolve a taxonomic name in a list (get ScientificNameAuthorship) #####
-x <- gnr_resolve(names = list)
+newtax %>%
+  write.csv('newtax.csv', row.names = FALSE)
+
+##### _____working with rGBIF #####
+
+# Search by type of record, all observational in this case
+occ_count(basisOfRecord='OBSERVATION')
+
+# Records for Puma concolor with lat/long data (georeferened) only. Note that hasCoordinate in occ_search() is the same as georeferenced in occ_count().
+occ_count(taxonKey=2435099, georeferenced=TRUE)
+#> [1] 3747
+
+# All georeferenced records in GBIF
+occ_count(georeferenced=TRUE)
+
+# Records from Denmark
+denmark_code <- isocodes[grep("Denmark", isocodes$name), "code"]
+occ_count(country=denmark_code)
+
+# Number of records in a particular dataset
+# this key is Smithsonian: https://www.gbif.org/dataset/821cc27a-e3bb-4bc5-ac34-89ada245069d
+occ_count(datasetKey='821cc27a-e3bb-4bc5-ac34-89ada245069d')
+
+# All records from 2012
+occ_count(year=2012)
+#> [1] 44688340
+
+# Records for a particular dataset, and only for preserved specimens
+smithsonianKey <- '821cc27a-e3bb-4bc5-ac34-89ada245069d'
+occ_count(datasetKey = smithsonianKey)
+
+# Looking up dates
+out <- name_lookup(query='mammalia')
+out$meta
+View(out$data)
+
+x <- occ_download_get("0000796-171109162308116") %>% occ_download_import()
+
+##### this is how you search gbif and extract data.frames#####
+# for institutionCode = USNM, catalogNumber matches USNM#
+x <- occ_search(scientificName = "Lophelia pertusa", limit = 100)
 View(x)
+class(x)
+y <- data.frame(x$data)
 
-##### ***** making comparisons **** #####
-##### compare list of taxa of interest to current taxonomy tables #####
-# # number not in master list
-# length(setdiff(list, tax$ScientificName))
-# # number not in change list
-# length(setdiff(list, taxch$VerbatimScientificName))
-# # number not on flagged list
-# length(setdiff(list, taxfl$ScientificName))
+y %>% #filter(institutionCode == "USNM") %>%
+  group_by(scientificName, catalogNumber, occurrenceID) %>%
+  summarise(n = n())
 
-# choose one comparison for final list
-list <- setdiff(list, tax$ScientificName)
-list <- setdiff(list, taxch2$VerbatimScientificName)
-list <- setdiff(list, taxfl$ScientificName)
+x<-occ_search(institutionCode = "USNM")
+y<-data.frame(x$data)
 
-##### filtering existing data to include only taxa in the list #####
-d2 <- d %>%
-  filter(
-    ScientificName %in% list
-  )
-
-unique(d2$ScientificName)
-length(d2$ScientificName)
+z<-y %>% filter(grepl("EX",recordNumber))
+View(y)
 
 
 
-##### creating a taxonomy table from existing data #####
-x <- d2 %>%
-  group_by(VernacularNameCategory, VernacularName, ScientificName,
-           TaxonRank, AphiaID, Phylum, Class, Subclass, Order, Suborder, Family,
-           Subfamily, Genus, Subgenus, Species, Subspecies, ScientificNameAuthorship, Synonyms) %>%
-  summarize(n = n())
 
-View(x)
 
-newtax <- x[,1:18]
-newtax$SynonymAphiaID <- "-999"
-newtax$HigherTaxonNameAuthorship <- "NA"
-#View(newtax)
-newtax <- ungroup(newtax)
-newtax <- data.frame(newtax)
 
-# combine new taxa with original file
-tax2<-rbind(tax,newtax)
 
-# exporting the new joint taxonomy table
-setwd("C:/rworking/digs/outdata")
-write.csv(tax2,"20180830-0_taxonomy_RPMcGuinn.csv", row.names = F, quote = T)
 
-##### adding records to Taxa_to_Flag #####
-# #checking
-# names(taxfl)
-# table(taxfl$FlagReason, )
 
-#making list into a data frame
-listdf <- data.frame(list)
 
-#setting variable names
-names(listdf) <- c("ScientificName")
 
-#creating Flag and FlagReason Varialbes
-listdf$Flag <- "1"
-listdf$FlagReason <- "Outside of taxonomic scope"
 
-#binding the new records from the list to taxfl
-taxfl2 <- rbind(taxfl,listdf)
-taxfl2 <- taxfl2 %>% arrange(ScientificName)
-
-#writing out new taxfl file
-setwd("C:/rworking/digs/outdata")
-write.csv(taxfl2,"20180321-1_taxa_to_flag.csv", row.names = F, quote = T)
 
