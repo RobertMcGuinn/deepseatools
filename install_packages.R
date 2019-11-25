@@ -80,8 +80,7 @@ library(devtools)
 library(obistools)
 library(jsonlite) #https://cran.r-project.org/web/packages/jsonlite/
 library(httr)
-install.packages("rgbif")
-library("rgbif")
+# install.packages("rgbif")
 library(rgbif)
 
 

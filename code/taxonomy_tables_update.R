@@ -8,7 +8,7 @@
 
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 
-n <- '20191111-0'
+n <- '20191121-0'
 
 taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
 gs_browse(taxfl)
@@ -22,8 +22,6 @@ tax <- gs_title(paste(n, '_taxonomy', sep = ''))
 gs_browse(tax)
 tax <- gs_read(tax)
 
-
-##### load the subset of data in question #####
 ##### load in subset alone without running QA dash #####
 
 x <- "20191112-1_HBOI_Walton_Smith_Cuba_Reed_Farrington_2017_2017"
@@ -45,9 +43,10 @@ taxa <- as.character(setdiff(unique(sub1$ScientificName), tax$ScientificName))
 # taxa
 # length(taxa)
 
-#### break them into chunks for WoRMs interface #####
+#### __OPTIONAL__ break them into chunks for WoRMs interface #####
 taxa1 <- taxa[1:50]
 taxa2 <- taxa[51:66]
+taxa1 <- taxa
 
 ##### checking #####
 
@@ -65,7 +64,7 @@ x <- wm_records_taxamatch(name = taxa1,
 
 # create a proper data frame from the list
 
-x <- bind_rows(x, .id = "column_label")()
+x <- bind_rows(x, .id = "column_label")
 
 # merge back to get original submitted names
 

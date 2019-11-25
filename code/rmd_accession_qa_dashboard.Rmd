@@ -85,7 +85,7 @@ sum_tbl <-
   group_by(DatasetID) %>%
   summarize(
             DataProvider = paste(unique(DataProvider), collapse=" | "),
-            #PI = toString(unique(PI)),
+            PI = paste(unique(PI), collapse=" | "),
             Reporter = paste(unique(Reporter), collapse=" | "),
             ReporterEmail = paste(unique(ReporterEmail), collapse=" | "),
             DataContact = paste(unique(DataContact), collapse=" | "),

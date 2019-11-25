@@ -154,9 +154,10 @@ render("2019_ISDSC7_high_density_THourigan_RPMcGuinn.Rmd",
 
 ##### render the QA dashboard (non-museum) #####
 # install.packages("rmarkdown")
+
 library(rmarkdown)
 # add the prefix of the dataset you want to report on
-x <- "20191111-0_University_of_Hawaii_Smith_Durden_Kilo_Moana_KM1808_2018_2018"
+x <- "20191113-0_HBOI_Pisces_and_Nancy_Foster_Harter_Reed_Farrington_2012_2017"
 
 render("C:/rworking/deepseatools/code/rmd_accession_qa_dashboard.rmd",
        output_file =  paste(x,".doc", sep=''),

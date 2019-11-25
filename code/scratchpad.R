@@ -3677,7 +3677,7 @@ x <- sub %>% filter(CatalogNumber == '971624') #%>%
                 gisCRMDepth, gisGEBCODepth, gisEtopoDepth, gisIHOSeas)
 
 
-###### map it ######
+##### map it ######
 
 library(leaflet)
 m <- leaflet()
@@ -3746,7 +3746,7 @@ indata<-indata[,c(TMPL_FullVariables)]
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.xlsx('20191108-1_NOAA_OER_EX1806_NCarolina_Morrison_Sautter_2018_2018-TH.xlsx', sheet = 1)
 
-##### workin on checking identifiedby #####
+##### working on checking identifiedby #####
 
 x <- sub %>% filter(sub$RecordType == 'specimen') %>%
   group_by(IdentifiedBy) %>%
@@ -3762,7 +3762,7 @@ setwd("C:/rworking/deepseatools/indata")
 x %>%
   write.csv("20191118-0_summary of IdentifiedBy at version 20191108-1_RPMcGuinn.csv", row.names = FALSE)
 
-#####  #####
+##### rgbif #####
 x <- occ_search(scientificName = "Ursus americanus", limit = 50)
 
 setwd("C:/rworking/deepseatools/indata/dwca-nmnh_extant_dwc-a-v1.25")
@@ -3771,4 +3771,16 @@ sub <- read.table("occurrence.txt", header = T, fill = TRUE)
 
 d <- data.frame(x$data)
 
+##### helping Meredith  E. #####
 
+x <- filt %>% filter(DatasetID == 'NOAA_NWFSC_Bottom_Trawl_Survey') %>%
+  group_by(TrackingID, EventID, DatasetID) %>%
+  summarize(n=n())
+
+
+##### export 'sub' to GIS file x_geo (in geozones aprx) #####
+
+setwd('c:/rworking/deepseatools/code')
+source('export_to_gis.R')
+
+##### looking at DatasetIDs  #####
