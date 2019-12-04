@@ -1241,11 +1241,12 @@ DatasetID <- setdiff(unique(sub$DatasetID), unique(filt$DatasetID))
 SurveyID <- setdiff(unique(sub$SurveyID), unique(filt$SurveyID))
 ```
 
-If name appears below after variable, then it does not match the standard name.
+If name appears below after variable, then it does not match the standard name. That means it needs to be changed to match, or it is actually a new name that we have not encountered before.
 
 * Vessel: `r Vessel`
 * VehicleName: `r VehicleName`
-* PI: `r PIAffiliation`
+* PI: `r PI`
+* PIAffiliation: `r PIAffiliation`
 * Repository: `r Repository`
 * IdentifiedBy: `r IdentifiedBy`
 * IdentificationQualifier: `r IdentificationQualifier`

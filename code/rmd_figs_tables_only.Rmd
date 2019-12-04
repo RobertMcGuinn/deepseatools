@@ -4,19 +4,22 @@ author: "Robert P. McGuinn"
 date: "Report last ran on: `r Sys.Date()`"
 output: word_document
 ---
+# Input database
 
-``` {r setup_data_intake, echo=FALSE, message=FALSE, warning=FALSE}
+``` {r setup_data_intake, echo=FALSE, message=FALSE, warning=FALSE, cache = TRUE}
 
-setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20190718-0.csv", header = T)
-filt <- indata %>%
-  filter(Flag == "0")
+# setwd("C:/rworking/deepseatools/indata")
+# indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
+# filt <- indata %>%
+#   filter(Flag == "0")
 
 ```
 
+# data transformations where needed
+
 ``` {r setup_data_prep, echo=FALSE, warning=FALSE, message=FALSE}
 
-filt <- filt %>% filter(is.na(Phylum) == F)
+# filt <- filt %>% filter(is.na(Phylum) == F)
                          
 ##### checker #####
 
@@ -42,30 +45,37 @@ filt <- filt %>% filter(is.na(Phylum) == F)
 
 ```
 
+# input schema
+
 ``` {r setup_schema, echo=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
 ##### download Google Sheet version of schema for use in R  documents ##### 
 # Register and download Google Sheet
 s <- gs_title('2019_DSCRTP_National_Database_Schema')
 #s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 s <- gs_read(s)
-
 # s<- s[,-(33:35)]
 #names(s)
 
 ```
 
+# knitr options
+
 ``` {r setup_opts, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
 ##### knitr options #####
 knitr::opts_chunk$set(fig.width=6.5, fig.height=4, warning = FALSE, dpi = 300, dev = c('png'), fig.path="C:/rworking/deepseatools/reports/2019_status_update_report/figures/") 
+
 options(scipen=10000)
 
 ##### setting digit options #####
 options(digits = 0)
 ```
 
+
 ``` {r setup_variables,  echo=FALSE, warning=FALSE, message=FALSE}
-version <- '20190718-0'
+version <- '20190920-0'
 ```
+
+# schema metrics variables
 
 ``` {r setup_schema_metrics, echo=FALSE}
 #total number of fields in the NDB
@@ -128,6 +138,8 @@ l <- length(l$FieldName)
 
 ```
 
+# table: data providers
+
 ``` {r dataprovider_table, echo=FALSE, caption = 'test caption'}
 options(scipen=999)
 
@@ -155,9 +167,9 @@ read_docx() %>%
   body_add_flextable(ft) %>% 
   print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/dataprovider_table.docx")
 
-
-
 ```
+
+# table: public fields
 
 ``` {r public_fields_table, echo=FALSE}
 
@@ -195,7 +207,6 @@ read_docx() %>%
 
 
 
-
 # sum_tbl <- kable(sum_tbl, 
 #                  row.names = F, 
 #                  digits = 2,
@@ -208,6 +219,8 @@ read_docx() %>%
 #write.csv(sum_tbl,"20180216_0_Field_Summary_Schema_20180216-0.csv", row.names = F, quote = T)
 
 ```
+
+# table: required/desired points
 
 ``` {r required_desired_points_table, echo=FALSE,  warning=FALSE}
 x <-
@@ -232,12 +245,6 @@ ft <- flextable(x) %>%
   fontsize(size = 10, part = "body") %>% 
   autofit() 
 
-
-
-
-  
-  
-
 ft
 
 read_docx() %>% 
@@ -245,6 +252,8 @@ read_docx() %>%
   print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/required_desired_points_table.docx")
 
 ```
+
+# table: required/desired transects
 
 ``` {r required_desired_transects_table, echo=FALSE}
 x <-
@@ -280,6 +289,8 @@ read_docx() %>%
 
 ```
 
+table: required/desired trawl
+
 ``` {r required_desired_trawl_table, echo=FALSE}
 x <-
   s %>%
@@ -312,6 +323,8 @@ read_docx() %>%
 
 
 ```
+  
+# table: obis
   
 ``` {r obis_table, echo=FALSE}
 options(scipen=999)
@@ -346,6 +359,8 @@ read_docx() %>%
   print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/obis_table.docx")
 ```
 
+# calculatons
+
 ``` {r calculations, echo=FALSE}
 # length of unflagged records 
 a <- round(length(filt$CatalogNumber), -4)
@@ -374,9 +389,12 @@ i <- max(y$n)
 
 ```
 
-``` {r GrowthThroughTime, echo=FALSE, cache = TRUE, dpi=300}
+# figure: growth through time
+
+``` {r GrowthThroughTime, echo=FALSE, cache = FALSE, dpi=300}
 
 # ordering factors
+
 filt2 <- filt %>%
   filter(as.Date(EntryDate) > as.Date('2010-01-01'))
 options(scipen=10000)
@@ -390,19 +408,10 @@ g <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
 
 g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
-# write to file
-
-# x <- g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
-# 
-# png(file = "C:/rworking/deepseatools/reports/2019_status_update_report/growththroughtime.png",
-#     width = 1200, height = 800, 
-#     units = "px", pointsize = 12, res = 150)
-# 
-# x
-# 
-# dev.off()
 
 ```
+
+# calculations: regional
 
 ``` {r region-counts, echo=FALSE}
 a <- filt %>% 
@@ -413,6 +422,8 @@ a <- length(a$CatalogNumber)/length(filt$CatalogNumber)
 a <- round(a*100, 0)
 
 ```
+
+# figure: fish council region
 
 ``` {r FishCouncilRegion, echo=FALSE}
 # ordering factors
@@ -452,6 +463,8 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ```
 
+# calculations: depth
+
 ``` {r DepthCalc, echo=FALSE}
 x <- s %>%
   filter(
@@ -479,6 +492,8 @@ y <- toString(y$FieldName)
 # #[1] 3992
 ```
 
+# figure: depth distribution
+
 ``` {r depth_vernacularname, echo=FALSE}
 ##### Boxplot of depth by FishCouncilRegion #####
 filt2 <- filt %>% 
@@ -496,6 +511,8 @@ g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ```
 
+# figure: depth distribution density plot
+
 ``` {r DepthDensity, echo=FALSE,  dpi = 300}
 filt2 <- filt %>% 
   filter(DepthInMeters != "-999")
@@ -511,6 +528,8 @@ g <- ggplot(filt2, aes(DepthInMeters, fill = Phylum)) +
 #display.brewer.all(colorblindFriendly=TRUE)
 g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 ```
+
+# figure: observation year
 
 ``` {r ObservationYear, echo=FALSE,  dpi = 300}
 # ordering factors
@@ -528,6 +547,8 @@ g <- ggplot(filt2, aes(ObservationYear, fill = Phylum)) +
 g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ```
+
+# figure: individual count
 
 ``` {r IndividualCount, echo=FALSE,  dpi = 300}
 # ordering factors
@@ -551,6 +572,8 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ```
 
+# calculations: size
+
 ``` {r SizeCalc, echo=FALSE,  warning = FALSE}
 yo <- filt %>% 
   filter(
@@ -566,6 +589,8 @@ yo$SizeDiff <- (yo$MaximumSize - yo$MinimumSize)
 x <- length(yo$CatalogNumber)
 y <- length(filt$CatalogNumber)
 ```
+
+# figure: size
 
 ``` {r Size, echo=FALSE,  warning = FALSE, dpi = 300}
 yo <- yo %>%
@@ -587,6 +612,8 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ```
 
+# calculations: condition
+
 ``` {r ConditionCalc, echo=FALSE}
 
 condition <- filt$Condition %in% c('Live','Damaged','Dead')
@@ -598,6 +625,8 @@ z <- length(z$Condition)
 t <- length(filt$Condition)
 
 ```
+
+# figure: condition
 
 ``` {r Condition, echo=FALSE,  dpi = 300}
 yo <- filt %>% 
@@ -623,12 +652,16 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ```
 
+# calculations: 
+
 ``` {r Location, echo=FALSE}
 z <- s %>%
   filter(DSCRTPGroup == 'Taxonomy Metadata', InternalUseOnly == "0", FieldName != 'AssociatedTaxa', FieldName != 'Synonyms')
 z <-toString(z$FieldName)
 
 ```
+
+
 
 ``` {r taxonranksum, echo=FALSE,  dpi = 300}
 # ordering factors
@@ -647,6 +680,9 @@ g <- ggplot(filt2, aes(TaxonRank, fill = Phylum)) +
 #display.brewer.all(colorblindFriendly=TRUE)
 g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 ```
+
+
+
 
 ``` {r recordtype, echo = FALSE}
 valid <- filt$RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'video transect','notation', 'catch record')

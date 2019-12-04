@@ -44,6 +44,8 @@ library(prettydoc)
 library(robis)
 #install.packages('devtools')
 library(devtools)
+library(httr)
+library(jsonlite)
 
 ##### _____ Bringing in database #####
 
@@ -3783,4 +3785,187 @@ x <- filt %>% filter(DatasetID == 'NOAA_NWFSC_Bottom_Trawl_Survey') %>%
 setwd('c:/rworking/deepseatools/code')
 source('export_to_gis.R')
 
-##### looking at DatasetIDs  #####
+##### httr and GET from REST URLs #####
+library(httr)
+library(jsonlite)
+# A simple GET request
+node <- 'https://service.ncddc.noaa.gov/arcgis/rest/services/OceanExploration/OE_OkeanosDives/MapServer/13'
+r <- GET(node)
+str(content(r))
+r <- content(r, as = "text", encoding = "UTF-8")
+df <- fromJSON(r, flatten = TRUE)
+
+##### This should allow you to plot the dive directly from the internet #####
+# and the plot your points from a CSV based on the dive (i.e. EventID)
+
+library(leaflet)
+#install.packages("leaflet.esri")
+library(leaflet.esri)
+leaflet() %>%
+  addEsriBasemapLayer(esriBasemapLayers$Oceans) %>%
+  addEsriFeatureLayer(
+    url = "https://service.ncddc.noaa.gov/arcgis/rest/services/OceanExploration/OE_OkeanosDives/MapServer/65",
+    useServiceSymbology = TRUE, markerType ="marker")
+
+x <- jsonlite::fromJSON("https://service.ncddc.noaa.gov/arcgis/rest/services/OceanExploration/OE_OkeanosDives/MapServer/65")
+
+data_url <- "https://service.ncddc.noaa.gov/arcgis/rest/services/OceanExploration/OE_OkeanosDives/MapServer/"
+x <- download.file(data_url, "65.geojson")
+
+
+
+##### _____ New corals vs. old corals #####
+
+rm(filt)
+rm(indata)
+
+##### Getting old corals and sponges #####
+
+setwd("C:/rworking/deepseatools/indata")
+indata_old<-read.csv("DSCRTP_NatDB_20170807-1.csv", header = T)
+filt_old <- indata_old %>%
+  filter(Flag == "0")
+
+##### Getting new corals and sponges #####
+
+setwd("C:/rworking/deepseatools/indata")
+indata_new<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
+filt_new <- indata_new %>%
+  filter(Flag == "0")
+
+##### Bringing in most recent corals #####
+
+# 20191125-1_University_of_Hawaii_Smith_Durden_Kilo_Moana_KM1808_2018_2018
+# 20191125-1_HBOI_Pisces_and_Nancy_Foster_Harter_Reed_Farrington_2012_2017
+# 20191118-1_HBOI_Walton_Smith_Cuba_Reed_Farrington_2017_2017
+# 20191118-0_NOAA_OER_EX1806_NCarolina_Morrison_Sautter_2018_2018
+# 20191112-0_University_of_Hawaii_Kelley_Nautilus_NA101_2018_2018
+# 20191107-3_NOAA_OER_EX1803_GOMEX_Wagner_2018_2018
+
+setwd("C:/rworking/deepseatools/indata")
+a <-read.csv("20191125-1_University_of_Hawaii_Smith_Durden_Kilo_Moana_KM1808_2018_2018.csv", header = T)
+filt_a <- a %>%
+  filter(Flag == "0")
+
+setwd("C:/rworking/deepseatools/indata")
+b <-read.csv("20191125-1_HBOI_Pisces_and_Nancy_Foster_Harter_Reed_Farrington_2012_2017.csv", header = T)
+filt_b <- b %>%
+  filter(Flag == "0")
+
+setwd("C:/rworking/deepseatools/indata")
+c <-read.csv("20191118-1_HBOI_Walton_Smith_Cuba_Reed_Farrington_2017_2017.csv", header = T)
+filt_c <- c %>%
+  filter(Flag == "0")
+
+setwd("C:/rworking/deepseatools/indata")
+d <-read.csv("20191118-0_NOAA_OER_EX1806_NCarolina_Morrison_Sautter_2018_2018.csv", header = T)
+filt_d <- d %>%
+  filter(Flag == "0")
+
+setwd("C:/rworking/deepseatools/indata")
+e <-read.csv("20191112-0_University_of_Hawaii_Kelley_Nautilus_NA101_2018_2018.csv", header = T)
+filt_e <- e %>%
+  filter(Flag == "0")
+
+setwd("C:/rworking/deepseatools/indata")
+f <-read.csv("20191107-3_NOAA_OER_EX1803_GOMEX_Wagner_2018_2018.csv", header = T)
+filt_f <- f %>%
+  filter(Flag == "0")
+
+##### Putting together one file that includes all #####
+
+filt_new_2 <- rbind(filt, filt_a, filt_b, filt_c, filt_d, filt_e, filt_f)
+
+##### Create a not-in function #####
+`%ni%` = Negate(`%in%`)
+
+##### Find only new records since after FY17 #####
+filt_new_2_only <- filt_new_2 %>% filter(CatalogNumber %ni% filt_old$CatalogNumber)
+
+##### _____ export to ArcGIS
+old <- filt_old %>% dplyr::select(CatalogNumber, Latitude, Longitude)
+new <- filt_new_2_only %>% dplyr::select(CatalogNumber, Latitude, Longitude)
+
+##### filtering out a problem with longitude #####
+new_fixed <- new %>% filter(as.numeric(Longitude) > -200)
+
+##### install packages #####
+
+library(arcgisbinding)
+arc.check_product()
+
+##### create spdf #####
+
+old_geo <- old
+coordinates(old_geo) <- c("Longitude", "Latitude")
+proj4string(old_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/data/aprx/RTC2020/RTC2020.gdb'
+arc.write(file.path(fgdb_path, 'old_geo'), data=old_geo, overwrite = TRUE)
+
+##### create spdf
+
+new_geo <- new_fixed
+coordinates(new_geo) <- c("Longitude", "Latitude")
+proj4string(new_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/data/aprx/RTC2020/RTC2020.gdb'
+arc.write(file.path(fgdb_path, 'new_geo'), data=new_geo, overwrite = TRUE)
+
+##### data request from Peter Etnoyer on 2019-12-03 #####
+
+# No of Swiftia in Gulf of Mexico added to DB in years 2016-2019
+# No of Swiftia in Gulf of Mexico available in years <= to 2015
+#
+# No of Hypnorgorgia in Gulf of Mexico added to DB in years 2016-2019
+# No of Hypnogorgia in Gulf of Mexico available in years <= to 2015
+
+yo <- filt %>% filter(Genus == "Hypnogorgia" | Genus == "Swiftia", FishCouncilRegion == "Gulf of Mexico")
+
+yo$EntryDateCat <- as.Date(yo$EntryDate) < as.Date('2015-12-30')
+
+yo %>% group_by(EntryDateCat, Genus) %>% summarize(n=n(), IndividualCount = sum(IndividualCount))
+
+#### _____ export to ArcGIS
+yo_geo <- yo %>% dplyr::select(CatalogNumber, Latitude, Longitude)
+
+##### install packages #####
+
+library(arcgisbinding)
+arc.check_product()
+
+##### create spdf #####
+
+coordinates(yo_geo) <- c("Longitude", "Latitude")
+proj4string(yo_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/data/aprx/geozones/geozones.gdb'
+arc.write(file.path(fgdb_path, 'yo_geo'), data=yo_geo, overwrite = TRUE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,15 +1,17 @@
 ---
-title: "Database Status Update - Figs and Tables"
+title: "Database Status Update - Inline stats"
 author: "Robert P. McGuinn"
 date: "Report last ran on: `r Sys.Date()`"
 output: word_document
 toc: true
 ---
 
+
 ```{r data_intake, echo=FALSE, warning=FALSE, message=FALSE, cache = TRUE}
 
+##### input: latest version of NDB #####
 # setwd("C:/rworking/deepseatools/indata")
-# indata<-read.csv("DSCRTP_NatDB_20190718-0.csv", header = T)
+# indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
 # filt <- indata %>%
 #   filter(Flag == "0")
 
@@ -52,7 +54,7 @@ toc: true
 #                                               '500m', 
 #           
 
-filt <- filt %>% filter(is.na(Phylum) == F)
+# filt <- filt %>% filter(is.na(Phylum) == F)
                          
 ##### checker #####
 
@@ -88,25 +90,32 @@ s <- gs_read(s)
 # s<- s[,-(33:35)]
 #names(s)
 
+
 ```
 
 ```{r opts, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+
 ##### knitr options #####
-knitr::opts_chunk$set(fig.width=6.5, fig.height=4, warning = FALSE, dpi = 300, dev = c('png'), fig.path="C:/rworking/deepseatools/reports/2019_status_update_report/figures/") 
+knitr::opts_chunk$set(fig.width=6.5, 
+                      fig.height=4, 
+                      warning = FALSE, 
+                      dpi = 300, dev = c('png'), fig.path="C:/rworking/deepseatools/reports/2019_status_update_report/figures/") 
 options(scipen=10000)
 
 ##### setting digit options #####
 options(digits = 0)
+
 ```
 
 ```{r variables, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
-version <- '20190718-0'
+
+version <- '20190920-0'
+
 ```
 
 # DRAFT - Status Update for NOAA's National Database for Deep-Sea Corals and Sponges - Figs and Tables (database version `r version`)
 
 Number of genera: `r length(unique(filt$Genus))` 
-
 
 # Changes and Additions to Database Fields
 

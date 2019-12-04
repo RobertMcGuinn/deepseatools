@@ -24,7 +24,7 @@ tax <- gs_read(tax)
 
 ##### load in subset alone without running QA dash #####
 
-x <- "20191112-1_HBOI_Walton_Smith_Cuba_Reed_Farrington_2017_2017"
+x <- "20191111-0_University_of_Hawaii_Smith_Durden_Kilo_Moana_KM1808_2018_2018"
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
@@ -191,16 +191,6 @@ y<-data.frame(x$data)
 
 z<-y %>% filter(grepl("EX",recordNumber))
 View(y)
-
-
-
-
-
-
-
-
-
-
 
 
 

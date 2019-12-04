@@ -7,8 +7,9 @@ output: word_document
 
 ```{r data_intake, echo=FALSE, warning=FALSE, message=FALSE, cache = TRUE}
 
+##### input: latest version of NDB #####
 # setwd("C:/rworking/deepseatools/indata")
-# indata<-read.csv("DSCRTP_NatDB_20190718-0.csv", header = T)
+# indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
 # filt <- indata %>%
 #   filter(Flag == "0")
 
@@ -91,7 +92,13 @@ s <- gs_read(s)
 
 ```{r opts, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
 ##### knitr options #####
-knitr::opts_chunk$set(fig.width=6.5, fig.height=4, warning = FALSE, dpi = 300, dev = c('png'), fig.path="C:/rworking/deepseatools/reports/2019_status_update_report/figures/") 
+knitr::opts_chunk$set(fig.width=6.5, 
+                      fig.height=4, 
+                      warning = FALSE, 
+                      dpi = 300, 
+                      dev = c('png'), 
+                      fig.path="C:/rworking/deepseatools/reports/2019_status_update_report/figures/") 
+
 options(scipen=10000)
 
 ##### setting digit options #####
@@ -99,7 +106,7 @@ options(digits = 0)
 ```
 
 ```{r variables, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
-version <- '20190718-0'
+version <- '20190920-0'
 ```
 
 # DRAFT - Status Update for NOAA's National Database for Deep-Sea Corals and Sponges - Figs and Tables (database version `r version`)

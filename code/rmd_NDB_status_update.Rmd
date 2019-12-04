@@ -1,0 +1,629 @@
+---
+title: 'NOAA National Database for Deep-Sea Corals and Sponges'
+output: 
+    word_document:
+      toc: true
+      reference_docx: c:\rworking\deepseatools\wordtemplates\mytemplate.docx
+---
+
+```{r data_intake, echo=FALSE, warning=FALSE, message=FALSE, cache = TRUE}
+
+##### input: latest version of NDB #####
+# setwd("C:/rworking/deepseatools/indata")
+# indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
+# filt <- indata %>%
+#   filter(Flag == "0")
+
+```
+
+```{r data_prep, echo=FALSE, warning=FALSE, message=FALSE, cache = FALSE}
+
+##### data improvements (from version DSCRTP_NatDB_20171214-0): Recorded in Redmine #####
+# filt <- filt %>% filter(ObservationYear != "-999" | 
+#                           is.na(TaxonRank) == F |
+#                           DepthInMeters != '-999') 
+# 
+# filt <- filt %>% mutate(DataProvider = 
+#                           ifelse(DataProvider == "Yoklavich, Mary",
+#                                               'NOAA, Southwest Fisheries Science Center, Santa Cruz', 
+#                                               as.character(DataProvider)))
+# filt <- filt %>% mutate(DataProvider = 
+#                           ifelse(DataProvider == "Flower Garden Banks National Marine Sanctuary (FGBNMS)",
+#                                               'NOAA, Flower Garden Banks National Marine Sanctuary', 
+#                                               as.character(DataProvider)))
+# 
+# filt <- filt %>% mutate(DataProvider = 
+#                           ifelse(DataProvider == "Hall-Spencer, Jason",
+#                                               'Hall-Spencer, J.', 
+#                                               as.character(DataProvider)))
+# 
+# 
+# filt <- filt %>% mutate(DataProvider = 
+#                           ifelse(DataProvider == "National Undersea Research Center",
+#                                               'National Undersea Research Center, University of Connecticut', 
+#                                               as.character(DataProvider)))
+# 
+# filt <- filt %>% mutate(DataProvider = 
+#                           ifelse(DataProvider == "NOAA Center for Coastal Monitoring and Assessment",
+#                                               'NOAA, Center for Coastal Monitoring and Assessment', 
+#                                               as.character(DataProvider)))
+# 
+# filt <- filt %>% mutate(LocationAccuracy = 
+#                           ifelse(LocationAccuracy == "300 m",
+#                                               '500m', 
+#           
+
+# filt <- filt %>% filter(is.na(Phylum) == F)
+                         
+##### checker #####
+
+# length(filt1$CatalogNumber)
+
+# sum_tbl <- filt %>%
+#    # filter(as.numeric(IndividualCount) > 100,
+#    #        grepl('Etnoyer', PI),
+#    #        DatasetID == 'NOAA_SJ-10-08'
+#    #       ) %>%
+#   group_by(AccessionID) %>% 
+#   summarize(DataProvider = toString(unique(DataProvider)),
+#             Repository = toString(unique(Repository)),
+#             Vessel = toString(unique(Vessel)),
+#             PI = toString(unique(PI)),
+#             SampleID = toString(unique(SampleID)),
+#             ScientificName = toString(unique(ScientificName)),
+#             ImageFilePath = toString(unique(ImageFilePath)),
+#             Records = n()
+#   ) %>% 
+#   arrange(desc(Records))
+# View(sum_tbl)
+
+```
+
+```{r schema, echo=FALSE, echo=FALSE, warning=FALSE, message=FALSE, cache = FALSE}
+##### download Google Sheet version of schema for use in R  documents ##### 
+# Register and download Google Sheet
+s <- gs_title('2019_DSCRTP_National_Database_Schema')
+#s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+s <- gs_read(s)
+
+# s<- s[,-(33:35)]
+#names(s)
+
+```
+
+``` {r setup_opts, cache=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+##### knitr options #####
+knitr::opts_chunk$set(fig.width=6.5, fig.height=4, warning = FALSE, dpi = 300, dev = c('png'), fig.path="C:/rworking/deepseatools/reports/2019_status_update_report/figures/") 
+
+options(scipen=10000)
+
+##### setting digit options #####
+options(digits = 0)
+```
+
+``` {r setup_variables,  echo=FALSE, warning=FALSE, message=FALSE}
+version <- '20190920-0'
+
+# length of unflagged records 
+a <- round(length(filt$CatalogNumber), -4)
+
+# number of DatasetID
+b <- length(unique(filt$DatasetID))
+
+# number of DataProviders
+c <- length(unique(filt$DataProvider))
+
+# number of flagged records
+d <- length(filter(indata, Flag == '1')$CatalogNumber)
+
+# percent of unflagged records with images
+filt2 <- filter(filt, is.na(ImageURL) == F)
+e <- round((length(filt2$CatalogNumber)/(length(filt$CatalogNumber))*100),0)
+
+# number of unflagged records with images 
+f <- length(filter(filt, is.na(ImageURL) == F)$CatalogNumber)
+
+# stats on number of records per DatasetID
+y <- count(filt, DatasetID)
+g <- round(median(y$n),0)
+h <- min(y$n)
+i <- max(y$n)
+
+#total number of fields in the NDB
+aa <- length(s$FieldName)
+
+#total number of published fields
+bb <- s %>%
+  filter(InternalUseOnly == '0')
+bb <- length(bb$FieldName)
+
+#total number of unpublished fields
+cc <- s %>%
+  filter(InternalUseOnly == '1')
+cc <- length(cc$FieldName)
+
+#PointHist required
+dd <- s %>%
+  filter(PointHist == 'R')
+dd <- length(dd$FieldName)
+
+#PointNew required
+ee <- s %>%
+  filter(PointNew == 'R')
+ee <- length(ee$FieldName)
+
+#PointProgram required
+ff <- s %>%
+  filter(PointProgram == 'R')
+ff <- length(ff$FieldName)
+
+#TransHist required
+gg <- s %>%
+  filter(TransHist == 'R')
+gg <- length(gg$FieldName)
+
+#TransNew required
+hh <- s %>%
+  filter(TransNew == 'R')
+hh <- length(hh$FieldName)
+
+#TransProgram required
+ii <- s %>%
+  filter(TransProgram == 'R')
+ii <- length(ii$FieldName)
+
+#TrawlHist required
+jj <- s %>%
+  filter(TrawlHist == 'R')
+jj <- length(jj$FieldName)
+
+#TrawlNew required
+kk <- s %>%
+  filter(TrawlNew == 'R')
+kk <- length(kk$FieldName)
+
+#TrawlProgram required
+ll <- s %>%
+  filter(TrawlProgram == 'R')
+ll <- length(ll$FieldName)
+
+```
+
+# Robert P. McGuinn, Thomas F. Hourigan, Scott Cross, L. Matthew Dornback, Peter J. Etnoyer, David Sallis, Heather M. Coleman
+
+![](C:\rworking\deepseatools\indata\images\map_portal_screen_shot.png)  
+
+####  
+####  
+####  
+
+![](C:\rworking\deepseatools\indata\images\DOC_seal.jpg)
+
+#### U.S. Department of Commerce  
+#### National Oceanic and Atmospheric Administration  
+#### National Marine Fisheries Service    
+####   
+#### NOAA Technical Memorandum NMFS-OHC-006  
+#### December, 2019   
+
+#####
+
+# 2020 Status Update: NOAA'S National Database for Deep-Sea Corals and Sponges
+
+McGuinn, Robert P. ^4,2^; Thomas F. Hourigan ^1^; Scott Cross ^2^; L. Matthew Dornback ^5,6^; Peter J. Etnoyer ^3^; David Sallis ^4,2^; Heather M. Coleman ^1^
+
+1. NOAA, National Marine Fisheries Service (NMFS), Office of Habitat Conservation, Deep Sea Coral Research and Technology Program (DSCRTP)  
+
+2. NOAA, National Environmental Satellite, Data, and Information Service (NESDIS), National Centers for Environmental Information (NCEI)  
+
+3. NOAA, National Centers for Coastal Ocean Science (NCCOS)  
+
+4. Mississippi State University, Northern Gulf Institute, NCEI Affiliate (NGI)
+
+5. NOAA, Office of Exploration and Research  
+
+6. Cherokee Nation Technologies  
+
+* corresponding authors (McGuinn, Robert P. ^4,2^; Thomas F. Hourigan ^1^)  
+
+####
+####
+####
+####
+#### NOAA Technical Memorandum NMFS-OHC-006  
+#### December, 2019
+
+ 
+
+![](C:\rworking\deepseatools\indata\images\noaa_logo_bw.png)  
+    
+#### U.S. Department of Commerce   
+#### Wilbur L. Ross, Jr., Secretary
+####    
+#### National Oceanic and Atmospheric Administration    
+#### RDML Tim Gallaudet, Ph.D., USN Ret., Acting NOAA Administrator   
+####  
+#### National Marine Fisheries Service    
+#### Chris Oliver, Assistant Administrator for Fisheries    
+
+#####
+
+**Recommended citation:**
+  
+McGuinn, RP, TF Hourigan, S. Cross, LM Dornback, PJ Etnoyer, D. Sallis, and HM Coleman. 2019. NOAA's National Database for Deep-Sea Corals and Sponges: Status Update. NOAA Tech. Memo. NMFS-OHC-006, XX p.
+  
+**Copies of this report may be obtained from:**
+  
+Heather Coleman  
+NMFS Office of Habitat Conservation  
+National Oceanic and Atmospheric Administration   
+1315 East-West Highway, Room 14201  
+Silver Spring, MD 20910
+  
+Or online at:  
+http://spo.nmfs.noaa.gov/tech-memos/ or http://deepseacoraldata.noaa.gov/libary/    
+  
+#####    
+  
+# Executive Summary  
+
+The National Oceanic and Atmospheric Administration (NOAA) Deep Sea Coral Research and Technology Program (DSCRTP), herein referred to as the 'Program', compiles and curates a National Database of the known locations of deep sea corals and sponges. The database contains observations of places where corals and sponges occur (occurrences). The database focuses on occurrences within the United States Exclusive Economic Zone (US-EEZ), but the Program includes records outside of the US-EEZ where available and is actively encouraging partnerships worldwide to enhance the geographic scope of the data served. The database fulfills NOAA's requirements under the reauthorized Magnuson-Stevens Fishery Conservation and Management Act (MSA, 2007) to identify and map locations of deep sea corals, and to submit this information for use by Regional Fishery Management Councils (FMCs). See http://www.fisherycouncils.org for an overview of the structure and function of the FMCs. The Program intends for this database to be the most comprehensive, quality-assured, national-scale, data portal for deep sea corals and sponges available (Hourigan et al., 2015).
+  
+The database was originally conceived in 2009, building upon an initial United States Geological Survey Cold-Water Coral Database that was limited to Atlantic records (Scanlon et al., 2010). Through the sustained partnership and funding activities of the DSCRTP, and the contributions of `r length(unique(factor(filt$DataProvider)))` unique data providers, this database now includes over `r prettyNum(a, big.mark = ",")` occurrences of deep sea corals and sponges world-wide (at database version: `r version`).  The database is now being used as an essential trusted input to open ocean planning, management, and conservation activities at the Regional Fishery Management Councils and beyond.  
+  
+    
+The objectives of this technical memo are to:
+  
+* Acknowledge the many contributors to the database (as of the date of this publication).  
+* Identify recent enhancements and additions to the database and related data products.  
+* Describe quality control and assurance processes used to build and maintain the database.  
+* Provide an update on the continued development of the database through time in the form of a summary of its current contents for key variables.  
+* Direct data providers and data users to additional online resources.  
+  
+#####  
+
+# 2020 Status Update: NOAA's National Database for Deep-Sea Corals and Sponges
+####  
+
+## Background  
+
+The National Oceanic and Atmospheric Administration (NOAA) Deep Sea Coral Research and Technology Program (DSCRTP), herein referred to as the ‘Program', compiles and curates a National Database of the known locations of deep sea corals and sponges. The database contains observations (occurrences) of places where corals and sponges have been observed during research and in some cases includes metrics of size, abundance, and environmental conditions at the time of observation. The database focuses on occurrences within the United States (US) Exclusive Economic Zone (EEZ), but the Program includes records outside of the US-EEZ where available and is actively encouraging partnerships worldwide to enhance the geographic scope of the data served. The database fulfills NOAA's requirements under the reauthorized Magnuson-Stevens Fishery Conservation and Management Act (MSA, 2007) to identify and map locations of deep sea corals, and to submit this information for use by Regional Fishery Management Councils (FMCs). See http://www.fisherycouncils.org for an overview of the structure and function of the FMCs. The Program intends for this database to be the most comprehensive, quality-assured, national-scale, data portal for deep sea corals and sponges available (Hourigan et al., 2015).
+
+The database was originally conceived in 2009, building upon an initial United States Geological Survey Cold-Water Coral Database that was limited to Atlantic records (Scanlon et al., 2010). Since 2012, the database has undergone rapid development experiencing periods of exponential growth during major data harvests (*Figure 1*). From 2012 to 2015 was a period of internal growth and development of the database, including the establishment of new field names, definitions, and accepted (valid) values. Additionally, a web-based mapping and data download site was established and is available at DeepSeaCoralData.NOAA.gov. Online access to the database, through the DSCRTP map portal, began in the fall of 2015. Growth from 2015 and onward was marked by quarterly data updates made available to the public. The quarterly database updates include the addition of new occurrences as well as improvements to existing records.
+  
+The database includes `r bb` publically available fields that relate to the location, taxonomy, environmental conditions, and the provenance of the observations. All of the values in this report are based on version `r version` of the National Database, thus some of the reported values will change as the database grows and changes through time. There are currently over `r length(unique(factor(filt$DataProvider)))` individual records in the database composed of 226 individual data sets from 75 different data providers.  See *Table 1* for a full summary of all of the data providers.
+
+``` {r GrowthThroughTime, echo=FALSE, cache = FALSE, dpi=300}
+
+# ordering factors
+
+filt2 <- filt %>%
+  filter(as.Date(EntryDate) > as.Date('2010-01-01'))
+options(scipen=10000)
+g <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
+  stat_bin(data = subset(filt2, Phylum =="Porifera"),aes(y=cumsum(..count..)),geom="line", binwidth = 2, size = 2) +
+  stat_bin(data = subset(filt2, Phylum =="Cnidaria"),aes(y=cumsum(..count..)),geom="line", binwidth = 2, size = 2) +
+  ylab("Cumulative Number of Records") + 
+  xlab("Year Record Added") + 
+  guides(fill=FALSE) + 
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+
+```
+
+#### Figure 1: Growth of NOAA's National Database for Deep-Sea Corals and Sponges through time.
+
+This document is a companion and update to an earlier NOAA Technical Memorandum entitled “An Introduction to NOAA's National Database for Deep-Sea Corals and Sponges” (Hourigan et al., 2015).  The 2015 document is available online at https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/database_intro.  Readers are referred to that document for more detail on the Program and its mandates, database structure, and on general principles that informed the design of the database and related data. The objectives of this status update are to:  
+
+* Acknowledge contributors to the database (as of the date of this publication).
+* Describe quality assurance and control (QA/QC) processes used to build and maintain the database.  
+* Provide an update on the continued development of the database through time in the form of a summary of its current contents for key variables.    
+* Direct data providers and data users to additional online resources.    
+
+**Note to readers:**    
+Throughout this document, the term 'DSCRTP web portal' is used to refer to the Program's general web portal at https://deepseacoraldata.noaa.gov/. The term, 'DSCRTP map portal' refers specifically to the interactive map and data download functionality available here: https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm    
+  
+Throughout this document, when referring to a field name from the National Database, it will be shown in single quotes exactly as it appears in the database, for example, 'DataProvider'. These field names are also used in the tables and figures for consistency and to familiarize the reader with the vocabulary used in the database. For a full list of all the field names, their definitions, and the valid values see Appendix 2 of this document. For convenience, the most current spreadsheet-compatible version of the data dictionary is located on the DSCRTP web portal at the following URL. https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view
+
+## Overview of Recent Changes and Additions to the DSCRTP Data Working Group Production Practices and Products  
+
+Since the first publication of NOAA's National Database for Deep-Sea Corals and Sponges in 2015, the Program has continued to develop and implement workflows to increase the number of observations, to improve the quality of existing records, and to add related data products such as Geographic Information System (GIS)-formatted data layers. The following section describes the main changes and additions to the Data Working Group processes.  
+
+Quarterly updates. The Program's Data Working Group updates the National Database with new observations and improvements to existing records on a quarterly basis, rather than handling changes in an ad hoc manner as before. The quarterly release cycle allows for better internal coordination and external communication regarding database improvements and anticipated additions and changes.  
+New versions of the database are published on the DSCRTP map portal. The most recent database version number is indicated in the bottom left corner of the DSCRTP map portal screen as a date expressed in the format 'YYYYMMDD_X' where 'X' is an integer that captures additional iterations for a given version as needed. Older versions of the database are kept in perpetuity and are available upon request from the Program. The Program also uses these older versions to return individual records to an earlier time point if errors are recognized. The database is also archived annually at the NOAA National Centers for Environmental Information (NCEI) at the following location: https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0145037. It is important to note that the most current National Database is always the version available at the DSCRTP map portal and not at the preceding NCEI archive link.  
+
+Automated quality control. All data submissions are subject to automated quality assurance and control routines written in both R and Python scripts that check for potential errors in depth, geographic location, and taxonomy. This is a first step in a more extensive process that includes hands-on review of each data set. More details on the QA/QC process are detailed below in the section entitled **'Overview of Data Ingestion and Quality Assurance Processes'.**  
+
+Standardized taxonomy. The Program has implemented a master taxonomy table to standardize all taxonomic information in the National Database. See Appendix 1 for the full range of taxonomic holdings. The master taxonomy table is expanded as new taxa are acquired. All taxonomic information is based on the standards maintained at the World Register of Marine Species (WoRMS) database (Horton et al., 2018). Our taxonomic list is a subset of the WoRMS database filtered to include only the organisms that are within the taxonomic scope of the National Database for Deep-Sea Corals and Sponges.  For practical purposes, the database initially deviated from the WoRMS standard taxonomy by retaining the cnidarian Order Gorgonacea (generally subsumed in the Order Alcyonacea). In the 2019 update, the database has become fully compliant with WoRMS; gorgonians have been included in the Order Alcyonacea and the structural aspects of Gorgonacea have been captured in a separate field ('VernacularNameCategory' = gorgonian coral).  For a discussion on the database's taxonomic scope please refer to Hourigan et al., 2015.
+Standard metadata describing component data sets. For the purposes of attribution, maintaining clear provenance, and facilitating QA/QC and end-user confidence, data are identified and tracked as discrete data sets. The Program recognizes four different categories of data set: (1) data from a specific cruise, “cruise”; (2) data from an identifiable multiyear program, such as a fisheries survey series, “program”; (3) records from museum collections “repository”; and (4) records from the published literature, “literature”. As of this writing there are 226 data sets as defined by the Program; this number grows with each quarterly update. International Standards Organization (ISO) compliant metadata for each component data set are published on the DSCRTP web portal. The 'DatasetID' field is used to identify unique data sets as defined by the program. See Appendix 4 of this document for details on accessing summary dashboards for each “DatasetID' and downloading individual data sets and metadata.
+Changes to field definitions and valid values. Changes are occasionally needed to make improvements to database fields, definitions, and valid values. The details of these changes are given below in the section, 'Important Changes to the Field Definitions and Valid Values'.
+Availability of related content. Some types of content are added to the DSCRTP web portal as they become available, such as Site Characterization Reports from Program-funded cruises, as well as new and improved models of habitat suitability for various taxa of coral. Both products are available for viewing and download from the DSCRTP map portal, along with details regarding model creation. The Program is committed to supporting the development and distribution of these ever-improving models for data visualization and exploration as they become available.
+Database Contributors
+The National Database contains contributions from museums, research programs, research cruises, and literature (Table 1). The database currently contains data contributions from 75 unique data providers.
+
+
+
+
+
+Table 1: Data providers and the number of data sets and records contributed by each to NOAA's National Database for Deep-Sea Corals and Sponges. 75 data providers and 226 individual data sets.
+
+
+How to Contribute to the National Database
+
+The Program would like to establish direct communication with data providers prior to submission to the National Database. Individuals who wish to submit coral and sponge occurrence data are encouraged to first contact the Data Working Group directly at deepseacoraldata@noaa.gov to engage prior to the data assembly and submission process. The Program is available to discuss the format and structure of the database in detail and answer any questions. The Program's Data Working Group is also available to review sample products before final submission. A set of web-based resources to assist data providers is available on the DSCRTP web portal at the following link: https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/guidance-for-fieldwork-data-and-reporting
+Contributors to the National Database should consult Appendix 3 of this document for a discussion of the required and desired fields for different types of data providers and research efforts. This information is also included on the database record submission template available at: https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/dscrtp-database-records-submission-template.xlsx/view  
+ 
+
+
+
+
+ Overview of Data Ingestion and Quality Assurance Processes
+The Program is intent on building a high-quality, value-added aggregation of deep sea coral and sponge occurrence data that overcomes the limitations of individual incoming data sets by placing them in context of other resources. Incoming data are checked against valid values for taxonomy, vessel names, vehicle names, and data providers. A systematic QA/QC process matches incoming values against standard value sets and thereby identifies, flags, and corrects errors where possible. The intention of the information presented below is to inform and update the reader on the Program's latest QA/QC procedures. The Program's quality assurance process involves both manual and automated quality checks, listed below.
+Initial Intake Inspection and Documentation Phase
+•	The original data set is received from the data provider and archived as a 'Level 0' data product. The Program's data submission template facilitates data entry and streamlines incorporating data into the database.  
+•	Level 0 data are then saved in a uniform folder structure on NOAA systems with notes and correspondence from the data provider. 
+•	Data sets are assigned a standard file name and assigned an 'AccessionID', which tracks each data set received, along with any changes that occur between initial submission to publication.
+•	Data sets are reviewed by Program staff familiar with deep sea corals and NOAA data protocols. Additional notes on the submission are captured and filed. Additional communication with the data provider is initiated, if needed, to correct recognized errors or to clarify certain values.
+•	All changes from the original are documented and tracked in an issue tracking system and all subsequent versions of the data are saved so that incorrect transformations or corrections can be easily reversed.
+
+Initial conformation
+•	Data undergo a coded QA/QC process using R-based scripting.
+•	Initial automated routines are performed to make sure data conform, in the most basic sense, to the Program's data schema, aka data dictionary (see Appendix 2). 
+•	These automated routines accomplish the following tasks:
+–	Check field names and transform them where necessary.
+–	Add any missing field names to complete the schema structure.
+–	Populate null values with the appropriate entries, -999 for integer and NA for text.
+–	Rearrange the data set in a standardized column order.
+
+Technical review phase
+•	Automated quality assurance scripts are run and manual review steps are completed that include the following: 
+–	The data are evaluated regarding how well they conform to the specific valid values listed in the data dictionary (see Appendix 2 for the full data dictionary).
+–	Taxonomic problems with any 'ScientificName' are identified and corrected based on the World Register of Marine Species (WoRMS).
+–	A standardized master taxonomy table is joined with the 'ScientificName' values to add accepted values for Phylum, Order, Family, etc.
+–	Depths are checked against the best available regional bathymetry and mismatched values are flagged where they are out of the expected range.
+–	A visual summary referred to as a QA dashboard is generated using R Markdown Language. The dashboard visualizes the values in each field in such a way as to summarize and highlight possible issues. The dashboard report maps the positions of all occurrences.
+–	All issues recognized during technical review are listed and corrected if possible.
+–	If an issue is not correctable, then the offending records are flagged and not released to the public.
+–	A final automated QA dashboard is generated to inform the next stage of the process, expert review.
+Expert review phase
+•	A subject matter expert conducts a final review using the information gleaned from the technical review, along with an additional inspection of the final QA dashboard, to find any outstanding issues that were not previously recognized.
+•	All remaining issues are listed and corrected.
+•	The expert reviewer then indicates that the data set is ready for publication in the National Database.
+Important Changes and Additions to Database Fields
+The data schema, published in 2015, has remained stable, but changes have been made to enhance the utility of the database, and to improve clarity of the field definitions set forth in Hourigan et al., 2015. The full data dictionary for the National Database contains 133 fields, of which 108 are published and 25 are unpublished and used internally by the Program for data management purposes. For a discussion of the required and desired fields for submitting data to the Program, please see Appendix 3.
+Logical groupings of fields, called 'Field Category', reflect the higher level organization of the database and provide a convenient way to group related fields. These groups demonstrate how the database fields relate to one another and describe different aspects of the individual occurrences (or observations) of corals and sponges. Two new categories, “GIS Enhancement”, and “Flagging ” have been added to capture a suite of new fields, bringing the number of field categories from eight to ten (Table 2).
+The 'Field Category' groups are defined as follows:
+•	Survey Data: Fields that pertain to a whole survey or cruise, such as vessel name, vehicle name, or cruise number.
+•	Event Data: Data that pertain to an entire dive or event (e.g., trawl, transect, ROV dive).
+•	Observation Data: Fields that that hold information about an individual record.
+•	Taxonomic ID: Fields that capture taxonomic ranks and hierarchy, along with details regarding the identification of a taxon.
+•	Environment: Fields that describe the habitat, substrate, and oceanographic properties in the same location as the observation.
+•	Occurrence Detail: Fields that capture further detail about each occurrence or observation.
+•	GIS Enhancement: Fields that originate from geospatial processing by the Program that are designed to enhance and supplement the data originally submitted. Example: 'LargeMarineEcosystem'
+•	Metadata: Fields that describe the origin or provenance of the records.
+•	Record Keeping: Fields that capture unique identifiers for each data set and for each individual database record, 'DatasetID' and 'CatalogNumber', respectively.
+•	Quality Flags: Published quality and usability flags defined by the Program.
+For a full list of current field names in the database, their definitions, and their valid values, see Appendix 2 of this document. The data dictionary for the program is a version-controlled document (20190718-0 at the time of writing). Appendix 2 is arranged alphabetically to assist the reader when searching for specific fields. The field definitions and valid values are periodically updated by the Program's Data Working Group. The data dictionary presented in the previous technical memo, Hourigan et al. (2015), is superseded by the current version. For the most current version of the data dictionary, users should consult the DSCRTP web portal at: https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view . The definitions posted at that location will supersede all other versions (including the one published in this document). 
+
+
+
+
+Table 2: Public fields of NOAA's National Database for Deep-Sea Corals and Sponges grouped by 'Field Category'.  The single quoting convention used in this document is not used in the table below for enhanced visual clarity.
+
+
+Several additions of internal and external fields, updates to field definitions, and updates to valid values have occurred since 2015. The Program recognizes the need for field definitions to remain as stable as possible through time, but the field definitions and valid values are revisited periodically to make additions or changes, to capture critical new incoming information, or to clarify and refine the way a field should be implemented. Typical changes include adding a new field, improving the definition of an existing field, and changing the valid value set for an existing field. Below are key changes to the database fields that have occurred since 2015.  
+Two new taxonomy-related fields were added.
+•	VerbatimScientificName: The 'ScientificName' as originally reported by the 'DataProvider'.
+•	TypeStatus: The type status (e.g., holotype, paratype, etc.), if any, of the specimen. Additional information (e.g., typified scientific name, publication) should be included in 'IdentificationComments'.  The database currently contains over 700 records of holotypes.
+The previous 'Size' field was changed to 'VerbatimSize' and two new fields were added to capture the minimum and maximum size.
+•	VerbatimSize: This field is used to store the originally reported size value (in cm). If the record represents a size range (e.g., an estimate for an individual, or the range for a number of the same taxon of coral or sponge), then use of 'MinimumSize' and 'MaximumSize'
+•	MinimumSize: Minimum size of the taxon observed. Methods for determining size (e.g., height or maximum diameter) should be noted in 'OccurrenceComments'.
+•	MaximumSize: Maximum size of the taxon observed. Methods for determining size (e.g., height or maximum diameter) should be noted in 'OccurrenceComments'.
+The following fields were added to capture key habitat characteristics using standardized terminology from the Coastal and Marine Ecological Classification Standard (CMECS). https://www.cmecscatalog.org/cmecs/index.jsp .
+•	CMECSGeoForm: Tectonic or geologic features, such as shelf, canyon, or seamount. See the Coastal and Marine Ecological Classification Standard catalog for description. 
+•	CMECSSubstrate: Geologic or biogenic substrate. See the Coastal and Marine Ecological Classification Standard catalog for description 
+•	CMECSBiotic: Biotic community present at the observation site. See the Coastal and Marine Ecological Classification Standard catalog for description.
+The 'EntryUpdate' field was added to capture the most current date that the Program modified the record. This is in addition to the field called 'Modified', which captures the last date that the data provider modified the record.
+•	EntryUpdate: The most recent date the DSCRTP Program updated or verified the record. Format: YYYY-MM-DD. This variable will only contain a value if the DSCRTP Program has updated a record which has previously been published in the database. Also see the related variables that inform record versioning: 'Modified' and 'EntryDate'.
+We added the field 'ShallowFlag' to flag occurrences that are less than 50 meters deep. These occurrences are included in our database because they represent deeper taxa that can also occur at shallower depths than our typical 50 meter cutoff.
+•	ShallowFlag: A value of 1 denotes a coral or sponge record where DepthInMeters is correct but it is less than 50 meters. A value of 0 denotes a coral that has a correct DepthInMeters greater than or equal to 50 meters.
+Several new spatially calculated depth fields were added to help ground truth the observed depths within the database.
+•	gisCRMDepth: GIS-derived depth (bathymetry is Coastal Relief Model).
+•	gisGEBCODepth: GIS-derived gisGEBCODepth (bathymetry is GEBCO).
+•	gisEtopoDepth: GIS-derived depth (bathymetry is ETOPO1).
+The following location related fields were added to enhance the ability to describe and standardize place names.
+•	gisNGIALocality: GIS-derived Locality (based on NGIA point placenames) - 30km max search distance for matching.
+•	gisNGIADist: distance to nearest official NGIA locality (km).
+•	gisGEBCOLocality: GIS-derived Locality (based on GEBCO point placenames) - 30km max search distance for matching.
+•	gisGEBCODist: distance to nearest official GEBCO locality (km).
+The following fields have been added to capture the actual spatially explicit boundary of the sample area footprint for each record.
+•	footprintWKT: A Well-Known Text (WKT) representation of the shape (footprint, geometry) that defines the sample area. As an example, for downward looking or oblique still images, this would be a polygon representing the footprint of the viewable area (an orthogonal projection using the sea floor as the projection plane). For a video transect, this would be a polygon that represents the footprint of the entire viewable area throughout the length of the video. To report the actual area of the sample, see 'SampleAreaInSquareMeters'. Also please report 'footprintSRS' if you report 'footprintWKT'. Example: the one-degree bounding box with opposite corners at (longitude=10, latitude=20) and (longitude=11, latitude=21) would be expressed in well-known text as “POLYGON ((10 20, 11 20, 11 21, 10 21, 10 20))” withouth the enclosing quotes. For discussion see http://terms.tdwg.org/wiki/dwc:footprintWKT
+
+•	footprintSRS: A Well-Known Text (WKT) representation of the Spatial Reference System (SRS) for the footprintWKT of the Location. Do not use this term to describe the SRS of the Latitude and Longitude, even if it is the same as for the footprintWKT. 'footprintSRS' must always be populated if 'footprintWKT' is given. Example: The WKT for the standard WGS84 SRS (EPSG:4326) is “GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]]” without the enclosing quotes. For discussion see http://terms.tdwg.org/wiki/dwc:footprintSRS
+Key Notes on Database Fields for Data Users and Providers
+
+This section provides additional details regarding the database structure to assist both users and data providers in the proper creation and interpretation of the occurrence records within the National Database.  
+SampleID vs. TrackingID vs. CatalogNumber
+The 'SampleID' field is meant to be used by the data provider as an identifier to specify the exact observation, image, or physical specimen from which the occurrence record was created. 'SampleID' is a key value that allows Program records to be traced back to the data provider's original observation. For example, for museum specimens, the 'SampleID' would be the museum's catalog number.
+The purpose of the 'SampleID' field is for end-users of the database to have a link back to the original data provider's observation records. Therefore the 'SampleID' must be a persistent identifier, internal to the data provider's institution or working group, that ensures individual physical samples or imagery records will be located within their own data storage systems. If appropriate, this 'SampleID' field can be repeated within the National Database records. For example, a single still image that contains two taxa would be properly represented as two separate records in the database with the same SampleID. The 'TrackingID' can be used as a secondary identification field, e.g., for a field ID number.  The 'TrackingID' field can be used, in addition to the 'SampleID' field, when two separate IDs have been used for a single sample. If only one identifier is available, use only 'SampleID'.
+In contrast, the 'CatalogNumber' field is a completely unique identifier created and used by the Program to locate individual records within the National Database. The 'CatalogNumber' is assigned by the Program itself, and could number in the hundreds of thousands, or millions one day. These numbers are used to uniquely identify and reference specific occurrence records only within the context of the National Database.
+Geographic Position
+Published database records have positional information in the 'Latitude' and 'Longitude' fields. The positional information can reference a point or a line. When only a single coordinate is given to represent a linear sampling event, that point is typically the start point or midpoint, with details provided in the 'LocationComments' field. When available, some records collected along transects or during trawl surveys will also have information in the following fields: 'StartLatitude', 'StartLongitude', 'EndLatitude', and 'EndLongitude'. Other fields in the database describe details about the quality of the location data: 'NavType', 'LocationAccuracy', and 'LocationComments'. 'LocationAccuracy' specifically, is important to understand uncertainty in spatial modeling and guide users on the spatial resolution of the occurrence record. Additionally, fields about the named locality of each occurrence are included based on automated spatial analysis routines: 'Ocean', 'LargeMarineEcosystem', 'gisMEOW', 'Country', and 'FishCouncilRegion'. 'Locality' is the non-standardized named location that the data provider listed in the initial data submission. Well Known Text (WKT) representations of the geographic position of occurrences can be recorded in the pair of variables: 'footprintWKT' and 'footprintSRS' (for a deeper discussion of these variables and the quantification of the sample area, see the discussion below in the section: The Sample Area).
+The Sample Area
+The area sampled by a survey provides important information relevant to understanding the occurrence records in the database. Each record in the database represents an observation of one or more occurrences of a single taxon within a given sample area (in square meters). The sample area will vary based on whether the observation is an actual physical sample or imagery (both still images and video), or other types of direct observation (e.g., directly observed from a submersible or by trawl sampling). Sampling area means the viewable area (or trawled area), orthogonally projected onto the sea floor, represented by a polygon. The sample area could denote the area observed in a single still image, multiple still images, a video segment, or, in the case of physical samples, sometimes a single discrete point in space. In the case of trawl records, the sample area is the area trawled, which is typically determined by trawl width and length of the trawl haul.  All details regarding the methods used for the determination of horizontal position and sample area will be reported in the variable 'LocationComments'.
+The Program has instituted several new database fields to better capture the sample area. The sample area can be reported in the field 'SampleAreaInSquareMeters'. If the exact georeferenced footprint of the polygon representing the sample area is known, it can be reported in the pair of fields called 'footprintWKT' and 'footprintSRS'.  Most major GIS software provides functionality to convert and export Well-Known Text representations of sampling polygons.  The Program would like to obtain these explicit polygonal representations of the sampling area for entire video transects or for single images where possible (example: footprints of georeferenced, downward-looking photos). This type of explicit representation of the sample area will allow a better quantification of sampling effort in a given location.
+For convenience and simplicity, each record in the database, regardless of sample area shape or size, is represented on the web mapping portal as a single geographically-located point. Geographic position of this single point is indicated in the 'Latitude' and 'Longitude' fields. 
+The Program places a high value on detailed quantification of the sample area, as it helps quantify total sampling effort and is essential for analysis of the density of coral and sponge communities.  
+
+Connection between the Ocean Biogeographic Information System, USA (OBIS-USA) and the National Database
+
+The Program is committed to contributing to national and international aggregations of occurrence data. To this end, the Program contributes updated coral and sponge data on an annual basis to OBIS-USA, the U.S. node of OBIS which is part of the International Oceanographic Data and Information Exchange (IODE) of the Intergovernmental Oceanographic Commission (IOC) of the United Nations Educational, Scientific and Cultural Organization (UNESCO). The National Database contributes a particular subset of fields from its database to OBIS-USA during annual submissions and these fields align to the Darwin Core standard, the standard used by OBIS-USA (Table 3).  
+
+
+
+
+
+Table 3: Fields from the National Database for Deep Sea Corals and Sponges that are contributed to the Ocean Biogeographic Information System – USA (OBIS-USA).  The vocabulary crosswalk table below is in alphabetical order by DSCRTP field names.  The corresponding Darwin Core term is given that matches the term used within OBIS.  The OBIS-required fields are highlighted.
+
+Note to Reviewers: This table is currently under review by our data working group.
+
+
+Summary of Database Contents
+The following figures and statistics provide insight into the completeness and quality status of datasets included within the National Database. These results are meant to inform and caution data users about the adequacy of using the database for various analytical objectives. Appendix 4 includes a link to an online resource that describes each unique data set in detail as well as providing an interactive map to explore those data in isolation.  The dataset dashboards also have a link to download the dataset as well as International Standards Organization compliant metadata (ISO 19115-2).
+The figures and tables that are presented in the following section are designed to give readers greater insight into the current contents and status of a few key fields in the database. For clarity and brevity, not all variables within the database are covered here. We elected to summarize fields and highlight relationships that clarify the distribution of data holdings and well as identify issues that data users may find useful for their analytical goals.
+Analysis Details
+The analyses presented here use version 20190718-0 of the database. In some cases, the data have been filtered to enhance readability or interpretation of a figure or table. These filters will be called out explicitly in the text or captions when used. The purpose of this analysis is to succinctly summarize the current contents and quality of the database, so that any major limitations are apparent to end. The numerical and graphical summaries provided in this document were created using R and R-Markdown used within the RStudio development environment (R Core Team, 2017; RStudio Team, 2016). The author can provide the code upon request.
+Distribution of Records by U.S. Fishery Management Council Region
+Primary clients for the National Database are the United States Regional Fishery Management Councils. The 'FishCouncilRegion' field identifies the council region within which a record occurs. Figure 2 represents the number of sponge and coral occurrences that fall within each of council regions. Around 5 % of records are not found within U.S. Fishery Management Council regions, as they are either within international waters or within the boundaries of other countries' exclusive economic zones.
+
+
+
+
+
+Figure 2: Distribution of known coral and sponge occurrences (as of 2018) reported by Fishery Management Council region ('FishCouncilRegion'). Only records occurring within a council boundary are included. The number of records is primarily a measure of sampling effort and reporting to the database, not necessarily a reflection of the abundance of deep sea corals or sponges within that region.  Records outside the U.S. EEZ are not included in this figure.
+Images Associated with Records
+To date, approximately 7 % or 50,498 records have full resolution still images available. These images are viewable directly in the DSCRTP map portal by clicking on coral or sponge points. The 'ImageURL' field also contains the link to the image if available, and this field is available in data downloaded from the DSCRTP map portal.
+Depth Distribution
+'DepthInMeters' is the primary depth field in the database with all of the published records including depth information in this field. This field records either the actual reported depth, the average depth (when separate 'MinimumDepthInMeters' and 'MaximumDepthInMeters' are reported), or, in cases where no depth is reported, a GIS-derived depth for their position is assigned, relative to the best available bathymetry. These spatially derived depths are available in the following fields: 'gisCRMDepth', 'gisGEBCODepth', and 'gisEtopoDepth' and provide an important means of checking depth.  Averaged and assigned depths should be treated as approximations. 
+The 'DepthMethod' and 'LocationComments' fields contain additional details on the source and methodology for depth values present in the 'DepthInMeters' field. For full definitions and valid values of these fields, see Appendix 2. See Figure 3 below for a distribution of depth values in the National Database by Fishery Management Council region ('FishCouncilRegion'). It is important to note here again that not all areas have been surveyed and thus these values only represent the currently held occurrences. 
+
+Figure 3: Distribution of depth values by Fishery Management Council region ('FishCouncilRegion'). The 'NA' values are records that are outside of the United States exclusive economic zone.
+Observations through Time
+The year in which an observation was made, 'ObservationYear', provides some insights for understanding deep sea exploration activities through time. Figure 4 provides a visualization of the distribution of the 'ObservationYear' field. The database includes records from 1833 to 2017, with the median year of observation being 2007.  Most records prior to 1980 represent museum specimens.  The large increase in 21st century records reflects the increasing importance of records annotated from still images and video.
+
+Figure 4: The temporal distribution of coral and sponge observations by 'ObservationYear.'
+ 
+Individual Count
+The 'IndividualCount' field indicates the number individual corals or sponges per record. 64 % or 445,859 records have 'IndividualCount' values. Most of the records fall within the range of 1-50 individuals per observation frame, but the maximum is over 16,000 individuals.  See Figure 5 for the distribution of individual count between 0 and 50.  
+When interpreting individual count values, it is important to realize that some records represent linear sampling events, like a trawl or video transects and so the underlying sample area is much bigger, leading to higher overall individual count values.  Where 'SampleAreaInSquareMeters' is reported, this value can be used to spatially normalize the count values.  Also, when 'IndividualCount' is not populated,  species abundance values may be reported in 'CategoricalAbundance' instead, which is simply a categorical expression of the count of the number of individuals. 
+
+Figure 5: Distribution of 'IndividualCount' values between 0 and 50 corals or sponges. The figure's x-axis is truncated at 50 individuals for visual clarity, but the true maximum for 'IndividualCount' is 16,791.
+ 
+Size
+For records with reported size values (23 % of all records; n = 157,997), all are properly specified according to the data dictionary. See Figure 6 below for distribution of average size values.  In the database, size values are reported in 'MinimumSize' and 'MaximumSize'fields in order to capture a range of sizes that might be observed within a sample area. In the case of a video transect, for example, multiple sizes may be observed for a single taxon. Average size values reported in the figure below are calculated as ('MinimumSize' + 'MaximumSize')/2.   Values for these two fields will be identical where only one size observation was made.  The original size values, exactly as reported by the data provider, are captured in a field called “VerbatimSize'. 
+
+
+Figure 6:  Histogram of average size values. For clarity the x-axis limit has been set to 100 cm, but the maximum average size is 762 cm. 
+ 
+Condition
+For records with reported condition values (62 % of all records; n = 405,491), 99% comply with the list of valid values specified in the data dictionary. Most entries are listed as 'Live' (Figure 7).
+
+Figure 7: Distribution condition values, showing most records in the database are of live coral and sponges.
+Habitat and Substrate
+Habitat and substrate values are in the database as reported by the data provider. No standard valid values have been adopted or implemented for these fields.  The newly-established fields using CMECS classifications (CMECSBiotic, CMECSGeoForm, CMECSSubstrate) are intended to help standardize reporting of habitat measures.
+•	18 % or 127,708 records have 'Substrate' values reported.
+•	39 % or 271,370 records have 'Habitat' values reported.
+
+
+
+
+Taxonomy
+All records in the database (100%) are populated with a complete taxonomic string. In addition, greater information about taxonomic identifications are available in the following descriptive fields: 'IdentificationComments',  'IdentifiedBy',  'IdentificationDate',  and 'IdentificationQualifier'. See Appendix 2 for the full definitions of these fields.
+Taxonomic identifications can change through time, either through refinements in identification by taxonomists or through changes to underlying group taxonomy. DSCRTP attemps to keep up with these changes, but these fields should be checked carefully before using the data for analysis.
+'TaxonRank' provides taxonomic resolution of the taxonomic identifications in the database. Figure 8 provides a visualization of the distribution of the 'TaxonRank' field. The bars are colored by 'Phylum' as an indication of the relative portion of corals vs. sponges and their taxonomic resolution. Most corals are identified to the taxon rank ('TaxonRank') of genus or species.  
+
+Figure 8: Distribution of 'TaxonRank' across all records. Corals are only included in the database if they are identified at least to Order, as higher taxonomic levels contain cnidarians that are not considered to be corals. Sponge records are accepted at the phylum level and below.
+See Appendix 1 for a full summary of the taxa in the database.  
+Record Types
+100 % of all records (n = 695,335) have 'RecordType' values reported. See Figure 9 below for a view of the distribution of records by 'RecordType' within each Fishery Management Council region. Figure 10 shows the distribution of these values across the entire database, regardless of region.
+
+
+
+Figure 9: The distribution of 'RecordType' within the database for each 'FishCouncilRegion.'
+
+Figure 10: The distribution of valid 'RecordType' values across the entire database.
+
+Sampling Equipment
+Approximately 98 % of all records (n = 678,773) have 'SamplingEquipment' values reported. Additional information on the sampling equipment (e.g., specific type of trawl) and other methods are often included in the 'SurveyComments' or in the data set metadata.  Figure 11 shows the distribution of 'SamplingEquipment' values, grouped by 'FishCouncilRegion' to identify the regional differences in sampling methodology. See Figure 12 below for the makeup of the entire database by 'SamplingEquipment'.
+
+
+
+
+
+Figure 11: The distribution of 'SamplingEquipment' values, grouped by 'FishCouncilRegion'.
+
+
+Figure 12: The distribution of 'SamplingEquipment' valid values across the entire database.
+Caveats for Data Usage
+Data users should be cautious when using these data for specific analytical purposes, especially when using data from more than one sampling effort at a time. As with all data aggregations, meta-analyses of disparate data are complex and many pitfalls can arise when combining data from sources that use different sampling methods. Users of the data are encouraged to carefully consider which data sets (and even which records within a data set) are appropriate to use for the analytical purpose at hand, especially in regard to evaluating identification and positional uncertainty. The Program has made considerable effort to assess the quality of data included in the National Database and to exclude data that are not up to standard.  Additionally, numerous metadata fields are included to provide users with additional information that can be used to evaluate the data.  Despite those efforts, data quality issues do still exist in the database and users should conduct their own quality checks prior to relying on the database for particular analyses and management applications.
+Conclusion
+The Program's goal is to provide broad public access to a comprehensive, consolidated, quality assured data resource for deep sea corals and sponges in the U.S. and around the world. It is our intention that all data providers receive the credit they deserve for helping build this resource, which is designed to enhance deep sea conservation and management decision making. By creating the National Database for Deep-Sea Corals and Sponges and the data portal at DeepSeaCoralData.NOAA.gov, the Program has provided a comprehensive and convenient one-stop source to view and access these data.
+This report has summarized the current holdings and quality level of NOAA's National Database of Deep-Sea Corals and Sponges in order to enhance understanding, appropriate use, and to indicate areas for further improvement. The Program welcomes feedback from portal and data users. Please send us your comments and questions to deepseacoraldata@noaa.gov. This report, and any follow-on updates, will continue to track the ongoing evolution of this key resource for deep sea ecologists, biologists, managers, policy makers, and explorers.
+Acknowledgements
+The Program would like to thank all the individuals and institutions who have contributed their data to be published in the common framework of the National Database. We recognize the considerable time and effort that it takes to collaborate with us, and for that, we are grateful. Also, thanks to all the contributors to the conceptualization and design of the database and the deep sea coral data portal. This resource is only possible with all of the individual and institutional contributors from the deep sea research community.  We would also like to thank all of the users of the data and portal for providing the real-world application of these resources.  Thanks to all who continue to help us evolve these information resources to enhance deep sea conservation and management.  
+References
+Amante, C. and B.W. Eakins (2009) ETOPO1 1 Arc-Minute Global Relief Model: Procedures, Data Sources and Analysis. NOAA Technical Memorandum NESDIS NGDC-24. National Geophysical Data Center, NOAA. doi:10.7289/V5C8276M [access date].] Available from https://www.ngdc.noaa.gov/mgg/global/.
+Horton, T. et al. (2018) World Register of Marine Species. Available from http://www.marinespecies.org at VLIZ. Accessed 2018-03-10. doi:10.14284/170.
+Hourigan, T.F., P.J. Etnoyer, R.P. McGuinn, C. Whitmire, D.S. Dorfman, L.M. Dornback, S. Cross, and D. Sallis (2015) An Introduction to NOAA's National Database for Deep-Sea Corals and Sponges. NOAA Technical Memorandum NOS NCCOS 191. 27 pp. Silver Spring, MD. Available from https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/database_intro.
+R Core Team (2017) R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. Available from  https://www.R-project.org/.
+RStudio Team (2016) RStudio: Integrated Development for R. RStudio, Inc., Boston, MA. Available from http://www.rstudio.com/.
+Scanlon, K.M., R.G. Waller, A.R. Sirotek, J.M. Knisel, J.J. O'Malley, and S. Alesandrini (2010) USGS cold-water coral geographic database-Gulf of Mexico and western North Atlantic Ocean, version 1.0: U.S. Geological Survey Open-File Report 2008-1351. Available from https://pubs.usgs.gov/of/2008/1351/.
+
+Appendix 1: Summary of occurrence records by Family
+Summary of all occurrence records in the database grouped and listed alphabetically by 'Family'.  The number of genera ('Genus') with records in the database within in each family is reported in the column named 'Genera' in the table below. For records listed only at the Family level, Genus will be “NA”.  The column heading '# of Records' represents the number of records within each family. 
+
+Corals
+
+
+Sponges
+
+
+Appendix 2: Data Dictionary for the National Database
+National Database field names, definitions, and their valid values, organized by field name. The current version of this table is available as an Excel file on the DSCRTP web portal: 
+https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view 
+Important Note on Data Dictionary Version: For the most current version available, access the link above. The version printed here may be out of date due to post-publication updates of the schema. Users are advised to use the latest Excel version of the table for preparing a new data for submission or for analytical guidance.  
+
+
+
+
+Appendix 3: Required and Desired Fields for Submission of Data to the National Database
+The following section is revised from Hourigan et al. 2015. Even though the database has a diverse array of fields that can accommodate many types of information, not all are required when submitting data to the Program. For example, the minimum number of required fields for submission to the database is eight. This number is for historical point-based records. All incoming data are evaluated according to the data type. A two-factor classification is used to characterize incoming data according to type. Three categories, 'Point', 'Transect', and 'Trawl', are used to differentiate the first factor and are defined below.
+•	Point: Discrete observations from a single geographic point. An example is an observation of a single taxon from an individual still image or alternatively an actual single point collection of a physical sample.
+•	Transect: Cumulative observations from a pre-determined linear transect. An example would be observations from multiple still images (within a transect) that are grouped together to form a single record in the National Database. Even though these records are currently represented as a single point on the DSCRTP map portal interface, they are an inherently linear sampling frame, and additional required fields help capture the start and end points of the transect line.
+•	Trawl: Specimens from trawl hauls. These data represent observations of multiple collected individuals over a single trawl-haul describing a single taxa, and represented by a single record in the National Database. These records also have an inherently linear sampling frame, and additional required fields help to capture the start and end points of the trawl line if available.
+Three categories, 'Historical', 'New', and 'Program' are used to differentiate the second factor and are defined below.
+•	Historical: 'Historical' data are already collected and the Program has no ability to influence the format or observational methods. An example is a data set already collected under the funding of another program and that might already be in the literature or another database format, such as records from Monterey Bay Aquarium Research Institute and the Smithsonian Institution at the National Museum of Natural History.
+•	New: 'New' data have not yet been collected, but are intended to be submitted to the Program. An example is data from an upcoming expedition that is not funded by the Program and therefore has fewer submission requirements. The Program would like to encourage these efforts to submit their observations to the National Database, and can provide direct assistance when researchers contact the Program prior to data collection.
+•	Program: Data collected under exploration funded by the Program have the most required fields for submission. In the case of Program funded data collection, it is expected that the principal investigators coordinate directly with the Program to process their data according to Program standards outlined here. Examples include data from upcoming planned cruises with Program funding and 'data rescue' projects designed to create new annotations from existing unanalyzed video or still photos.
+Used in combination, these factors (each with three categories), lead to nine different types of incoming data with different numbers of required fields. The Data Working Group uses notation to refer to these combinations: Point Historical, Point New, Point Program, Transect Historical, Transect New, Transect Program, Trawl Historical, Trawl New, Trawl Program. Tables 4a-c below summarize the required fields for the nine possible incoming data types.
+Table 4a: Required and desired fields for different types of incoming point-based data. 'R' means the field is required for data submission and 'D' means that it is desired by the Program. 'P' means that the field is supplied by the Program.
+
+
+Table 4b: Required and desired fields for different types of incoming transect-based data. 'R' means the field is required for data submission and 'D' means that it is desired by the Program. 'P' means that the field is supplied by the Program.
+
+
+
+
+
+
+Table 4c: Required and desired fields for different types of incoming trawl-based data. 'R' means the field is required for data submission and 'D' means that it is desired by the Program. 'P' means that the field is supplied by the Program.
+
+
+Appendix 4: Data set Dashboards
+Each of the data sets in the database has a unique 'DatasetID'. There are currently 695,335 records in the database composed of 226 individual data sets from 75 different data providers. You will find an interactive dashboard for each data set at the following location: https://deepseacoraldata.noaa.gov/DatasetID_Table/DatasetID_Table_20190418-0.html These dashboards provide important information about each constituent data set that makes up the National Database and to download each set individually with ISO compliant metadata.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
