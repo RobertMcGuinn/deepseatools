@@ -542,6 +542,7 @@ Three new taxonomy-related fields were added.
 * **'VerbatimScientificName'**: `r s$FieldDescription[s$FieldName == "VerbatimScientificName"]`
 * **'TypeStatus'**: `r s$FieldDescription[s$FieldName == "TypeStatus"]`. The database currently contains over 700 records of holotypes.
 * **'IdentificationVerificationStatus'**: `r s$FieldDescription[s$FieldName == "IdentificationVerificationStatus"]`
+* **'LifeScienceIdentifier'**: `r s$FieldDescription[s$FieldName == "LifeScienceIdentifier"]`
 
 Several new fields have been added that relate to capturing and reporting morphological descriptions of taxa.
 
