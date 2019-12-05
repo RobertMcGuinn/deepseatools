@@ -236,9 +236,8 @@ McGuinn, Robert P. ^4,2^; Thomas F. Hourigan ^1^; Scott Cross ^2^; L. Matthew Do
 ####
 ####
 #### NOAA Technical Memorandum NMFS-OHC-006  
-#### December, 2019
+#### December, 2019  
 
- 
 
 ![](C:\rworking\deepseatools\indata\images\noaa_logo_bw.png)  
     
@@ -288,6 +287,7 @@ The objectives of this technical memo are to:
 #####  
 
 # 2020 Status Update: NOAA's National Database for Deep-Sea Corals and Sponges
+
 ####  
 
 ## Background  
@@ -533,10 +533,21 @@ read_docx() %>%
 
 Several additions of internal and external fields, updates to field definitions, and updates to valid values have occurred since 2015. The Program recognizes the need for field definitions to remain as stable as possible through time, but the field definitions and valid values are revisited periodically to make additions or changes in order to capture critical new incoming information, or to clarify and refine the way a field should be implemented. Typical changes include adding a new field, improving the definition of an existing field, and changing the valid value set for an existing field. Highlighted below are the key changes to the database fields that have occurred since 2015.  
 
-Two new taxonomy-related fields were added.
+The database now has a field that indicates the current version of the database. This value is essential for reporting purposes, because it allows full reproducibity of results based on a specific version of the database. 
 
-* **'VerbatimScientificName'**: The 'ScientificName' as originally reported by the 'DataProvider'.
-* **'TypeStatus'**: The type status (e.g., holotype, paratype, etc.), if any, of the specimen. Additional information (e.g., typified scientific name, publication) should be included in 'IdentificationComments'. The database currently contains over 700 records of holotypes.
+* **Database Version**: `r s$FieldDescription[s$FieldName == "DatabaseVersion"]`
+
+Three new taxonomy-related fields were added.
+
+* **'VerbatimScientificName'**: `r s$FieldDescription[s$FieldName == "VerbatimScientificName"]`
+* **'TypeStatus'**: `r s$FieldDescription[s$FieldName == "TypeStatus"]`. The database currently contains over 700 records of holotypes.
+* **'IdentificationVerificationStatus'**: `r s$FieldDescription[s$FieldName == "IdentificationVerificationStatus"]`
+
+Several new fields have been added that relate to capturing and reporting morphological descriptions of taxa.
+
+* **OperationalTaxonomicUnit**: `r s$FieldDescription[s$FieldName == "OperationalTaxonomicUnit"]`
+* **Morphospecies**: `r s$FieldDescription[s$FieldName == "Morphospecies"]`
+* **CombinedNameID**: `r s$FieldDescription[s$FieldName == "CombinedNameID"]`
 
 The previous 'Size' field was changed to 'VerbatimSize' and two new fields were added to capture the minimum and maximum size of the individual corals and sponges where these measurements are provided. 
 
@@ -740,7 +751,7 @@ g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ### Observations through Time
 
-The year in which an observation was made, 'ObservationYear', provides some insights for understanding deep sea exploration activities through time. Figure 4 provides a visualization of the distribution of the 'ObservationYear' field. The database includes records from 1833 to 2017, with the median year of observation being 2007.  Most records prior to 1980 represent museum specimens.  The large increase in 21st century records reflects the increasing importance of records annotated from still images and video.
+The year in which an observation was made, 'ObservationYear', provides some insights for understanding deep sea exploration activities through time. **Figure 4** provides a visualization of the distribution of the 'ObservationYear' field. The database includes records from `r min(filt$ObservationYear)` to `r max(filt$ObservationYear)`, with the median year of observation being `r median(filt$ObservationYear)`.  Most records prior to 1980 represent museum specimens. The large increase in 21st century records reflects the increasing importance of records annotated from still images and video.
 
 ``` {r ObservationYear, echo=FALSE,  dpi = 300}
 # ordering factors
@@ -763,9 +774,9 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ### Individual Count
 
-The 'IndividualCount' field indicates the number individual corals or sponges per record. 64 % or 445,859 records have 'IndividualCount' values. Most of the records fall within the range of 1-50 individuals per observation frame, but the maximum is over 16,000 individuals.  See Figure 5 for the distribution of individual count between 0 and 50.  
+The 'IndividualCount' field indicates the number individual corals or sponges per record. `r round((length(filter(filt, IndividualCount != '-999')$CatalogNumber)/length(filt$CatalogNumber))*100,2)` % or `r length(filter(filt, IndividualCount != '-999')$CatalogNumber)` records have 'IndividualCount' values. Most of the records fall within the range of 1-50 individuals per observation frame, but the maximum is over 16,000 individuals. The median value of 'IndividualCount' is `r median(filt$IndividualCount)`. See **Figure 5** for the distribution of individual count between 0 and 50.  
 
-When interpreting individual count values, it is important to realize that some records represent linear sampling events, like a trawl or video transects and so the underlying sample area is much bigger, leading to higher overall individual count values.  Where 'SampleAreaInSquareMeters' is reported, this value can be used to spatially normalize the count values.  Also, when 'IndividualCount' is not populated,  species abundance values may be reported in 'CategoricalAbundance' instead, which is simply a categorical expression of the count of the number of individuals.
+When interpreting individual count values ('IndividualCount'), it is important to consider the geographic extent of the sampling events. The database includes sampling frames that are as small as a single photograph and as large as a video transect or the area sampled during a trawl haul. For many records, the size of the sampling frame is unknown. The 'SampleAreaInSquareMeters' field is designed to capture the area of the sampling frame, but at the current database version (`r version`) only `r round((length(filter(filt, SampleAreaInSquareMeters != '-999')$CatalogNumber)/length(filt$CatalogNumber))*100,.1)`% of the records are populuated for this variable. Where populated, this value can be used to spatially normalize the count values by area for the purpose of making calculations of density. Also, when 'IndividualCount' is not populated, species abundance values may be reported in 'CategoricalAbundance' instead, which is simply a categorical expression of the count of the number of individuals counted within the sampling frame.
 
 ``` {r IndividualCount, echo=FALSE,  dpi = 300}
 # ordering factors
@@ -793,6 +804,26 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ### Size
 
+``` {r SizeCalc, echo=FALSE, cache = FALSE, warning = FALSE}
+yo <- filt %>% 
+  filter(
+    MinimumSize != "-999",
+    MaximumSize != "-999",
+    MinimumSize != '0',
+    is.na(Phylum) == F
+    )
+
+yo$AverageSize <- (yo$MinimumSize + yo$MaximumSize)/2
+yo$SizeDiff <- (yo$MaximumSize - yo$MinimumSize)
+
+x <- length(yo$CatalogNumber)
+y <- length(filt$CatalogNumber)
+z <- max(yo$AverageSize)
+
+```
+
+'MinimumSize' and 'MaximumSize' values reported: `r round((x/y) *100,1)` % of all records (n = `r x`). The maximum average size is `r z`.
+
 For records with reported size values (23 % of all records; n = 157,997), all are properly specified according to the data dictionary. See Figure 6 below for distribution of average size values.  In the database, size values are reported in 'MinimumSize' and 'MaximumSize'fields in order to capture a range of sizes that might be observed within a sample area. In the case of a video transect, for example, multiple sizes may be observed for a single taxon. Average size values reported in the figure below are calculated as ('MinimumSize' + 'MaximumSize')/2.   Values for these two fields will be identical where only one size observation was made.  The original size values, exactly as reported by the data provider, are captured in a field called “VerbatimSize'.
 
 ``` {r Size, echo=FALSE,  warning = FALSE, dpi = 300}
@@ -818,6 +849,21 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 #### Figure 6:  Histogram of average size values. For clarity the x-axis limit has been set to 100 cm, but the maximum average size is 762 cm. 
 
 ### Condition
+
+```{r ConditionCalc, echo=FALSE, cache = FALSE}
+
+condition <- filt$Condition %in% c('Live','Damaged','Dead')
+x <- length(condition[condition == T])
+y <- filter(filt, is.na(filt$Condition) == FALSE)
+y <- length(y$Condition)
+z <- filter(filt, is.na(filt$Condition) == TRUE)
+z <- length(z$Condition)
+t <- length(filt$Condition)
+
+```
+
+Condition values reported: `r round((y/t) *100,1)` % of all records (n = `r y`)   
+Percent valid: `r round((x/y) * 100,1)`   
 
 For records with reported condition values (62 % of all records; n = 405,491), 99% comply with the list of valid values specified in the data dictionary. Most entries are listed as 'Live' (Figure 7).
 
@@ -849,12 +895,26 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ### Habitat and Substrate
 
-Habitat and substrate values are in the database as reported by the data provider. No standard valid values have been adopted or implemented for these fields.  The newly-established fields using CMECS classifications (CMECSBiotic, CMECSGeoForm, CMECSSubstrate) are intended to help standardize reporting of habitat measures.
+Records with 'Substrate' values: `r (length(filter(filt, is.na(Substrate) == F)$CatalogNumber)/length(filt$CatalogNumber))*100` % or `r length(filter(filt, is.na(Substrate) == F)$CatalogNumber)` 
+
+Records with 'Habitat' values:
+`r (length(filter(filt, is.na(Habitat) == F)$CatalogNumber)/length(filt$CatalogNumber))*100` % or `r length(filter(filt, is.na(Habitat) == F)$CatalogNumber)` records have 'Habitat' values.
+
+Habitat and substrate values are in the database, verbatim, as reported by the data provider. No standard valid values have been adopted or implemented for these fields.  The newly-established fields using CMECS classifications (CMECSBiotic, CMECSGeoForm, CMECSSubstrate) are intended to help standardize reporting of habitat measures.
 
 * 18 % or 127,708 records have 'Substrate' values reported.
 * 39 % or 271,370 records have 'Habitat' values reported.
 
 ### Taxonomy
+
+```{r taxonomy_fields, echo=FALSE, cache = FALSE}
+z <- s %>%
+  filter(DSCRTPGroup == 'Taxonomy Metadata', InternalUseOnly == "0", FieldName != 'AssociatedTaxa', FieldName != 'Synonyms')
+z <-toString(z$FieldName)
+
+```
+
+Taxononmic qualifier and descriptive fields: `r z`. 
 
 All records in the database (100%) are populated with a complete taxonomic string. In addition, greater information about taxonomic identifications are available in the following descriptive fields: 'IdentificationComments',  'IdentifiedBy',  'IdentificationDate',  and 'IdentificationQualifier'. See Appendix 2 for the full definitions of these fields.  
 
@@ -884,12 +944,9 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 See Appendix 1 for a full summary of the taxa in the database.  
 
-
 ### Record Types
 
-100 % of all records (n = 695,335) have 'RecordType' values reported. See Figure 9 below for a view of the distribution of records by 'RecordType' within each Fishery Management Council region. Figure 10 shows the distribution of these values across the entire database, regardless of region.
-
-``` {r recordtype, echo = FALSE}
+``` {r recordtype_calc, echo = FALSE}
 valid <- filt$RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'video transect','notation', 'catch record')
 
 # number of records with valid values
@@ -907,6 +964,12 @@ z <- length(z$RecordType)
 t <- length(filt$RecordType)
 
 ```
+
+Values reported for 'RecordType': `r round((y/t) *100,1)` % of all records (n = `r y`) have .  
+Percent valid values for 'RecordType: `r round((x/y) * 100,1)` %
+
+100 % of all records (n = 695,335) have 'RecordType' values reported. See Figure 9 below for a view of the distribution of records by 'RecordType' within each Fishery Management Council region. Figure 10 shows the distribution of these values across the entire database, regardless of region.
+
 
 ``` {r RecordTypePlotSouth, echo=FALSE,  dpi = 300}
 yo <- filt %>% 
@@ -1015,8 +1078,6 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ### Sampling Equipment
 
-Approximately 98 % of all records (n = 678,773) have 'SamplingEquipment' values reported. Additional information on the sampling equipment (e.g., specific type of trawl) and other methods are often included in the 'SurveyComments' or in the data set metadata.  Figure 11 shows the distribution of 'SamplingEquipment' values, grouped by 'FishCouncilRegion' to identify the regional differences in sampling methodology. See Figure 12 below for the makeup of the entire database by 'SamplingEquipment'.
-
 ``` {r SamplingEquipmentCalcs, echo = FALSE}
 valid <- filt$SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA')
 
@@ -1038,6 +1099,10 @@ z <- length(z$SamplingEquipment)
 t <- length(filt$SamplingEquipment)
 
 ```
+
+`r round((y/t) *100,1)` % of all records (n = `r y`) have 'SamplingEquipment' values reported.  Of those records that have reported values, `r round((x/y) * 100,1)` % comply with the list of valid values specified in the data dictionary. 
+
+Approximately 98 % of all records (n = 678,773) have 'SamplingEquipment' values reported. Additional information on the sampling equipment (e.g., specific type of trawl) and other methods are often included in the 'SurveyComments' or in the data set metadata.  Figure 11 shows the distribution of 'SamplingEquipment' values, grouped by 'FishCouncilRegion' to identify the regional differences in sampling methodology. See Figure 12 below for the makeup of the entire database by 'SamplingEquipment'.
 
 ``` {r SamplingEquipmentPlotbyRegionPacific, echo=FALSE,  dpi = 300}
 yo <- filt %>% 
@@ -1169,11 +1234,11 @@ RStudio Team (2016) RStudio: Integrated Development for R. RStudio, Inc., Boston
 
 Scanlon, K.M., R.G. Waller, A.R. Sirotek, J.M. Knisel, J.J. O'Malley, and S. Alesandrini (2010) USGS cold-water coral geographic database-Gulf of Mexico and western North Atlantic Ocean, version 1.0: U.S. Geological Survey Open-File Report 2008-1351. Available from https://pubs.usgs.gov/of/2008/1351/.
 
-#### Appendix 1: Summary of occurrence records by Family
+## Appendix 1: Summary of occurrence records by Family
 
 Summary of all occurrence records in the database grouped and listed alphabetically by 'Family'.  The number of genera ('Genus') with records in the database within in each family is reported in the column named 'Genera' in the table below. For records listed only at the Family level, Genus will be “NA”.  The column heading '# of Records' represents the number of records within each family. 
 
-## Corals
+### Corals
 
 ``` {r genus_by_family_coral_table, echo=FALSE}
 x <-
@@ -1201,7 +1266,7 @@ read_docx() %>%
   print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/genus_by_family_coral_table.docx")
 ```
 
-## Sponges
+### Sponges
 
 ``` {r genus_by_family_sponge_table, echo=FALSE}
 x <-
@@ -1231,7 +1296,7 @@ read_docx() %>%
   print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/genus_by_family_sponge_table.docx")
 ```
 
-#### Appendix 2: Data Dictionary for the National Database
+## Appendix 2: Data Dictionary for the National Database
 
 National Database field names, definitions, and their valid values, organized by field name. The current version of this table is available as an Excel file on the DSCRTP web portal: 
 https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view   
@@ -1273,7 +1338,9 @@ read_docx() %>%
 
 ```
 
-#### Appendix 3: Required and Desired Fields for Submission of Data to the National Database
+## Appendix 3: Required and Desired Fields for Submission of Data to the National Database
+
+Each of the data sets in the database has unique 'DatasetID'. There are currently `r length(filt$CatalogNumber)` records in the database composed of `r length(unique(filt$DatasetID))` individual data sets from `r length(unique(filt$DataProvider))` different data providers. You will find an an interactive dashboard for each data set at the following location: LINK (not live yet, see reviewer note below) 
 
 The following section is revised from Hourigan et al. 2015. Even though the database has a diverse array of fields that can accommodate many types of information, not all are required when submitting data to the Program. For example, the minimum number of required fields for submission to the database is eight. This number is for historical point-based records. All incoming data are evaluated according to the data type. A two-factor classification is used to characterize incoming data according to type. Three categories, 'Point', 'Transect', and 'Trawl', are used to differentiate the first factor and are defined below.
 
@@ -1292,7 +1359,7 @@ Three categories, 'Historical', 'New', and 'Program' are used to differentiate t
 
 Used in combination, these factors (each with three categories), lead to nine different types of incoming data with different numbers of required fields. The Data Working Group uses notation to refer to these combinations: Point Historical, Point New, Point Program, Transect Historical, Transect New, Transect Program, Trawl Historical, Trawl New, Trawl Program. Tables 4a-c below summarize the required fields for the nine possible incoming data types.
 
-### Table 4a: Required and desired fields for different types of incoming point-based data. 'R' means the field is required for data submission and 'D' means that it is desired by the Program. 'P' means that the field is supplied by the Program.
+#### Table 4a: Required and desired fields for different types of incoming point-based data. 'R' means the field is required for data submission and 'D' means that it is desired by the Program. 'P' means that the field is supplied by the Program.
 
 ``` {r required_desired_points_table, echo=FALSE,  warning=FALSE}
 x <-
@@ -1396,7 +1463,7 @@ read_docx() %>%
 
 ```
 
-#### Appendix 4: Data set Dashboards
+## Appendix 4: Data set Dashboards
 
 Each of the data sets in the database has a unique 'DatasetID'. There are currently 695,335 records in the database composed of 226 individual data sets from 75 different data providers. You will find an interactive dashboard for each data set at the following location: https://deepseacoraldata.noaa.gov/DatasetID_Table/DatasetID_Table.html These dashboards provide important information about each constituent data set that makes up the National Database and to download each set individually with ISO compliant metadata.
 

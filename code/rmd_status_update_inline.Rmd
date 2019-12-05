@@ -370,6 +370,7 @@ z <- max(yo$AverageSize)
 
 
 # Condition
+
 ```{r ConditionCalc, echo=FALSE, cache = FALSE}
 
 condition <- filt$Condition %in% c('Live','Damaged','Dead')
