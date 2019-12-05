@@ -305,6 +305,7 @@ Percent of records without FishCouncilRegion assignments: `r prettyNum(a, big.ma
 Per `r e`% or `r prettyNum(f, big.mark = ",")` records have full resolution images available. 
 
 # Depth Distribution
+
 ```{r depth_fields, echo=FALSE, cache = FALSE}
 x <- s %>%
   filter(

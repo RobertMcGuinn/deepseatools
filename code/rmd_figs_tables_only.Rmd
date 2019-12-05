@@ -289,7 +289,7 @@ read_docx() %>%
 
 ```
 
-table: required/desired trawl
+# table: required/desired trawl
 
 ``` {r required_desired_trawl_table, echo=FALSE}
 x <-
@@ -681,8 +681,7 @@ g <- ggplot(filt2, aes(TaxonRank, fill = Phylum)) +
 g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 ```
 
-
-
+# figure: recordtype
 
 ``` {r recordtype, echo = FALSE}
 valid <- filt$RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'video transect','notation', 'catch record')
@@ -925,6 +924,8 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ```
 
+# table: coral
+
 ``` {r genus_by_family_coral_table, echo=FALSE}
 x <-
  arrange(filt, Genus) %>% filter(Phylum == 'Cnidaria') %>%
@@ -950,6 +951,8 @@ read_docx() %>%
   body_add_flextable(ft) %>% 
   print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/genus_by_family_coral_table.docx")
 ```
+
+## table:  sponges
 
 ``` {r genus_by_family_sponge_table, echo=FALSE}
 x <-
@@ -978,6 +981,8 @@ read_docx() %>%
   body_add_flextable(ft) %>% 
   print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/genus_by_family_sponge_table.docx")
 ```
+
+## table: data dictionary
 
 ``` {r data_dictionary_table, echo=FALSE}
 x <-
@@ -1014,11 +1019,6 @@ read_docx() %>%
 
 ```
 
-``` {r data_dictionary_livetext, echo=FALSE}
 
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/data_dictionary_table.docx")
 
-```
 

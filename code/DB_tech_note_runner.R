@@ -4,10 +4,10 @@
 # purpose: run the RMarkdown for the database technical memo (status update)
 
 ##### input: latest version of NDB #####
-# setwd("C:/rworking/deepseatools/indata")
-# indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
-# filt <- indata %>%
-#   filter(Flag == "0")
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
 
 ##### input: latest version of the NDB schmea #####
 # # Register and download Google Sheet
