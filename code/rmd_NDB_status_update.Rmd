@@ -22,7 +22,7 @@ options(scipen=10000)
 options(digits = 0)
 ```
 
-```{r data_intake, echo=FALSE, warning=FALSE, message=FALSE, cache = TRUE}
+``` {r data_intake, echo=FALSE, warning=FALSE, message=FALSE, cache = TRUE}
 
 ##### input: latest version of NDB #####
 # setwd("C:/rworking/deepseatools/indata")
@@ -32,7 +32,7 @@ options(digits = 0)
 
 ```
 
-```{r data_prep, echo=FALSE, warning=FALSE, message=FALSE, cache = FALSE}
+``` {r data_prep, echo=FALSE, warning=FALSE, message=FALSE, cache = FALSE}
 
 ##### data improvements (from version DSCRTP_NatDB_20171214-0): Recorded in Redmine #####
 # filt <- filt %>% filter(ObservationYear != "-999" | 
@@ -95,7 +95,7 @@ options(digits = 0)
 
 ```
 
-```{r schema, echo=FALSE, echo=FALSE, warning=FALSE, message=FALSE, cache = FALSE}
+``` {r schema, echo=FALSE, echo=FALSE, warning=FALSE, message=FALSE, cache = FALSE}
 ##### download Google Sheet version of schema for use in R  documents ##### 
 # Register and download Google Sheet
 s <- gs_title('2019_DSCRTP_National_Database_Schema')
@@ -775,9 +775,19 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ### Individual Count
 
-The 'IndividualCount' field indicates the number individual corals or sponges per record. `r round((length(filter(filt, IndividualCount != '-999')$CatalogNumber)/length(filt$CatalogNumber))*100,2)` % or `r length(filter(filt, IndividualCount != '-999')$CatalogNumber)` records have 'IndividualCount' values. Most of the records fall within the range of 1-50 individuals per observation frame, but the maximum is over 16,000 individuals. The median value of 'IndividualCount' is `r median(filt$IndividualCount)`. See **Figure 5** for the distribution of individual count between 0 and 50.  
+```{r individualcount_calc, echo=FALSE}
 
-When interpreting individual count values ('IndividualCount'), it is important to consider the geographic extent of the sampling events. The database includes sampling frames that are as small as a single photograph and as large as a video transect or the area sampled during a trawl haul. For many records, the size of the sampling frame is unknown. The 'SampleAreaInSquareMeters' field is designed to capture the area of the sampling frame, but at the current database version (`r version`) only `r round((length(filter(filt, SampleAreaInSquareMeters != '-999')$CatalogNumber)/length(filt$CatalogNumber))*100,.1)`% of the records are populuated for this variable. Where populated, this value can be used to spatially normalize the count values by area for the purpose of making calculations of density. Also, when 'IndividualCount' is not populated, species abundance values may be reported in 'CategoricalAbundance' instead, which is simply a categorical expression of the count of the number of individuals counted within the sampling frame.
+#total number of published fields
+max <- filt %>%
+  filter(IndividualCount != '-999')
+max <- max(filt$IndividualCount)
+
+```
+
+
+The 'IndividualCount' field indicates the number individual corals or sponges per record. `r round((length(filter(filt, IndividualCount != '-999')$CatalogNumber)/length(filt$CatalogNumber))*100,2)` % or `r prettyNum(length(filter(filt, IndividualCount != '-999')$CatalogNumber), big.mark = ",")` records have 'IndividualCount' values. Most of the records fall within the range of 1-50 individuals per observation frame, but the maximum is over 16,000 individuals. The median value of 'IndividualCount' is `r median(filt$IndividualCount)`. See **Figure 5** for the distribution of individual count between 0 and 50.  
+
+When interpreting individual count values ('IndividualCount'), it is important to consider the geographic extent of the sampling events. The database includes sampling frames that are as small as a single photograph and as large as a video transect or the area sampled during a trawl haul. For many records, the size of the sampling frame is unknown. The 'SampleAreaInSquareMeters' field is designed to capture the area of the sampling frame, but at the current database version (`r version`) only `r round((length(filter(filt, SampleAreaInSquareMeters != '-999')$CatalogNumber)/length(filt$CatalogNumber))*100,.1)`% of the records are populuated for this variable. Where populated, this value can be used to spatially normalize the count values by area for the purpose of making calculations of density. Also, when 'IndividualCount' is not populated, species abundance values may be reported in 'CategoricalAbundance' instead, which is simply a categorical version of the count of the number of individuals counted within the sampling frame. The valid values for 'CategoricalAbundance' are: `s %>% filter(FieldName == 'CategoricalAbundance') %>% dplyr::select(ValidValues)`. 
 
 ``` {r IndividualCount, echo=FALSE,  dpi = 300}
 # ordering factors
@@ -801,45 +811,52 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ```
 
-#### Figure 5: Distribution of 'IndividualCount' values between 0 and 50 corals or sponges. The figure's x-axis is truncated at 50 individuals for visual clarity, but the true maximum for 'IndividualCount' is 16,791.
+#### Figure 5: Distribution of 'IndividualCount' values between 0 and 50 corals or sponges. The figure's x-axis is truncated at 50 individuals for visual clarity, but the true maximum for 'IndividualCount' is `r prettyNum(max, big.mark = ",")`
 
 ### Size
 
 ``` {r SizeCalc, echo=FALSE, cache = FALSE, warning = FALSE}
 yo <- filt %>% 
   filter(
-    MinimumSize != "-999",
-    MaximumSize != "-999",
-    MinimumSize != '0',
-    is.na(Phylum) == F
+    MinimumSize != "-999" | 
+    MaximumSize != "-999"
+    #MinimumSize != '0',
+    #is.na(Phylum) == F
     )
+
+#checking
+length(yo$CatalogNumber)
+# yo %>% filter(as.numeric(MaximumSize) > 200) %>% dplyr::select(CatalogNumber, MinimumSize, RecordType, ScientificName)
 
 yo$AverageSize <- (yo$MinimumSize + yo$MaximumSize)/2
 yo$SizeDiff <- (yo$MaximumSize - yo$MinimumSize)
 
-x <- length(yo$CatalogNumber)
-y <- length(filt$CatalogNumber)
-z <- max(yo$AverageSize)
+x <- length(filt$CatalogNumber)
+y <- length(yo$CatalogNumber)
+
+percent <- ((x-y)/x) * 100 
+
+
 
 ```
 
 'MinimumSize' and 'MaximumSize' values reported: `r round((x/y) *100,1)` % of all records (n = `r x`). The maximum average size is `r z`.
 
-For records with reported size values (23 % of all records; n = 157,997), all are properly specified according to the data dictionary. See Figure 6 below for distribution of average size values.  In the database, size values are reported in 'MinimumSize' and 'MaximumSize'fields in order to capture a range of sizes that might be observed within a sample area. In the case of a video transect, for example, multiple sizes may be observed for a single taxon. Average size values reported in the figure below are calculated as ('MinimumSize' + 'MaximumSize')/2.   Values for these two fields will be identical where only one size observation was made.  The original size values, exactly as reported by the data provider, are captured in a field called “VerbatimSize'.
+About `r round( percent,.1)`% of all records have reported size values (n = `r prettyNum(y, big.mark = ',')`) In the database, size values are reported in fields called 'MinimumSize' and 'MaximumSize' fields in order to capture a range of sizes that might be observed within given sampling area. In the case of a video transect, for example, multiple sizes may be observed for a single taxon, so reporting a range is appropriate. See *Figure 6a* and *Figure 6b* below for distribution of minimum and maximum size values. The original size values, exactly as reported by the data provider, are captured in a field called “VerbatimSize'.
 
-``` {r Size, echo=FALSE,  warning = FALSE, dpi = 300}
-yo <- yo %>%
-  filter(
-   AverageSize < 100  
+``` {r MinSize, echo=FALSE,  warning = FALSE, dpi = 300}
+yo <- filt %>%
+  filter(MinimumSize != "-999",  
+    MinimumSize < 100
     )
 
 # ordering factors
 options(scipen=10000)
-g <- ggplot(yo, aes(as.numeric(AverageSize), fill = Phylum)) +
+g <- ggplot(yo, aes(as.numeric(MinimumSize), fill = Phylum)) +
   geom_histogram(bins = 50) + 
   #coord_cartesian(ylim = c(1, 20000)) +
   ylab("Number of Records") + 
-  xlab("Average Size (cm)")  +
+  xlab("Minimum Size (cm)")  +
   theme_bw(base_size = 15, base_family = "Cambria")
 
 #display.brewer.all(colorblindFriendly=TRUE)
@@ -847,7 +864,30 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ```
 
-#### Figure 6:  Histogram of average size values. For clarity the x-axis limit has been set to 100 cm, but the maximum average size is 762 cm. 
+#### Figure 6a: Histogram of minimum size values. For clarity the x-axis limit has been set to 100 cm.
+
+``` {r MaxSize, echo=FALSE,  warning = FALSE, dpi = 300}
+yo <- filt %>%
+  filter(
+    MaximumSize != "-999", 
+    MaximumSize < 100
+    )
+
+# ordering factors
+options(scipen=10000)
+g <- ggplot(yo, aes(as.numeric(MaximumSize), fill = Phylum)) +
+  geom_histogram(bins = 50) + 
+  #coord_cartesian(ylim = c(1, 20000)) +
+  ylab("Number of Records") + 
+  xlab("Maximum Size (cm)")  +
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+```
+
+#### Figure 6b: Histogram of maximum size values. For clarity the x-axis limit has been set to 100 cm.
 
 ### Condition
 
@@ -863,21 +903,19 @@ t <- length(filt$Condition)
 
 ```
 
-Condition values reported: `r round((y/t) *100,1)` % of all records (n = `r y`)   
-Percent valid: `r round((x/y) * 100,1)`   
-
-For records with reported condition values (62 % of all records; n = 405,491), 99% comply with the list of valid values specified in the data dictionary. Most entries are listed as 'Live' (Figure 7).
+Approximately `r round((y/t) *100,.1)`% of all records have 'Condition' values reported. The currently valid values for Condition are: `r s %>% filter(FieldName == 'Condition') %>% dplyr::select(ValidValues)`. Most of the records that have 'Condition' reported have been reported as 'Live'. It is likely that this is influenced by a strong search and observation bias for living coral and sponges, rather than any real prevalence of living vs. dead or damanged coral (**Figure 7**).  
 
 ``` {r Condition, echo=FALSE,  dpi = 300}
 yo <- filt %>% 
   filter(
-    Condition %in% c('Live','Damaged','Dead') 
+    Condition %in% c('Dead','Damaged','Live', NA),
+    is.na(Phylum) == F
     #Condition != 'Live'
          )
 
 # ordering factors
 yo$Condition <- factor(yo$Condition, 
-                       levels = c('Live','Damaged','Dead'))
+                       levels = c('Dead','Damaged', 'Live', NA))
 
 
 options(scipen=10000)
@@ -896,15 +934,11 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ### Habitat and Substrate
 
-Records with 'Substrate' values: `r (length(filter(filt, is.na(Substrate) == F)$CatalogNumber)/length(filt$CatalogNumber))*100` % or `r length(filter(filt, is.na(Substrate) == F)$CatalogNumber)` 
+Habitat and substrate values are in the database, verbatim, as reported by the data provider. No standard valid values have been adopted or implemented for these fields. Three newly-established fields using the Coastal and Marine Ecological Classification Standard (CMECS)  classifications (CMECSBiotic, CMECSGeoForm, CMECSSubstrate) are intended to help standardize reporting of habitat measures in the future. See the following URL for more information about CMECS. https://www.natureserve.org/conservation-tools/coastal-and-marine-ecological-classification-standard-cmecs
 
-Records with 'Habitat' values:
-`r (length(filter(filt, is.na(Habitat) == F)$CatalogNumber)/length(filt$CatalogNumber))*100` % or `r length(filter(filt, is.na(Habitat) == F)$CatalogNumber)` records have 'Habitat' values.
+Records with 'Substrate' values: `r round((length(filter(filt, is.na(Substrate) == F)$CatalogNumber)/length(filt$CatalogNumber))*100, .1)`% or `r prettyNum(length(filter(filt, is.na(Substrate) == F)$CatalogNumber), big.mark = ',')` 
 
-Habitat and substrate values are in the database, verbatim, as reported by the data provider. No standard valid values have been adopted or implemented for these fields.  The newly-established fields using CMECS classifications (CMECSBiotic, CMECSGeoForm, CMECSSubstrate) are intended to help standardize reporting of habitat measures.
-
-* 18 % or 127,708 records have 'Substrate' values reported.
-* 39 % or 271,370 records have 'Habitat' values reported.
+Records with 'Habitat' values: `r round(length(filter(filt, is.na(Habitat) == F)$CatalogNumber)/length(filt$CatalogNumber)*100, .1)`% or `r prettyNum(length(filter(filt, is.na(Habitat) == F)$CatalogNumber), big.mark = ',')` 
 
 ### Taxonomy
 
@@ -915,13 +949,11 @@ z <-toString(z$FieldName)
 
 ```
 
-Taxononmic qualifier and descriptive fields: `r z`. 
-
-All records in the database (100%) are populated with a complete taxonomic string. In addition, greater information about taxonomic identifications are available in the following descriptive fields: 'IdentificationComments',  'IdentifiedBy',  'IdentificationDate',  and 'IdentificationQualifier'. See Appendix 2 for the full definitions of these fields.  
+All records in the database are populated with a complete taxonomic string. In addition, greater information about taxonomic identifications are available in the following descriptive fields: `r z`. See **Appendix 2** for the full definitions of these fields.  
 
 Taxonomic identifications can change through time, either through refinements in identification by taxonomists or through changes to underlying group taxonomy. DSCRTP attemps to keep up with these changes, but these fields should be checked carefully before using the data for analysis.
   
-'TaxonRank' provides taxonomic resolution of the taxonomic identifications in the database. Figure 8 provides a visualization of the distribution of the 'TaxonRank' field. The bars are colored by 'Phylum' as an indication of the relative portion of corals vs. sponges and their taxonomic resolution. Most corals are identified to the taxon rank ('TaxonRank') of genus or species.  
+'TaxonRank' provides taxonomic resolution of the identifications in the database (**Figure 8**) Most corals and sponges are identified to the taxon rank ('TaxonRank') of genus or species.  
 
 ``` {r taxonranksum, echo=FALSE,  dpi = 300}
 # ordering factors
@@ -943,7 +975,7 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 #### Figure 8: Distribution of 'TaxonRank' across all records. Corals are only included in the database if they are identified at least to Order, as higher taxonomic levels contain cnidarians that are not considered to be corals. Sponge records are accepted at the phylum level and below.
 
-See Appendix 1 for a full summary of the taxa in the database.  
+See **Appendix 1** for a full summary of the taxa in the database.  
 
 ### Record Types
 
@@ -969,7 +1001,7 @@ t <- length(filt$RecordType)
 Values reported for 'RecordType': `r round((y/t) *100,1)` % of all records (n = `r y`) have .  
 Percent valid values for 'RecordType: `r round((x/y) * 100,1)` %
 
-100 % of all records (n = 695,335) have 'RecordType' values reported. See Figure 9 below for a view of the distribution of records by 'RecordType' within each Fishery Management Council region. Figure 10 shows the distribution of these values across the entire database, regardless of region.
+`r round((y/t) *100,1)`% of all records (n = `r prettyNum(y, big.mark = ',')`) have 'RecordType' values reported. See **Figure 9** below for a view of the distribution of records by 'RecordType' within each Fishery Management Council region. **Figure 10** shows the distribution of these values across the entire database, regardless of region.
 
 
 ``` {r RecordTypePlotSouth, echo=FALSE,  dpi = 300}
@@ -1080,9 +1112,9 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 ### Sampling Equipment
 
 ``` {r SamplingEquipmentCalcs, echo = FALSE}
-valid <- filt$SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA')
+valid <- filt$SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'epibenthic sled', 'other', 'NA')
 
-#schema %>% filter(FieldName == "SamplingEquipment") %>% dplyr::select(ValidValues)
+#s %>% filter(FieldName == "SamplingEquipment") %>% dplyr::select(ValidValues)
 #View(table(filt$SamplingEquipment))
 
 # number of records with valid values
@@ -1101,13 +1133,11 @@ t <- length(filt$SamplingEquipment)
 
 ```
 
-`r round((y/t) *100,1)` % of all records (n = `r y`) have 'SamplingEquipment' values reported.  Of those records that have reported values, `r round((x/y) * 100,1)` % comply with the list of valid values specified in the data dictionary. 
-
-Approximately 98 % of all records (n = 678,773) have 'SamplingEquipment' values reported. Additional information on the sampling equipment (e.g., specific type of trawl) and other methods are often included in the 'SurveyComments' or in the data set metadata.  Figure 11 shows the distribution of 'SamplingEquipment' values, grouped by 'FishCouncilRegion' to identify the regional differences in sampling methodology. See Figure 12 below for the makeup of the entire database by 'SamplingEquipment'.
+Approximately `r round((y/t) *100,.1)`% of all records (n = `r prettyNum(y, big.mark= ',')`) have 'SamplingEquipment' values reported. Additional information on the sampling equipment (e.g., specific type of trawl) and other methods are often included in the 'SurveyComments' or in the data set metadata. **Figure 11** shows the distribution of 'SamplingEquipment' values, grouped by 'FishCouncilRegion' to identify the regional differences in sampling methodology. See **Figure 12** below for the makeup of the entire database by 'SamplingEquipment'.
 
 ``` {r SamplingEquipmentPlotbyRegionPacific, echo=FALSE,  dpi = 300}
 yo <- filt %>% 
-  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA'))
+  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'epibenthic sled', 'other', 'NA'))
 
 yo <- within(yo, 
              SamplingEquipment <- factor(SamplingEquipment, 
@@ -1132,7 +1162,7 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
  
 ``` {r SamplingEquipmentPlotbyRegionSouth, echo=FALSE,  dpi = 300}
 yo <- filt %>% 
-  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA'))
+  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'epibenthic sled', 'other', 'NA'))
 
 yo <- within(yo, 
              SamplingEquipment <- factor(SamplingEquipment, 
@@ -1155,7 +1185,7 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
  
 ``` {r SamplingEquipmentPlotbyRegionNewEngland, echo=FALSE,  dpi = 300}
 yo <- filt %>% 
-  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA'))
+  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'epibenthic sled', 'other', 'NA'))
 
 yo <- within(yo, 
              SamplingEquipment <- factor(SamplingEquipment, 
@@ -1182,7 +1212,7 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ``` {r SamplingEquipmentPlot, echo=FALSE,  dpi = 300}
 yo <- filt %>% 
-  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'other', 'NA'))
+  filter(SamplingEquipment %in% c('ROV', 'AUV', 'submersible', 'drop camera', 'towed camera', 'trawl', 'net', 'dredge', 'longline', 'pot', 'hook and line', 'grab', 'corer', 'SCUBA', 'epibenthic sled', 'other', 'NA'))
 
 yo <- within(yo, 
              SamplingEquipment <- factor(SamplingEquipment, 
