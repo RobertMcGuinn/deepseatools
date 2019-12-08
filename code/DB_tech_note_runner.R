@@ -26,18 +26,18 @@ render("C:/rworking/deepseatools/code/rmd_NDB_status_update.rmd",
 
 ##### figs_tables_only #####
 
-x <- "rmd_figs_tables_only"
-render("C:/rworking/deepseatools/code/rmd_figs_tables_only.rmd",
-       output_file =  paste(x,".doc", sep=''),
-       output_dir = 'C:/rworking/deepseatools/reports/2019_status_update_report/figures')
+# x <- "rmd_figs_tables_only"
+# render("C:/rworking/deepseatools/code/rmd_figs_tables_only.rmd",
+#        output_file =  paste(x,".doc", sep=''),
+#        output_dir = 'C:/rworking/deepseatools/reports/2019_status_update_report/figures')
 
 ##### (inline) #####
 
-x <- "rmd_status_update_inline"
-render("C:/rworking/deepseatools/code/rmd_status_update_inline.rmd",
-       output_file =  paste(x,".doc", sep=''),
-       output_dir = 'C:/rworking/deepseatools/reports/2019_status_update_report/inline')
-
+# x <- "rmd_status_update_inline"
+# render("C:/rworking/deepseatools/code/rmd_status_update_inline.rmd",
+#        output_file =  paste(x,".doc", sep=''),
+#        output_dir = 'C:/rworking/deepseatools/reports/2019_status_update_report/inline')
+#
 
 
 
