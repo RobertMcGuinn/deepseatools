@@ -3948,10 +3948,11 @@ proj4string(yo_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 fgdb_path <- 'C:/data/aprx/geozones/geozones.gdb'
 arc.write(file.path(fgdb_path, 'yo_geo'), data=yo_geo, overwrite = TRUE)
 
+##### match function #####
 
+name <- na.omit(check[match(USNM$SampleID, check$SampleID),])
 
-
-
+####
 
 
 

@@ -102,7 +102,7 @@ options(digits = 0)
 
 ```
 
-``` {r schema, echo=FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+``` {r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
 ##### download Google Sheet version of schema for use in R  documents ##### 
 # Register and download Google Sheet
 # s <- gs_title('2019_DSCRTP_National_Database_Schema')
@@ -113,7 +113,7 @@ options(digits = 0)
 
 ```
 
-``` {r setup_variables,  echo=FALSE, warning=FALSE, message=FALSE}
+``` {r setup_variables,  echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
 version <- '20190920-0'
 
 # length of unflagged records 
@@ -336,11 +336,11 @@ This document is a companion and update to an earlier NOAA Technical Memorandum 
 **Note to readers:**    
 Throughout this document, the term 'DSCRTP web portal' is used to refer to the Program's general web portal at https://deepseacoraldata.noaa.gov/. The term, 'DSCRTP map portal' refers specifically to the interactive map and data download functionality available here: https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm    
   
-Throughout this document, when referring to a field name from the National Database, it will be shown in single quotes exactly as it appears in the database, for example, 'DataProvider'. These field names are also used in the tables and figures for consistency and to familiarize the reader with the vocabulary used in the database. For a full list of all the field names, their definitions, and the valid values see **Appendix 2** of this document. For convenience, the most current spreadsheet-compatible version of the data dictionary is located on the DSCRTP web portal at the following URL. https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view
+Throughout this document, when referring to a field name from the National Database, it will be shown in single quotes exactly as it appears in the database, for example, 'DataProvider'. These field names are also used in the tables and figures for consistency and to familiarize the reader with the vocabulary used in the database. For a full list of all the field names, their definitions, and the valid values see **Appendix 2**. For convenience, the most current spreadsheet-compatible version of the data dictionary is located on the DSCRTP web portal at the following URL. Please note data dictionary version number. https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view
 
-## Overview of Changes to Data Structure and Processes 
+## Overview of Changes to Data Working Group Workflows
 
-Since the first publication of NOAA's National Database for Deep-Sea Corals and Sponges in 2015, the Program has continued to develop and implement workflows to increase the number of observations, to improve the quality of existing records, and to add related data products such as Geographic Information System (GIS)-formatted data layers. The following section describes the main changes and additions to the Data Working Group processes.  
+Since the first publication of NOAA's National Database for Deep-Sea Corals and Sponges in 2015, the Program has continued to develop and implement workflows to increase the number of observations, to improve the quality of existing records, and to add related data products such as Geographic Information System (GIS)-formatted data layers. The following section describes the main changes and additions to the Data Working Group workflows and processes.  
 
 **Quarterly updates** 
 
@@ -350,11 +350,11 @@ New versions of the database are published on the DSCRTP map portal. The most re
 
 **Automated quality control**  
   
-All data submissions are subject to automated quality assurance and control routines written in both R and Python scripts that check for potential errors in depth, geographic location, and taxonomy. This is a first step in a more extensive process that includes hands-on review of each data set. More details on the QA/QC (quality assurance/quality control) processes are detailed below in the section entitled 'Overview of Data Ingestion and Quality Assurance Processes'  
+All data submissions are subject to automated quality assurance and control routines written in both R and Python scripts that check for potential errors in depth, geographic location, and taxonomy. This is a first step in a more extensive process that includes hands-on review of each data set. More details on the quality assurance/quality control (QA, QC) processes are detailed below in the section entitled 'Overview of Data Ingestion and Quality Assurance Processes'  
 
 **Standardized taxonomy**  
 
-The Program has implemented a master taxonomy table to standardize all taxonomic information in the National Database. The master taxonomy table is expanded as new taxa are acquired. All taxonomic information is based on the standards maintained at the World Register of Marine Species (WoRMS) database (Horton et al., 2018). Our taxonomic list is a subset of the WoRMS database filtered to include only the organisms that are within the taxonomic scope of the National Database for Deep-Sea Corals and Sponges. For practical purposes, the database initially deviated from the WoRMS standard taxonomy by retaining the cnidarian Order Gorgonacea (generally subsumed in the Order Alcyonacea). In the 2019 update, the database has become fully compliant with WoRMS; gorgonians have been included in the Order Alcyonacea and the structural aspects of Gorgonacea have been captured in a separate field ('VernacularNameCategory' = gorgonian coral).  For a discussion on the database's taxonomic scope please refer to Hourigan et al., 2015
+The Program has implemented a master taxonomy table to standardize all taxonomic information in the National Database. The master taxonomy table is expanded as new taxa are acquired. All taxonomic information is based on the standards maintained at the World Register of Marine Species (WoRMS) database (Horton et al., 2018). Our taxonomic list is a subset of the WoRMS database filtered to include only the organisms that are within the taxonomic scope of the National Database for Deep-Sea Corals and Sponges. For practical purposes, the database initially deviated from the WoRMS standard taxonomy by retaining the cnidarian Order Gorgonacea (generally subsumed in the Order Alcyonacea). In the 2019 update, the database has become fully compliant with WoRMS; gorgonians have been included in the Order Alcyonacea and the structural aspects of Gorgonacea have been captured in a separate field ('VernacularNameCategory' = gorgonian coral). For a discussion on the database's taxonomic scope please refer to Hourigan et al., 2015
 
 **Standard metadata describing component data sets** 
   
@@ -368,12 +368,15 @@ Changes are occasionally needed to make improvements to database fields, definit
   
 Some types of content are added to the DSCRTP web portal as they become available, such as Site Characterization Reports from Program-funded cruises, as well as new and improved models of habitat suitability for various taxa of coral. Both products are available for viewing and download from the DSCRTP map portal, along with details regarding model creation. The Program is committed to supporting the development and distribution of these ever-improving models for data visualization and exploration as they become available.
 
+#####  
+
 ## Database Contributors  
   
 The National Database contains contributions from museums, research programs, research cruises, and literature (**Table 1**). The database currently contains data contributions from `r c` unique data providers.
 
 #### Table 1: Data providers and the number of data sets and records contributed by each to NOAA's National Database for Deep-Sea Corals and Sponges. `r c` data providers and `r b` individual data sets.
-
+  
+  
 ``` {r dataprovider_table, echo=FALSE}
 options(scipen=999)
 
@@ -397,21 +400,21 @@ ft <- flextable(x) %>%
 
 ft
 
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/dataprovider_table.docx")
-
 ```
 
+####    
+    
 ## How to Contribute to the National Database
 
 The Program strives to establish direct communication with data providers prior to submission to the National Database. Individuals who wish to submit coral and sponge occurrence data are encouraged to first contact the Data Working Group directly at deepseacoraldata@noaa.gov to engage prior to the data assembly and submission process. The Program is available to discuss the format and structure of the database in detail and answer any questions. The Program's Data Working Group is also available to review sample products before final submission. A set of web-based resources to assist data providers is available on the DSCRTP web portal at the following link: https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/guidance-for-fieldwork-data-and-reporting  
   
 Contributors to the National Database should consult **Appendix 3** of this document for a discussion of the required and desired fields for different types of data providers and research efforts. This information is also included on the database record submission template available at: https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/dscrtp-database-records-submission-template.xlsx/view  
 
+#####  
+
 ## Why Contribute Data to the National Database?  
   
-Contributing data to NOAA’s National Database for Deep-Sea Corals and Sponges can accomplish the following goals:  
+Contributing data to NOAA's National Database for Deep-Sea Corals and Sponges can accomplish the following goals:  
   
 * Provide a permanent and widely-accessible repository that serves diverse stakeholders interested in the science, management, and conservation of deep-water ecosystems, including scientists, resource managers, policy makers, economists, and educators.    
 * Meet the requirements of scientific journals to provide access to underlying data sets.    
@@ -421,9 +424,11 @@ Contributing data to NOAA’s National Database for Deep-Sea Corals and Sponges 
 * Allow your data to easily integrate with other national and international databases. The Program provides annual uploads of the database to the Ocean Biogeographic Information System (OBIS) and the Global Biodiversity Information Facility (GBIF) through the U.S. OBIS node (OBIS-USA).    
 * Help with the quality checking of existing database records.   
 * Save money by using established NOAA infrastructure to host and serve your data.    
-* Ensure that your data are thoroughly documented and permanently archived at NOAA’s National Centers for Environmental Information.      
+* Ensure that your data are thoroughly documented and permanently archived at NOAA's National Centers for Environmental Information.      
 * Stimulate funder interest and continued research in your region.    
 * Become part of the largest deep-sea coral and sponge data community in the world!   
+
+##### 
   
 ## Overview of Data Ingestion and Quality Assurance Processes
   
@@ -432,62 +437,69 @@ The Program is intent on building a high-quality, value-added aggregation of dee
 ### Initial Intake Inspection and Documentation Phase  
 
 * The original data set is received from the data provider and archived as a 'Level 0' data product. The Program's data submission template facilitates data entry and streamlines incorporating data into the database.  
-* Level 0 data are then saved in a uniform folder structure on NOAA systems with notes and correspondence from the data provider. 
-* Data sets are assigned a standard file name and assigned an 'AccessionID', which tracks each data set received, along with any changes that occur between initial submission to publication.
-* Data sets are reviewed by Program staff familiar with deep sea corals and NOAA data protocols. Additional notes on the submission are captured and filed. Additional communication with the data provider is initiated, if needed, to correct recognized errors or to clarify certain values.
-* All changes from the original are documented and tracked in an issue tracking system and all subsequent versions of the data are saved so that incorrect transformations or corrections can be easily reversed.
+* Level 0 data are then saved in a uniform folder structure on NOAA systems with notes and correspondence from the data provider.   
+* Data sets are assigned a standard file name and assigned an 'AccessionID', which tracks each data set received, along with any changes that occur between initial submission to publication.  
+* Data sets are reviewed by Program staff familiar with deep sea corals and NOAA data protocols. Additional notes on the submission are captured and filed. Additional communication with the data provider is initiated, if needed, to correct recognized errors or to clarify certain values.  
+* All changes from the original are documented and tracked in an issue tracking system and all subsequent versions of the data are saved so that incorrect transformations or corrections can be easily reversed.  
+
+####  
 
 ### Initial conformation
-
-* Data undergo a coded QA/QC process using R-based scripting.
-* Initial automated routines are performed to make sure data conform to the Program's data dictionary (see **Appendix 2**). 
+  
+* Data undergo a coded QA/QC process using R-based scripting.  
+* Initial automated routines are performed to make sure data conform to the Program's data dictionary (see **Appendix 2**).   
 * These automated routines accomplish the following tasks:
 ** Check field names and transform them where necessary.
 ** Add any missing field names to complete the schema structure.
-** Populate null values with the appropriate entries, '-999' for integer and 'NA' for text.
-** Rearrange the data set in a standardized column order.
+** Populate null values with the appropriate entries, '-999' for integer and 'NA' for text.  
+** Rearrange the data set in a standardized column order.  
 
-### Technical review phase  
+#### 
 
+### Technical review phase
 Automated quality assurance scripts are run and manual review steps are completed that include the following:
 
 * The data are evaluated regarding how well they conform to the specific valid values listed in the data dictionary (see **Appendix 2** for the full data dictionary).  
 * Taxonomic problems with any incoming 'ScientificName' are identified and corrected based on the master taxonomy table values which are synced with the World Register of Marine Species (WoRMS) database.  
 * A standardized master taxonomy table is joined with the 'ScientificName' values to add accepted values for Phylum, Order, Family, etc.  
-* Depths are checked against the best available regional bathymetry and mismatched values are flagged where they are out of the expected range. 
-* A visual summary referred to as a 'QA dashboard' is generated using R Markdown scripting. The dashboard visualizes the values in each field in such a way as to summarize and highlight possible issues. The dashboard report also provides maps of the positions of all occurrences.
-* All issues recognized during technical review are listed and corrected if possible.
-* If an issue is not correctable, then the offending records are flagged and not released to the public.
-* A final automated QA dashboard is generated to inform the next stage of the process, expert review.
+* Depths are checked against the best available regional bathymetry and mismatched values are flagged where they are out of the expected range.   
+* A visual summary referred to as a 'QA dashboard' is generated using R Markdown scripting. The dashboard visualizes the values in each field in such a way as to summarize and highlight possible issues. The dashboard report also provides maps of the positions of all occurrences.  
+* All issues recognized during technical review are listed and corrected if possible.  
+* If an issue is not correctable, then the offending records are flagged and not released to the public.  
+* A final automated QA dashboard is generated to inform the next stage of the process, expert review.  
+
+#### 
 
 ### Expert review phase
-
-* A subject matter expert conducts a final review using the information gleaned from the technical review, along with an additional inspection of the final QA dashboard, to find any outstanding issues that were not previously recognized.
-* All remaining issues are listed and corrected.
-* The expert reviewer then indicates that the data set is ready for publication in the National Database.
-
-## Important Changes and Additions to Database Fields 
-
+  
+* A subject matter expert conducts a final review using the information gleaned from the technical review, along with an additional inspection of the final QA dashboard, to find any outstanding issues that were not previously recognized.  
+* All remaining issues are listed and corrected.  
+* The expert reviewer then indicates that the data set is ready for publication in the National Database.    
+    
+#####
+## Important Changes and Additions to Database Fields  
+  
 The data schema, published in 2015, has remained relatively stable, but changes have been made to enhance the utility of the database, and to improve clarity of the field definitions set forth in Hourigan et al., 2015. The full data dictionary for the National Database contains `r aa` fields, of which `r bb` are published and `r cc` are unpublished and used internally by the Program for data management purposes. For a discussion of the required and desired fields for submitting data to the Program, please see **Appendix 3**.
 
-Logical groupings of fields, called 'Field Category' in the data dictionary, reflect the higher level organization of the database and provide a convenient way to group related fields. Two new categories, “GIS Enhancement”, and “Flagging ” have been added to capture a suite of new fields, bringing the number of field categories from eight to ten (**Table 2**).  
+Logical groupings of fields, called 'Field Category' in the data dictionary, reflect the higher level organization of the database and provide a convenient way to group related fields. Two new categories, "GIS Enhancement", and "Flagging" have been added to capture a suite of new fields, bringing the number of field categories from eight to ten.    
 
 The 'Field Category' groups are defined as follows:  
 
-* Survey Data: Fields that pertain to a whole survey or cruise, such as vessel name, vehicle name, or cruise number.
-* Event Data: Data that pertain to an entire dive or event (e.g., trawl, transect, ROV dive).
-* Observation Data: Fields that that hold information about an individual record.
-* Taxonomic ID: Fields that capture taxonomic ranks and hierarchy, along with details regarding the identification of a taxon.
-* Environment: Fields that describe the habitat, substrate, and oceanographic properties in the same location as the observation.
-* Occurrence Detail: Fields that capture further detail about each occurrence or observation.
-* GIS Enhancement: Fields that originate from geospatial processing by the Program that are designed to enhance and supplement the data originally submitted. Example: 'LargeMarineEcosystem'
-* Metadata: Fields that describe the origin or provenance of the records.
-* Record Keeping: Fields that capture unique identifiers for each data set and for each individual database record, 'DatasetID' and 'CatalogNumber', respectively.
-* Quality Flags: Quality and usability flags defined by the Program.  
+* **Survey Data:** Fields that pertain to a whole survey or cruise, such as vessel name, vehicle name, or cruise number.  
+* **Event Data:** Data that pertain to an entire dive or event (e.g., trawl, transect, ROV dive).  
+* **Observation Data:** Fields that that hold information about an individual record.  
+* **Taxonomic ID:** Fields that capture taxonomic ranks and hierarchy, along with details regarding the identification of a taxon.  
+* **Environment:** Fields that describe the habitat, substrate, and oceanographic properties in the same location as the observation.  
+* **Occurrence Detail:** Fields that capture further detail about each occurrence or observation.  
+* **GIS Enhancement:** Fields that originate from geospatial processing by the Program that are designed to enhance and supplement the data originally submitted. Example: 'LargeMarineEcosystem'.  
+* **Metadata:** Fields that describe the origin or provenance of the records.  
+* **Record Keeping:** Fields that capture unique identifiers for each data set and for each individual database record, 'DatasetID' and 'CatalogNumber', respectively.  
+* **Quality Flags:** Quality and usability flags defined by the Program.  
+  
 
-For a full list of current field names in the database, their definitions, and their valid values, see **Appendix 2** of this document. The data dictionary for the program is a version-controlled document (version `r version` at the time of this writing). **Appendix 2** is arranged alphabetically to assist the reader when searching for specific fields. The field definitions and valid values are periodically updated by the Program's Data Working Group. **Important note:** The data dictionary presented in the previous technical memo, Hourigan et al. (2015), is superseded by the current version. For the most current version of the data dictionary, users should consult the DSCRTP web portal at: https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view The definitions posted at that location will always supersede all other versions (including the one published in this document).
+All of the public and private fields for are listed in **Table 2a** and **Table 2b**. For a full list of current field names in the database, their definitions, and their valid values, see **Appendix 2** of this document. The data dictionary for the program is a version-controlled document (version `r version` at the time of this writing). **Appendix 2** is arranged alphabetically to assist the reader when searching for specific fields. The field definitions and valid values are periodically updated by the Program's Data Working Group. **Important note:** The data dictionary presented in the previous technical memo, Hourigan et al. (2015), is superseded by the current version. For the most current version of the data dictionary, users should consult the DSCRTP web portal at: https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view The definitions posted at that location will always supersede all other versions (including the one published in this document).
    
-#### Table 2: Public fields of NOAA's National Database for Deep-Sea Corals and Sponges grouped by 'Field Category'. The single quoting convention used in this document is not used in the table below for enhanced visual clarity.  
+#### Table 2a: Public fields of NOAA's National Database for Deep-Sea Corals and Sponges grouped by 'Field Category'. The single quoting convention used in this document is not used in the table below for enhanced visual clarity.  
 
 ``` {r public_fields_table, echo=FALSE}
 
@@ -507,22 +519,16 @@ ft <- flextable(x) %>%
   set_header_labels(Field_Names = "Field Name", n = "# of Records", DSCRTPCategory = "DSCRTP Category") %>% 
   colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  fontsize(size = 10, part = "body") %>% 
-  autofit() %>% 
+  fontsize(size = 12, part = "body") %>% 
+  #autofit() %>% 
   width(j = ~ n, width = 1.2) %>% 
   width(j = ~ DSCRTPCategory, width = 1.5) %>% 
   width(j = ~ Field_Names, width = 4) %>% 
-  align(align = "left") %>% 
-  align_text_col(align = "left") %>% 
-  align_nottext_col(align = "right")
+  align(j = 1:2, align = "left", part = "all") %>% 
+  align(j = 3, align = "center", part = "all")
 
 
 ft
-
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/public_fields_table.docx")
-
 
 
 # sum_tbl <- kable(sum_tbl, 
@@ -537,17 +543,55 @@ read_docx() %>%
 #write.csv(sum_tbl,"20180216_0_Field_Summary_Schema_20180216-0.csv", row.names = F, quote = T)
 
 ```
+  
+#####
+  
+#### Table 2b: Private fields of NOAA's National Database for Deep-Sea Corals and Sponges grouped by 'Field Category'. The single quoting convention used in this document is not used in the table below for enhanced visual clarity.  
 
+``` {r private_fields_table, echo=FALSE}
+
+s$DSCRTPCategory <- factor(s$DSCRTPCategory, levels = c("Survey Data","Event Data","Observation Data","TaxonomicID","Environment","Occurrence Detail","GIS Enhancement","Metadata","Record Keeping","Flag"))
+
+x <-
+  s %>% arrange(FieldName) %>% 
+  filter(InternalUseOnly == '1') %>%
+  group_by(DSCRTPCategory) %>% 
+  summarize(Field_Names = toString(unique(FieldName)),
+            n = n())
+
+
+colkeys <- names(x[,-1])
+ft <- flextable(x) %>% 
+  theme_vanilla() %>% #booktabs, vanilla, box, tron, tron_legacy
+  set_header_labels(Field_Names = "Field Name", n = "# of Records", DSCRTPCategory = "DSCRTP Category") %>% 
+  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  font(fontname = "Cambria", part = "all")  %>% #header, body, all
+  fontsize(size = 10, part = "body") %>% 
+  autofit() %>% 
+  width(j = ~ n, width = 1.2) %>% 
+  width(j = ~ DSCRTPCategory, width = 1.5) %>% 
+  width(j = ~ Field_Names, width = 4) %>% 
+  align(j = 1:2, align = "left", part = "all") %>% 
+  align(j = 3, align = "center", part = "all")
+
+
+ft
+
+```
+  
+    
+**Field Additions**  
+  
 Several additions of internal and external fields, updates to field definitions, and updates to valid values have occurred since 2015. The Program recognizes the need for field definitions to remain as stable as possible through time, but the field definitions and valid values are revisited periodically to make additions or changes in order to capture critical new incoming information, or to clarify and refine the way a field should be implemented. Typical changes include adding a new field, improving the definition of an existing field, and changing the valid value set for an existing field. Highlighted below are the key changes to the database fields that have occurred since 2015.  
 
 The database now has a field that indicates the current version of the database. This value is essential for reporting purposes, because it allows full reproducibity of results based on a specific version of the database. 
 
-* **Database Version**: `r s$FieldDescription[s$FieldName == "DatabaseVersion"]`
+* **'DatabaseVersion'**: `r s$FieldDescription[s$FieldName == "DatabaseVersion"]`
 
-Three new taxonomy-related fields were added.
+Four new taxonomy-related fields were added.
 
 * **'VerbatimScientificName'**: `r s$FieldDescription[s$FieldName == "VerbatimScientificName"]`
-* **'TypeStatus'**: `r s$FieldDescription[s$FieldName == "TypeStatus"]`. The database currently contains over 700 records of holotypes.
+* **'TypeStatus'**: `r s$FieldDescription[s$FieldName == "TypeStatus"]` The database currently contains over 700 records of holotypes.
 * **'IdentificationVerificationStatus'**: `r s$FieldDescription[s$FieldName == "IdentificationVerificationStatus"]`
 * **'LifeScienceIdentifier'**: `r s$FieldDescription[s$FieldName == "LifeScienceIdentifier"]`
 
@@ -585,12 +629,12 @@ Several new spatially calculated depth fields were added to help ground truth th
 
 The following location related fields were added to enhance the ability to describe and standardize place names.  
   
-* **gisNGIALocality**:`r s$FieldDescription[s$FieldName == "gisNGIALocality"]`
-* **gisNGIADist**:`r s$FieldDescription[s$FieldName == "gisNGIADist"]`
+* **gisNGIALocality**: `r s$FieldDescription[s$FieldName == "gisNGIALocality"]`
+* **gisNGIADist**: `r s$FieldDescription[s$FieldName == "gisNGIADist"]`
 * **gisGEBCOLocality**: `r s$FieldDescription[s$FieldName == "gisGEBCOLocality"]`
-* **gisGEBCODist**:`r s$FieldDescription[s$FieldName == "gisGEBCODist"]` 
+* **gisGEBCODist**: `r s$FieldDescription[s$FieldName == "gisGEBCODist"]` 
 
-The following fields have been added to capture the actual spatially explicit boundary of the sample area footprint for each record.  These fields are mostly unpopulated in the current version (`r version`) of the database, but efforts are being made to get as many of these populated as possible.   
+The following fields have been added to capture the actual spatially explicit boundary of the sample area footprint for each record.  These fields are mostly unpopulated in the current version (`r version`) of the database. 
 
 * **footprintWKT**: `r s$FieldDescription[s$FieldName == "footprintWKT"]`  
 * **footprintSRS**: `r s$FieldDescription[s$FieldName == "footprintSRS"]`
