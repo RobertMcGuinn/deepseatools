@@ -519,7 +519,7 @@ ft <- flextable(x) %>%
   set_header_labels(Field_Names = "Field Name", n = "# of Records", DSCRTPCategory = "DSCRTP Category") %>% 
   colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  fontsize(size = 12, part = "body") %>% 
+  fontsize(size = 11, part = "body") %>% 
   #autofit() %>% 
   width(j = ~ n, width = 1.2) %>% 
   width(j = ~ DSCRTPCategory, width = 1.5) %>% 
@@ -566,7 +566,7 @@ ft <- flextable(x) %>%
   set_header_labels(Field_Names = "Field Name", n = "# of Records", DSCRTPCategory = "DSCRTP Category") %>% 
   colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  fontsize(size = 10, part = "body") %>% 
+  fontsize(size = 11, part = "body") %>% 
   autofit() %>% 
   width(j = ~ n, width = 1.2) %>% 
   width(j = ~ DSCRTPCategory, width = 1.5) %>% 
@@ -665,7 +665,7 @@ The Program places a high value on detailed quantification of the sample area, a
 
 ## Connection between the Ocean Biogeographic Information System, USA (OBIS-USA) and the National Database
 
-The Program is committed to contributing to national and international aggregations of occurrence data. To this end, the Program contributes updated coral and sponge data on an annual basis to OBIS-USA, the U.S. node of OBIS which is part of the International Oceanographic Data and Information Exchange (IODE) of the Intergovernmental Oceanographic Commission (IOC) of the United Nations Educational, Scientific and Cultural Organization (UNESCO). The National Database contributes a particular subset of fields from its database to OBIS-USA during annual submissions and these fields align to the Darwin Core standard, the standard used by OBIS-USA (Table 3).
+The Program is committed to contributing to national and international aggregations of occurrence data. To this end, the Program contributes updated coral and sponge data on an annual basis to OBIS-USA, the U.S. node of OBIS which is part of the International Oceanographic Data and Information Exchange (IODE) of the Intergovernmental Oceanographic Commission (IOC) of the United Nations Educational, Scientific and Cultural Organization (UNESCO). The National Database contributes a particular subset of fields from its database to OBIS-USA during annual submissions and these fields align to the Darwin Core standard, the standard used by OBIS-USA (**Table 3**).
 
 #### Table 3: Fields from the National Database for Deep Sea Corals and Sponges that are contributed to the Ocean Biogeographic Information System – USA (OBIS-USA).  The vocabulary crosswalk table below is in alphabetical order by DSCRTP field names.  The corresponding Darwin Core term is given that matches the term used within OBIS.  The OBIS-required fields are highlighted.
 
@@ -697,10 +697,9 @@ ft <- flextable(x) %>%
   
 ft
 
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/obis_table.docx")
 ```
+
+#####
 
 ## Summary of Database Contents
 
@@ -710,7 +709,7 @@ The figures and tables that are presented in the following section are designed 
 
 ### Analysis Details  
   
-The analyses presented here use version `r version` of the database. In some cases, the data have been filtered to enhance readability or interpretation of a figure or table. These filters will be called out explicitly in the text or captions when used. The purpose of this analysis is to succinctly summarize the current contents and quality of the database, so that any major limitations are apparent to end. The numerical and graphical summaries provided in this document were created using R and R-Markdown used within the RStudio development environment (R Core Team, 2017; RStudio Team, 2016). Code can be provided upon request..
+The analyses presented here use version `r version` of the database. In some cases, the data have been filtered to enhance readability or interpretation of a figure or table. These filters will be called out explicitly in the text or captions when used. The purpose of this analysis is to succinctly summarize the current contents and quality of the database, so that any major limitations are apparent to end. The numerical and graphical summaries provided in this document were created using R and R-Markdown used within the RStudio development environment (R Core Team, 2017; RStudio Team, 2016). All R code is shared on GitHub at https://github.com/RobertMcGuinn/deepseatools.   
 
 ### Distribution of Records by U.S. Fishery Management Council Region  
 
@@ -767,7 +766,7 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ### Images Associated with Records   
 
-To date, approximately `r e`% or `r prettyNum(f, big.mark = ",")` records have full resolution still images available. These images are viewable directly in the DSCRTP map portal by clicking on coral or sponge points. The 'ImageURL' field also contains the link to the image if available, and this field is available in data downloaded from the DSCRTP map portal.
+As of the current version, approximately `r e`% or `r prettyNum(f, big.mark = ",")` records have full resolution still images available. There are `r prettyNum(length(unique(filt$ImageURL)), big.mark = ",")` unique images. These images are viewable directly in the DSCRTP map portal by clicking on coral or sponge points. The 'ImageURL' field also contains the link to the image if available, and this field is available in data downloaded from the DSCRTP map portal.
 
 ### Depth Distribution  
   
@@ -876,7 +875,7 @@ yo <- filt %>%
     )
 
 #checking
-length(yo$CatalogNumber)
+# length(yo$CatalogNumber)
 # yo %>% filter(as.numeric(MaximumSize) > 200) %>% dplyr::select(CatalogNumber, MinimumSize, RecordType, ScientificName)
 
 yo$AverageSize <- (yo$MinimumSize + yo$MaximumSize)/2
@@ -891,7 +890,7 @@ percent <- ((x-y)/x) * 100
 
 ```
 
-About `r round( percent,.1)`% of all records have reported size values (n = `r prettyNum(y, big.mark = ',')`) In the database, size values are reported in fields called 'MinimumSize' and 'MaximumSize' fields in order to capture a range of sizes that might be observed within given sampling area. In the case of a video transect, for example, multiple sizes may be observed for a single taxon, so reporting a range is appropriate. See *Figure 6a* and *Figure 6b* below for distribution of minimum and maximum size values. The original size values, exactly as reported by the data provider, are captured in a field called “VerbatimSize'.
+About `r round( percent,.1)`% of all records have reported size values (n = `r prettyNum(y, big.mark = ',')`) In the database, size values are reported in fields called 'MinimumSize' and 'MaximumSize' fields in order to capture a range of sizes that might be observed within given sampling area. In the case of a video transect, for example, multiple sizes may be observed for a single taxon, so reporting a range is appropriate. See *Figure 6a* and *Figure 6b* below for distribution of minimum and maximum size values. The original size values, exactly as reported by the data provider, are captured in a field called 'VerbatimSize'.
 
 ``` {r MinSize, echo=FALSE,  warning = FALSE, dpi = 300}
 yo <- filt %>%
@@ -1047,8 +1046,6 @@ t <- length(filt$RecordType)
 
 ```
 
-Values reported for 'RecordType': `r round((y/t) *100,1)` % of all records (n = `r y`) have .  
-Percent valid values for 'RecordType: `r round((x/y) * 100,1)` %
 
 `r round((y/t) *100,1)`% of all records (n = `r prettyNum(y, big.mark = ',')`) have 'RecordType' values reported. See **Figure 9** below for a view of the distribution of records by 'RecordType' within each Fishery Management Council region. **Figure 10** shows the distribution of these values across the entire database, regardless of region.
 
@@ -1316,7 +1313,7 @@ Scanlon, K.M., R.G. Waller, A.R. Sirotek, J.M. Knisel, J.J. O'Malley, and S. Ale
 
 ## Appendix 1: Summary of occurrence records by Family
 
-Summary of all occurrence records in the database grouped and listed alphabetically by 'Family'.  The number of genera ('Genus') with records in the database within in each family is reported in the column named 'Genera' in the table below. For records listed only at the Family level, Genus will be “NA”.  The column heading '# of Records' represents the number of records within each family. 
+Summary of all occurrence records in the database grouped and listed alphabetically by 'Family'.  The number of genera ('Genus') with records in the database within in each family is reported in the column named 'Genera' in the table below. For records listed only at the Family level, Genus will be 'NA”.  The column heading '# of Records' represents the number of records within each family. 
 
 ### Corals
 
@@ -1334,16 +1331,17 @@ ft <- flextable(x) %>%
   set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
   colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  autofit() %>% 
   width(j = ~ Genera, width = 3.5) %>% 
   width(j = ~ Genus_n + n + Family, width = 1.2) %>% 
-  width(j = ~ Family, width = 1.5)
+  width(j = ~ Family, width = 1.5) %>% 
+  align(j = 1, align = "left", part = "all") %>% 
+  align(j = 2:3, align = "center", part = "all") %>% 
+  align(j = 4, align = "left", part = "all") %>% 
+  italic(j = 4, italic = TRUE, part = "body")
 
+  
 ft
 
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/genus_by_family_coral_table.docx")
 ```
 
 ### Sponges
@@ -1362,18 +1360,17 @@ ft <- flextable(x) %>%
   set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
   colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  autofit() %>% 
   width(j = ~ Genera, width = 3.5) %>% 
   width(j = ~ Genus_n + n + Family, width = 1.2) %>% 
-  width(j = ~ Family, width = 1.5)
+  width(j = ~ Family, width = 1.5) %>% 
+  align(j = 1, align = "left", part = "all") %>% 
+  align(j = 2:3, align = "center", part = "all") %>% 
+  align(j = 4, align = "left", part = "all") %>% 
+  italic(j = 4, italic = TRUE, part = "body")
 
-  
 
 ft
 
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/genus_by_family_sponge_table.docx")
 ```
 
 ## Appendix 2: Data Dictionary for the National Database
@@ -1411,10 +1408,6 @@ ft <- flextable(x) %>%
   
 
 ft
-
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/data_dictionary_table.docx")
 
 ```
 
@@ -1466,9 +1459,6 @@ ft <- flextable(x) %>%
 
 ft
 
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/required_desired_points_table.docx")
 
 ```
 
@@ -1501,9 +1491,6 @@ ft <- flextable(x) %>%
 
 ft
 
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/required_desired_transects_table.docx")
 
 
 ```
@@ -1536,9 +1523,7 @@ ft <- flextable(x) %>%
 
 ft
 
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "c:/rworking/deepseatools/reports/2019_status_update_report/tables/required_desired_trawl_table.docx")
+
 
 
 ```

@@ -3874,7 +3874,7 @@ filt_f <- f %>%
 
 ##### Putting together one file that includes all #####
 
-filt_new_2 <- rbind(filt, filt_a, filt_b, filt_c, filt_d, filt_e, filt_f)
+filt_new <- rbind(filt, filt_a, filt_b, filt_c, filt_d, filt_e, filt_f)
 
 ##### Create a not-in function #####
 `%ni%` = Negate(`%in%`)

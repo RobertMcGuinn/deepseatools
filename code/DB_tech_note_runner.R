@@ -10,12 +10,12 @@
 #   filter(Flag == "0")
 
 ##### input: latest version of the NDB schmea #####
-# # Register and download Google Sheet
-# s <- gs_title('2019_DSCRTP_National_Database_Schema')
-# # gs_browse(s)
-# # s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
-# s <- gs_read(s)
-# names(s)
+# Register and download Google Sheet
+s <- gs_title('2019_DSCRTP_National_Database_Schema')
+# gs_browse(s)
+# s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+s <- gs_read(s)
+names(s)
 
 ##### all #####
 
