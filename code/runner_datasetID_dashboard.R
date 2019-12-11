@@ -52,7 +52,7 @@ d <- indata %>%
   )
 
 ##### ***OR*** full run set indata to d #####
-d <- indata
+d <- filt
 
 ##### checking #####
 # table(unique(factor(d$DataProvider)))
@@ -114,7 +114,7 @@ setdiff(d$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, d$DatasetID)
 
 ##### merge d (primary subset) with key  #####
-d <- merge(d, key, all.x = TRUE)
+d <- merge(filt, key, all.x = TRUE)
 
 ##### check #####
 # table(d$class, useNA = 'always')

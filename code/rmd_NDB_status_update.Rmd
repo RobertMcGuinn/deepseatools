@@ -14,7 +14,7 @@ source('C:/rworking/deepseatools/install_packages.R')
 
 ##### knitr options #####
 knitr::opts_chunk$set(
-  fig.width= 7.5, 
+  fig.width = 8, 
   fig.asp = .60, 
   warning = FALSE,
   message=FALSE,
@@ -381,10 +381,26 @@ The National Database contains contributions from museums, research programs, re
   
 ``` {r dataprovider_table, echo=FALSE}
 options(scipen=999)
+# create a list of files (or single file) that meets title query
+x <- drive_find(q = "name contains '20190920-1_DatasetID_Key_DSCRTP'")
+
+# # browse to it
+# x %>% drive_browse()
+
+# getting the id as a character string
+y <- x$id
+
+# this downloads the file to the specified path
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20190920-1_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
+
+# read the file into R as a data frame
+key <- read.xlsx(dl$local_path)
+d <- merge(filt, key, all.x = TRUE)
+
 
 x <-
-  filt %>%
-  group_by(DataProvider) %>%
+  d %>%
+  group_by(class, DataProvider) %>% 
   summarize(
     Number_Datasets = length(unique(DatasetID)),
     Records = n()
@@ -393,7 +409,7 @@ x <-
 colkeys <- names(x[,-1])
 ft <- flextable(x) %>% 
   theme_box() %>% #booktabs, vanilla, box, tron, tron_legacy
-  set_header_labels(Number_Datasets = "# of Data Sets", Records = "# of Records") %>% 
+  set_header_labels(class = "Type of Data", Number_Datasets = "# of Data Sets", Records = "# of Records") %>% 
   colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   autofit() %>% 
@@ -401,6 +417,15 @@ ft <- flextable(x) %>%
   
 
 ft
+
+
+
+doc <- read_docx()
+doc <- body_add_flextable(doc, value = ft)
+fileout <- tempfile(fileext = ".docx")
+setwd("C:/rworking/deepseatools/indata")
+fileout <- "table.docx" # uncomment to write in your working directory
+print(doc, target = fileout)
 
 ```
 
@@ -449,12 +474,18 @@ The Program is intent on building a high-quality, value-added aggregation of dee
 ### Initial conformation
   
 * Data undergo a coded QA/QC process using R-based scripting.  
+
 * Initial automated routines are performed to make sure data conform to the Program's data dictionary (see **Appendix 2**).   
-* These automated routines accomplish the following tasks:
-** Check field names and transform them where necessary.
-** Add any missing field names to complete the schema structure.
+
+* These automated routines accomplish the following tasks:  
+  
+** Check field names and transform them where necessary.  
+
+** Add any missing field names to complete the schema structure.  
+
 ** Populate null values with the appropriate entries, '-999' for integer and 'NA' for text.  
-** Rearrange the data set in a standardized column order.  
+
+** Rearrange the data set in a standardized column order.    
 
 #### 
 
@@ -518,7 +549,7 @@ x <-
 colkeys <- names(x[,-1])
 ft <- flextable(x) %>% 
   theme_vanilla() %>% #booktabs, vanilla, box, tron, tron_legacy
-  set_header_labels(Field_Names = "Field Name", n = "# of Records", DSCRTPCategory = "DSCRTP Category") %>% 
+  set_header_labels(Field_Names = "Field Name", n = "# of Fields", DSCRTPCategory = "DSCRTP Category") %>% 
   colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 11, part = "body") %>% 
@@ -565,7 +596,7 @@ x <-
 colkeys <- names(x[,-1])
 ft <- flextable(x) %>% 
   theme_vanilla() %>% #booktabs, vanilla, box, tron, tron_legacy
-  set_header_labels(Field_Names = "Field Name", n = "# of Records", DSCRTPCategory = "DSCRTP Category") %>% 
+  set_header_labels(Field_Names = "Field Name", n = "# of Fields", DSCRTPCategory = "DSCRTP Category") %>% 
   colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 11, part = "body") %>% 
@@ -586,7 +617,7 @@ ft
   
 Several additions of internal and external fields, updates to field definitions, and updates to valid values have occurred since 2015. The Program recognizes the need for field definitions to remain as stable as possible through time, but the field definitions and valid values are revisited periodically to make additions or changes in order to capture critical new incoming information, or to clarify and refine the way a field should be implemented. Typical changes include adding a new field, improving the definition of an existing field, and changing the valid value set for an existing field. Highlighted below are the key changes to the database fields that have occurred since 2015.  
 
-The database now has a field that indicates the current version of the database. This value is essential for reporting purposes, because it allows full reproducibity of results based on a specific version of the database. 
+The database now has a field that indicates the current version of the database. This value is essential for reporting purposes, because it allows full reproducibility of results based on a specific version of the database. 
 
 * **'DatabaseVersion'**: `r s$FieldDescription[s$FieldName == "DatabaseVersion"]`
 
@@ -638,6 +669,7 @@ The following location related fields were added to enhance the ability to descr
 
 The following fields have been added to capture the actual spatially explicit boundary of the sample area footprint for each record.  These fields are mostly unpopulated in the current version (`r version`) of the database. 
 
+* **SampleAreaInSquareMeters**: `r s$FieldDescription[s$FieldName == "SampleAreaInSquareMeters"]` 
 * **footprintWKT**: `r s$FieldDescription[s$FieldName == "footprintWKT"]`  
 * **footprintSRS**: `r s$FieldDescription[s$FieldName == "footprintSRS"]`
 
@@ -985,7 +1017,7 @@ t <- length(filt$Condition)
 
 ```
 
-Approximately `r round((y/t) *100,.1)`% of all records have 'Condition' values reported. The currently valid values for Condition are: `r s %>% filter(FieldName == 'Condition') %>% dplyr::select(ValidValues)`. Most of the records that have 'Condition' reported have been reported as 'Live'. It is likely that this is influenced by a strong search and observation bias for living coral and sponges, rather than any real prevalence of living vs. dead or damanged coral (**Figure 7**).  
+Approximately `r round((y/t) *100,.1)`% of all records have 'Condition' values reported. The currently valid values for Condition are: `r s %>% filter(FieldName == 'Condition') %>% dplyr::select(ValidValues)`. Most of the records that have 'Condition' reported have been reported as 'Live'. It is likely that this is influenced by a strong search and observation bias for living coral and sponges, rather than any real prevalence of living vs. dead or damaged coral (**Figure 7**).  
 
 ``` {r Condition, echo=FALSE,  dpi = 300}
 yo <- filt %>% 
@@ -1033,7 +1065,7 @@ z <-toString(z$FieldName)
 
 All records in the database are populated with a complete taxonomic string. In addition, greater information about taxonomic identifications are available in the following descriptive fields: `r z`. See **Appendix 2** for the full definitions of these fields.  
 
-Taxonomic identifications can change through time, either through refinements in identification by taxonomists or through changes to underlying group taxonomy. DSCRTP attemps to keep up with these changes, but these fields should be checked carefully before using the data for analysis.
+Taxonomic identifications can change through time, either through refinements in identification by taxonomists or through changes to underlying group taxonomy. DSCRTP attempts to keep up with these changes, but these fields should be checked carefully before using the data for analysis.
   
 'TaxonRank' provides taxonomic resolution of the identifications in the database (**Figure 8**) Most corals and sponges are identified to the taxon rank ('TaxonRank') of genus or species.  
 
