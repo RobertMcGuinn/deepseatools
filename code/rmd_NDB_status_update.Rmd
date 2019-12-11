@@ -14,8 +14,8 @@ source('C:/rworking/deepseatools/install_packages.R')
 
 ##### knitr options #####
 knitr::opts_chunk$set(
-  fig.width=6.5, 
-  fig.height=4, 
+  fig.width= 7.5, 
+  fig.asp = .60, 
   warning = FALSE,
   message=FALSE,
   cache = TRUE,
@@ -220,6 +220,8 @@ ll <- length(ll$FieldName)
 
 #####
 
+#####
+
 # 2020 Status Update: NOAA'S National Database for Deep-Sea Corals and Sponges
 
 McGuinn, Robert P. ^4,2^; Thomas F. Hourigan ^1^; Scott Cross ^2^; L. Matthew Dornback ^5,6^; Peter J. Etnoyer ^3^; David Sallis ^4,2^; Heather M. Coleman ^1^
@@ -305,7 +307,7 @@ The database was originally conceived in 2009, building upon an initial United S
   
 The database includes `r bb` publically available fields that relate to the location, taxonomy, environmental conditions, and the provenance of the observations. All of the values in this report are based on version `r version` of the National Database. Some of the reported values will change as the database is updated each quarter with new records and corrections to old records. There are currently over `r prettyNum(a, big.mark = ",")` individual records in the database composed of `r length(unique(filt$DatasetID))` individual data sets from `r length(unique(factor(filt$DataProvider)))` different data providers.  See **Table 1** for a full summary of all of the data providers.
 
-``` {r GrowthThroughTime, echo=FALSE,  dpi=300}
+``` {r GrowthThroughTime, echo=FALSE, dpi=300}
 
 # ordering factors
 
@@ -667,13 +669,45 @@ The Program places a high value on detailed quantification of the sample area, a
 
 The Program is committed to contributing to national and international aggregations of occurrence data. To this end, the Program contributes updated coral and sponge data on an annual basis to OBIS-USA, the U.S. node of OBIS which is part of the International Oceanographic Data and Information Exchange (IODE) of the Intergovernmental Oceanographic Commission (IOC) of the United Nations Educational, Scientific and Cultural Organization (UNESCO). The National Database contributes a particular subset of fields from its database to OBIS-USA during annual submissions and these fields align to the Darwin Core standard, the standard used by OBIS-USA (**Table 3**).
 
-#### Table 3: Fields from the National Database for Deep Sea Corals and Sponges that are contributed to the Ocean Biogeographic Information System – USA (OBIS-USA).  The vocabulary crosswalk table below is in alphabetical order by DSCRTP field names.  The corresponding Darwin Core term is given that matches the term used within OBIS.  The OBIS-required fields are highlighted.
+#### Table 3: Fields from the National Database for Deep Sea Corals and Sponges that are contributed to the Ocean Biogeographic Information System, USA (OBIS-USA). The vocabulary crosswalk table below is in alphabetical order by DSCRTP field names. The corresponding Darwin Core term is given that matches the term used within OBIS. The OBIS-required fields are highlighted.
 
 ``` {r obis_table, echo=FALSE}
+
+z <- c('samplingEquipment',
+'sailingVessel',
+'vehicleName',
+'categoricalAbundance',
+'organismDensity',
+'cover',
+'verbatimSize',
+'minimumSize',
+'maximumSize',
+'weight',
+'condition',
+'startLatitude',
+'startLongitude',
+'endLatitude',
+'endLongitude',
+'habitat',
+'substrate',
+'geoformCMECS',
+'substrateCMECS',
+'bioticCMECS',
+'temperature',
+'salinity',
+'oxygen',
+'pH',
+'pHScale',
+'pCO2',
+'totalAlkalinity',
+'dissolvedInorganicCarbon')
+
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
 options(scipen=999)
 x <-
   s %>% arrange(DarwinCoreTerm) %>% 
-  filter(ReleaseToOBIS == '1') %>% 
+  filter(ReleaseToOBIS == '1', DarwinCoreTerm %!in% z ) %>% 
   group_by(FieldName) %>%
   summarize(
     DarwinCoreTerm = toString(unique(DarwinCoreTerm))
@@ -703,7 +737,7 @@ ft
 
 ## Summary of Database Contents
 
-The following figures and statistics provide insight into the completeness and quality status of datasets included within the National Database. These results are meant to inform and caution data users about the adequacy of using the database for various analytical objectives. **Appendix 4** includes a link to an online resource that describes each unique data set in detail as well as providing an interactive map to explore those data in isolation. The dataset dashboards also have a link to download the dataset as well as International Standards Organization compliant metadata (ISO 19115-2).
+The following figures and statistics provide insight into the completeness and quality status of data sets included within the National Database. These results are meant to inform and caution data users about the adequacy of using the database for various analytical objectives. **Appendix 4** includes a link to an online resource that describes each unique data set in detail as well as providing an interactive map to explore those data in isolation. The data set dashboards also have a link to download the data set as well as International Standards Organization compliant metadata (ISO 19115-2).
 
 The figures and tables that are presented in the following section are designed to give readers greater insight into the current contents and status of a few key fields in the database. For clarity and brevity, not all variables within the database are covered here. We elected to summarize fields and highlight relationships that clarify the distribution of data holdings and well as identify issues that data users may find useful for their analytical goals.
 
@@ -837,7 +871,7 @@ max <- max(filt$IndividualCount)
 
 The 'IndividualCount' field indicates the number individual corals or sponges per record. `r round((length(filter(filt, IndividualCount != '-999')$CatalogNumber)/length(filt$CatalogNumber))*100,2)` % or `r prettyNum(length(filter(filt, IndividualCount != '-999')$CatalogNumber), big.mark = ",")` records have 'IndividualCount' values. Most of the records fall within the range of 1-50 individuals per observation frame, but the maximum is over 16,000 individuals. The median value of 'IndividualCount' is `r median(filt$IndividualCount)`. See **Figure 5** for the distribution of individual count between 0 and 50.  
 
-When interpreting individual count values ('IndividualCount'), it is important to consider the geographic extent of the sampling events. The database includes sampling frames that are as small as a single photograph and as large as a video transect or the area sampled during a trawl haul. For many records, the size of the sampling frame is unknown. The 'SampleAreaInSquareMeters' field is designed to capture the area of the sampling frame, but at the current database version (`r version`) only `r round((length(filter(filt, SampleAreaInSquareMeters != '-999')$CatalogNumber)/length(filt$CatalogNumber))*100,.1)`% of the records are populuated for this variable. Where populated, this value can be used to spatially normalize the count values by area for the purpose of making calculations of density. Also, when 'IndividualCount' is not populated, species abundance values may be reported in 'CategoricalAbundance' instead, which is simply a categorical version of the count of the number of individuals counted within the sampling frame. The valid values for 'CategoricalAbundance' are: `s %>% filter(FieldName == 'CategoricalAbundance') %>% dplyr::select(ValidValues)`. 
+When interpreting individual count values ('IndividualCount'), it is important to consider the geographic extent of the sampling events. The database includes sampling frames that are as small as a single photograph and as large as a video transect or the area sampled during a trawl haul. For many records, the size of the sampling frame is unknown. The 'SampleAreaInSquareMeters' field is designed to capture the area of the sampling frame, but at the current database version (`r version`) only `r round((length(filter(filt, SampleAreaInSquareMeters != '-999')$CatalogNumber)/length(filt$CatalogNumber))*100,.1)`% of the records are populuated for this variable. Where populated, this value can be used to spatially normalize the count values by area for the purpose of making calculations of density. Also, when 'IndividualCount' is not populated, species abundance values may be reported in 'CategoricalAbundance' instead, which is simply a categorical version of the count of the number of individuals counted within the sampling frame. The valid values for 'CategoricalAbundance' are: `r s %>% filter(FieldName == 'CategoricalAbundance') %>% dplyr::select(ValidValues)`. 
 
 ``` {r IndividualCount, echo=FALSE,  dpi = 300}
 # ordering factors
@@ -1296,13 +1330,13 @@ This report has summarized the current holdings and quality level of NOAA's Nati
 
 ## Acknowledgements
 
-The Program would like to thank all the individuals and institutions who have contributed their data to be published in the common framework of the National Database. We recognize the considerable time and effort that it takes to collaborate with us, and for that, we are grateful. Also, thanks to all the contributors to the conceptualization and design of the database and the deep sea coral data portal. This resource is only possible with all of the individual and institutional contributors from the deep sea research community.  We would also like to thank all of the users of the data and portal for providing the real-world application of these resources.  Thanks to all who continue to help us evolve these information resources to enhance deep sea conservation and management.  
+The Program would like to thank all the individuals and institutions who have contributed their data to be published in the common framework of the National Database. We recognize the considerable time and effort that it takes to collaborate with us, and for that, we are grateful. Also, thanks to all the contributors to the conceptualization and design of the database and the deep sea coral data portal. This resource is only possible with all of the individual and institutional contributors from the deep sea research community. We would also like to thank all of the users of the data and portal for providing the real-world application of these resources. A huge thanks to all of the reviewers for their insights and improvements to this document (in alphabetical order by last name): Rachel Bassett, Abigail Benson, Just Cebrian, Elizabeth Duncan, Meredith Everett, Enrique Salgado, and Curt Whitmire. Thanks to all who continue to help us evolve these information resources to enhance deep sea conservation and management. 
 
 ## References
 
 Amante, C. and B.W. Eakins (2009) ETOPO1 1 Arc-Minute Global Relief Model: Procedures, Data Sources and Analysis. NOAA Technical Memorandum NESDIS NGDC-24. National Geophysical Data Center, NOAA. doi:10.7289/V5C8276M [access date].] Available from https://www.ngdc.noaa.gov/mgg/global/.
 
-Horton, T. et al. (2018) World Register of Marine Species. Available from http://www.marinespecies.org at VLIZ. Accessed 2018-03-10. doi:10.14284/170.
+Horton, T. et al. (2018) World Register of Marine Species. Available from http://www.marinespecies.org at VLIZ. Accessed 2019-12-10. doi:10.14284/170.
 
 Hourigan, T.F., P.J. Etnoyer, R.P. McGuinn, C. Whitmire, D.S. Dorfman, L.M. Dornback, S. Cross, and D. Sallis (2015) An Introduction to NOAA's National Database for Deep-Sea Corals and Sponges. NOAA Technical Memorandum NOS NCCOS 191. 27 pp. Silver Spring, MD. Available from https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/database_intro.
 
@@ -1313,7 +1347,7 @@ Scanlon, K.M., R.G. Waller, A.R. Sirotek, J.M. Knisel, J.J. O'Malley, and S. Ale
 
 ## Appendix 1: Summary of occurrence records by Family
 
-Summary of all occurrence records in the database grouped and listed alphabetically by 'Family'.  The number of genera ('Genus') with records in the database within in each family is reported in the column named 'Genera' in the table below. For records listed only at the Family level, Genus will be 'NA”.  The column heading '# of Records' represents the number of records within each family. 
+Summary of all occurrence records in the database grouped and listed alphabetically by 'Family'. The number of genera ('Genus') with records in the database within in each family is reported in the column named 'Genera' in the table below. For records listed only at the Family level, Genus will be 'NA'. The column heading '# of Records' represents the number of records within each family. 
 
 ### Corals
 
@@ -1372,17 +1406,20 @@ ft <- flextable(x) %>%
 ft
 
 ```
-
+  
+#####
+  
 ## Appendix 2: Data Dictionary for the National Database
 
-National Database field names, definitions, and their valid values, organized by field name. The current version of this table is available as an Excel file on the DSCRTP web portal: 
+National Database field names, definitions, and their valid values, organized by field name. This table includes only the public fields in the National Database. The fields are arranged alphabetically for ease of use. The current version of this table is also available as an Excel file on the DSCRTP web portal: 
 https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view   
 
-Important Note on Data Dictionary Version: For the most current version available, access the link above. The version printed here may be out of date due to post-publication updates of the schema. Users are advised to use the latest Excel version of the table for preparing a new data for submission or for analytical guidance.  
+**Important Note on Data Dictionary Version:** For the most current version available, access the link above. The version printed here may be out of date due to post-publication updates of the schema. Users are advised to use the latest Excel version of the table for preparing a new data for submission or for analytical guidance. 
+
 
 ``` {r data_dictionary_table, echo=FALSE}
 x <-
-  s %>% filter(InternalUseOnly == '0') %>% 
+  s %>%  filter(InternalUseOnly == '0') %>% 
   group_by(FieldName) %>% 
   summarize(Field_Definition = toString(unique(FieldDescription)),
             Valid_Values = toString(unique(ValidValues)))
@@ -1410,7 +1447,9 @@ ft <- flextable(x) %>%
 ft
 
 ```
-
+  
+##### 
+  
 ## Appendix 3: Required and Desired Fields for Submission of Data to the National Database
 
 Each of the data sets in the database has unique 'DatasetID'. There are currently `r length(filt$CatalogNumber)` records in the database composed of `r length(unique(filt$DatasetID))` individual data sets from `r length(unique(filt$DataProvider))` different data providers. You will find an an interactive dashboard for each data set at the following location: LINK (not live yet, see reviewer note below) 
@@ -1431,6 +1470,8 @@ Three categories, 'Historical', 'New', and 'Program' are used to differentiate t
 * **Program:** Data collected under exploration funded by the Program have the most required fields for submission. In the case of Program funded data collection, it is expected that the principal investigators coordinate directly with the Program to process their data according to Program standards outlined here. Examples include data from upcoming planned cruises with Program funding and 'data rescue' projects designed to create new annotations from existing unanalyzed video or still photos.
 
 Used in combination, these factors (each with three categories), lead to nine different types of incoming data with different numbers of required fields. The Data Working Group uses notation to refer to these combinations: Point Historical, Point New, Point Program, Transect Historical, Transect New, Transect Program, Trawl Historical, Trawl New, Trawl Program. *Tables 4a-c* below summarize the required fields for the nine possible incoming data types.
+
+#####
 
 #### Table 4a: Required and desired fields for different types of incoming point-based data. 'R' means the field is required for data submission and 'D' means that it is desired by the Program. 'P' means that the field is supplied by the Program.
 
@@ -1461,7 +1502,9 @@ ft
 
 
 ```
-
+  
+#####
+  
 #### Table 4b: Required and desired fields for different types of incoming transect-based data. 'R' means the field is required for data submission and 'D' means that it is desired by the Program. 'P' means that the field is supplied by the Program.
 
 ``` {r required_desired_transects_table, echo=FALSE}
@@ -1495,6 +1538,8 @@ ft
 
 ```
 
+##### 
+
 #### Table 4c: Required and desired fields for different types of incoming trawl-based data. 'R' means the field is required for data submission and 'D' means that it is desired by the Program. 'P' means that the field is supplied by the Program.
 
 ``` {r required_desired_trawl_table, echo=FALSE}
@@ -1527,7 +1572,9 @@ ft
 
 
 ```
-
+  
+##### 
+  
 ## Appendix 4: Data set Dashboards
 
 Each of the data sets in the database has a unique 'DatasetID'. There are currently 695,335 records in the database composed of `r length(unique(filt$DatasetID))` individual data sets from `r length(unique(filt$DataProvider))` different data providers. You will find an interactive dashboard for each data set at the following location: https://deepseacoraldata.noaa.gov/DatasetID_Table/DatasetID_Table.html These dashboards provide important information about each constituent data set that makes up the National Database and to download each set individually with ISO compliant metadata.

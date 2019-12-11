@@ -6,8 +6,8 @@
 ##### input: latest version of NDB #####
 # setwd("C:/rworking/deepseatools/indata")
 # indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
-# filt <- indata %>%
-#   filter(Flag == "0")
+filt <- indata %>%
+  filter(Flag == "0")
 
 ##### input: latest version of the NDB schmea #####
 # Register and download Google Sheet
