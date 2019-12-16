@@ -21,13 +21,13 @@ library("raster")
 # # set file pointer
 setwd("C:/rworking/deepseatools/indata")
 
-# read it in as a data table from file
-# filt <- data.table::fread(infile)
+read it in as a data table from file
+filt <- data.table::fread(infile)
 
 ##### filter dat #####
 
-dat <- filt %>% filter(# gisMEOW == 'Sea of Japan/East Sea',
-                       Genus == 'Anomocora'#,
+dat <- filt %>% filter(grepl('Caribbean', gisMEOW),
+                       Genus == 'Stichopathes'#
                        # Vessel == 'Silver Bay R/V',
                        # FishCouncilRegion == 'South Atlantic'
 )
@@ -37,7 +37,7 @@ dat <- as.data.table(dat)
 ##### kernel density surface and map #####
 
 kde <- bkde2D(dat[ , list(Longitude, Latitude)],
-              bandwidth= c(.8,.8),
+              bandwidth= c(.5,.5),
               gridsize = c(1000,1000))
 
 # create raster from kernel density output
@@ -83,10 +83,10 @@ leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
 # erase very low density cells
 
 # set low density cells as NA so we can make them transparent with the colorNumeric function
-KernelDensityRaster@data@values[which(KernelDensityRaster@data@values < 5.721019e-05)] <- NA
+# KernelDensityRaster@data@values[which(KernelDensityRaster@data@values < 5.721019e-05)] <- NA
 
 # create pal function for coloring the raster
-palRaster <- colorNumeric("Spectral", domain = KernelDensityRaster@data@values, na.color = "transparent")
+# palRaster <- colorNumeric("Spectral", domain = KernelDensityRaster@data@values, na.color = "transparent")
 
 # leaflet map with raster
 # leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
