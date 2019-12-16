@@ -43,6 +43,13 @@ taxa <- as.character(setdiff(unique(sub1$ScientificName), tax$ScientificName))
 # taxa
 # length(taxa)
 
+##### -OR- just bring in a list of mismatches #####
+
+setwd("C:/rworking/deepseatools/indata")
+taxa <- read.csv('taxa.csv', header = F)
+taxa$V1 <- gsub("'", '', taxa$V1)
+
+
 #### __OPTIONAL__ break them into chunks for WoRMs interface #####
 taxa1 <- taxa[1:50]
 taxa2 <- taxa[51:66]
@@ -55,7 +62,7 @@ length(taxa2)
 
 ##### match chunks with with WoRMS database 50 at a time then rbind them #####
 
-x <- wm_records_taxamatch(name = taxa1,
+x <- wm_records_taxamatch(name = taxa,
                           ids = TRUE,
                           verbose = TRUE,
                           marine_only = TRUE,
@@ -68,7 +75,7 @@ x <- bind_rows(x, .id = "column_label")
 
 # merge back to get original submitted names
 
-y <- merge(taxa1, x, by.x = "row.names", by.y = 'column_label')
+y <- merge(taxa, x, by.x = "row.names", by.y = 'column_label')
 
 x <- wm_records_taxamatch(name = taxa2,
                           ids = TRUE,
@@ -116,12 +123,6 @@ newtax_un$Genus <- match$genus
 newtax_un$TaxonRank <- match$rank
 newtax_un$SynonymAphiaID <- "-999"
 newtax_un$HigherTaxonNameAuthorship <- NA
-
-
-
-
-
-
 
 ##### binding new taxonomy table with existing #####
 

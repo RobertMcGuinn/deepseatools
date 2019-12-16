@@ -3952,7 +3952,70 @@ arc.write(file.path(fgdb_path, 'yo_geo'), data=yo_geo, overwrite = TRUE)
 
 name <- na.omit(check[match(USNM$SampleID, check$SampleID),])
 
-####
+##### creating spatial lines: from Elizabeth Gugliotti on 20191213 #####
+
+library(sp)
+library(maptools)
+library(leaflet)
+# Creating the points_to_line function
+points_to_line <- function(data, long, lat, id_field = NULL, sort_field = NULL) {
+
+  # Convert to SpatialPointsDataFrame
+  coordinates(data) <- c(long, lat)
+
+  # If there is a sort field...
+  if (!is.null(sort_field)) {
+    if (!is.null(id_field)) {
+      data <- data[order(data[[id_field]], data[[sort_field]]), ]
+    } else {
+      data <- data[order(data[[sort_field]]), ]
+    }
+  }
+
+  # If there is only one path...
+  if (is.null(id_field)) {
+
+    lines <- SpatialLines(list(Lines(list(Line(data)), "id")))
+
+    return(lines)
+
+    # Now, if we have multiple lines...
+  } else if (!is.null(id_field)) {
+
+    # Split into a list by ID field
+    paths <- sp::split(data, data[[id_field]])
+
+    sp_lines <- SpatialLines(list(Lines(list(Line(paths[[1]])), "line1")))
+
+    # I like for loops, what can I say...
+    for (p in 2:length(paths)) {
+      id <- paste0("line", as.character(p))
+      l <- SpatialLines(list(Lines(list(Line(paths[[p]])), id)))
+      sp_lines <- spRbind(sp_lines, l)
+    }
+
+    return(sp_lines)
+  }
+}
+
+
+#Create nav_lines
+nav_lines <- points_to_line (data=rovnav,
+                             long='Long',
+                             lat='Lat',
+                             id_field='TransectNumber',
+                             sort_field='TC')
+
+#have to rename rownames of your data to the row names of nav_lines
+rownames(nav_unique)<-c("line1","line2","line3","line4","line5","line6","line7","line8","line9","line10","line11","line12","line13","line14","line15","line16","line17","line18","line19","line20","line21","line22","line23","line24","line25","line26","line27","line28","line29","line30","line31","line32","line33","line34","line35","line36","line37","line38","line39","line40","line41","line42","line43","line44","line45","line46","line47","line48","line49","line50","line51","line52","line53","line54","line55","line56","line57","line58","line59","line60","line61","line62","line63","line64","line65","line66","line67","line68","line69")
+
+#Create Spatial Data Frame that has lines plus your data
+SLDF = SpatialLinesDataFrame(nav_lines, nav_unique)
+
+pal<-colorNumeric("viridis", domain = NULL)
+leaflet(data=SLDF) %>%
+  addTiles()%>%
+  addPolylines(color = ~pal(Dive))
 
 
 
