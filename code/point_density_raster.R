@@ -8,7 +8,6 @@
 # options(viewer = NULL)
 
 ##### packages #####
-
 library("leaflet")
 library("data.table")
 library("sp")
@@ -21,13 +20,13 @@ library("raster")
 # # set file pointer
 setwd("C:/rworking/deepseatools/indata")
 
-read it in as a data table from file
+# read it in as a data table from file
 filt <- data.table::fread(infile)
 
 ##### filter dat #####
 
 dat <- filt %>% filter(grepl('Caribbean', gisMEOW),
-                       Genus == 'Stichopathes'#
+                       Genus == 'Umbellula'#
                        # Vessel == 'Silver Bay R/V',
                        # FishCouncilRegion == 'South Atlantic'
 )
@@ -69,13 +68,14 @@ leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
              radius = .5, opacity = .2, col = "blue",
              popup = paste("CatalogNumber:", dat$CatalogNumber, "<br>",
                            "ScientificName:", dat$ScientificName, "<br>",
+                           "DepthInMeters:", dat$DepthInMeters, "<br>",
                            "DatasetID:", dat$DatasetID, "<br>",
                            "Vessel:", dat$Vessel, "<br>",
                            "SurveyID:", dat$SurveyID, "<br>",
                            "SampleID:", dat$SampleID, "<br>",
                            "TrackingID:", dat$TrackingID, "<br>",
                            "Station:", dat$Station, "<br>",
-                           "Observation Year:", dat$ObservationYear)) # %>%
+                           "Observation Year:", dat$ObservationYear))#%>%
   # addLegend(pal = palRaster,
   #           values = KernelDensityRaster@data@values,
   #           title = "Kernel Density of Points")
