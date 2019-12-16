@@ -17,25 +17,25 @@ library("KernSmooth")
 library("raster")
 
 ##### load data #####
-#
-# # # set file pointer
-# setwd("C:/rworking/deepseatools/indata")#inurl <- "https://data.cityofchicago.org/api/views/22s8-eq8h/rows.csv?accessType=DOWNLOAD"
-# infile <- "DSCRTP_NatDB_20190920-0.csv"
-#
-# # read it in as a data table from file
-# filt <- data.table::fread(infile)
-#
-# ##### filter dat #####
+
+# # set file pointer
+setwd("C:/rworking/deepseatools/indata")
+infile <- "DSCRTP_NatDB_20190920-0.csv"
+
+# read it in as a data table from file
+filt <- data.table::fread(infile)
+
+##### filter dat #####
 
 dat <- filt %>% filter(# gisMEOW == 'Sea of Japan/East Sea',
-                       Genus == 'Lophelia',
+                       Genus == 'Phakellia',
                        # Vessel == 'Silver Bay R/V',
                        FishCouncilRegion == 'South Atlantic'
 )
 
 dat <- as.data.table(dat)
 
-######  kernel density surface and map #####
+##### kernel density surface and map #####
 
 kde <- bkde2D(dat[ , list(Longitude, Latitude)],
               bandwidth= c(.8,.8),
