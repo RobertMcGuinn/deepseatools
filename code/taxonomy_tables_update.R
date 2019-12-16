@@ -8,7 +8,7 @@
 
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 
-n <- '20191121-0'
+n <- '20191213-0'
 
 taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
 gs_browse(taxfl)
@@ -24,9 +24,14 @@ tax <- gs_read(tax)
 
 ##### load in subset alone without running QA dash #####
 
-x <- "20191111-0_University_of_Hawaii_Smith_Durden_Kilo_Moana_KM1808_2018_2018"
+x <- "20191207-0_UnpurgedRecords_THourigan"
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
+
+##### load in subset from Excel #####
+
+setwd("C:/rworking/deepseatools/indata")
+sub <- read.xlsx('20191207-0_UnpurgedRecords_THourigan.xlsx', sheet = 1)
 
 ##### get records where mismatch to master taxonomy table #####
 

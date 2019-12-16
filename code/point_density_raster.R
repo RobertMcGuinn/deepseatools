@@ -18,15 +18,16 @@ library("raster")
 ##### load data #####
 
 # # set file pointer
-setwd("C:/rworking/deepseatools/indata")
-
-# read it in as a data table from file
-filt <- data.table::fread(infile)
+# setwd("C:/rworking/deepseatools/indata")
+#
+# # read it in as a data table from file
+# filt <- data.table::fread(infile)
 
 ##### filter dat #####
 
 dat <- filt %>% filter(grepl('Caribbean', gisMEOW),
-                       Genus == 'Umbellula'#
+                       is.na(ImageURL) == F
+                       # Genus == 'Siphonogorgia'#
                        # Vessel == 'Silver Bay R/V',
                        # FishCouncilRegion == 'South Atlantic'
 )
@@ -43,6 +44,7 @@ kde <- bkde2D(dat[ , list(Longitude, Latitude)],
 
 KernelDensityRaster <- raster(list(x=kde$x1 ,y=kde$x2 ,z = kde$fhat))
 
+# masking raster
 # KernelDensityRaster = mask(x=KernelDensityRaster, mask=worldcropr)
 
 # checking
@@ -83,27 +85,30 @@ leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
 # erase very low density cells
 
 # set low density cells as NA so we can make them transparent with the colorNumeric function
-# KernelDensityRaster@data@values[which(KernelDensityRaster@data@values < 5.721019e-05)] <- NA
+KernelDensityRaster@data@values[which(KernelDensityRaster@data@values < 2.721019e-05)] <- NA
 
 # create pal function for coloring the raster
-# palRaster <- colorNumeric("Spectral", domain = KernelDensityRaster@data@values, na.color = "transparent")
+palRaster <- colorNumeric("Spectral", domain = KernelDensityRaster@data@values, na.color = "transparent")
 
 # leaflet map with raster
-# leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
-#   addRasterImage(KernelDensityRaster,
-#                  colors = palRaster,
-#                  opacity = .5) %>%
-#   addCircles(lng = dat$Longitude, lat = dat$Latitude,
-#              radius = .5, opacity = .2, col = "blue",
-#              popup = paste("CatalogNumber:", dat$CatalogNumber, "<br>",
-#                            "ScientificName:", dat$ScientificName, "<br>",
-#                            "DatasetID:", dat$DatasetID, "<br>",
-#                            "Vessel:", dat$Vessel, "<br>",
-#                            "SurveyID:", dat$SurveyID, "<br>",
-#                            "SampleID:", dat$SampleID, "<br>",
-#                            "TrackingID:", dat$TrackingID, "<br>",
-#                            "Station:", dat$Station, "<br>",
-#                            "Observation Year:", dat$ObservationYear)) #%>%
+# leaflet map with raster
+leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
+  addRasterImage(KernelDensityRaster,
+                 colors = palRaster,
+                 opacity = .5) %>%
+  addCircles(lng = dat$Longitude, lat = dat$Latitude,
+             radius = .5, opacity = .2, col = "blue",
+             popup = paste("CatalogNumber:", dat$CatalogNumber, "<br>",
+                           "ScientificName:", dat$ScientificName, "<br>",
+                           "DepthInMeters:", dat$DepthInMeters, "<br>",
+                           "ImageURL:", dat$ImageURL, "<br>",
+                           "DatasetID:", dat$DatasetID, "<br>",
+                           "Vessel:", dat$Vessel, "<br>",
+                           "SurveyID:", dat$SurveyID, "<br>",
+                           "SampleID:", dat$SampleID, "<br>",
+                           "TrackingID:", dat$TrackingID, "<br>",
+                           "Station:", dat$Station, "<br>",
+                           "Observation Year:", dat$ObservationYear))#%>%
   # addLegend(pal = palRaster,
   #           values = KernelDensityRaster@data@values,
   #           title = "Kernel Density of Points")
