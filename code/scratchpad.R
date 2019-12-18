@@ -4017,9 +4017,14 @@ leaflet(data=SLDF) %>%
   addTiles()%>%
   addPolylines(color = ~pal(Dive))
 
+##### github source #####
+
+script <- getURL("https://raw.githubusercontent.com/opetchey/RREEBES/Beninca_development/Beninca_etal_2008_Nature/report/functions/indirect_method_functions.R", ssl.verifypeer = FALSE)
+
+yo <-readr::read_csv("https://raw.githubusercontent.com/Atrebas/atrebas.github.io/master/post/2019-03-03-datatable-dplyr.R")
 
 
-
+class(yo)
 
 
 

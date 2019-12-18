@@ -2,7 +2,10 @@
 # Author: Robert P. McGuinn
 # Date started: 20190516
 # Purpose: To install key packages
+
 ##### Installation/Loading of Packages #####
+# install.packages('RCurl')
+library(RCurl)
 # install.packages('xlsx')
 #install.packages('openxlsx')
 library(openxlsx)

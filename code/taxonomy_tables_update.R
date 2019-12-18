@@ -8,7 +8,7 @@
 
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 
-n <- '20191213-0'
+n <- '20191217-1'
 
 taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
 gs_browse(taxfl)
@@ -23,15 +23,13 @@ gs_browse(tax)
 tax <- gs_read(tax)
 
 ##### load in subset alone without running QA dash #####
-
-x <- "20191207-0_UnpurgedRecords_THourigan"
+x <- "20191216-0_UnpurgedRecords_THourigan"
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
 ##### load in subset from Excel #####
-
 setwd("C:/rworking/deepseatools/indata")
-sub <- read.xlsx('20191207-0_UnpurgedRecords_THourigan.xlsx', sheet = 1)
+sub <- read.xlsx('20191216-0_UnpurgedRecords_THourigan.xlsx', sheet = 1)
 
 ##### get records where mismatch to master taxonomy table #####
 
@@ -54,6 +52,9 @@ setwd("C:/rworking/deepseatools/indata")
 taxa <- read.csv('taxa.csv', header = F)
 taxa$V1 <- gsub("'", '', taxa$V1)
 
+##### -OR- bring in a single taxa
+
+taxa <- as.character("Taiaroa")
 
 #### __OPTIONAL__ break them into chunks for WoRMs interface #####
 taxa1 <- taxa[1:50]
@@ -82,6 +83,8 @@ x <- bind_rows(x, .id = "column_label")
 
 y <- merge(taxa, x, by.x = "row.names", by.y = 'column_label')
 
+
+##### do next block of records #####
 x <- wm_records_taxamatch(name = taxa2,
                           ids = TRUE,
                           verbose = TRUE,
@@ -100,6 +103,9 @@ z <- merge(taxa2, x, by.x = "row.names", by.y = 'column_label')
 # bind the two files together
 
 match <- rbind(y,z)
+
+# OR
+match <- y
 
 ##### getting rid of unaccepted taxa #####
 
