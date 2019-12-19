@@ -18,6 +18,7 @@ filt <- indata %>%
   filter(Flag == "0")
 
 ##### setting bounding box coordinates #####
+
 minLon <- -85
 maxLon <- -82
 minLat <- 23
@@ -44,27 +45,29 @@ url.hi <- paste("http://maps.ngdc.noaa.gov/mapviewer-support/wcs-proxy/",
                 "resx=0.000833333333333334&resy=0.000833333333333334&bbox=",
                 minLon, ",", minLat, ",", maxLon, ",", maxLat, sep="")
 fname.hi <- "crm_test.tif"
-
 download.file(url.hi, fname.hi, mode="wb", cacheOK="false")
-
 crm <- raster::raster(fname.hi)
 
 ##### optional: write the raster for GIS usage #####
 
-# setwd("C:/rworking/digs/outdata")
+# setwd("C:/rworking/deepseatools/outdata")
 # writeRaster(crm,'crm.tif')
 
 ##### filtering the coral data to match elevation data extraction #####
+
 filt <- filter(indata, as.numeric(Latitude) > minLat,
                as.numeric(Latitude) < maxLat,
                as.numeric(Longitude) < maxLon,
                as.numeric(Longitude) > minLon,
                Flag == "0")
+
 #View(filt)
+
 coordinates(filt) <- c("Longitude","Latitude")
 proj4string(filt) <- proj4string(etopo)
 
 ##### extract raster CRM and ETOPO data to points #####
+
 filt$gisCRM <- raster::extract(crm,filt)
 filt$gisETOPO <- raster::extract(etopo,filt)
 
@@ -73,9 +76,9 @@ filt$gisETOPO <- raster::extract(etopo,filt)
 filt$gisCRM <- filt$gisCRM * -1
 filt$gisETOPO <- filt$gisETOPO * -1
 
-# names(filt)
+
 filtdata <- as.data.frame(filt)
-#names(filtdata)
+# names(filtdata)
 
 ##### plotting in ggplot #####
 
