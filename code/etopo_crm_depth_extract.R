@@ -5,6 +5,7 @@
 
 ##### load packages #####
 
+library(ncdf4)
 library(sp)
 library(tidyverse)
 library(raster)
@@ -17,12 +18,43 @@ indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0")
 
-##### setting bounding box coordinates #####
+##### load GEBCO 2019 bathymetry from local netcdf file #####
 
+# https://www.gebco.net/data_and_products/gridded_bathymetry_data/
+# code: https://www.benjaminbell.co.uk/2019/08/bathymetric-maps-in-r-getting-and.html
+
+# Load GEBCO_2019
+# this is just a test piece exracted from the gebco data extract tool.
+gebco2019 <- raster("C:/data/BaseLayers/GEBCO2019/gebco_2019.nc")
+
+##### setting bounding box coordinates#####
+
+# do it by hand -OR-
 minLon <- -85
 maxLon <- -82
 minLat <- 23
 maxLat <- 26
+
+# -OR- set bounding box coordinates to match the GEBCO extraction that you have.
+
+x <- bbox(gebco2019)
+minLat <- x[2,1]
+maxLat <- x[2,2]
+maxLon <- x[1,2]
+minLon <- x[1,1]
+
+##### filtering the coral data to match elevation data extraction#####
+
+filt <- filter(indata, as.numeric(Latitude) > minLat,
+               as.numeric(Latitude) < maxLat,
+               as.numeric(Longitude) < maxLon,
+               as.numeric(Longitude) > minLon,
+               Flag == "0")
+
+#View(filt)
+
+coordinates(filt) <- c("Longitude","Latitude")
+proj4string(filt) <- proj4string(etopo)
 
 ##### get ETOPO1 data from NCEI #####
 
@@ -53,28 +85,19 @@ crm <- raster::raster(fname.hi)
 # setwd("C:/rworking/deepseatools/outdata")
 # writeRaster(crm,'crm.tif')
 
-##### filtering the coral data to match elevation data extraction #####
-
-filt <- filter(indata, as.numeric(Latitude) > minLat,
-               as.numeric(Latitude) < maxLat,
-               as.numeric(Longitude) < maxLon,
-               as.numeric(Longitude) > minLon,
-               Flag == "0")
-
-#View(filt)
-
-coordinates(filt) <- c("Longitude","Latitude")
-proj4string(filt) <- proj4string(etopo)
-
 ##### extract raster CRM and ETOPO data to points #####
+# note: point extent must match raster extent (see above section on
+# setting max and min lats and longs.
 
 filt$gisCRMDepth <- raster::extract(crm,filt)
 filt$gisEtopoDepth <- raster::extract(etopo,filt)
+filt$gisGEBCO2019 <- raster::extract(gebco2019, filt)
 
 ##### changing the sign of the depth values to match NDB formatting ####
 
 filt$gisCRMDepth <- filt$gisCRMDepth * -1
 filt$gisEtopoDepth <- filt$gisEtopoDepth * -1
+filt$gisGEBCO2019 <- filt$gisGEBCO2019 * -1
 
 ##### setting as data
 filtdata <- as.data.frame(filt)
@@ -82,7 +105,7 @@ filtdata <- as.data.frame(filt)
 
 ##### plotting in ggplot #####
 
-p <- ggplot(filtdata, aes(DepthInMeters,gisEtopoDepth))
+p <- ggplot(filtdata, aes(DepthInMeters, gisGEBCO2019))
 p <- p + geom_point(size = .7) +
   geom_vline(aes(xintercept = 50), col = 'pink') +
   geom_hline(aes(yintercept = 50), col = 'pink') +
