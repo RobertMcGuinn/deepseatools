@@ -84,8 +84,8 @@ filtdata <- as.data.frame(filt)
 
 p <- ggplot(filtdata, aes(DepthInMeters,gisEtopoDepth))
 p <- p + geom_point(size = .7) +
-  geom_vline(aes(xintercept = 50)) +
-  geom_hline(aes(yintercept = 50)) +
+  geom_vline(aes(xintercept = 50), col = 'pink') +
+  geom_hline(aes(yintercept = 50), col = 'pink') +
   geom_abline(col = "gray60")
 
 p
