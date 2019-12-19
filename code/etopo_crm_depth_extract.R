@@ -50,7 +50,7 @@ filt <- filter(indata, as.numeric(Latitude) > minLat,
                as.numeric(Latitude) < maxLat,
                as.numeric(Longitude) < maxLon,
                as.numeric(Longitude) > minLon,
-               Flag == "0", ScientificName == "Lophelia pertusa")
+               Flag == "0")
 
 #View(filt)
 
@@ -115,7 +115,30 @@ p <- p + geom_point(size = .7) +
 p
 
 
-##### map it in leaflet #####
+##### leaflet map of etopo #####
+
+palRaster <- colorNumeric("Spectral", domain = etopo@data@values, na.color = "transparent")
+
+leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
+  addRasterImage(etopo,
+                 colors = palRaster,
+                 opacity = .5) %>%
+  addCircles(lng = filt$Longitude, lat = filt$Latitude,
+             radius = .5, opacity = .2, col = "blue",
+             popup = paste("CatalogNumber:", filt$CatalogNumber, "<br>",
+                           "ScientificName:", filt$ScientificName, "<br>",
+                           "DepthInMeters:", filt$DepthInMeters, "<br>",
+                           "ImageURL:", filt$ImageURL, "<br>",
+                           "DatasetID:", filt$DatasetID, "<br>",
+                           "Vessel:", filt$Vessel, "<br>",
+                           "SurveyID:", filt$SurveyID, "<br>",
+                           "SampleID:", filt$SampleID, "<br>",
+                           "TrackingID:", filt$TrackingID, "<br>",
+                           "Station:", filt$Station, "<br>",
+                           "Observation Year:", filt$ObservationYear))
+
+
+##### leaflet map of gebco #####
 palRaster <- colorNumeric("Spectral", domain = gebco2019@data@values, na.color = "transparent")
 
 leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
@@ -136,7 +159,26 @@ leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
                            "Station:", filt$Station, "<br>",
                            "Observation Year:", filt$ObservationYear))
 
+##### leaflet map of crm #####
+palRaster <- colorNumeric("Spectral", domain = crm@data@values, na.color = "transparent")
 
+leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
+  addRasterImage(crm,
+                 colors = palRaster,
+                 opacity = .5) %>%
+  addCircles(lng = filt$Longitude, lat = filt$Latitude,
+             radius = .5, opacity = .2, col = "blue",
+             popup = paste("CatalogNumber:", filt$CatalogNumber, "<br>",
+                           "ScientificName:", filt$ScientificName, "<br>",
+                           "DepthInMeters:", filt$DepthInMeters, "<br>",
+                           "ImageURL:", filt$ImageURL, "<br>",
+                           "DatasetID:", filt$DatasetID, "<br>",
+                           "Vessel:", filt$Vessel, "<br>",
+                           "SurveyID:", filt$SurveyID, "<br>",
+                           "SampleID:", filt$SampleID, "<br>",
+                           "TrackingID:", filt$TrackingID, "<br>",
+                           "Station:", filt$Station, "<br>",
+                           "Observation Year:", filt$ObservationYear))
 
 
 
