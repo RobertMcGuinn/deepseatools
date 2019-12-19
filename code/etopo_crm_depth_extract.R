@@ -9,6 +9,7 @@ library(ncdf4)
 library(sp)
 library(tidyverse)
 library(raster)
+library(leaflet)
 
 ##### load data (piece of NDB) from CSV #####
 
@@ -49,12 +50,12 @@ filt <- filter(indata, as.numeric(Latitude) > minLat,
                as.numeric(Latitude) < maxLat,
                as.numeric(Longitude) < maxLon,
                as.numeric(Longitude) > minLon,
-               Flag == "0")
+               Flag == "0", ScientificName == "Lophelia pertusa")
 
 #View(filt)
 
 coordinates(filt) <- c("Longitude","Latitude")
-proj4string(filt) <- proj4string(etopo)
+proj4string(filt) <- proj4string(gebco2019)
 
 ##### get ETOPO1 data from NCEI #####
 
@@ -112,6 +113,32 @@ p <- p + geom_point(size = .7) +
   geom_abline(col = "gray60")
 
 p
+
+
+##### map it in leaflet #####
+palRaster <- colorNumeric("Spectral", domain = gebco2019@data@values, na.color = "transparent")
+
+leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
+  addRasterImage(gebco2019,
+                 colors = palRaster,
+                 opacity = .5) %>%
+  addCircles(lng = filt$Longitude, lat = filt$Latitude,
+             radius = .5, opacity = .2, col = "blue",
+             popup = paste("CatalogNumber:", filt$CatalogNumber, "<br>",
+                           "ScientificName:", filt$ScientificName, "<br>",
+                           "DepthInMeters:", filt$DepthInMeters, "<br>",
+                           "ImageURL:", filt$ImageURL, "<br>",
+                           "DatasetID:", filt$DatasetID, "<br>",
+                           "Vessel:", filt$Vessel, "<br>",
+                           "SurveyID:", filt$SurveyID, "<br>",
+                           "SampleID:", filt$SampleID, "<br>",
+                           "TrackingID:", filt$TrackingID, "<br>",
+                           "Station:", filt$Station, "<br>",
+                           "Observation Year:", filt$ObservationYear))
+
+
+
+
 
 
 
