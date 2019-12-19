@@ -153,10 +153,49 @@ setwd("C:/rworking/deepseatools/indata")
 write.xlsx(image_table,'20191218-0_image_table_RPMcGuinn.xlsx', row.names = FALSE)
 
 ##### -OR- just generate an ERDDAP query #####
-https://ecowatch.ncddc.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatasetID%2CCatalogNumber%2CSampleID%2CRepository%2CScientificName%2CVernacularNameCategory%2CTaxonRank%2CIdentificationQualifier%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CObservationDate%2CSurveyID%2CStation%2CEventID%2CSamplingEquipment%2CLocationAccuracy%2CRecordType%2CDataProvider&CatalogNumber=845&CatalogNumber=879
+# example query: https://ecowatch.ncddc.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatasetID%2CCatalogNumber%2CSampleID%2CRepository%2CScientificName%2CVernacularNameCategory%2CTaxonRank%2CIdentificationQualifier%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CObservationDate%2CSurveyID%2CStation%2CEventID%2CSamplingEquipment%2CLocationAccuracy%2CRecordType%2CDataProvider&CatalogNumber=845&CatalogNumber=879
+otudap <- c('CatalogNumber',
+               'OperationalTaxonomicUnit',
+               'ScientificName',
+               'LifeScienceIdentifier',
+               'ScientificNameAuthorship',
+               'TaxonRank',
+               'Morphospecies',
+               'VerbatimScientificName',
+               'IdentificationComments',
+               'HighlightImageFilePath',
+               'HighlightImageURL')
 
-paste('https://ecowatch.ncddc.noaa.gov/erddap/tabledap/deep_sea_corals.csv?',
-      paste(imagefields, sep="", collapse="%2C"),
+imagedap <- c('CatalogNumber',
+                 'OperationalTaxonomicUnit',
+                 #'ImageFilePath',
+                 'RecordType',
+                 'IdentifiedBy',
+                 'IdentificationDate',
+                 'IdentificationComments',
+                 'IdentificationVerificationStatus',
+                 'TypeStatus',
+                 #'ImageFilePath',
+                 'Locality',
+                 'latitude',
+                 'longitude',
+                 'MinimumDepthInMeters',
+                 'MaximumDepthInMeters',
+                 'DataProvider',
+                 'Citation',
+                 'Modified',
+                 'VerbatimScientificName',
+                 'SampleID',
+                 'CMECSSubstrate',
+                 'Habitat',
+                 'MaximumSize'
+                 )
+
+
+x <- paste('https://ecowatch.ncddc.noaa.gov/erddap/tabledap/deep_sea_corals.csv?',
+      paste(imagedap, sep="", collapse="%2C"),
       '&CatalogNumber=',
       paste(cats, sep="", collapse="&CatalogNumber="), sep = '')
+
+
 
