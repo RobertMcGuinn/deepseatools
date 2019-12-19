@@ -68,21 +68,21 @@ proj4string(filt) <- proj4string(etopo)
 
 ##### extract raster CRM and ETOPO data to points #####
 
-filt$gisCRM <- raster::extract(crm,filt)
-filt$gisETOPO <- raster::extract(etopo,filt)
+filt$gisCRMDepth <- raster::extract(crm,filt)
+filt$gisEtopoDepth <- raster::extract(etopo,filt)
 
 ##### changing the sign of the depth values to match NDB formatting ####
 
-filt$gisCRM <- filt$gisCRM * -1
-filt$gisETOPO <- filt$gisETOPO * -1
+filt$gisCRMDepth <- filt$gisCRMDepth * -1
+filt$gisEtopoDepth <- filt$gisEtopoDepth * -1
 
-
+##### setting as data
 filtdata <- as.data.frame(filt)
 # names(filtdata)
 
 ##### plotting in ggplot #####
 
-p <- ggplot(filtdata, aes(DepthInMeters,gisETOPO))
+p <- ggplot(filtdata, aes(DepthInMeters,gisEtopoDepth))
 p <- p + geom_point(size = .7) +
   geom_vline(aes(xintercept = 50)) +
   geom_hline(aes(yintercept = 50)) +
