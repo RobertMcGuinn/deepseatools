@@ -6,7 +6,7 @@
 
 # Need this package to turn the esri line into an sf dataframe
 devtools::install_github("yonghah/esri2sf")
-library("esri2sf")
+library(esri2sf)
 library(sf)
 url<-"https://service.ncddc.noaa.gov/arcgis/rest/services/OceanExploration/OE_OkeanosDives/MapServer/65"
 df<-esri2sf(url)

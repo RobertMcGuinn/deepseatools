@@ -10,6 +10,8 @@ library(sp)
 library(tidyverse)
 library(raster)
 library(leaflet)
+library(ggplot2)
+library(obistools)
 
 ##### load data (piece of NDB) from CSV #####
 
@@ -17,7 +19,7 @@ library(leaflet)
 setwd("C:/rworking/deepseatools/indata")
 indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
 filt <- indata %>%
-  filter(Flag == "0")
+  dplyr::filter(Flag == "0")
 
 ##### load GEBCO 2019 bathymetry from local netcdf file #####
 
@@ -46,7 +48,7 @@ minLon <- x[1,1]
 
 ##### filtering the coral data to match elevation data extraction#####
 
-filt <- filter(indata, as.numeric(Latitude) > minLat,
+filt <- dplyr::filter(indata, as.numeric(Latitude) > minLat,
                as.numeric(Latitude) < maxLat,
                as.numeric(Longitude) < maxLon,
                as.numeric(Longitude) > minLon,
@@ -100,20 +102,18 @@ filt$gisCRMDepth <- filt$gisCRMDepth * -1
 filt$gisEtopoDepth <- filt$gisEtopoDepth * -1
 filt$gisGEBCO2019 <- filt$gisGEBCO2019 * -1
 
-##### setting as data
+##### setting as data frame
 filtdata <- as.data.frame(filt)
-# names(filtdata)
 
 ##### plotting in ggplot #####
 
-p <- ggplot(filtdata, aes(DepthInMeters, gisGEBCO2019))
+p♦ <- ggplot(filtdata, aes(DepthInMeters, gisGEBCO2019))
 p <- p + geom_point(size = .7) +
   geom_vline(aes(xintercept = 50), col = 'pink') +
   geom_hline(aes(yintercept = 50), col = 'pink') +
   geom_abline(col = "gray60")
 
 p
-
 
 ##### leaflet map of etopo #####
 
@@ -181,6 +181,30 @@ leaflet() %>% addProviderTiles("Esri.OceanBasemap") %>%
                            "Observation Year:", filt$ObservationYear))
 
 
+##### using the checkdepth from OBIS Tools(it uses GEBCO 2014?) #####
 
+# prepare the proper variables expected by OBIS tools.
+filtdata$decimalLatitude <- filtdata$Latitude
+filtdata$decimalLongitude <- filtdata$Longitude
+filtdata$minimumDepthInMeters <- filtdata$MinimumDepthInMeters
+filtdata$maximumDepthInMeters <- filtdata$MaximumDepthInMeters
+
+# lookup the depth from OBIS (which uses GEBCO 2014?)
+
+filtdata$gisOBISdepth <- lookup_xy(filtdata, shoredistance = FALSE, grids = TRUE, areas = FALSE)$bathymetry
+
+##### plotting the gisOBISdepth in ggplot #####
+
+p <- ggplot(filtdata, aes(gisGEBCO2019, gisGEBCODepth))
+p <- p + geom_point(size = .7) +
+  geom_vline(aes(xintercept = 50), col = 'pink') +
+  geom_hline(aes(yintercept = 50), col = 'pink') +
+  geom_abline(col = "gray60")
+
+p
+
+
+
+filt$gisGEBCODepth
 
 
