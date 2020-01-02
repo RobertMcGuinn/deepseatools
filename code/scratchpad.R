@@ -2,7 +2,6 @@
 # author: Robert P. McGuinn
 # date started: 20181107
 # purpose: collection of scripts useful to DSCRTP database quality assurance
-# code version: 20190415-0
 
 ##### Installation/Loading of Packages #####
 # install.packages('xlsx')
