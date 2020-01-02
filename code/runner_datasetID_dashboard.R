@@ -10,9 +10,14 @@ options(lifecycle_disable_warnings = TRUE)
 
 ##### _____ Bringing in database #####
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
 filt <- indata %>%
   filter(Flag == "0")
+
+# #change all 'missing' values in factors to explicit NA's
+# filt <- filt %>% mutate_if(is.factor,
+#                       fct_explicit_na,
+#                       na_level = "to_impute")
 
 ##### define database version (this variable called in RMD files) #####
 version <- unique(indata$DatabaseVersion)
@@ -20,7 +25,7 @@ version <- as.character(version)
 
 ##### bringing in datasetID key from xls stored on drive #####
 # create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20190920-1_DatasetID_Key_DSCRTP'")
+x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
 
 # # browse to it
 # x %>% drive_browse()
@@ -29,7 +34,9 @@ x <- drive_find(q = "name contains '20190920-1_DatasetID_Key_DSCRTP'")
 y <- x$id
 
 # this downloads the file to the specified path
-dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20190920-1_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
+dl <- drive_download(as_id(y),
+                     path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx",
+                     overwrite = TRUE)
 
 # read the file into R as a data frame
 key <- read.xlsx(dl$local_path)
@@ -42,17 +49,35 @@ rm(x)
 setdiff(filt$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, filt$DatasetID)
 
+##### ***OPTIONAL***updating DatasetID key with new 'n' #####
+
+# build a frequency table by DatasetID
+x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
+names(key)
+
+# strip n from fieds
+y <- key[,1:8]
+names(y)
+
+# merge new numbers
+z <- merge(y,x)
+names(z)
+
+# write out result
+write.xlsx(z, "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx",
+           overwrite = TRUE)
+
 ##### subsetting of indata to d (optional step for testing purposes) #####
 d <- indata %>%
   filter(
-    DatasetID == 'MCZ_IZ' | # Repository
-    DatasetID == 'Hall-Spencer_etal_2007' | # Literature
-    DatasetID == 'SOI_FK006C' | #Cruise
-    DatasetID == 'NOAA_AFSC_Longline_Survey' #Program
+    # DatasetID == 'MCZ_IZ' | # Repository
+    # DatasetID == 'Hall-Spencer_etal_2007' | # Literature
+    DatasetID == 'NOAA_EX-17-03' #| #Cruise
+    # DatasetID == 'NOAA_AFSC_Longline_Survey' #Program
   )
 
 ##### ***OR*** full run set indata to d #####
-d <- filt
+d <- indata
 
 ##### checking #####
 # table(unique(factor(d$DataProvider)))
@@ -114,7 +139,7 @@ setdiff(d$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, d$DatasetID)
 
 ##### merge d (primary subset) with key  #####
-d <- merge(filt, key, all.x = TRUE)
+d <- merge(d, key, all.x = TRUE)
 
 ##### check #####
 # table(d$class, useNA = 'always')
@@ -194,7 +219,8 @@ for (id in unique(yo$DatasetID)){
 ## repository: run RMD on each unique DatasetID group
 yo <- d %>%
   filter(
-    class == 'Repository'
+    class == 'Repository',
+    DatasetID != 'MBARI'
   )
 
 library("rmarkdown")
@@ -253,14 +279,6 @@ setwd("C:/rworking/deepseatools/indata")
 x %>%
   write.csv(paste("20190718-0_DatasetID_Dashboard_Review",".csv", sep = ''), row.names = FALSE)
 
-
-
-
-
-
-
-
-
 ##### updating DatasetID key with new 'n' #####
 
 # build a frequency table by DatasetID
@@ -276,6 +294,6 @@ z <- merge(y,x)
 names(z)
 
 # write out result
-write.xlsx(z, "C:/rworking/deepseatools/indata/20190920-0_DatasetID_Key_DSCRTP.xlsx",
+write.xlsx(z, "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx",
 overwrite = TRUE)
 
