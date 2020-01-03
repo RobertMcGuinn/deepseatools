@@ -4025,6 +4025,77 @@ yo <-readr::read_csv("https://raw.githubusercontent.com/Atrebas/atrebas.github.i
 
 class(yo)
 
+##### quick filters datasetiD #####
+x <- "OET_NA101"
+
+date <- filt %>% filter(DatasetID == x) %>%
+  group_by(ObservationDate) %>%
+  summarize(n=n())
+View(date)
+
+type <- filt %>% filter(DatasetID == x) %>%
+  group_by(RecordType) %>%
+  summarize(n=n())
+View(type)
+
+vessel <- filt %>% filter(DatasetID == x) %>%
+  group_by(Vessel) %>%
+  summarize(n=n())
+View(vessel)
+
+equip <- filt %>% filter(DatasetID == x) %>%
+  group_by(SamplingEquipment) %>%
+  summarize(n=n())
+View(equip)
+
+vehicle <- filt %>% filter(DatasetID == x) %>%
+  group_by(VehicleName) %>%
+  summarize(n=n())
+View(vehicle)
+
+web <- filt %>% filter(DatasetID == x) %>%
+  group_by(WebSite) %>%
+  summarize(n=n())
+View(web)
+
+citation <- filt %>% filter(DatasetID == x) %>%
+  group_by(Citation) %>%
+  summarize(n=n())
+View(citation)
+
+purpose <- filt %>% filter(DatasetID == x) %>%
+  group_by(Purpose) %>%
+  summarize(n=n())
+View(purpose)
+
+comments <- filt %>% filter(DatasetID == x) %>%
+  group_by(SurveyComments) %>%
+  summarize(n=n())
+View(comments)
+
+survey <- filt %>% filter(DatasetID == x) %>%
+  group_by(Vessel, SurveyID, ObservationYear) %>%
+  summarize(n=n())
+View(survey)
+
+locality <- filt %>% filter(DatasetID == x) %>%
+  group_by(Locality) %>%
+  summarize(n=n())
+View(locality)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -10,7 +10,7 @@ output:
 ---
 ```{r setup, include=FALSE}
 
-opts_chunk$set(fig.width=8, fig.height=4)
+opts_chunk$set(fig.width=8, fig.height=4, warning = FALSE, message = FALSE)
 
 ```
 
@@ -136,7 +136,7 @@ Coordinates are in WGS 84: [EPSG:4326](https://spatialreference.org/ref/epsg/wgs
 * **Maximum Longitude:** `r max(sub$Longitude)`
 
 # Overview
-*Note:* The numbers below only reflect published records. Additional records may be retained by the Program for further review (see "Data Quality" section below).
+*Note:* The numbers below only reflect published records. Additional records may be retained by the Program for further review.
 
 * **Number of records:** `r prettyNum(length(sub$CatalogNumber), big.mark = ",")`
 * **Number of coral records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Cnidaria"]), big.mark = ",")` 

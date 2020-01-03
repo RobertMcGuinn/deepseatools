@@ -49,6 +49,9 @@ rm(x)
 setdiff(filt$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, filt$DatasetID)
 
+setdiff(indata$DatasetID, key$DatasetID)
+setdiff(key$DatasetID, indata$DatasetID)
+
 ##### ***OPTIONAL***updating DatasetID key with new 'n' #####
 
 # build a frequency table by DatasetID
@@ -78,6 +81,7 @@ d <- indata %>%
 
 ##### ***OR*** full run set indata to d #####
 d <- indata
+rm(indata)
 
 ##### checking #####
 # table(unique(factor(d$DataProvider)))
