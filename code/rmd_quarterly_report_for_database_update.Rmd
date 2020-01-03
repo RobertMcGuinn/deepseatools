@@ -4,13 +4,45 @@ author: "NOAA-NFMS-OHC-DSCRTP"
 date: 'Robert.McGuinn@NOAA.gov; 843-460-9696. Report last ran: `r Sys.Date()`'
 output: word_document
 ---
-```{r settings_data, echo=FALSE}
 
-quarter <- "Q4, FY-2019"
-version <- "DSCRTP_NatDB_20190920-0"
-releasedate <- "2019-09-30"
-corrections <- 19596
+```{r load_both_db, echo=FALSE}
+
+# setwd("C:/rworking/deepseatools/indata")
+# indata1<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
+# filt1 <- indata1 %>%
+#   filter(Flag == "0")
+# 
+# setwd("C:/rworking/deepseatools/indata")
+# indata2<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+# filt2 <- indata2 %>%
+#   filter(Flag == "0")
+
+z <- max(as.numeric(filt1$CatalogNumber))
+# y <- max(as.numeric(filt2$CatalogNumber))
+
+# filt <- filt2
+# rm(filt2)
+
+x <- filt %>% 
+  filter(as.numeric(CatalogNumber) > z, 
+         DatasetID != 'HURL' , 
+           DatasetID != 'MCZ_IZ' , 
+           DatasetID != 'NMNH_IZ'
+         )
+
+# check
+
 ```
+
+
+```{r manual_set_variables, echo=FALSE}
+
+quarter <- "Q1, FY-2020"
+version <- "DSCRTP_NatDB_20191217-0"
+releasedate <- "2020-01-15"
+corrections <- 336
+```
+
 
 ```{r load_functions, warning = FALSE, message=FALSE, echo=FALSE}
 
@@ -25,37 +57,13 @@ TrimAll <- function(x){
 
 ```
 
-```{r load big data, echo=FALSE, cache=TRUE}
-##### Load Global Dataset ##### 
-# indata <- read.csv(paste("C:/rworking/digs/indata/", paste(version,".csv",sep=""), sep = ""), header = T)
-# indata<- indata %>% filter(Latitude != "-999", Longitude != "-999", Flag == "0")
-
-```
-
-```{r filter_big_data, echo=FALSE, cache=FALSE}
-# this is used to filter to only the new records
-
-x <- filt %>% 
-  filter(CatalogNumber > 950223)
-
-# check
-# table(factor(x$DatasetID))
-# yo <- table(factor(x$DatasetID))
-# length(yo)
-# 
-# table(factor(x$EntryDate))
-# yo <- table(factor(x$EntryDate))
-# length(yo)
-
-```
-
 # Quarterly update for: `r quarter`
 ## Database Version: `r version`
 
 The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(length(unique(x$DatasetID)), big.mark = ',')`** new datasets were added with a total of **`r prettyNum(length(x$CatalogNumber), big.mark = ',')`** new records, for a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
 
 Go here to view and download custom data subsets of your choosing:
-https://deepseacoraldata.noaa.gov/website/AGSViewers/DeepSeaCorals/mapSites.htm
+https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm
 
 *A big thank you to all of our data providers! We hope this database is providing a needed service to deep sea coral and sponge conservation. We welcome your questions and feedback.*
 
