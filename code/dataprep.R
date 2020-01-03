@@ -1,4 +1,4 @@
-##### Installation/Loading of Packages ##### 
+##### Installation/Loading of Packages #####
 #install.packages("pacman")
 library(pacman)
 #pacman::p_load(captioner, bundesligR)
@@ -82,21 +82,21 @@ d5 <- read.csv("C:/rworking/digs/indata/DSCRTP_NatDB_20171214_0_Subset_TH_NMNH.c
 # table(d3$Flag)
 # table(d4$Flag)
 # table(d5$Flag)
-# 
+#
 # setdiff(names(d1), names(d2))
 # setdiff(names(d2), names(d1))
-# 
+#
 # setdiff(names(d1), names(d3))
 # setdiff(names(d3), names(d1))
-# 
+#
 # setdiff(names(d1), names(d4))
 # setdiff(names(d4), names(d1))
-# 
+#
 # setdiff(names(d1), names(d5))
 # setdiff(names(d5), names(d1))
 
 
-##### corrections to Farrington set ##### 
+##### corrections to Farrington set #####
 #View(d4)
 #d4$VerbatimLatitude
 # use negation in grepl selection.
@@ -164,12 +164,13 @@ d <- do.call("rbind", list(d1, d2, d3, d4corr, d5))
 ##### checking #####
 #dim(d)
 #table(d$Flag)
+#table(d$Flag)
 
 ##### writing a copy of the clean set
 setwd("C:/rworking/digs/outdata")
 write.csv(d, 'DSCRTP_NatDB_20171214_0_Subset_Plus_Ocean_Sciencies_RPMcGuinn.csv', row.names = F, quote = T)
 
-##### mapit ##### 
+##### mapit #####
 x <- d[d$Flag == '0' | d$Flag == '2',]
 
 ##### map #####
@@ -177,10 +178,10 @@ x <- d[d$Flag == '0' | d$Flag == '2',]
 library(leaflet)
 m <- leaflet()
 m <- addProviderTiles(m, "Esri.OceanBasemap")
-m <- addCircleMarkers(m, data=x, 
-                      radius=5, 
-                      weight=0, 
-                      fillColor= "blue", 
+m <- addCircleMarkers(m, data=x,
+                      radius=5,
+                      weight=0,
+                      fillColor= "blue",
                       fillOpacity=1,
                       popup = paste(
                         "<b><em>","Flag:","</b></em>", x$Flag, "<br>",
@@ -199,7 +200,7 @@ m <- addCircleMarkers(m, data=x,
                         "<b><em>","Latitude:","</b></em>", x$Latitude, "<br>",
                         "<b><em>","Longitude:","</b></em>", x$Longitude, "<br>",
                         "<b><em>","Image:","</b></em>",x$ImageURL)
-                      
+
 )
 m
 
