@@ -1,0 +1,16 @@
+##### first change your directory to where VLC lives #####
+cd C:\Program Files\VideoLAN\VLC\
+
+##### extracting frames from MOV #####
+vlc c:\rworking\deepseatools\vid\vid.mov --video-filter=scene --vout=dummy --start-time=5 --stop-time=6 --scene-ratio=1 --scene-path="c:\rworking\deepseatools\vid\vidcaps" vlc://quit
+
+##### extracting frames from MP4 (seems like you need to leave out --vout=dummy to make MP4 work, not sure why.
+
+vlc c:\rworking\deepseatools\vid\vid2.mp4 --video-filter=scene --start-time=366 --stop-time=367 --scene-ratio=36 --scene-path="c:\rworking\deepseatools\vid\vidcaps" vlc://quit
+
+##### this will open and play a video
+
+vlc "c:rworking\deepseatools\vid\vid.mov"
+
+
+

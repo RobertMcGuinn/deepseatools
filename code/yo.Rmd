@@ -25,7 +25,7 @@ options(scipen=10000)
 options(digits = 0)
 ```
 
-``` {r data_intake, echo=FALSE, warning=FALSE, message=FALSE, eval = F}
+``` {r data_intake, echo=FALSE, warning=FALSE, message=FALSE, eval = T}
 
 ##### input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")

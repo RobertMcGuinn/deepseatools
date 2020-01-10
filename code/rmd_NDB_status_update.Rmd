@@ -70,10 +70,6 @@ filt <- filt %>% mutate(DataProvider =
                                  as.character(DataProvider)))
 
 
-"NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i"
-
-"NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i"     
-
 
 ##### data improvements (from version DSCRTP_NatDB_20171214-0): Recorded in Redmine #####
 # filt <- filt %>% filter(ObservationYear != "-999" | 
@@ -413,22 +409,22 @@ The National Database contains contributions from museums, research programs, re
  
   
 ``` {r dataprovider_table, echo=FALSE}
-options(scipen=999)
-# create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
-
-# # browse to it
-# x %>% drive_browse()
-
-# getting the id as a character string
-y <- x$id
-
-# this downloads the file to the specified path
-dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
-
-# read the file into R as a data frame
-key <- read.xlsx(dl$local_path)
-d <- merge(filt, key, all.x = TRUE)
+# options(scipen=999)
+# # create a list of files (or single file) that meets title query
+# x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
+# 
+# # # browse to it
+# # x %>% drive_browse()
+# 
+# # getting the id as a character string
+# y <- x$id
+# 
+# # this downloads the file to the specified path
+# dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
+# 
+# # read the file into R as a data frame
+# key <- read.xlsx(dl$local_path)
+# d <- merge(filt, key, all.x = TRUE)
 
 # checking merge step
 # View(d %>% filter(DataProvider == 'Ross (2012)') %>% 
@@ -437,12 +433,14 @@ d <- merge(filt, key, all.x = TRUE)
 
 x <-
   d %>%
-  group_by(DataProvider) %>% 
-  summarize(class = paste(unique(class), collapse= " | "),
+  group_by(DataProvider, class) %>% 
+  summarize(#class = paste(unique(class), collapse= " | "),
             #Number_Datasets = length(unique(DatasetID)),
             DatasetIDs = paste(unique(DatasetID), collapse= " | "),
     Records = n()
             )
+
+x <- x[,c("DataProvider","DatasetIDs","class","Records")]
 
 colkeys <- col_keys <- c("Records")
 
@@ -451,13 +449,12 @@ ft <- flextable(x) %>%
   colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all") %>% #header, body, all
   fontsize(size = 10) %>% 
-  width(j = ~ DatasetIDs + DataProvider, width = 2.5) %>%
-  width(j = ~ class, width = .9) %>%
-  #merge_v(j = c('class')) %>% 
+  flextable::width(j = ~ DatasetIDs + DataProvider, width = 2.5) %>%
+  flextable::width(j = ~ class, width = .9) %>%
+  merge_v(j = c('DataProvider')) %>% 
   set_header_labels(class = "Type of Data",
                     Records = "# of Records")
 ft
-
 
 
 ```
