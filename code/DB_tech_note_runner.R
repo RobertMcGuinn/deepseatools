@@ -40,7 +40,7 @@ x <- "yo"
 render("C:/rworking/deepseatools/code/yo.rmd",
        output_file =  paste(x,".doc", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports/2019_status_update_report/',
-       clean = FALSE)
+       clean = TRUE)
 
 
 
