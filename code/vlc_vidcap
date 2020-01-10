@@ -1,6 +1,6 @@
 ##### Header #####
 # author: Robert McGuinn, rpm@alumni.duke.edu
-# purpose: a range of command line commands extracting pics from video using VLC scene moduil
+# purpose: a range of command line commands extracting pics from video using VLC scene module
 # original documentation of VLC 'scene' module : https://wiki.videolan.org/Documentation:Modules/scene/
 
 ##### first change your directory to where VLC lives on your machine #####
