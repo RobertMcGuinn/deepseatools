@@ -15,7 +15,7 @@ vlc c:\rworking\deepseatools\vid\vid2.mp4 --video-filter=scene --start-time=366 
 
 ##### this will open and play a video
 
-vlc "c:rworking\deepseatools\vid\vid.mov"
+vlc "c:\rworking\deepseatools\vid\vid2.mp4"
 
 
 
