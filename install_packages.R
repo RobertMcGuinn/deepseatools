@@ -85,7 +85,9 @@ library(jsonlite) #https://cran.r-project.org/web/packages/jsonlite/
 library(httr)
 # install.packages("rgbif")
 library(rgbif)
-
+# install.packages("imager")
+library(imager)
+library(tools)
 
 
 

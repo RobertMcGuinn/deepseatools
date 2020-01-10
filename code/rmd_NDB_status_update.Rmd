@@ -14,13 +14,13 @@ source('C:/rworking/deepseatools/install_packages.R')
 
 ##### knitr options #####
 knitr::opts_chunk$set(
-  fig.width = 8, 
-  fig.asp = .60, 
+  fig.width = 8.0, 
+  fig.asp = .5, 
   warning = FALSE,
   message=FALSE,
   cache = TRUE,
   dpi = 300, 
-  dev = c('png'), 
+  dev = c('png'), cache.lazy = FALSE, 
   fig.path="C:/rworking/deepseatools/reports/2019_status_update_report/figures/") 
 
 options(scipen=10000)
@@ -32,14 +32,48 @@ options(digits = 0)
 ``` {r data_intake, echo=FALSE, warning=FALSE, message=FALSE}
 
 ##### input: latest version of NDB #####
-# setwd("C:/rworking/deepseatools/indata")
-# indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
-# filt <- indata %>%
-#   filter(Flag == "0")
+
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
 
 ```
 
+``` {r merge_key, eval=T}
+x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
+
+# # browse to it
+# x %>% drive_browse()
+
+# getting the id as a character string
+y <- x$id
+
+# this downloads the file to the specified path
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
+
+# read the file into R as a data frame
+key <- read.xlsx(dl$local_path)
+d <- merge(filt, key, all.x = TRUE)
+```
+
 ``` {r data_prep, echo=FALSE, warning=FALSE, message=FALSE}
+##### data improvements (from version DSCRTP_NatDB_20191217-0)#####
+
+filt <- filt %>% mutate(DataProvider =
+                          ifelse(DataProvider == "California Academy of Sciences (CAS)",
+                                              'California Academy of Sciences',
+                                              as.character(DataProvider)))
+
+filt <- filt %>% mutate(DataProvider =
+                          ifelse(DataProvider == "NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i", "NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i", 
+                                 as.character(DataProvider)))
+
+
+"NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i"
+
+"NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i"     
+
 
 ##### data improvements (from version DSCRTP_NatDB_20171214-0): Recorded in Redmine #####
 # filt <- filt %>% filter(ObservationYear != "-999" | 
@@ -105,16 +139,15 @@ options(digits = 0)
 ``` {r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
 ##### download Google Sheet version of schema for use in R  documents ##### 
 # Register and download Google Sheet
-# s <- gs_title('2019_DSCRTP_National_Database_Schema')
-# #s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
-# s <- gs_read(s)
-# # s<- s[,-(33:35)]
+s <- gs_title('2019_DSCRTP_National_Database_Schema')
+#s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+s <- gs_read(s)
+# s<- s[,-(33:35)]
 #names(s)
 
 ```
 
-``` {r setup_variables,  echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
-version <- '20190920-0'
+``` {r setup_variables, echo=FALSE, warning=FALSE, message=FALSE}
 
 # length of unflagged records 
 a <- round(length(filt$CatalogNumber), -4)
@@ -376,13 +409,13 @@ Some types of content are added to the DSCRTP web portal as they become availabl
   
 The National Database contains contributions from museums, research programs, research cruises, and literature (**Table 1**). The database currently contains data contributions from `r c` unique data providers.
 
-#### Table 1: Data providers and the number of data sets and records contributed by each to NOAA's National Database for Deep-Sea Corals and Sponges. `r c` data providers and `r b` individual data sets.
-  
+#### Table 1: Data providers to NOAA's National Database for Deep-Sea Corals and Sponges. `r c` data providers and `r b` individual data sets.
+ 
   
 ``` {r dataprovider_table, echo=FALSE}
 options(scipen=999)
 # create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20190920-1_DatasetID_Key_DSCRTP'")
+x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
 
 # # browse to it
 # x %>% drive_browse()
@@ -391,41 +424,41 @@ x <- drive_find(q = "name contains '20190920-1_DatasetID_Key_DSCRTP'")
 y <- x$id
 
 # this downloads the file to the specified path
-dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20190920-1_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
 
 # read the file into R as a data frame
 key <- read.xlsx(dl$local_path)
 d <- merge(filt, key, all.x = TRUE)
 
+# checking merge step
+# View(d %>% filter(DataProvider == 'Ross (2012)') %>% 
+#   group_by(DatasetID, DataProvider, class) %>% 
+#   summarize(n=n()))
 
 x <-
   d %>%
-  group_by(class, DataProvider) %>% 
-  summarize(
-    Number_Datasets = length(unique(DatasetID)),
+  group_by(DataProvider) %>% 
+  summarize(class = paste(unique(class), collapse= " | "),
+            #Number_Datasets = length(unique(DatasetID)),
+            DatasetIDs = paste(unique(DatasetID), collapse= " | "),
     Records = n()
             )
 
-colkeys <- names(x[,-1])
+colkeys <- col_keys <- c("Records")
+
 ft <- flextable(x) %>% 
   theme_box() %>% #booktabs, vanilla, box, tron, tron_legacy
-  set_header_labels(class = "Type of Data", Number_Datasets = "# of Data Sets", Records = "# of Records") %>% 
   colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
-  font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  autofit() %>% 
-  width(j = ~ DataProvider, width = 4.2)
-  
-
+  font(fontname = "Cambria", part = "all") %>% #header, body, all
+  fontsize(size = 10) %>% 
+  width(j = ~ DatasetIDs + DataProvider, width = 2.5) %>%
+  width(j = ~ class, width = .9) %>%
+  #merge_v(j = c('class')) %>% 
+  set_header_labels(class = "Type of Data",
+                    Records = "# of Records")
 ft
 
 
-
-doc <- read_docx()
-doc <- body_add_flextable(doc, value = ft)
-fileout <- tempfile(fileext = ".docx")
-setwd("C:/rworking/deepseatools/indata")
-fileout <- "table.docx" # uncomment to write in your working directory
-print(doc, target = fileout)
 
 ```
 
@@ -479,13 +512,13 @@ The Program is intent on building a high-quality, value-added aggregation of dee
 
 * These automated routines accomplish the following tasks:  
   
-** Check field names and transform them where necessary.  
++ Check field names and transform them where necessary.    
 
-** Add any missing field names to complete the schema structure.  
++ Add any missing field names to complete the schema structure.      
 
-** Populate null values with the appropriate entries, '-999' for integer and 'NA' for text.  
++ Populate null values with the appropriate entries, '-999' for integer and 'NA' for text.    
 
-** Rearrange the data set in a standardized column order.    
++ Rearrange the data set in a standardized column order.    
 
 #### 
 
@@ -539,41 +572,27 @@ All of the public and private fields for are listed in **Table 2a** and **Table 
 s$DSCRTPCategory <- factor(s$DSCRTPCategory, levels = c("Survey Data","Event Data","Observation Data","TaxonomicID","Environment","Occurrence Detail","GIS Enhancement","Metadata","Record Keeping","Flag"))
 
 x <-
-  s %>% arrange(FieldName) %>% 
+  s %>% arrange(FieldOrder) %>% 
   filter(InternalUseOnly == '0') %>%
   group_by(DSCRTPCategory) %>% 
-  summarize(Field_Names = toString(unique(FieldName)),
+  summarize(FieldName = paste(unique(FieldName), collapse= " | "),
             n = n())
 
-
-colkeys <- names(x[,-1])
+# colkeys <- names(x[,-1])
 ft <- flextable(x) %>% 
   theme_vanilla() %>% #booktabs, vanilla, box, tron, tron_legacy
-  set_header_labels(Field_Names = "Field Name", n = "# of Fields", DSCRTPCategory = "DSCRTP Category") %>% 
-  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  set_header_labels(FieldName = "Field Name", n = "# of Fields", DSCRTPCategory = "DSCRTP Category") %>% 
+  #colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 11, part = "body") %>% 
-  #autofit() %>% 
+  # autofit() %>% 
   width(j = ~ n, width = 1.2) %>% 
   width(j = ~ DSCRTPCategory, width = 1.5) %>% 
-  width(j = ~ Field_Names, width = 4) %>% 
+  width(j = ~ FieldName, width = 4) %>% 
   align(j = 1:2, align = "left", part = "all") %>% 
   align(j = 3, align = "center", part = "all")
 
-
 ft
-
-
-# sum_tbl <- kable(sum_tbl, 
-#                  row.names = F, 
-#                  digits = 2,
-#                  col.names = c('Field Category', 'Field Name', 'Number of Fields'))
-# 
-# options(scipen=10000)
-# sum_tbl
-
-#setwd("C:/rworking/digs/outdata")
-#write.csv(sum_tbl,"20180216_0_Field_Summary_Schema_20180216-0.csv", row.names = F, quote = T)
 
 ```
   
@@ -586,27 +605,25 @@ ft
 s$DSCRTPCategory <- factor(s$DSCRTPCategory, levels = c("Survey Data","Event Data","Observation Data","TaxonomicID","Environment","Occurrence Detail","GIS Enhancement","Metadata","Record Keeping","Flag"))
 
 x <-
-  s %>% arrange(FieldName) %>% 
+  s %>% arrange(FieldOrder) %>% 
   filter(InternalUseOnly == '1') %>%
   group_by(DSCRTPCategory) %>% 
-  summarize(Field_Names = toString(unique(FieldName)),
+  summarize(FieldName = paste(unique(FieldName), collapse= " | "),
             n = n())
 
-
-colkeys <- names(x[,-1])
+# colkeys <- names(x[,-1])
 ft <- flextable(x) %>% 
   theme_vanilla() %>% #booktabs, vanilla, box, tron, tron_legacy
-  set_header_labels(Field_Names = "Field Name", n = "# of Fields", DSCRTPCategory = "DSCRTP Category") %>% 
-  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  set_header_labels(FieldName = "Field Name", n = "# of Fields", DSCRTPCategory = "DSCRTP Category") %>% 
+  #colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 11, part = "body") %>% 
-  autofit() %>% 
+  # autofit() %>% 
   width(j = ~ n, width = 1.2) %>% 
   width(j = ~ DSCRTPCategory, width = 1.5) %>% 
-  width(j = ~ Field_Names, width = 4) %>% 
+  width(j = ~ FieldName, width = 4) %>% 
   align(j = 1:2, align = "left", part = "all") %>% 
   align(j = 3, align = "center", part = "all")
-
 
 ft
 
@@ -1377,6 +1394,8 @@ RStudio Team (2016) RStudio: Integrated Development for R. RStudio, Inc., Boston
 
 Scanlon, K.M., R.G. Waller, A.R. Sirotek, J.M. Knisel, J.J. O'Malley, and S. Alesandrini (2010) USGS cold-water coral geographic database-Gulf of Mexico and western North Atlantic Ocean, version 1.0: U.S. Geological Survey Open-File Report 2008-1351. Available from https://pubs.usgs.gov/of/2008/1351/.
 
+#####  
+
 ## Appendix 1: Summary of occurrence records by Family
 
 Summary of all occurrence records in the database grouped and listed alphabetically by 'Family'. The number of genera ('Genus') with records in the database within in each family is reported in the column named 'Genera' in the table below. For records listed only at the Family level, Genus will be 'NA'. The column heading '# of Records' represents the number of records within each family. 
@@ -1609,7 +1628,7 @@ ft
   
 ## Appendix 4: Data set Dashboards
 
-Each of the data sets in the database has a unique 'DatasetID'. There are currently 695,335 records in the database composed of `r length(unique(filt$DatasetID))` individual data sets from `r length(unique(filt$DataProvider))` different data providers. You will find an interactive dashboard for each data set at the following location: https://deepseacoraldata.noaa.gov/DatasetID_Table/DatasetID_Table.html These dashboards provide important information about each constituent data set that makes up the National Database and to download each set individually with ISO compliant metadata.
+Each of the data sets in the database has a unique 'DatasetID'. There are currently `r length(filt$CatalogNumber)` records in the database composed of `r length(unique(filt$DatasetID))` individual data sets from `r length(unique(filt$DataProvider))` different data providers. You will find an interactive dashboard for each data set at the following location: https://deepseacoraldata.noaa.gov/DatasetID_Table/DatasetID_Table.html These dashboards provide important information about each constituent data set that makes up the National Database and to download each set individually with ISO compliant metadata.
 
 
 

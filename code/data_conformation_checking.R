@@ -1,74 +1,57 @@
-##### New Data Patch / Initial Conform #####
+##### Header #####
 # Original Code Author: Robert McGuinn (rpm@alumni.duke.edu, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu)
-# Latest Status: Working with new Google Drive import of the schema.
+# Latest Status: working with new datasets.
 
-##### Installation/Loading of Packages #####
-library(stringr)
-library(knitr)
-library(maptools)
-library(maps)
-
-#install.packages("psych")
-
-library(psych)
-
-#install.packages("ggplot2")
-
-library(ggplot2)
-
-#install.packages("data.table")
-
-library(data.table)
-
-#install.packages("dplyr")
-library(dplyr)
-
-#install.packages("car")
-
-#library(car)
-
-#install.packages("gdata")
-
-library(gdata)
-
-library(stringr)
-
-#install.packages("rgdal")
-
-library(rgdal)
-
-library(ggmap)
-
-require(gdata)
-library(googlesheets)
-library(googledrive)
-
-##### Data Input and Preparation #####
-#set variables
+##### load dataset from CSV #####
 DatasetID <- "20180712_1_R2006_database-TH_RPMcGuinn"
-taxdataID <- "20180618_1_taxonomy.csv"
+d <- read.csv(paste("C:/rworking/digs/indata/", paste(DatasetID, ".csv", sep = ""), sep = ""),header = T)
 
-#bring in input data
-indata <- read.csv(paste("C:/rworking/digs/indata/", paste(DatasetID, ".csv", sep = ""), sep = ""),header = T)
-#indata <-read.table(paste("C:/rworking/digs/indata/", paste(DatasetID, ".txt", sep = ""), sep = ""), sep = "\t", allowEscapes=T, header = T)
+##### ***OR*** get modified and original datasets via Excel #####
+setwd("C:/rworking/deepseatools/indata")
+d <- read.xlsx('SeaTubeAnnotations_20190621_Dive01.000Z.xlsx', sheet = 1)
 
-#bring in input schema
-# Register and download Google Sheet
-s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
-schema<- gs_read(s)
-#gs_browse(s)
+##### browse google drive image #####
+x <- basename(d$ImageFilePath)
+x <- x[1]
+x <- paste('~/SeaTubeImages_20190621_Dive01.000Z/', x, sep = '')
+z <- team_drive_get("SeaTubeImages_20190621_Dive01.000Z")
 
-setwd("C:/rworking/digs/indata")
-write.csv(schema, "2018_DSCRTP_Schema.csv")
-schema <- read.csv(paste("C:/rworking/digs/indata/", paste("2018_DSCRTP_Schema", ".csv", sep = ""), sep = ""),header = T)
+##### load taxonomy google sheets #####
 
-#bring in taxonomy table
-tax <- read.csv(paste("C:/rworking/digs/indata/", taxdataID, sep = ""), header = T)
+# https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
+
+n <- '20191217-2'
+
+taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
+gs_browse(taxfl)
+taxfl <- gs_read(taxfl)
+
+taxch <- gs_title(paste(n, '_taxonomy_to_change', sep = ''))
+gs_browse(taxch)
+taxch <- gs_read(taxch)
+
+tax <- gs_title(paste(n, '_taxonomy', sep = ''))
+gs_browse(tax)
+tax <- gs_read(tax)
+
 
 #deduplicate the taxonomy table
 tax <- subset(tax,!duplicated(tax$ScientificName))
 
-##### Define Key Functions #####
+##### load schema #####
+s <- gs_title('2019_DSCRTP_National_Database_Schema')# gs_browse(s)
+# s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+s <- gs_read(s)
+# names(s)
+
+
+##### look at images
+setwd("C:/rworking/deepseatools/indata")
+fpath <- system.file('extdata/Leonardo_Birds.jpg', package='imager')
+im <- load.image(fpath)
+plot(im)
+
+##### define key functions #####
 Trim <- function(x){
   gsub("^\\s+|\\s+$", "", x)
 }
@@ -101,16 +84,15 @@ String <- function(x="") {
 }
 print.String <- function(x, ...) cat(x, "\n")
 
-##### Define DSCRTP Schema Templates #####
-
+##### character variables and numeric variables #####
 # Full DSCRTP schema variables template
-#TMPL_FullVariables <- read.csv("c:/rworking/digs/templates/20150604_TMPL_FullVariables.csv", header = F, stringsAsFactors = FALSE)
-TMPL_FullVariables <- schema$FieldName
+# TMPL_FullVariables <- read.csv("c:/rworking/digs/templates/20150604_TMPL_FullVariables.csv", header = F, stringsAsFactors = FALSE)
+TMPL_FullVariables <- s$FieldName
 TMPL_FullVariables <- as.character(TMPL_FullVariables)
 TMPL_FullVariables <- Trim(TMPL_FullVariables)
 
 # DSCRTP schema numeric variables template
-schemafilt <- schema %>% filter(
+schemafilt <- s %>% filter(
   DataType == "Float" |
   DataType == "Integer" |
   DataType == "Logical"
@@ -122,7 +104,7 @@ TMPL_NumVariables <- Trim(TMPL_NumVariables)
 
 # DSCRTP schema text variables template
 
-schemafilt <- schema %>%
+schemafilt <- s %>%
   filter(
     DataType == "Character" |
       DataType == "Date" |
@@ -133,12 +115,9 @@ TMPL_CharVariables <- schemafilt$FieldName
 TMPL_CharVariables <- as.character(TMPL_CharVariables)
 TMPL_CharVariables <- Trim(TMPL_CharVariables)
 
-##### Define Standards for the Data Category #####
-# Load templates for REQUIRED and DESIRED fields:
-# These will be in the "templates" directory
-# It is critical that you load the templates for the correct data category
+##### required/desired variables #####
 
-schemafilt <- schema %>%
+schemafilt <- s %>%
   filter(
     PointProgram == "R"
   )
@@ -147,7 +126,7 @@ TMPL_RequiredFields <- schemafilt$FieldName
 TMPL_RequiredFields <- as.character(TMPL_RequiredFields)
 TMPL_RequiredFields <- Trim(TMPL_RequiredFields)
 
-schemafilt <- schema %>%
+schemafilt <- s %>%
   filter(
     PointProgram == "D"
   )
@@ -156,9 +135,8 @@ TMPL_DesiredFields <- schemafilt$FieldName
 TMPL_DesiredFields <- as.character(TMPL_DesiredFields)
 TMPL_DesiredFields <- Trim(TMPL_DesiredFields)
 
-##### Data conformation #####
 ##### Remove Unnecessary "GIS" Variables #####
-indata <- indata[,grepl("gis", names(indata)) == F]
+d <- d[,grepl("gis", names(d)) == F]
 
 ##### Correct "Commonly Misspelled" Variables #####
 x <-which(colnames(indata) == "OccurrenceComments.1")
@@ -369,14 +347,14 @@ x <-which(colnames(indata) == "LocationComment")
 colnames(indata)[x] <- "LocationComments"
 
 ##### Check schema matching #####
-setdiff(names(indata), TMPL_FullVariables)
-setdiff(TMPL_FullVariables, names(indata))
+setdiff(names(d), TMPL_FullVariables)
+setdiff(TMPL_FullVariables, names(d))
 
-setdiff(TMPL_RequiredFields, names(indata))
-setdiff(names(indata),TMPL_RequiredFields)
+setdiff(TMPL_RequiredFields, names(d))
+setdiff(names(d),TMPL_RequiredFields)
 
-setdiff(TMPL_DesiredFields, names(indata))
-setdiff(names(indata),TMPL_DesiredFields)
+setdiff(names(d),TMPL_DesiredFields)
+setdiff(TMPL_DesiredFields, names(d))
 
 ##### Add Remaining Template Variables #####
 namevector<-setdiff(TMPL_FullVariables, names(indata))

@@ -4084,6 +4084,31 @@ locality <- filt %>% filter(DatasetID == x) %>%
 View(locality)
 
 
+##### quick summary for Tom Hourigan RTC #####
+
+x <- filt %>%
+  filter(DatasetID == "NOAA_SS-12-08" |
+           DatasetID == "NOAA_AE-14-04" |
+           DatasetID == "NOAA_VA-14-08") %>%
+  group_by(DatasetID, EventID, VernacularNameCategory) %>%
+  summarize(sum_IndividualCount = sum(IndividualCount),
+            n_records = n())
+  #View()
+
+setwd("C:/rworking/deepseatools/indata")
+write.xlsx(x, "20190109-0_summary_Bering_Aleutian_dropcam_NDB_20191217-0_RPMcGuinn.xlsx")
+
+
+##### get image from Google Drive #####
+head(d$Image)
+i = ''
+i <- gs_title(i)
+gs_browse(taxfl)
+
+
+
+
+
 
 
 
