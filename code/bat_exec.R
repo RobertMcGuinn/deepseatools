@@ -7,11 +7,24 @@
 setwd("C:/rworking/deepseatools/indata")
 x <- read.xlsx('annotations.xlsx', sheet = 1)
 
-##### build batch file for commands #####
+##### build commands for video stored on disk #####
+
 x$cmd <- paste('vlc ', x$vidpath,' ',
                '--video-filter=scene --start-time=',
                x$start, ' ', '--stop-time=', x$stop, ' ', '--scene-ratio=', x$fps, ' ',
+               '--scene-prefix=',x$annotationID,'_',x$start,'_',x$stop,'_',' ',
                '--scene-path=', x$stillpath, ' ', 'vlc://quit', sep = '')
+
+
+##### ***OR*** build commands for videos stored on youtube (change excel input to 'annotations_yt.xlsx) #####
+
+# x$cmd <- paste('vlc ','-vvv',' ', x$vidpath,' ',
+#                '--video-filter=scene --start-time=',
+#                x$start, ' ', '--stop-time=', x$stop, ' ', '--scene-ratio=', x$fps, ' ',
+#                '--scene-prefix=',x$annotationID,'_',x$start,'_',x$stop,'_',' ',
+#                '--scene-path=', x$stillpath, ' ', 'vlc://quit', sep = '')
+
+##### build *.bat file #####
 
 bat <- x$cmd
 bat <- data.frame(bat)

@@ -17,5 +17,15 @@ vlc c:\rworking\deepseatools\vid\vid2.mp4 --video-filter=scene --start-time=366 
 
 vlc "c:\rworking\deepseatools\vid\vid2.mp4"
 
+##### capturing frame grabs from a youtube stream
+
+cd C:\Program Files\VideoLAN\VLC\
+
+vlc -vvv https://www.youtube.com/watch?v=_zOHKSzH4OQ --video-filter=scene --start-time=85 --stop-time=85.5 --scene-ratio=24 --scene-prefix=hey --scene-path="c:\rworking\deepseatools\vid\vidcaps" vlc://quit
+
+
+
+
+
 
 
