@@ -88,6 +88,7 @@ library(rgbif)
 # install.packages("imager")
 library(imager)
 library(tools)
+library(stringr)
 
 
 

@@ -4133,3 +4133,64 @@ gs_browse(taxfl)
 
 
 
+
+##### trouble-shooting dataset NOAA_PU-11-08 #####
+x <- filt %>% filter(DatasetID == 'NOAA_PU-11-08') %>%
+  group_by(ObservationDate, ObservationYear, SamplingEquipment) %>%
+  summarize(n=n())
+
+table(filt$SamplingEquipment)
+
+x <- filt %>% filter(DatasetID == 'NOAA_PU-14-13') %>%
+  group_by(ObservationDate, ObservationYear, SamplingEquipment) %>%
+  summarize(n=n())
+
+table(filt$SamplingEquipment)
+
+##### helping Lindsey Kraatz #####
+
+# get list of file names in Google Folder
+
+x <- drive_ls(path = 'NOAA')
+x <- arrange(x, desc(name))
+
+setwd("C:/rworking/deepseatools/indata")
+
+write.xlsx(x, '20190117-0_Lindsey Kraatz_images.xlsx')
+
+# initial separation of file names
+
+y <- x %>% separate(name, c('ScientificName', 'DepthInMeters', 'Locality'), sep = ',')
+
+# extract depths
+
+y$DepthInMeters2 <- as.numeric(str_extract(y$DepthInMeters, "[0-9]+"))
+
+##### get images #####
+#29	Plumarella sp., 494 m West Florida Escarpment, NOAA-Pelagic Research Services.jpg
+
+name <- "Plumarella"
+yo <- 29
+z <- filt %>% filter(is.na(ImageURL) == F,
+                #ScientificName == y$ScientificName[yo],
+                grepl(name, ScientificName)
+                DepthInMeters > y$DepthInMeters2[yo] - 1,
+                DepthInMeters < y$DepthInMeters2[yo] + 1
+                )
+
+setwd("C:/rworking/deepseatools/indata/imageset")
+for(i in 1:length(z$CatalogNumber)){
+  download.file(as.character(z$ImageURL[i]),
+                destfile = paste(z$CatalogNumber[i],
+                                 z$ScientificName[i],
+                                 z$DepthInMeters[i],
+                                 z$Locality[i],
+                                 basename(as.character(z$ImageURL[i])),
+                                 sep = '_'),
+                mode = "wb")
+}
+
+
+
+
+
