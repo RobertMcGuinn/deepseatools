@@ -14,6 +14,9 @@ indata<-read_csv("DSCRTP_NatDB_20191217-0.csv", na = c("-999", "NA"))
 filt <- indata %>%
   filter(Flag == "0")
 
+##### removing records that do not have AphiaID #####
+filt <- filt %>% filter(is.na(filt$AphiaID) == F)
+
 ##### creating errdap_link field #####
 filt$references <- paste('https://ecowatch.ncddc.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatasetID%2CCatalogNumber%2CSampleID%2CCitation%2CRepository%2CScientificName%2CVernacularNameCategory%2CTaxonRank%2CIdentificationQualifier%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CObservationDate%2CSurveyID%2CStation%2CEventID%2CSamplingEquipment%2CLocationAccuracy%2CRecordType%2CDataProvider&CatalogNumber=',
                           filt$CatalogNumber, sep = '')
@@ -97,7 +100,7 @@ recode_list <- list('specimen' = 'PreservedSpecimen',
 obis$basisOfRecord <- recode(obis$basisOfRecord, !!!recode_list)
 
 ##### write out file for submission #####
-today <- '20190122-1'
+today <- '20190122-2'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
