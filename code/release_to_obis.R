@@ -8,7 +8,7 @@
 
 ##### load NDB #####
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+indata<-read_csv("DSCRTP_NatDB_20191217-0.csv", na = c("-999", "NA"))
 
 ##### filter the NDB #####
 filt <- indata %>%
@@ -18,10 +18,22 @@ filt <- indata %>%
 filt$references <- paste('https://ecowatch.ncddc.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatasetID%2CCatalogNumber%2CSampleID%2CCitation%2CRepository%2CScientificName%2CVernacularNameCategory%2CTaxonRank%2CIdentificationQualifier%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CObservationDate%2CSurveyID%2CStation%2CEventID%2CSamplingEquipment%2CLocationAccuracy%2CRecordType%2CDataProvider&CatalogNumber=',
                           filt$CatalogNumber, sep = '')
 
+##### fix Depth issues #####
+filt$MinimumDepthInMeters <- ifelse(test = is.na(filt$MinimumDepthInMeters) == T, yes = filt$DepthInMeters, no = filt$MinimumDepthInMeters)
+filt$MaximumDepthInMeters <- ifelse(test = is.na(filt$MaximumDepthInMeters) == T, yes = filt$DepthInMeters, no = filt$MaximumDepthInMeters)
+
+##### fix species issues #####
+filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932164', yes = "Narella", no = filt$ScientificName)
+filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932389', yes = "Narella", no = filt$ScientificName)
+
+##### get rid of records with missing ObservationDate #####
+filt <- filt %>% filter(is.na(ObservationDate) == F)
+
 ##### create a minimum list of fields to release to OBIS #####
 obis_fields <- c('DatabaseVersion',
                  'DatasetID',
                  'ScientificName',
+                 'IndividualCount',
                  'AphiaID',
                  'CatalogNumber',
                  'ObservationDate',
@@ -42,6 +54,7 @@ obis <- filt %>%
     scientificName = 'ScientificName', # verbatim
     scientificNameID = 'AphiaID', # requires modification
     occurrenceID = 'CatalogNumber', # requires modification
+    individualCount = 'IndividualCount', # verbatim
     eventDate = 'ObservationDate', # verbatim
     decimalLatitude = 'Latitude', # verbatim
     decimalLongitude = 'Longitude', # verbatim
@@ -84,7 +97,7 @@ recode_list <- list('specimen' = 'PreservedSpecimen',
 obis$basisOfRecord <- recode(obis$basisOfRecord, !!!recode_list)
 
 ##### write out file for submission #####
-today <- '20190122-0'
+today <- '20190122-1'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
@@ -166,34 +179,35 @@ obis %>%
 # references = "WebSite",
 # higherGeography = "gisMEOW")
 
-# add sampleSizeUnit column and populate all non-NA sampleSizeValue rows with "Square Meters"
-obis$sampleSizeUnit <- ifelse(is.na(obis$sampleSizeValue) == FALSE, "Square Meters", NA)
+# # add sampleSizeUnit column and populate all non-NA sampleSizeValue rows with "Square Meters"
+# obis$sampleSizeUnit <- ifelse(is.na(obis$sampleSizeValue) == FALSE, "Square Meters", NA)
 
 ##### later we will work on emof variables #####
-# create a list of emof fields and occurenceID
-emof_fields <- emof %>% select(measurementType) %>% pull()
-emof_fields_o <- append(emof_fields[[1]], "occurrenceID", after = 0)
 
-# select from emof dataframe Type, Unit and Method
-emof_tum <- select(emof, measurementType, measurementUnit, measurementMethod)
-
-# pull emof_fields from the main DSC dataset
-# stretch columns into a tall dataframe using gather
-# remove rows with NA values
-# join tall dataframe with emof type, unit method
-# add uuid for each record
-DB_emof_subset <- DB_subset2  %>%
-  select(emof_fields_o) %>%
-  gather(key = "measurementType", value = "measurementValue", -occurrenceID) %>%
-  drop_na() %>%
-  inner_join(emof_tum, by = "measurementType") %>%
-  mutate(measurementID=uuid())
-
-# remove emof fields from DSC Dataset
-DSCRTP_Occurrences <- DB_subset2 %>% select(-one_of(emof_fields))
-
-write_csv(DB_emof_subset, paste("DSCRTP_EMOF_Subset_", Sys.Date(), ".csv"))
-
-write_csv(DSCRTP_Occurrences, paste("DSCRTP_Occurrences_", Sys.Date(), ".csv"))
-
-print("Script Finished")
+# # create a list of emof fields and occurenceID
+# emof_fields <- emof %>% select(measurementType) %>% pull()
+# emof_fields_o <- append(emof_fields[[1]], "occurrenceID", after = 0)
+#
+# # select from emof dataframe Type, Unit and Method
+# emof_tum <- select(emof, measurementType, measurementUnit, measurementMethod)
+#
+# # pull emof_fields from the main DSC dataset
+# # stretch columns into a tall dataframe using gather
+# # remove rows with NA values
+# # join tall dataframe with emof type, unit method
+# # add uuid for each record
+# DB_emof_subset <- DB_subset2  %>%
+#   select(emof_fields_o) %>%
+#   gather(key = "measurementType", value = "measurementValue", -occurrenceID) %>%
+#   drop_na() %>%
+#   inner_join(emof_tum, by = "measurementType") %>%
+#   mutate(measurementID=uuid())
+#
+# # remove emof fields from DSC Dataset
+# DSCRTP_Occurrences <- DB_subset2 %>% select(-one_of(emof_fields))
+#
+# write_csv(DB_emof_subset, paste("DSCRTP_EMOF_Subset_", Sys.Date(), ".csv"))
+#
+# write_csv(DSCRTP_Occurrences, paste("DSCRTP_Occurrences_", Sys.Date(), ".csv"))
+#
+# print("Script Finished")
