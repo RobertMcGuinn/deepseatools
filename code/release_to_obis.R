@@ -5,7 +5,7 @@
 # date that forked edits started: 20190121
 # purpose: create a Minimum Viable Product (MVP) for export from the
 #       NOAA National Database for Deep Sea Corals and Sponges
-#       to Abby Benson for ingest to OBIS / GBIF
+#       to Abby Benson for ingest to OBIS / GBIF test
 
 ##### load NDB #####
 setwd("C:/rworking/deepseatools/indata")
