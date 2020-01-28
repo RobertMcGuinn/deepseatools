@@ -31,9 +31,6 @@ filt_new_only <- filt_new %>% filter(CatalogNumber %ni% filt_old$CatalogNumber)
 old <- filt_old %>% dplyr::select(CatalogNumber, Latitude, Longitude)
 new <- filt_new_only %>% dplyr::select(CatalogNumber, Latitude, Longitude)
 
-##### filtering out a problem with longitude #####
-new_fixed <- new %>% filter(as.numeric(Longitude) > -200)
-
 ##### install packages #####
 
 library(arcgisbinding)
@@ -45,18 +42,15 @@ old_geo <- old
 coordinates(old_geo) <- c("Longitude", "Latitude")
 proj4string(old_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
+new_geo <- new
+coordinates(new_geo) <- c("Longitude", "Latitude")
+proj4string(new_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+
 ##### create feature-class #####
 
 fgdb_path <- 'C:/data/aprx/RTC2020/RTC2020.gdb'
 arc.write(file.path(fgdb_path, 'old_geo'), data=old_geo, overwrite = TRUE)
-
-##### create spdf
-
-new_geo <- new_fixed
-coordinates(new_geo) <- c("Longitude", "Latitude")
-proj4string(new_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
-
-##### create feature-class #####
 
 fgdb_path <- 'C:/data/aprx/RTC2020/RTC2020.gdb'
 arc.write(file.path(fgdb_path, 'new_geo'), data=new_geo, overwrite = TRUE)
