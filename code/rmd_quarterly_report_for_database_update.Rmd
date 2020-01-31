@@ -14,14 +14,15 @@ output: word_document
 # 
 # setwd("C:/rworking/deepseatools/indata")
 # indata2<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
-# filt2 <- indata2 %>%
+# filt <- indata2 %>%
 #   filter(Flag == "0")
+
+# rm(indata1)
+# rm(indata2)
 
 z <- max(as.numeric(filt1$CatalogNumber))
 # y <- max(as.numeric(filt2$CatalogNumber))
 
-# filt <- filt2
-# rm(filt2)
 
 x <- filt %>% 
   filter(as.numeric(CatalogNumber) > z, 
@@ -236,7 +237,6 @@ g <- ggplot(x, aes(Order)) +
 set.seed(7)
 g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.05))
 
-
 ```
 
 -----
@@ -257,13 +257,20 @@ g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_
 # table(factor(x$DataProvider))
 # table(factor(x$PI))
 # table(factor(x$DataContact))
+x$url <- paste0('https://deepseacoraldata.noaa.gov/Dataset%20Summaries/',
+                      x$DatasetID, 
+                      '.html', 
+                      sep = '')
+
+x$DashBoard <- paste0("[", x$DatasetID, "](", x$url, ")")
 
 sum_tbl <-
   x %>%
   group_by(DataProvider) %>%
-  summarize(DatasetID = toString(unique(DatasetID)), 
+  summarize(DatasetID = toString(unique(DashBoard)), 
             PI = toString(unique(unlist(unique(strsplit(as.character(PI), '; '))))),
             DataContact = toString(unique(DataContact)),
+            Reporter = toString(unique(Reporter)),
             n = n()) %>%
   arrange(desc(DatasetID))
 sum_tbl <- kable(sum_tbl, row.names = F, digits = 2, format.args = list(big.mark = ","))
@@ -275,6 +282,9 @@ sum_tbl
 # Expedition Details
 
 ``` {r Vessel, echo=FALSE}
+
+
+
 sum_tbl <-
   x %>%
   group_by(DatasetID) %>%
@@ -286,6 +296,14 @@ sum_tbl <-
             EndYear= max(as.numeric(ObservationYear)),
             n = prettyNum(n(),big.mark = ',')) %>% 
   arrange(desc(BeginYear))
+
+sum_tbl$url <- paste0('https://deepseacoraldata.noaa.gov/Dataset%20Summaries/',
+                      sum_tbl$DatasetID, 
+                      '.html', 
+                      sep = '')
+
+sum_tbl$DashBoard <- paste0("[", "Dashboard Link", "](", sum_tbl$url, ")")
+sum_tbl <- sum_tbl %>% dplyr::select(-url)
 sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
 sum_tbl
 ```
