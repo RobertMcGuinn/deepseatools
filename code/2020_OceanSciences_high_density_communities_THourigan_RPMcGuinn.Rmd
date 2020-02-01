@@ -1,36 +1,65 @@
 ---
-title: "CAPSTONE High Density Communities"
+title: "Analysis Log: 2020 Ocean Sciences High Density CCommunities "
 author: "Robert.McGuinn@NOAA.gov; 843-460-9696"
 date: '`r Sys.Date()`'
 output: word_document
 always_allow_html: yes
 ---
 
-```{r import_data, echo=FALSE, cache=TRUE}
-
-##### add data from Tom Hourigan ##### 
-x <- "20190719_0_CAPSTONE_AnalysisHiDensity_THourigan.xlsx"
-setwd("C:/rworking/deepseatools/indata")
-y <- read.xlsx(x, sheet = 1)
-y <- y %>% filter(EventID != 'D2-EX1605L1-13', 
-                  is.na(ScientificName) == F)
+```{r import_data_and_fix, echo=FALSE, cache=TRUE, eval=FALSE}
 
 ##### add NDB ##### 
 # setwd("C:/rworking/deepseatools/indata")
 # indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
 # filt <- indata %>%
 #   filter(Flag == "0")
-# filt 
 
-##### add four more dives ##### 
-d <- filt %>% filter(EventID %in% c("NA101-H1715","NA101-H1717","NA101-H1720","NA101-H1722"), 
+##### add data from Tom Hourigan from 2019 ISDSC7 meeting##### 
+# x <- "20190719_0_CAPSTONE_AnalysisHiDensity_THourigan.xlsx"
+# setwd("C:/rworking/deepseatools/indata")
+# y <- read.xlsx(x, sheet = 1)
+# y <- y %>% filter(
+#   EventID != 'D2-EX1605L1-13',
+#   is.na(ScientificName) == F)
+
+##### strip of the Density measurements for later merge step
+
+yd <- y %>% dplyr::select(EventID, Density)
+names(yd) <- c('EventID','Density2')
+yd <- yd %>% group_by(EventID, Density2) %>% summarize(n=n()) 
+
+##### extract the records from the NDB that have matching EventIDs with Tom's file ##### 
+a <- filt %>% filter(EventID %in% yd$EventID)%>% dplyr::select(names(y))
+ 
+##### merge the Density values from Tom's original file ##### 
+b <- merge(a,yd, all.x = T)
+b$Density <- b$Density2
+b <- b %>% dplyr::select(-Density2, -n)
+
+##### add four more dives from most recent DB ##### 
+z <- filt %>% filter(EventID %in% c("NA101-H1715","NA101-H1717","NA101-H1720","NA101-H1722"), 
                       DatasetID == "OET_NA101") %>% dplyr::select(names(y))
 
+d <- rbind(b,z) 
 
-# NA101-H1715 - High Density
-# NA101-H1717 - Very High Density
-# NA101-H1720 - High Density
-# NA101-H1722 - High Density  
+# Notes from Tom Hourigan on how to set Densities for the added 4 dives
+# NA101-H1715 - High Density, >3000/km
+# NA101-H1717 - Very High Density, >10000/km
+# NA101-H1720 - High Density, >3000/km
+# NA101-H1722 - High Density, >3000/km
+
+##### fix species issues #####
+d$Density <- ifelse(test = d$EventID %in%  c('NA101-H1715','NA101-H1720','NA101-H1722'), 
+                    yes = ">3000/km", 
+                    no = d$Density)
+
+d$Density <- ifelse(test = d$EventID %in%  c('NA101-H1717'), 
+                    yes = ">10000/km", 
+                    no = d$Density)
+
+##### export data ##### 
+setwd("C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/data")
+write.xlsx(d, '20200131-0_Hawaii_CAPSTONE_plus_THourigan_RMcGuinn.xlsx')  
 
 ```
 
@@ -42,95 +71,30 @@ opts_chunk$set(fig.height = 9,
 
 # Analysis Log
 
-* Google Drive project folder location: [LINK](https://drive.google.com/open?id=1whEwRDsH7d5-nUNoo3ZbkE1Yer6Mx6CU)
-* Dataset used in this analysis provided by Tom Hourigan: [LINK](https://drive.google.com/open?id=1Taw4GrBYern873oUAmU2dGK8UIKEqerj)
+* Google Drive project folder location: [2020_Ocean_Sciences_Hourigan](https://drive.google.com/open?id=1NqMKNQYSGMTGR_KcSh8NdTV6ZQgsmMkA)
+* Local path - Robert McGuinn's computer ("C:\rworking\deepseatools\reports\2020_Ocean_Sciences_Hourigan")
 
-## Conservation targets and threat analysis goals.   
+## Dataset: Coral & sponge records from all of the CAPSTONE with high density dives
 
-The conservation targets are the high-density coral and sponge habitats encountered on the CAPSTONE expeditions.    
+* Dataset used in this analysis provided by Tom Hourigan + 4 new dives added from the National Database version 20191217-0.  The dataset is in the '~2020_Ocean_Sciences_Hourigan/data' folder: *20200131-0_Hawaii_CAPSTONE_plus_THourigan_RMcGuinn.xlsx* 
 
-Community metrics: 
+The added dives:
 
-* Composition
-* Diversity
+** NA101-H1715 - High Density, >3000/km
+** NA101-H1717 - Very High Density, >10000/km
+** NA101-H1720 - High Density, >3000/km
+** NA101-H1722 - High Density, >3000/km)
 
-The conservation threat: future deep-sea mining
+The density ranks are per 'EventID' (or dive)
 
-## Data: Coral & sponge records from all of the CAPSTONE with high density dives
+* High-Density (>3000/km in the 'Density' variable)
+* Very High Density (>10000/km in the 'Density' varable)
 
-The density ranks are per 'EventID' (dive)
+## Summary tables for taxa, grouped by EventID
 
-* High-Density (3000-9000 corals & sponges/km)
-* Very High Density (>10000/km)
+#### Table: Coral summary by EventID (limit: taxonrank is below genus)
 
-## Excel Summaries by EventID
-
-Question: What taxa (i.e., ScientificName) are represented in each dive (EventID), and in what numbers? How diverse is each dive?
-
-#### Table: Coral and Sponge Summary by EventID (limit: taxonrank is below genus)
-
-For an Excel file of the table click here: [LINK](https://drive.google.com/open?id=1S-ELcAaK60VNnvjX0nIRFRY1iPWzdHOA)
-
-Coral and sponge occurrences per EventID (dive) where TaxonRank is limited to 'genus, species, or subspecies'. Table arranged in descending order of the sum of the IndividualCount. Note: The Excel includes the following variables grouped by EventID. 
-
-* EventID
-* Densities
-* Taxa
-* Richness
-* Locality
-* MinimumDepth
-* MaximumDepth
-* NumberRecords
-* IndividualCount_sum
-
-
-```{r table_corals_sponges_species_write, echo=FALSE} 
-x <- d %>%
-  filter(
-    TaxonRank == 'genus' |
-      TaxonRank == 'species' |
-      TaxonRank == 'subspecies',
-    #Phylum == 'Cnidaria'
-  ) %>%
-  arrange(ScientificName) %>%
-  group_by(EventID) %>%
-  summarize(
-    Densities = paste(unique(Density), collapse = ' | '),
-    Taxa = paste(unique(ScientificName), collapse= ' | '),
-    Richness = length(unique(ScientificName)),
-    Locality = paste(unique(Locality), collapse= ' | '),
-    MinimumDepth = min(DepthInMeters),
-    MaximumDepth = max(DepthInMeters), 
-    NumberRecords = n(),
-    IndividualCount_sum = sum(IndividualCount)
-  )
-
-x <- x %>% arrange(desc(IndividualCount_sum))
-
-setwd("C:/rworking/deepseatools/reports")
-write.xlsx(x, '20190719-0_Summary_of_Corals_and_Sponges_by_EventID.xlsx')  
-```
-
-
-#### Table: Coral Summary by EventID (limit: taxonrank is below genus)
-
-For an Excel file of the table click here: [LINK](https://drive.google.com/open?id=16GSehUv7KtahtfjJFdIzreCgwAba205s)
-For an Excel file **without** taxonomic limits see: [LINK](https://drive.google.com/open?id=1Htn_tkVOmJCI-wjjWE972qwiW1c55a7a)
-
-Coral occurrences per EventID (dive) where TaxonRank is limited to 'genus, species, or subspecies'. Table arranged in descending order of the sum of the IndividualCount. Note: The Excel includes the following variables grouped by EventID.  
-
-* EventID
-* Densities
-* Taxa
-* Richness
-* Locality
-* MinimumDepth
-* MaximumDepth
-* NumberRecords
-* IndividualCount_sum
-
-
-```{r table_corals_species_write, echo=FALSE} 
+```{r table_coral_summary_by_EventID, echo=FALSE} 
 x <- d %>%
   filter(
     TaxonRank == 'genus' |
@@ -153,30 +117,22 @@ x <- d %>%
 
 x <- x %>% arrange(desc(IndividualCount_sum))
 
-setwd("C:/rworking/deepseatools/reports")
-write.xlsx(x, '20190719-0_Summary_of_Corals_by_EventID.xlsx')  
+
+##### write it to excel ##### 
+filename = "20200131-0_Summary_of_Corals_by_EventID.xlsx"
+setwd("C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/tables")
+write.xlsx(x, filename)  
+
 ```
 
+*Coral* occurrences per EventID (dive) where TaxonRank is limited to 'genus, species, or subspecies'. The table is arranged in descending order of the sum of the IndividualCount. 
 
-#### Table: Sponge Summary by EventID (limit: taxonrank is below genus)
+For an Excel version of the table, see the '~2020_Ocean_Sciences_Hourigan/tables' folder
+Filename: *`r filename`*
 
-For an Excel file of the table click here: [LINK](https://drive.google.com/open?id=1OP2fI1qzKphxafAUBqIy6l5O88AMZW0t)
-For an Excel file **without** taxonomic limits see: [LINK](https://drive.google.com/open?id=1kJooXt2O3O-H1jFdxDyi4oydGxYVny0z)
+#### Table: Sponge summary by EventID (limit: taxonrank is below genus)
 
-Sponge occurrences per EventID (dive) where TaxonRank is limited to 'genus, species, or subspecies'. Table arranged in descending order of the sum of the IndividualCount. Note: The Excel includes the following variables grouped by EventID.  
-
-* EventID
-* Densities
-* Taxa
-* Richness
-* Locality
-* MinimumDepth
-* MaximumDepth
-* NumberRecords
-* IndividualCount_sum
-
-
-```{r table_sponges_species_write, echo=FALSE} 
+```{r table_sponge_summary_by_EventID, echo=FALSE} 
 x <- d %>%
   filter(
     TaxonRank == 'genus' |
@@ -198,12 +154,19 @@ x <- d %>%
   )
 
 x <- x %>% arrange(desc(IndividualCount_sum))
-#View(x)
 
 
-setwd("C:/rworking/deepseatools/reports")
-write.xlsx(x, '20190719-0_Summary_of_Sponges_by_EventID.xlsx')  
+##### write it to excel ##### 
+filename = "20200131-0_Summary_of_Sponges_by_EventID.xlsx"
+setwd("C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/tables")
+write.xlsx(x, filename)  
+
 ```
+
+*Sponge* occurrences per EventID (dive) where TaxonRank is limited to 'genus, species, or subspecies'. The table is arranged in descending order of the sum of the IndividualCount. 
+
+For an Excel version of the table, see the '~2020_Ocean_Sciences_Hourigan/tables' folder
+Filename: *`r filename`*
 
 ## Coral summary by 4 distinct zones defined by region and depth. 
 
