@@ -63,7 +63,7 @@ write.xlsx(d, '20200131-0_Hawaii_CAPSTONE_plus_THourigan_RMcGuinn.xlsx')
 ```
 
 ```{r setup, include=FALSE}
-opts_chunk$set(fig.height = 9,
+opts_chunk$set(fig.height = 2,
                fig.width = 17, 
                dpi = 90)
 ```
@@ -676,25 +676,37 @@ mycols <- c("Keratoisidinae" = "red",
             "Hemicorallium" = "darkgreen",
             "Madrepora oculata" = "black",
             "Paramuricea" = "steelblue3",
-            "Paragorgia" = "white",
+            "Paragorgia" = "gray64",
             "Paracalyptrophora hawaiiensis" = "violet",
             "Plexauridae" = "tan", 
             "Chrysogorgia" = "lightsalmon",
-            "Iridogorgia" = "orangered"
+            "Iridogorgia" = "gray25"
             )
 
 for (id in unique(z$EventID)){
-  
+
+# get the right EventID
 yo <- z %>% filter(EventID == id)
 
+# create the proper oridering
+ord <- aggregate(yo$IndividualCount, by=list(yo$ScientificName), FUN=sum) 
+ord <- ord %>% arrange(x)
+yo$ScientificName <- factor(yo$ScientificName, levels=ord$Group.1)
+yo <- yo[order(yo$ScientificName),]
+
+
+# make the plot
 p <- ggplot(yo, aes(x = EventID, y = IndividualCount, fill = ScientificName)) +
   geom_bar(stat = "identity", position = "fill" ) +
   coord_flip() +
   #scale_fill_manual(values = mycolors) +
-  scale_colour_manual(values = mycols, aesthetics = c("colour", "fill")) +
+  scale_colour_manual(values = mycols, 
+                      aesthetics = c("colour", "fill"),
+                      drop = FALSE, guide=guide_legend(reverse=TRUE)
+                      ) +
   theme_minimal() + 
-  theme( legend.position = "bottom" ) + 
-  coord_polar("y", start=0)
+  theme(legend.position = "right" )# +
+  #coord_polar("y", start=0)
 
 print(p)
      
