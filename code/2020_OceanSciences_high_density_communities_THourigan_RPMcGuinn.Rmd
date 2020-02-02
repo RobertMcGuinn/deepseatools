@@ -9,21 +9,20 @@ always_allow_html: yes
 ```{r import_data_and_fix, echo=FALSE, cache=TRUE, eval=FALSE}
 
 ##### add NDB ##### 
-# setwd("C:/rworking/deepseatools/indata")
-# indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
-# filt <- indata %>%
-#   filter(Flag == "0")
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
 
 ##### add data from Tom Hourigan from 2019 ISDSC7 meeting##### 
-# x <- "20190719_0_CAPSTONE_AnalysisHiDensity_THourigan.xlsx"
-# setwd("C:/rworking/deepseatools/indata")
-# y <- read.xlsx(x, sheet = 1)
-# y <- y %>% filter(
-#   EventID != 'D2-EX1605L1-13',
-#   is.na(ScientificName) == F)
+x <- "20190719_0_CAPSTONE_AnalysisHiDensity_THourigan.xlsx"
+setwd("C:/rworking/deepseatools/indata")
+y <- read.xlsx(x, sheet = 1)
+y <- y %>% filter(
+  EventID != 'D2-EX1605L1-13',
+  is.na(ScientificName) == F)
 
 ##### strip of the Density measurements for later merge step
-
 yd <- y %>% dplyr::select(EventID, Density)
 names(yd) <- c('EventID','Density2')
 yd <- yd %>% group_by(EventID, Density2) %>% summarize(n=n()) 
@@ -48,7 +47,7 @@ d <- rbind(b,z)
 # NA101-H1720 - High Density, >3000/km
 # NA101-H1722 - High Density, >3000/km
 
-##### fix species issues #####
+##### add Density values to new dives issues #####
 d$Density <- ifelse(test = d$EventID %in%  c('NA101-H1715','NA101-H1720','NA101-H1722'), 
                     yes = ">3000/km", 
                     no = d$Density)
@@ -625,12 +624,9 @@ write.xlsx(x, '20190725-0_Summary_of_Corals_and_Sponges_Diversity_by_EventID.xls
 # S <- specnumber(site.sp) ## rowSums(site.sp > 0) does the same...
 # J <- H/log(S)
 
-
-
 ```
 
 ```{r mapping_diversity , echo=FALSE, eval=F}
-
 
 x$Latitude <- as.numeric(x$Latitude)
 x$Longitude <- as.numeric(x$Longitude)
@@ -662,43 +658,46 @@ Figures are arranged by ascending order of EventID. Each figure represents 'top 
 
 ```{r communities_by_eventID, echo=F, eval=F}
 
-z <- d %>% 
-  filter(EventID == "D2-EX1504L2-02" |
-           EventID == "D2-EX1504L2-06" |
-           EventID == "D2-EX1504L2-07") %>%
-  arrange(EventID)
-
-for (id in unique(z$EventID)){
-  
-x <- d %>% filter(EventID == id) %>% 
-  group_by(EventID, ScientificName) %>% 
-  summarize(IndividualCount_sum = sum(IndividualCount)) %>% 
-  arrange(desc(IndividualCount_sum))
+x <- d %>% filter(EventID == 'NA101-H1715' | 
+                    EventID == 'D2-EX1705-07',
+                 Phylum == "Cnidaria") %>%
+  group_by(ScientificName, EventID) %>%
+  summarize(sum = sum(IndividualCount)) %>%
+  arrange(desc(sum))
 
 x <- x[1:10,]
 
-y <- d %>% filter(ScientificName %in% x$ScientificName,
-                  EventID == id)
+z <- d %>% filter(ScientificName %in% x$ScientificName,
+                  EventID %in% x$EventID)
 
-y$ScientificName <- factor(y$ScientificName, levels = c(x$ScientificName))
+##### set colors to rep specific taxa
+mycols <- c("Keratoisidinae" = "red",
+            "Acanella weberi" = "blue",
+            "Hemicorallium" = "darkgreen",
+            "Madrepora oculata" = "black",
+            "Paramuricea" = "steelblue3",
+            "Paragorgia" = "white",
+            "Paracalyptrophora hawaiiensis" = "violet",
+            "Plexauridae" = "tan", 
+            "Chrysogorgia" = "lightsalmon",
+            "Iridogorgia" = "orangered"
+            )
 
-# Stacked Percent
-print(
-  ggplot(y, aes(x <- EventID, y = IndividualCount, fill = ScientificName)) + 
-  geom_bar(stat = 'identity', position = 'fill') + 
-  scale_fill_brewer(palette = "Spectral") +
-  ylab("Individual Count (proportion)") + 
-  #xlab("EventID") +
-  labs(fill = "Taxa") +
-  theme_bw(base_size = 22, base_family = "Cambria") +
-  theme(axis.text.x = element_text(angle = 0, hjust = .5, vjust = 0, face = 'italic'), 
-        axis.title.x = element_blank()) + 
-    guides(fill = guide_legend(label.theme = element_text(face = 'italic', family = "Cambria", size = 16)))
+for (id in unique(z$EventID)){
+  
+yo <- z %>% filter(EventID == id)
+
+p <- ggplot(yo, aes(x = EventID, y = IndividualCount, fill = ScientificName)) +
+  geom_bar(stat = "identity", position = "fill" ) +
+  coord_flip() +
+  #scale_fill_manual(values = mycolors) +
+  scale_colour_manual(values = mycols, aesthetics = c("colour", "fill")) +
+  theme_minimal() + 
+  theme( legend.position = "bottom" ) + 
+  coord_polar("y", start=0)
+
+print(p)
      
-)
-
-print(unique(y$EventID))
-
 }
 
 ```
