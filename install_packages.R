@@ -92,9 +92,12 @@ library(stringr)
 
 
 
-
-
-
+# packages <- c("dplyr", "tidyr", "devtools", "usethis", "roxygen2", "leaflet", "ggplot2", "DT", "scales", "shiny", "sf", "ggmap", "broom", "captioner")
+#
+#
+# for (package in packages) { if (!(package %in% installed.packages())) { install.packages(package) } }
+# update.packages(ask=FALSE)
+#
 
 
 

@@ -6,7 +6,7 @@ output: word_document
 always_allow_html: yes
 ---
 
-```{r import_data_and_fix, echo=FALSE, cache=TRUE, eval=FALSE}
+```{r import_data_and_fix, echo=FALSE, cache=TRUE, eval=T}
 
 ##### add NDB ##### 
 setwd("C:/rworking/deepseatools/indata")
@@ -63,9 +63,9 @@ write.xlsx(d, '20200131-0_Hawaii_CAPSTONE_plus_THourigan_RMcGuinn.xlsx')
 ```
 
 ```{r setup, include=FALSE}
-opts_chunk$set(fig.height = 2,
-               fig.width = 17, 
-               dpi = 90)
+opts_chunk$set(fig.height = 5,
+               fig.width = 7, 
+               dpi = 300)
 ```
 
 # Analysis Log
@@ -91,18 +91,53 @@ The density ranks are per 'EventID' (or dive)
 
 ## Summary tables for taxa, grouped by EventID
 
+#### Table: Coral and sponge summary by individual tax(limit: taxonrank is below genus)
+
+```{r table_coral_and_sponge_summary_by_EventID, echo=FALSE} 
+x <- d %>%
+  filter(
+    # TaxonRank == 'genus' |
+    #   TaxonRank == 'species' |
+    #   TaxonRank == 'subspecies',
+    #Phylum == 'Cnidaria'
+  ) %>%
+  arrange(ScientificName) %>%
+  group_by(EventID, ScientificName) %>%
+  summarize(
+    TaxonRank = paste(unique(TaxonRank), collapse= ' | '),
+    Phylum = paste(unique(Phylum), collapse= ' | '),
+    Taxa = paste(unique(ScientificName), collapse= ' | '),
+    IndividualCount_sum = sum(IndividualCount),
+    Densities = paste(unique(Density), collapse = ' | '),
+    #Richness = length(unique(ScientificName)),
+    Locality = paste(unique(Locality), collapse= ' | '),
+    MinimumDepth = min(DepthInMeters),
+    MaximumDepth = max(DepthInMeters), 
+    NumberRecords = n()
+
+  )
+
+x <- x %>% arrange(EventID, desc(IndividualCount_sum))
+
+
+##### write it to excel ##### 
+filename = "20200203-1_Summary_of_sorals_and_sponges_by_EventID_ScientificName_not_limited_by_TaxonRank_RPMcGuinn.xlsx"
+setwd("C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/tables")
+write.xlsx(x, filename)  
+```
+
 #### Table: Coral summary by EventID (limit: taxonrank is below genus)
 
 ```{r table_coral_summary_by_EventID, echo=FALSE} 
 x <- d %>%
   filter(
-    TaxonRank == 'genus' |
-      TaxonRank == 'species' |
-      TaxonRank == 'subspecies',
+    # TaxonRank == 'genus' |
+    #   TaxonRank == 'species' |
+    #   TaxonRank == 'subspecies',
     Phylum == 'Cnidaria'
   ) %>%
   arrange(ScientificName) %>%
-  group_by(EventID) %>%
+  group_by(EventID, ScientificName) %>%
   summarize(
     Densities = paste(unique(Density), collapse = ' | '),
     Taxa = paste(unique(ScientificName), collapse= ' | '),
@@ -114,14 +149,13 @@ x <- d %>%
     IndividualCount_sum = sum(IndividualCount)
   )
 
-x <- x %>% arrange(desc(IndividualCount_sum))
+x <- x %>% arrange(EventID, desc(IndividualCount_sum))
 
 
 ##### write it to excel ##### 
-filename = "20200131-0_Summary_of_Corals_by_EventID.xlsx"
+filename = "20200203-0_Summary_of_Corals_by_EventID_not_limited_by_TaxonRank_RPMcGuinn.xlsx"
 setwd("C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/tables")
 write.xlsx(x, filename)  
-
 ```
 
 *Coral* occurrences per EventID (dive) where TaxonRank is limited to 'genus, species, or subspecies'. The table is arranged in descending order of the sum of the IndividualCount. 
@@ -429,9 +463,6 @@ d$longloc[as.numeric(d$Longitude) < 90] <- "east"
 
 ```
 
-#### Figure: NMDS Plots (all dives)
-Each dive is represented by a colored dot. Taxa are represented by the '+' signs.  In the first figure, categorical depth is used for coloring the dive dots. Depth breaks used were; shallow: 0-1000m, deep: 1000m and below. In the second figure, categorical temperature is used to color the dots.  It is obvious from these plots the main determinant of differences in community composition is depth and it is likely a proxy for temperature.  It is much less clear at this point what is driving the separation along NMDS2. In the third figure, dots are colored by whether the site was located at greater than 10 degrees latitude (north) or less than 10 degrees latitude (south).  The community separation is not clear in this last one. Also, more shallow sites were sampled in the south and a greater number of the dives in the north were at deeper sites.    
-
 
 ``` {r NMDS, echo=FALSE, cache = FALSE, dpi=300, warning=FALSE, message=FALSE, results='hide', cache=T}
 
@@ -656,32 +687,69 @@ m
 
 Figures are arranged by ascending order of EventID. Each figure represents 'top 10' taxa in each EventID. The list (legend) on the side of the figure is in rank order and the color blocks are also in rank order by sum of IndividualCount as a proportion of total.Colors between figures m represent different taxa, because there are differing Top 10 taxa. All taxa, sponges and corals, were used regardless of TaxonRank. To find a specific EventID use ctrl-F in Word.
 
-```{r communities_by_eventID, echo=F, eval=F}
+```{r communities_by_eventID, echo=F, eval=T, warning=F, message=F}
 
-x <- d %>% filter(EventID == 'NA101-H1715' | 
-                    EventID == 'D2-EX1705-07',
-                 Phylum == "Cnidaria") %>%
+latlimit <- 10
+depthlimit <- 1000
+
+##### bring in the original data (d) and filter according to EventIDs of interest
+x <- d %>% filter(
+  TaxonRank == 'genus' |
+    TaxonRank == 'species',
+  #Density == '>10000/km', 
+  #Phylum == "Cnidaria"#,
+  #as.numeric(Latitude) > latlimit,
+  #as.numeric(DepthInMeters) < depthlimit
+  ) %>%
   group_by(ScientificName, EventID) %>%
   summarize(sum = sum(IndividualCount)) %>%
   arrange(desc(sum))
 
-x <- x[1:10,]
+##### getting the top ten species/eventID from the combined list when ordered by 
+# sum of IndividualCount
+x <- x[1:55,]
 
-z <- d %>% filter(ScientificName %in% x$ScientificName,
-                  EventID %in% x$EventID)
+##### filter
+z <- d %>% filter(
+  ScientificName %in% x$ScientificName
+  #EventID %in% x$EventID
+  )
 
-##### set colors to rep specific taxa
-mycols <- c("Keratoisidinae" = "red",
-            "Acanella weberi" = "blue",
-            "Hemicorallium" = "darkgreen",
-            "Madrepora oculata" = "black",
-            "Paramuricea" = "steelblue3",
-            "Paragorgia" = "gray64",
-            "Paracalyptrophora hawaiiensis" = "violet",
-            "Plexauridae" = "tan", 
-            "Chrysogorgia" = "lightsalmon",
-            "Iridogorgia" = "gray25"
-            )
+# checking
+length(unique(x$EventID))
+length(unique(z$EventID))
+length(unique(d$EventID))
+
+length(unique(x$ScientificName))
+length(unique(z$ScientificName))
+length(unique(d$ScientificName))
+
+##### make some colors #####
+palette1 <- brewer.pal(9,"Set1")
+palette2 <- brewer.pal(8,"Set2")
+palette3 <- brewer.pal(9,"Set3")
+palette4 <- brewer.pal(8,"Dark2")
+palette5 <- brewer.pal(8,"Accent")
+big_palette <- c(palette1,palette2,palette3, palette4, palette5)
+
+##### set colors to rep specific taxa #####
+# mycols <- c("Keratoisidinae" = "red",
+#             "Acanella weberi" = "blue",
+#             "Hemicorallium" = "darkgreen",
+#             "Madrepora oculata" = "black",
+#             "Paramuricea" = "steelblue3",
+#             "Paragorgia" = "gray64",
+#             "Paracalyptrophora hawaiiensis" = "violet",
+#             "Plexauridae" = "tan", 
+#             "Chrysogorgia" = "lightsalmon",
+#             "Iridogorgia" = "gray25",
+#             "Parisis" = "green"                   
+#             )
+
+mycols <- big_palette
+names(mycols) <- levels(factor(x$ScientificName))
+
+##### run the loop ##### 
 
 for (id in unique(z$EventID)){
 
@@ -699,18 +767,25 @@ yo <- yo[order(yo$ScientificName),]
 p <- ggplot(yo, aes(x = EventID, y = IndividualCount, fill = ScientificName)) +
   geom_bar(stat = "identity", position = "fill" ) +
   coord_flip() +
-  #scale_fill_manual(values = mycolors) +
   scale_colour_manual(values = mycols, 
                       aesthetics = c("colour", "fill"),
                       drop = FALSE, guide=guide_legend(reverse=TRUE)
                       ) +
   theme_minimal() + 
-  theme(legend.position = "right" )# +
-  #coord_polar("y", start=0)
-
+  theme(legend.position = "bottom", 
+        legend.title = element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y = element_blank()
+        ) +
+  coord_polar("y", start=0) + 
+  labs(title = NULL, y = NULL, x = NULL)
+print(id)
 print(p)
-     
 }
+
+
 
 ```
 
@@ -725,19 +800,6 @@ NA101-H1717 - Very High Density
 NA101-H1720 - High Density
 NA101-H1722 - High Density   
 
-Let me know if you need this subset (though I expect you can probably do this more efficiently than I can)
-
-I liked the analyses that you did on Summary of community composition at each EventID (Figure: 56 figures follow, one per each EventID) - but for the purposes of the poster I think it would be best to:
-
-* Limit the analyses to only the Very High Density Dives
-* Rather than bar plots, convert to pie plots (which I think are more easily viewed and comprehended)
-* Most important - Retain a consistent color scheme for each major taxon across pie plots so they can be compared.
-
-* Does this sound doable?
-
-Thanks,
-
-Tom
 
 ## Notes from Tom Hourigan 20200131
 
