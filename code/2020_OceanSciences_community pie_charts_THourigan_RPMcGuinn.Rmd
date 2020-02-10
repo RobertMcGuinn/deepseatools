@@ -8,6 +8,7 @@ editor_options:
   chunk_output_type: console
 ---
 
+## Install
 ```{r install, warning=F, message=F, echo=FALSE}
 library(tidyverse)
 library(RColorBrewer)
@@ -17,8 +18,12 @@ library(openxlsx)
 library(magrittr)
 library(mime)
 library(scales)
+library(vegan)
+devtools::install_github("slowkow/ggrepel")
+
 ```
 
+## Setup 'knitr' options
 ```{r setup, include=FALSE}
 opts_chunk$set(fig.height = 8,
                fig.width = 10, 
@@ -190,7 +195,7 @@ z <- d %>% filter(
 
 ## Create pie charts by EventID
 
-```{r create_community_charts, echo=F, eval=T, warning=F, message=F}
+```{r create_community_charts, echo=F, eval=f, warning=F, message=F}
 ##### run the loop ##### 
 for (id in unique(z$EventID)){
 
@@ -233,13 +238,338 @@ ggsave(paste(id,'.png',sep=''))
 
 }
 ###### clean up everything except core objects ###### 
-#rm(list=setdiff(ls(), c("filt", "indata", "d")))
+rm(list=setdiff(ls(), c("filt", "indata", "d", "z")))
+```
+
+## NMDS   
+### Setting up depth, temp, and location categories
+
+```{r setdepthclass, echo=FALSE, cache = FALSE} 
+
+##### setting depth categories ##### 
+z$DepthCat[as.numeric(z$DepthInMeters) <= 1000] <- "shallow"
+z$DepthCat[as.numeric(z$DepthInMeters) > 1000] <- "deep"
+z$DepthCat <- factor(z$DepthCat, levels = c("shallow", "deep"))
+
+##### setting location categories ##### 
+z$loc[as.numeric(z$Latitude) > 10] <- "north"
+z$loc[as.numeric(z$Latitude) < 10] <- "south"
+
+##### setting temperature categories #####
+z$temp_cat[as.numeric(z$Temperature) > 5] <- "warm: > 5"
+z$temp_cat[as.numeric(z$Temperature) >= 3 & as.numeric(z$Temperature) <= 5] <- "cold: 3 to 5"
+z$temp_cat[as.numeric(z$Temperature) < 3] <- "colder: less than 3"
+z$temp_cat <- factor(z$temp_cat, levels = c("warm: > 5", "cold: 3 to 5", "colder: less than 3"))
+
+##### setting oxygen categories #####
+# qplot(as.numeric(z$Oxygen))
+z$ox_cat[as.numeric(z$Oxygen) >= 4] <- "rich"
+z$ox_cat[as.numeric(z$Oxygen) < 4] <- "poor"
+
+##### longitude cat #####
+z$longloc[as.numeric(z$Longitude) > 90] <- "west"
+z$longloc[as.numeric(z$Longitude) < 90] <- "east"
+
+```
+
+### Filter dataset 
+
+```{r}
+x <- z %>% 
+  filter(
+    # DepthCat == 'deep',
+    # EventID %in% c("D2-EX1504L2-11", "D2-EX1504L2-07", 
+    #                "D2-EX1504L2-13", "NA101-H1722", "D2-EX1708-12",
+    #                "D2-EX1708-07", "D2-EX1708-17", "D2-EX1708-03")
+    #Phylum == "Porifera"
+  )
+
+```
+
+### Create site by species matrix.
+
+```{r}
+
+##### create site X species matrix #####
+
+site.sp <- dcast(x, EventID ~ ScientificName, value.var = "IndividualCount", fun.aggregate = sum)
+
+# setwd("C:/rworking/digs/outdata")
+# write.csv(site.sp, 'site.sp.csv')
+
+# creating a site variable
+site.sp$site <- site.sp$EventID
+
+# getting rid of non-needed variables
+site.sp <- site.sp %>%
+  dplyr::select(-EventID)
+
+# # moving the site variable to the beginning
+# col_idx <- grep("site", names(site.sp))
+# site.sp <- site.sp[, c(col_idx, (1:ncol(site.sp))[-col_idx])]
+# # names(site.sp)
+
+# set the site as the row.names
+row.names(site.sp) <- site.sp$site
+
+# remove the site variable
+site.sp <- site.sp %>%
+  dplyr::select(-site)
+
+# making it a matrix
+site.sp <- as.matrix(site.sp)
+
+```
+
+### Calculating diversity metrics 
+
+```{r}
+
+alpha = mean(specnumber(site.sp))
+beta  = ncol(site.sp)/alpha - 1
+alpha
+beta
+
+```
+
+### Calculating dissimilarity matrices 
+
+```{r}
+## Bray-Curtis as binary (presence/absence) of species per equation above
+sp_bray_binary = vegdist(site.sp, method='bray', binary=T)
+
+## Bray-Curtis as amount (density) of species
+sp_bray = vegdist(site.sp, method='bray')
+
+## transformed Bray-Curtis as amount (density) of species
+sp_bray_transformed = vegdist(wisconsin(sqrt(site.sp)), method='bray')
+
+## write to data folder
+# setwd("C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/tables")
+# write.csv(as.matrix(sp_bray_binary),'sp_bray_binary.csv')
+# write.csv(as.matrix(sp_bray), 'sp_bray.csv')
+# write.csv(as.matrix(sp_bray_transformed), 'sp_bray_transformed.csv')
+
+```
+
+### Look at histgrams of ecological distance
+
+```{r}
+
+i = lower.tri(as.matrix(sp_bray_binary))
+hist(as.matrix(sp_bray_binary)[i]     , 
+     xlab='ecological distance', main='sp_bray_binary')
+
+hist(as.matrix(sp_bray)[i]            ,  
+     xlab='ecological distance', main='sp_bray')
+
+hist(as.matrix(sp_bray_transformed)[i],  
+     xlab='ecological distance', main='sp_bray_transformed')
+
+##### checking ##### 
+## look at individual values
+m = as.matrix(sp_bray_transformed)
+diag(m) = NA
+i_max = which(m == max(m, na.rm=T), arr.ind=T)
+i_min = which(m == min(m, na.rm=T), arr.ind=T)
+
+View(m)
+
+##### checking ##### 
+## look at pairs of sites.
+# y <- z %>% filter(EventID == 'D2-EX1708-13')
+# a <- z %>% filter(EventID == 'D2-EX1504L2-10')
+# b <- z %>% filter(EventID == 'D2-EX1605L3-06')
+# 
+# length()
+# intersect(y$ScientificName, a$ScientificName)
+# intersect(b$ScientificName, a$ScientificName)
+
 ```
 
 
+### Run NMDS on site X species matrix #####
 
+```{r}
 
+NMDS <- metaMDS(site.sp, distance = "bray", binary = F, k=3, trymax = 30)
 
+```
 
+### Extracting the site and species scores for use with ggplot2 ##### 
 
+```{r}
 
+#Using the scores function from vegan to extract the site scoresand convert to a data.frame
+site.scores <- as.data.frame(scores(NMDS))  
+site.scores$site <- rownames(site.scores)  # create a column of site names, from the rownames of data.scores
+# head(site.scores)  #look at the data
+# merge information from d (to get categories)
+site.scores <- merge(site.scores, z, by.x = 'site', by.y = 'EventID')
+
+#summarize by site 
+site.scores <- site.scores %>% group_by(site) %>% summarise(NMDS1 = NMDS1[1],
+                                                            NMDS2 = NMDS2[1],
+                                                            DepthCat = DepthCat[1],
+                                                            temp_cat = temp_cat[1],
+                                                            loc = loc[1])
+
+# extracting species scores
+species.scores <- as.data.frame(scores(NMDS, "species"))  #Using the scores function from vegan to extract the species scores and convert to a data.frame
+species.scores$species <- rownames(species.scores)  # create a column of species, from the rownames of species.scores
+# head(species.scores)  #look at the data
+species.scores$spec_code <- 1:(length(species.scores$species))
+
+#NMDS
+
+```
+
+### Plotting NMDS results
+
+```{r}
+
+ggplot() +
+  geom_point(data=site.scores, aes(x=NMDS2,y=NMDS1, color= DepthCat), size=5) + # add the point markers
+  geom_text(data=site.scores,aes(x=NMDS2,y=NMDS1, label = site), size=4, position = position_nudge(y = .0001)) + # add the text
+  #geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3, size=4) +
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+ggplot() +
+  geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color = temp_cat), size=5) + # add the point markers
+  geom_text(data=site.scores,aes(x=NMDS2,y=NMDS1, label = site), size=4, position = position_nudge(y = .0001)) + # add the text
+  #geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3, size=4) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+# ggplot() +
+#   geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=loc), size=5) + # add the point markers
+#   geom_text(data=site.scores,aes(x=NMDS2,y=NMDS1, label = site), size=4, position = position_nudge(y = .0001)) + # add the text
+#   #geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3, size=4) + 
+#   coord_equal() +
+#   theme_bw(base_size = 15, base_family = "Cambria") +
+#   theme(axis.text.x = element_blank(),  # remove x-axis text
+#         axis.text.y = element_blank(), # remove y-axis text
+#         axis.ticks = element_blank(),  # remove axis ticks
+#         axis.title.x = element_text(size=18), # remove x-axis labels
+#         axis.title.y = element_text(size=18), # remove y-axis labels
+#         panel.background = element_blank(), 
+#         panel.grid.major = element_blank(),  #remove major-grid labels
+#         panel.grid.minor = element_blank(),  #remove minor-grid labels
+#         plot.background = element_blank())
+# 
+# 
+ggplot() +
+  #geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=loc), size=5) + # add the point markers
+  geom_text(data=species.scores,aes(x=NMDS2,y=NMDS1, label = species), size=4, position = position_nudge(y = .0001)) + # add the text
+  geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color = temp_cat), shape = 3, size=4) +
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+print(NMDS)
+
+```
+
+### Looking at clusters 
+
+```{r}
+y <- vegdist(site.sp, method = "bray", binary = F)
+#heatmap(as.matrix(y))
+
+# h = hclust(y)
+# plot(h, main = "Clustering cars using Bray Curtis method", sub = "", xlab="", axes = FALSE, hang = -1)
+# lines(x = c(0,0), y = c(0,200), type = "n") # force extension of y axis
+# axis(side = 2, at = seq(0,100,10), labels = seq(100,0,-10))
+
+fit <- hclust(sp_bray_transformed)
+plot(fit, main = "Clustering cars using Bray Curtis method", sub = "", xlab="", axes = FALSE) # display dendogram
+groups <- cutree(fit, k=4) # cut tree into 5 clusters
+# draw dendogram with red borders around the 5 clusters
+rect.hclust(fit, k=4, border="red")
+
+```
+
+### Table of species codes 
+
+```{r spec_codes, echo=F}
+x <- species.scores %>%  dplyr::select(spec_code)
+
+kable(x)
+
+```
+
+### Diversity estimates.
+
+#### Table: Shannon diversity per EventID
+All taxa (both coral and sponges at all taxonomic ranks included in estimates).
+
+```{r diversity, echo=F}
+
+plots <- diversity(site.sp, index = "shannon") #makes an object
+#that the diversity values #are written to.
+# summary(plots) #gives summary statistics for the plots
+# median(plots) #gives the median
+# mean(plots) #gives the mean
+# class(plots)
+# max(plots[1:30])
+# # View(plots)
+
+# creating plots
+plots_df <- data.frame(plots)
+# View(plots_df)
+plots_df$EventID <- row.names(plots_df)
+# names(d)
+d <- merge(d, plots_df, all.x = T)
+# length(d$EventID)
+# length(unique(d$EventID))
+x <- d %>% group_by(EventID, plots) %>% summarize(n=n(), 
+                                                 Latitude = paste(mean(as.numeric(Latitude)), collapse = ' | '), 
+                                                 Longitude = paste(mean(as.numeric(Longitude)), collapse = ' | '))
+#View(x)
+
+setwd("C:/rworking/deepseatools/reports")
+write.xlsx(x, '20190725-0_Summary_of_Corals_and_Sponges_Diversity_by_EventID.xlsx') 
+
+## Calculating various Diversity Indices
+
+# H <- diversity(site.sp)
+# simp <- diversity(site.sp, "simpson")
+# invsimp <- diversity(site.sp, "inv")
+# ## Unbiased Simpson (Hurlbert 1971, eq. 5) with rarefy:
+# unbias.simp <- rarefy(site.sp, 2) - 1
+# ## Fisher alpha
+# alpha <- fisher.alpha(site.sp)
+# ## Plot all
+# pairs(cbind(H, simp, invsimp, unbias.simp, alpha, J), pch="+", col="blue")
+# ## Species richness (S) and Pielou's evenness (J):
+# S <- specnumber(site.sp) ## rowSums(site.sp > 0) does the same...
+# J <- H/log(S)
+
+```

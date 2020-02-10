@@ -463,6 +463,7 @@ d$longloc[as.numeric(d$Longitude) < 90] <- "east"
 
 ```
 
+## NMDS
 
 ``` {r NMDS, echo=FALSE, cache = FALSE, dpi=300, warning=FALSE, message=FALSE, results='hide', cache=T}
 
