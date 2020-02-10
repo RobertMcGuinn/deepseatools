@@ -1,0 +1,245 @@
+---
+title: "Analysis Log: 2020 Ocean Sciences High Density Communities "
+author: "Robert.McGuinn@NOAA.gov; 843-460-9696"
+date: 'Last ran on: `r Sys.Date()`'
+output: word_document
+always_allow_html: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r install, warning=F, message=F, echo=FALSE}
+library(tidyverse)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(openxlsx)
+library(magrittr)
+library(mime)
+library(scales)
+```
+
+```{r setup, include=FALSE}
+opts_chunk$set(fig.height = 8,
+               fig.width = 10, 
+               dpi = 300)
+```
+
+## Load
+
+```{r import_data, echo=F, cache=TRUE, eval=T}
+##### add NDB ##### 
+# setwd("C:/rworking/deepseatools/indata")
+# indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+# filt <- indata %>%
+#   filter(Flag == "0")
+
+##### add data from Tom Hourigan from 2019 ISDSC7 meeting##### 
+x <- "20190719_0_CAPSTONE_AnalysisHiDensity_THourigan.xlsx"
+setwd("C:/rworking/deepseatools/indata")
+y <- read.xlsx(x, sheet = 1)
+y <- y %>% filter(
+  EventID != 'D2-EX1605L1-13',
+  is.na(ScientificName) == F)
+
+###### cleanup ##### 
+rm(x)
+```
+
+## Fix
+
+```{r fix_data, echo=F, cache=F, eval=T}
+##### strip off the Density measurements for later merge step
+yd <- y %>% dplyr::select(EventID, Density)
+names(yd) <- c('EventID','Density2')
+yd <- yd %>% group_by(EventID, Density2) %>% summarize(n=n()) 
+
+
+##### extract the records from the NDB that have matching EventIDs with Tom's file ##### 
+a <- filt %>% filter(EventID %in% yd$EventID)%>% dplyr::select(names(y))
+ 
+
+##### merge the Density values from Tom's original file ##### 
+b <- merge(a,yd, all.x = T)
+b$Density <- b$Density2
+b <- b %>% dplyr::select(-Density2, -n)
+
+##### add four more dives from most recent DB ##### 
+z <- filt %>% filter(EventID %in% c("NA101-H1715","NA101-H1717","NA101-H1720","NA101-H1722"), 
+                      DatasetID == "OET_NA101") %>% dplyr::select(names(y))
+
+d <- rbind(b,z) 
+
+# Notes from Tom Hourigan on how to set Densities for the added 4 dives
+# NA101-H1715 - High Density, >3000/km
+# NA101-H1717 - Very High Density, >10000/km
+# NA101-H1720 - High Density, >3000/km
+# NA101-H1722 - High Density, >3000/km
+
+##### add Density values to new dives issues #####
+d$Density <- ifelse(test = d$EventID %in%  c('NA101-H1715','NA101-H1720','NA101-H1722'), 
+                    yes = ">3000/km", 
+                    no = d$Density)
+
+d$Density <- ifelse(test = d$EventID %in%  c('NA101-H1717'), 
+                    yes = ">10000/km", 
+                    no = d$Density)
+
+##### work on 2 NA values in dataset ##### 
+
+# set the NA
+d <- d %>%  mutate(ScientificName = ifelse(is.na(ScientificName),
+                                           yes = "Narella calamus",
+                                           no = as.character(ScientificName)))
+
+# d %>% filter(ScientificName == 'Narella calamus') %>% dplyr::select(ScientificName, EventID)
+# x %>% filter(ScientificName == 'Narella calamus') %>% dplyr::select(ScientificName, EventID)
+# d %>% filter(is.na(ScientificName) == T) %>% 
+#   dplyr::select(ScientificName, EventID)
+
+
+##### export data ##### 
+# setwd("C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/data")
+# write.xlsx(d, '20200131-0_Hawaii_CAPSTONE_plus_THourigan_RMcGuinn.xlsx')  
+
+##### cleanup #####
+rm(a)
+rm(b)
+rm(yd)
+rm(z)
+```
+
+## Project folder on Google Drive
+
+Google Drive project folder location: [2020_Ocean_Sciences_Hourigan](https://drive.google.com/open?id=1NqMKNQYSGMTGR_KcSh8NdTV6ZQgsmMkA)
+
+## Pie charts by EventID
+
+The figures below are arranged by ascending alphabetical order by EventID.  Each figure represents the 'top 10' taxa in each EventID.  The legend on the bottom of the figure is in rank order from left to right, as is the arrangement of the taxa within the pie chart (starting a top going around clockwise from most to least abundant).  The color wedges are also in rank order by sum of IndividualCount as a proportion of the total for the top ten taxa. *Colors for each taxa are consistent across all figures.* All taxa, sponges and corals, were used regardless of TaxonRank (no other taxonomic filters applied). To find a specific EventID use *ctrl-F* to find in Word.  The EventID label is included *above* each figure as well as within the image of each figure (this can be left off if needed.) 
+
+## Summarize by EventID
+
+```{r summarize_by_EventID, echo=F, eval=T, warning=F, message=F}
+
+# set limts
+# latlimit <- 10
+# depthlimit <- 1000
+
+##### bring in the original data (d) and summarize according to EventIDs of interest #####
+x <- d %>% filter(
+  #TaxonRank == 'genus' |
+  #TaxonRank == 'species',
+  #Density == '>10000/km', 
+  #Phylum == "Cnidaria"#,
+  #as.numeric(Latitude) > latlimit,
+  #as.numeric(DepthInMeters) < depthlimit
+  ) %>%
+  group_by(ScientificName, EventID) %>%
+  summarize(sum = sum(IndividualCount)) %>%
+  arrange(desc(sum))
+```
+
+## Make color map
+
+```{r make_colors, echo=F, eval=T, warning=F, message=F}
+
+topten <- d %>%
+ group_by(EventID, ScientificName)%>%
+ summarize(individual_count_sum = sum(IndividualCount))%>%
+ top_n(10, individual_count_sum) %>% arrange(EventID, desc(individual_count_sum))
+
+##### make a random color list that matches length of top ten #####
+
+cl <- colors(distinct = TRUE)
+set.seed(15887) # to set random generator seed
+mycols <- sample(cl, 138)
+names(mycols) <- unique(topten$ScientificName)
+#mycols
+
+##### writing to xlsx #####
+
+# setwd("C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/data")
+# write.xlsx(topten, '20200205-0_top_ten_summary_THourigan_RMcGuinn.xlsx')  
+
+##### checking ##### 
+
+# table(topten$EventID)
+# length(unique(topten$ScientificName))
+# 
+# # checking
+# length(unique(x$EventID))
+# length(unique(z$EventID))
+# length(unique(d$EventID))
+# 
+# length(unique(x$ScientificName))
+# length(unique(z$ScientificName))
+# length(unique(d$ScientificName))
+# length(unique(topten$ScientificName))
+
+```
+
+## Filter to only species appearing in the top ten list  
+
+```{r filter_to_top_ten, echo=F, eval=T, warning=F, message=F}
+##### filter d down to just the species appearing in the top ten ##### 
+z <- d %>% filter(
+  ScientificName %in% topten$ScientificName
+# EventID %in% c("NA101-H1715","NA101-H1720", "D2-EX1504L2-17")
+  )
+```
+
+## Create pie charts by EventID
+
+```{r create_community_charts, echo=F, eval=T, warning=F, message=F}
+##### run the loop ##### 
+for (id in unique(z$EventID)){
+
+# get the right EventID
+yo <- z %>% filter(EventID == id)
+
+##### create the proper oridering for the factor levels #####
+ord <- aggregate(yo$IndividualCount, by=list(yo$ScientificName), FUN=sum) 
+ord <- ord %>% arrange(desc(x))
+ord <- ord[1:10,]
+ord$EventID <- id
+ord$Group.1 <- factor(ord$Group.1, levels = rev(ord$Group.1))
+
+##### make the pie chart ##### 
+p <- ggplot(ord, aes(x = EventID, y = x, fill = Group.1)) +
+  geom_bar(stat = "identity", position = "fill" ) +
+  coord_flip() +
+  scale_colour_manual(values = mycols, 
+                      aesthetics = c("colour", "fill"),
+                      drop = FALSE, guide=guide_legend(reverse=TRUE, nrow=5)) +
+  theme_minimal() + 
+  theme(legend.position = "bottom", 
+        legend.title = element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y = element_blank(),
+        text = element_text(size=30), 
+        legend.text=element_text(size=24)) +
+  coord_polar("y", start=0) + 
+  #guides(fill = guide_legend(nrow = 2)) +
+  labs(title = NULL, y = NULL, x = NULL)
+print(id)
+print(p)
+
+##### save each pie chat to a folder #####
+
+setwd("C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/figures")
+ggsave(paste(id,'.png',sep=''))
+
+}
+###### clean up everything except core objects ###### 
+#rm(list=setdiff(ls(), c("filt", "indata", "d")))
+```
+
+
+
+
+
+
+
+

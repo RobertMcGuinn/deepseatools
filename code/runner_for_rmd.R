@@ -223,10 +223,11 @@ render("C:/rworking/deepseatools/code/rmd_quarterly_report_for_database_update.R
        output_dir = 'C:/rworking/deepseatools/reports')
 
 ##### render the 2020 Ocean Sciences report #####
+
+library(rmarkdown)
 setwd("C:\\rworking\\deepseatools\\code")
-x <- "20200202-0_Analysis_Log_2020_OceanSciences_high_density_communities_THourigan_RPMcGuinn"
-render("C:/rworking/deepseatools/code/2020_OceanSciences_high_density_communities_THourigan_RPMcGuinn.Rmd" ,
+x <- "20200210-0_Analysis_Log_2020_OceanSciences_community_pie_charts_THourigan_RPMcGuinn"
+render("C:/rworking/deepseatools/code/2020_OceanSciences_community pie_charts_THourigan_RPMcGuinn.Rmd" ,
        output_file =  paste(x,".doc", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/log/')
-
 

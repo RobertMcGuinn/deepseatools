@@ -1,0 +1,49 @@
+---
+title: "YO"
+author: "Robert McGuinn"
+date: "2/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T)
+```
+
+# 1st level
+## 2nd level
+
+list
+
+* yo  
+* yo   
+* yo
+
+[google](https://www.google.com/)
+
+1. yo 
+1. yo 
+1. yo 
+
+```{r}
+yo <- 5*3
+yo
+print(yo)
+```
+
+```{r yo}
+
+yo2 <- 6*4
+yo2
+print(yo2)
+
+```
+
+function_name(x = value, y = value)
+
+```{r}
+
+bgchem <- read.csv(file = "../indata/BGchem2008data.csv")
+
+```
+
+

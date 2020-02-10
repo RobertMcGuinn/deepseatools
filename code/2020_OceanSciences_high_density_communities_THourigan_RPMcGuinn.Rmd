@@ -63,15 +63,15 @@ write.xlsx(d, '20200131-0_Hawaii_CAPSTONE_plus_THourigan_RMcGuinn.xlsx')
 ```
 
 ```{r setup, include=FALSE}
-opts_chunk$set(fig.height = 5,
-               fig.width = 7, 
+opts_chunk$set(fig.height = 8,
+               fig.width = 15, 
                dpi = 300)
 ```
 
 # Analysis Log
 
 * Google Drive project folder location: [2020_Ocean_Sciences_Hourigan](https://drive.google.com/open?id=1NqMKNQYSGMTGR_KcSh8NdTV6ZQgsmMkA)
-* Local path - Robert McGuinn's computer ("C:\rworking\deepseatools\reports\2020_Ocean_Sciences_Hourigan")
+* Local path - Robert McGuinn's computer "C:\rworking\deepseatools\reports\2020_Ocean_Sciences_Hourigan"
 
 ## Dataset: Coral & sponge records from all of the CAPSTONE with high density dives
 
@@ -694,8 +694,8 @@ depthlimit <- 1000
 
 ##### bring in the original data (d) and filter according to EventIDs of interest
 x <- d %>% filter(
-  TaxonRank == 'genus' |
-    TaxonRank == 'species',
+  #TaxonRank == 'genus' |
+  #TaxonRank == 'species',
   #Density == '>10000/km', 
   #Phylum == "Cnidaria"#,
   #as.numeric(Latitude) > latlimit,
@@ -705,15 +705,14 @@ x <- d %>% filter(
   summarize(sum = sum(IndividualCount)) %>%
   arrange(desc(sum))
 
-##### getting the top ten species/eventID from the combined list when ordered by 
-# sum of IndividualCount
-x <- x[1:55,]
+topten <- d %>%
+ group_by(EventID, ScientificName)%>%
+ summarize(individual_count_sum = sum(IndividualCount))%>%
+ top_n(10, individual_count_sum)
 
-##### filter
-z <- d %>% filter(
-  ScientificName %in% x$ScientificName
-  #EventID %in% x$EventID
-  )
+# checking 
+#table(topten$EventID)
+length(unique(topten$ScientificName))
 
 # checking
 length(unique(x$EventID))
@@ -723,34 +722,22 @@ length(unique(d$EventID))
 length(unique(x$ScientificName))
 length(unique(z$ScientificName))
 length(unique(d$ScientificName))
+length(unique(topten$ScientificName))
 
-##### make some colors #####
-palette1 <- brewer.pal(9,"Set1")
-palette2 <- brewer.pal(8,"Set2")
-palette3 <- brewer.pal(9,"Set3")
-palette4 <- brewer.pal(8,"Dark2")
-palette5 <- brewer.pal(8,"Accent")
-big_palette <- c(palette1,palette2,palette3, palette4, palette5)
+##### make a random color list that matches length of top ten #####
+cl <- colors(distinct = TRUE)
+set.seed(15887) # to set random generator seed
+mycols <- sample(cl, 138)
+names(mycols) <- unique(topten$ScientificName)
+mycols
 
-##### set colors to rep specific taxa #####
-# mycols <- c("Keratoisidinae" = "red",
-#             "Acanella weberi" = "blue",
-#             "Hemicorallium" = "darkgreen",
-#             "Madrepora oculata" = "black",
-#             "Paramuricea" = "steelblue3",
-#             "Paragorgia" = "gray64",
-#             "Paracalyptrophora hawaiiensis" = "violet",
-#             "Plexauridae" = "tan", 
-#             "Chrysogorgia" = "lightsalmon",
-#             "Iridogorgia" = "gray25",
-#             "Parisis" = "green"                   
-#             )
-
-mycols <- big_palette
-names(mycols) <- levels(factor(x$ScientificName))
+##### filter d down to just the species appearing in the top ten ##### 
+z <- d %>% filter(
+  ScientificName %in% topten$ScientificName
+  EventID %in% c("NA101-H1715","NA101-H1720")
+  )
 
 ##### run the loop ##### 
-
 for (id in unique(z$EventID)){
 
 # get the right EventID
@@ -758,33 +745,42 @@ yo <- z %>% filter(EventID == id)
 
 # create the proper oridering
 ord <- aggregate(yo$IndividualCount, by=list(yo$ScientificName), FUN=sum) 
-ord <- ord %>% arrange(x)
-yo$ScientificName <- factor(yo$ScientificName, levels=ord$Group.1)
-yo <- yo[order(yo$ScientificName),]
+ord <- ord %>% arrange(desc(x))
+ord <- ord[1:10,]
+ord$EventID <- id
+ord$Group.1 <- factor(ord$Group.1, levels = rev(ord$Group.1))
 
 
-# make the plot
-p <- ggplot(yo, aes(x = EventID, y = IndividualCount, fill = ScientificName)) +
+#levels(ord$Group.1) <- as.character(ord$Group.1)
+
+#ord <- ord %>% arrange(x)
+# yo <- yo %>% filter(ScientificName %in% ord$Group.1)
+# levels(yo$ScientificName) <- levels(-ord$Group.1)
+# yo <- yo[order(levels(yo$ScientificName)),]
+
+##### make the pie chart  ##### 
+p <- ggplot(ord, aes(x = EventID, y = x, fill = Group.1)) +
   geom_bar(stat = "identity", position = "fill" ) +
   coord_flip() +
   scale_colour_manual(values = mycols, 
                       aesthetics = c("colour", "fill"),
                       drop = FALSE, guide=guide_legend(reverse=TRUE)
-                      ) +
+  ) +
   theme_minimal() + 
   theme(legend.position = "bottom", 
-        legend.title = element_blank(),
+        legend.title = element_text(),
         axis.text.x=element_blank(),
         axis.ticks.x = element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y = element_blank()
-        ) +
+        #axis.text.y=element_blank(),
+        axis.ticks.y = element_blank(),
+        text = element_text(size=30), 
+        legend.text=element_text(size=16)
+  ) +
   coord_polar("y", start=0) + 
   labs(title = NULL, y = NULL, x = NULL)
 print(id)
 print(p)
 }
-
 
 
 ```
