@@ -1,0 +1,374 @@
+---
+title: "2020_OceanSciences_NMDS_clean"
+author: "Robert McGuinn"
+date: "2/11/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+### Install
+```{r install, warning=F, message=F, echo=FALSE}
+library(tidyverse)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(openxlsx)
+library(magrittr)
+library(mime)
+library(scales)
+library(vegan)
+library(reshape2)
+library(ggrepel)
+library(extrafont)
+library(dendextend)
+
+```
+
+### Setup 'knitr' options
+```{r setup, include=FALSE}
+opts_chunk$set(fig.height = 8,
+               fig.width = 10, 
+               dpi = 300)
+```
+
+### Load
+
+```{r import_data, echo=F, cache=TRUE, eval=T}
+##### add NDB ##### 
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+##### add data from Tom Hourigan from 2019 ISDSC7 meeting##### 
+x <- "20190719_0_CAPSTONE_AnalysisHiDensity_THourigan.xlsx"
+setwd("C:/rworking/deepseatools/indata")
+y <- read.xlsx(x, sheet = 1)
+y <- y %>% filter(
+  EventID != 'D2-EX1605L1-13',
+  is.na(ScientificName) == F)
+
+###### cleanup ##### 
+rm(x)
+rm(indata)
+```
+
+### Fix
+
+```{r fix_data, echo=F, cache=F, eval=T}
+##### strip off the Density measurements for later merge step
+yd <- y %>% dplyr::select(EventID, Density)
+names(yd) <- c('EventID','Density2')
+yd <- yd %>% group_by(EventID, Density2) %>% summarize(n=n()) 
+
+##### extract the records from the NDB that have matching EventIDs with Tom's file ##### 
+a <- filt %>% filter(EventID %in% yd$EventID)%>% dplyr::select(names(y))
+
+##### merge the Density values from Tom's original file ##### 
+b <- merge(a,yd, all.x = T)
+b$Density <- b$Density2
+b <- b %>% dplyr::select(-Density2, -n)
+
+##### add five more dives from most recent DB ##### 
+z <- filt %>% filter(EventID %in% c("NA101-H1715","NA101-H1717",
+                                    "NA101-H1720","NA101-H1722","NA101-H1724"), 
+                      DatasetID == "OET_NA101") %>% dplyr::select(names(y))
+
+
+d <- rbind(b,z) 
+
+# Notes from Tom Hourigan on how to set Densities for the added 4 dives
+# NA101-H1715 - High Density, >3000/km
+# NA101-H1717 - Very High Density, >10000/km
+# NA101-H1720 - High Density, >3000/km
+# NA101-H1722 - High Density, >3000/km
+
+##### add Density values to new dives issues #####
+d$Density <- ifelse(test = d$EventID %in%  c('NA101-H1715','NA101-H1720','NA101-H1722', "NA101-H1724", "NA101-H1717"), 
+                    yes = ">3000/km", 
+                    no = d$Density)
+
+##### work on 2 NA values in dataset ##### 
+
+# set the NA
+d <- d %>%  mutate(ScientificName = ifelse(is.na(ScientificName),
+                                           yes = "Narella calamus",
+                                           no = as.character(ScientificName)))
+
+# d %>% filter(ScientificName == 'Narella calamus') %>% dplyr::select(ScientificName, EventID)
+# x %>% filter(ScientificName == 'Narella calamus') %>% dplyr::select(ScientificName, EventID)
+# d %>% filter(is.na(ScientificName) == T) %>% 
+#   dplyr::select(ScientificName, EventID)
+
+
+##### export data ##### 
+# setwd("C:/rworking/deepseatools/reports/2020_Ocean_Sciences_Hourigan/data")
+# write.xlsx(d, '20200211-0_Hawaii_CAPSTONE_plus_OET_THourigan_RMcGuinn.xlsx')  
+
+##### cleanup #####
+rm(a)
+rm(b)
+rm(yd)
+rm(z)
+```
+## Summarize by EventID
+
+```{r summarize_by_EventID, echo=F, eval=T, warning=F, message=F}
+
+# set limts
+# latlimit <- 10
+# depthlimit <- 1000
+
+##### bring in the original data (d) and summarize according to EventIDs of interest #####
+x <- d %>% filter(
+  #TaxonRank == 'genus' |
+  #TaxonRank == 'species',
+  #Density == '>10000/km', 
+  #Phylum == "Cnidaria"#,
+  #as.numeric(Latitude) > latlimit,
+  #as.numeric(DepthInMeters) < depthlimit
+  ) %>%
+  group_by(ScientificName, EventID) %>%
+  summarize(sum = sum(IndividualCount)) %>%
+  arrange(desc(sum))
+```
+
+## Filter to only species appearing in the top ten list  
+
+```{r filter_to_top_ten, echo=F, eval=T, warning=F, message=F}
+##### filter d down to just the species appearing in the top ten ##### 
+topten <- d %>%
+ group_by(EventID, ScientificName)%>%
+ summarize(individual_count_sum = sum(IndividualCount))%>%
+ top_n(10, individual_count_sum) %>% arrange(EventID, desc(individual_count_sum))
+
+z <- d %>% filter(
+  ScientificName %in% topten$ScientificName
+# EventID %in% c("NA101-H1715","NA101-H1720", "D2-EX1504L2-17")
+  )
+```
+
+### Setting up depth, temp, and location categories
+
+```{r setdepthclass, echo=FALSE, cache = FALSE} 
+
+##### setting depth categories ##### 
+z$DepthCat[as.numeric(z$DepthInMeters) <= 1000] <- "shallow"
+z$DepthCat[as.numeric(z$DepthInMeters) > 1000] <- "deep"
+z$DepthCat <- factor(z$DepthCat, levels = c("shallow", "deep"))
+
+##### setting location categories ##### 
+z$loc[as.numeric(z$Latitude) > 10] <- "north"
+z$loc[as.numeric(z$Latitude) < 10] <- "south"
+
+##### setting temperature categories #####
+z$temp_cat[as.numeric(z$Temperature) > 5] <- "warm: > 5"
+z$temp_cat[as.numeric(z$Temperature) >= 3 & as.numeric(z$Temperature) <= 5] <- "cold: 3 to 5"
+z$temp_cat[as.numeric(z$Temperature) < 3] <- "colder: less than 3"
+z$temp_cat <- factor(z$temp_cat, levels = c("warm: > 5", "cold: 3 to 5", "colder: less than 3"))
+
+##### setting oxygen categories #####
+# qplot(as.numeric(z$Oxygen))
+z$ox_cat[as.numeric(z$Oxygen) >= 4] <- "rich"
+z$ox_cat[as.numeric(z$Oxygen) < 4] <- "poor"
+
+##### longitude cat #####
+z$longloc[as.numeric(z$Longitude) > 90] <- "west"
+z$longloc[as.numeric(z$Longitude) < 90] <- "east"
+
+```
+
+### Filter dataset 
+```{r}
+x <- z %>% 
+  filter(
+    # DepthCat == 'deep',
+    # EventID %in% c("D2-EX1504L2-11", "D2-EX1504L2-07", 
+    #                "D2-EX1504L2-13", "NA101-H1722", "D2-EX1708-12",
+    #                "D2-EX1708-07", "D2-EX1708-17", "D2-EX1708-03")
+    #Phylum == "Porifera"
+  )
+```
+
+### Create site by species matrix.
+
+```{r}
+
+##### create site X species matrix #####
+
+site.sp <- dcast(x, EventID ~ ScientificName, value.var = "IndividualCount", fun.aggregate = sum)
+
+# setwd("C:/rworking/digs/outdata")
+# write.csv(site.sp, 'site.sp.csv')
+
+# creating a site variable
+site.sp$site <- site.sp$EventID
+
+# getting rid of non-needed variables
+site.sp <- site.sp %>%
+  dplyr::select(-EventID)
+
+# # moving the site variable to the beginning
+# col_idx <- grep("site", names(site.sp))
+# site.sp <- site.sp[, c(col_idx, (1:ncol(site.sp))[-col_idx])]
+# # names(site.sp)
+
+# set the site as the row.names
+row.names(site.sp) <- site.sp$site
+
+# remove the site variable
+site.sp <- site.sp %>%
+  dplyr::select(-site)
+
+# making it a matrix
+site.sp <- as.matrix(site.sp)
+
+```
+
+### Looking at clusters 
+
+```{r}
+##### create different distance matrices ##### 
+## Bray-Curtis as binary (presence/absence) of species per equation above
+sp_bray_binary = vegdist(site.sp, method='bray', binary=T)
+
+## Bray-Curtis as amount (density) of species
+sp_bray = vegdist(site.sp, method='bray')
+
+## transformed Bray-Curtis as amount (density) of species
+sp_bray_transformed = vegdist(wisconsin(sqrt(site.sp)), method='bray')
+
+##### create different clusters ######
+
+fit <- hclust(sp_bray_transformed)
+plot(fit, main = "", sub = "", xlab="Sites", axes = T, ylab = "Ecological Distance (Bray-Curtis - Wisconsin Transformed)", hang = -1) # display dendogram
+groups <- cutree(fit, k=4) # cut tree into 5 clusters
+# draw dendogram with red borders around the 5 clusters
+rect.hclust(fit, k=4, border="red")
+
+fit <- hclust(sp_bray_binary)
+plot(fit, main = "", sub = "", xlab="Sites", axes = T, ylab = "Ecological Distance (Sorensen)", hang = -1) # display dendogram
+groups <- cutree(fit, k=5) # cut tree into 5 clusters
+# draw dendogram with red borders around the 5 clusters
+rect.hclust(fit, k=5, border="red")
+
+fit <- hclust(sp_bray)
+plot(fit, main = "", sub = "", xlab="Sites", axes = T, ylab = "Ecological Distance (Bray-Curtis)", hang = -1) # display dendogram
+groups <- cutree(fit, k=5) # cut tree into 5 clusters
+# draw dendogram with red borders around the 5 clusters
+rect.hclust(fit, k=5, border="red")
+
+```
+
+### Run NMDS on site X species matrix #####
+
+```{r}
+
+mds <- metaMDS(site.sp, distance = 'bray', binary = F, k=3, try = 30)  #using all the defaults
+
+```
+
+### Plotting NMDS results
+
+```{r}
+
+data.scores <- as.data.frame(scores(mds))  #Using the scores function from vegan to extract the site scores and convert to a data.frame
+data.scores$site <- rownames(data.scores)  # create a column of site names, from the rownames of data.scores
+data.scores <- merge(data.scores, z, by.x = 'site', by.y = 'EventID')
+names(data.scores)
+
+##### joing results from results from hierarchical groupings ##### 
+
+groups <- data.frame(groups)
+groups$site<- row.names(groups)
+data.scores <-merge(data.scores, groups)
+
+##### extract species scores #####
+species.scores <- as.data.frame(scores(mds, "species"))  #Using the scores function from vegan to extract the species scores and convert to a data.frame
+species.scores$species <- rownames(species.scores)  # create a column of species, from the rownames of species.scores
+head(species.scores)  #look at the data
+
+##### get hulls of hclust groups onto plot ##### 
+grp.a <- data.scores[data.scores$groups == 1, ][chull(data.scores[data.scores$groups == 1, c("NMDS1", "NMDS2")]), ]  # hull values for grp A
+
+grp.b <- data.scores[data.scores$groups == 2, ][chull(data.scores[data.scores$groups == 2, c("NMDS1", "NMDS2")]), ]  # hull values for grp B
+
+grp.c <- data.scores[data.scores$groups == 3, ][chull(data.scores[data.scores$groups == 3, c("NMDS1", "NMDS2")]), ]  # hull values for grp B
+
+grp.d <- data.scores[data.scores$groups == 4, ][chull(data.scores[data.scores$groups == 4, c("NMDS1", "NMDS2")]), ]  # hull values for grp B
+
+grp.e <- data.scores[data.scores$groups == 5, ][chull(data.scores[data.scores$groups == 5, c("NMDS1", "NMDS2")]), ]  # hull values for grp B
+
+hull.data <- rbind(grp.a, grp.b, grp.c, grp.d, grp.e)  #combine grp.a and grp.b
+#hull.data
+hull.data$groups <- as.character(hull.data$groups)
+
+##### OR get hulls of temperature onto plot ##### 
+# grp.a <- data.scores[data.scores$temp_cat == "warm: > 5", ][chull(data.scores[data.scores$temp_cat =="warm: > 5", c("NMDS1", "NMDS2")]), ]  # hull values for grp A
+# 
+# grp.b <- data.scores[data.scores$temp_cat == "cold: 3 to 5", ][chull(data.scores[data.scores$temp_cat =="cold: 3 to 5", c("NMDS1", "NMDS2")]), ]  # hull values for grp B
+# 
+# grp.c <- data.scores[data.scores$temp_cat == "colder: less than 3", ][chull(data.scores[data.scores$temp_cat =="colder: less than 3", c("NMDS1", "NMDS2")]), ]  # hull values for grp B
+# 
+# hull.data <- rbind(grp.a, grp.b, grp.c)  #combine grp.a and grp.b
+# hull.data$groups <- as.character(hull.data$groups)
+
+```
+
+# NMDS plot 
+
+```{r}
+
+##### plot with hulls ##### 
+ggplot() + 
+  geom_polygon(data=hull.data, aes(x=NMDS1, y=NMDS2, fill=groups, group=groups),alpha=.5) + # add the convex hulls
+  #geom_text_repel(data=species.scores, aes(x=NMDS1,y=NMDS2,label=species),alpha=0.5) +  # add the species labels
+  #geom_text(data=data.scores, aes(x=NMDS1,y=NMDS2,label=site),alpha=0.5) +  # add the species labels
+  geom_point(data=data.scores,aes(x=NMDS1,y=NMDS2, color = temp_cat), size=4) + # add the point markers
+  scale_colour_manual(values=c("warm: > 5" = "red",
+                               "cold: 3 to 5" = "yellow",
+                               "colder: less than 3" = "blue")) +
+  scale_fill_manual(values = c("1" = "gray", 
+                               "2" = "pink", 
+                               "3" = "blue", 
+                               "4" = "green", 
+                               "5" = "red")) +
+  coord_flip() +
+  theme_bw() + 
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+
+
+```
+
+### Making fancy dendrograms
+
+```{r}
+
+dend <- as.dendrogram(fit)
+
+# Plot with Color in function of the cluster
+leafcolor <- c("red", "green", "blue", "pink", "gray")
+par(mar=c(5,1,1,7))
+dend %>%
+  set("labels_col", value = leafcolor, k=5) %>%
+  set("branches_k_color", value = leafcolor, k = 5) %>%
+  plot(horiz=TRUE, axes=TRUE)
+
+ 
+```
+
+
+
+
+
+
