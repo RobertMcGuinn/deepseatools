@@ -114,6 +114,51 @@ rm(z)
 
 ```
 
+## Export to GIS 
+
+```{r}
+
+##### install packages #####
+library(arcgisbinding)
+arc.check_product()
+library(rgdal)
+
+##### create spdf #####
+d_geo <- d
+coordinates(d_geo) <- c("Longitude", "Latitude")
+proj4string(d_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/data/aprx/20190724-0_CAPSTONE_analysis_RPMcGuinn/20190724-0_CAPSTONE_analysis_RPMcGuinn.gdb'
+arc.write(file.path(fgdb_path, 'd_geo'), data=d_geo, overwrite = TRUE)
+
+
+##### export other CAPSTONE & OET Dives dives #####
+yo <- filt %>% filter(EventID %in% unique(d$EventID)|
+                        grepl('CAPSTONE', SurveyComments) | 
+                               DatasetID == 'OET_NA101')
+## checking
+# x <- filt %>% filter(grepl('CAPSTONE', SurveyComments)) %>% dplyr::select(EventID)
+# setdiff(unique(d$EventID), unique(x$EventID))
+# setdiff(unique(x$EventID), unique(d$EventID))
+# filt %>% filter(grepl("NA101", DatasetID)) %>% dplyr::select(DatasetID)
+
+yo <- yo %>% group_by(EventID) %>% summarize(Latitude = mean(Latitude), Longitude = mean(Longitude))
+
+
+##### create spdf #####
+yo_geo <- yo
+coordinates(yo_geo) <- c("Longitude", "Latitude")
+proj4string(yo_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/data/aprx/20190724-0_CAPSTONE_analysis_RPMcGuinn/20190724-0_CAPSTONE_analysis_RPMcGuinn.gdb'
+arc.write(file.path(fgdb_path, 'yo_geo'), data=yo_geo, overwrite = TRUE)
+
+```
+
 ## Project folder on Google Drive
 
 Google Drive project folder location: [2020_Ocean_Sciences_Hourigan](https://drive.google.com/open?id=1NqMKNQYSGMTGR_KcSh8NdTV6ZQgsmMkA)

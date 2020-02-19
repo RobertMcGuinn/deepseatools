@@ -4190,6 +4190,58 @@ for(i in 1:length(z$CatalogNumber)){
                 mode = "wb")
 }
 
+##### getting Bathypathes images for Daniel Wagner 20200212 #####
+
+library(tidyverse)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(openxlsx)
+library(magrittr)
+library(mime)
+library(scales)
+library(vegan)
+library(reshape2)
+library(ggrepel)
+library(extrafont)
+library(dendextend)
+
+## data load
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+## query and load images to folder
+name <- "Bathypathes"
+z <- filt %>% filter(is.na(ImageURL) == F,
+                     Genus == name,
+                     Ocean == 'North Atlantic' | Ocean == 'South Atlantic'
+)
+
+setwd("C:/rworking/deepseatools/indata/image_set_Wagner")
+for(i in 1:length(z$CatalogNumber)){
+  download.file(as.character(z$ImageURL[i]),
+                destfile = paste(z$CatalogNumber[i],
+                                 z$ScientificName[i],
+                                 z$DepthInMeters[i],
+                                 z$Locality[i],
+                                 basename(as.character(z$ImageURL[i])),
+                                 sep = '_'),
+                mode = "wb")
+}
+
+
+
+##### working with Google Drive #####
+target <- drive_get(as_id("https://drive.google.com/drive/folders/1qp-cuwqPJ5x4QOFzErH5BegJMbhFmcAj"))
+x <- drive_ls(target, pattern = "20190404-0", type = "spreadsheet", recursive = T)
+
+
+
+
+
+
 
 
 

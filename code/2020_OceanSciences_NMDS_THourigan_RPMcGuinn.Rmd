@@ -158,7 +158,7 @@ View(m)
 
 ```{r}
 
-NMDS <- metaMDS(site.sp, distance = "bray", binary = T, k=5, trymax = 30)
+NMDS <- metaMDS(site.sp, distance = "bray", binary = T, k=3, trymax = 30)
 
 ```
 
