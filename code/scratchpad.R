@@ -4238,7 +4238,11 @@ target <- drive_get(as_id("https://drive.google.com/drive/folders/1qp-cuwqPJ5x4Q
 x <- drive_ls(target, pattern = "20190404-0", type = "spreadsheet", recursive = T)
 
 
+##### working with dplyr mutate #####
 
+mtcars %>%
+  filter(mpg > 20) %>%
+  pull(3)
 
 
 
