@@ -148,6 +148,12 @@ s <- gs_read(s)
 # length of unflagged records 
 a <- round(length(filt$CatalogNumber), -4)
 
+# # length of unflagged coral records
+# a_coral <- round(filt %>% filtergroup_by(Phylum) %>% summarize(n=n()) %>% pull() -4)
+# 
+# # length of unflagged sponge records
+# a_sponge <- round(length(filt$CatalogNumber), -4)
+
 # number of DatasetID
 b <- length(unique(filt$DatasetID))
 
@@ -309,18 +315,20 @@ http://spo.nmfs.noaa.gov/tech-memos/ or http://deepseacoraldata.noaa.gov/libary/
   
 # Executive Summary  
 
-The National Oceanic and Atmospheric Administration (NOAA) Deep Sea Coral Research and Technology Program (DSCRTP), herein referred to as the 'Program', compiles and curates a National Database of the known locations of deep sea corals and sponges. The database contains observations of places where corals and sponges occur (occurrences). The database focuses on occurrences within the United States Exclusive Economic Zone (US-EEZ), but the Program includes records outside of the US-EEZ where available and is actively encouraging partnerships worldwide to enhance the geographic scope of the data served. The database fulfills NOAA's requirements under the reauthorized Magnuson-Stevens Fishery Conservation and Management Act (MSA, 2007) to identify and map locations of deep sea corals, and to submit this information for use by Regional Fishery Management Councils (FMCs). See http://www.fisherycouncils.org for an overview of the structure and function of the FMCs. The Program intends for this database to be the most comprehensive, quality-assured, national-scale, data portal for deep sea corals and sponges available (Hourigan et al., 2015).
+The National Oceanic and Atmospheric Administration (NOAA) Deep Sea Coral Research and Technology Program (Program) compiles, curates, and makes publically accessible a National Database of biogeographic data and information on deep-sea corals and sponges – the most important habitat-forming organisms in the deep sea. The database is accessible through the Program's Data Portal (https://deepseacoraldata.noaa.gov/) and provides geographically-specific information on the diversity, distribution and abundance of corals and sponges. The database focuses on records of occurrences within the United States Exclusive Economic Zone (US-EEZ), but the Program includes records outside of the US-EEZ where available and is actively encouraging partnerships worldwide to enhance the geographic scope of the data served. The database fulfills NOAA's requirements under the reauthorized Magnuson-Stevens Fishery Conservation and Management Act (MSA, 2007) to identify and map locations of deep-sea corals, and to submit this information for use by Regional Fishery Management Councils (FMCs). The database is the most comprehensive, quality-assured, national-scale, data portal for deep-sea corals and sponges available.
   
-The database was originally conceived in 2009, building upon an initial United States Geological Survey Cold-Water Coral Database that was limited to Atlantic records (Scanlon et al., 2010). Through the sustained partnership and funding activities of the DSCRTP, and the contributions of `r length(unique(factor(filt$DataProvider)))` unique data providers, this database now includes over `r prettyNum(a, big.mark = ",")` occurrences of deep sea corals and sponges world-wide (at database version: `r version`).  The database is now being used as an essential trusted input to open ocean planning, management, and conservation activities at the Regional Fishery Management Councils and beyond.  
+This report presents information on the development and enhancements to the database since it became accessible through the online portal in 2015 (Hourigan et al., 2015). Through the sustained partnership and funding activities of the Program, and the contributions of 76 unique data providers, this database now includes over `r prettyNum(a, big.mark = ",")` records of deep-sea corals (`r prettyNum(a, big.mark = ",")`) and sponges (`r prettyNum(a, big.mark = ",")`) world-wide (at database version: `r version`) along with extensive metadata. The database is now being used as an essential trusted input to open ocean planning, management, and conservation activities at the Regional Fishery Management Councils and beyond.
   
-    
-The objectives of this technical memo are to:
+The objectives of this report are to:
   
-* Acknowledge the many contributors to the database (as of the date of this publication).  
-* Identify recent enhancements and additions to the database and related data products.  
-* Describe quality control and assurance processes used to build and maintain the database.  
-* Provide an update on the continued development of the database through time in the form of a summary of its current contents for key variables.  
-* Direct data providers and data users to additional online resources.  
+* Provide an update on the continued development of the database through time in the form of a summary of its current contents for key variables.   
+* Identify enhancements and additions to the database and related data products since 2015.  These include, *inter alia*, the following:        
++ Summaries and metadata for each data set (`r b` data sets to date);   
++ Further standardization of coral taxonomy;    
++ Institution of additional fields that accommodate standardized habitat descriptions, comparisons of recorded depths to modeled bathymetry, additional information on areas surveyed, morphospecies descriptions, and highlight exemplary images of taxa.     
+* Describe quality control and assurance processes used to build and maintain the database.    
+* Acknowledge the many contributors to the database (as of the date of this publication).    
+* Direct data providers and data users to additional online resources.    
   
 #####  
 
@@ -330,9 +338,11 @@ The objectives of this technical memo are to:
 
 ## Background  
 
-The National Oceanic and Atmospheric Administration (NOAA) Deep Sea Coral Research and Technology Program (DSCRTP), herein referred to as the ‘Program', compiles and curates a National Database of the known locations of deep sea corals and sponges. The database contains observations (occurrences) of places where corals and sponges have been observed during research and in some cases includes metrics of size, abundance, and environmental conditions at the time of observation. The database focuses on occurrences within the United States (US) Exclusive Economic Zone (EEZ), but the Program includes records outside of the US-EEZ where available and is actively encouraging partnerships worldwide to enhance the geographic scope of the data served. The database fulfills NOAA's requirements under the reauthorized Magnuson-Stevens Fishery Conservation and Management Act (MSA, 2007) to identify and map locations of deep sea corals, and to submit this information for use by Regional Fishery Management Councils (FMCs). See http://www.fisherycouncils.org for an overview of the structure and function of the FMCs. The Program intends for this database to be the most comprehensive, quality-assured, national-scale, data portal for deep sea corals and sponges available (Hourigan et al., 2015).
+Corals and sponges are the most important organisms creating deepwater biogenic habitats, and have become a centerpiece of deep-sea conservation in both the United States and internationally (Hourigan et al. 2017). The National Oceanic and Atmospheric Administration (NOAA) Deep Sea Coral Research and Technology Program (DSCRTP), herein referred to as the 'Program', compiles, curates, and makes publically accessible a National Database of biogeographic data and information on deep-sea corals and sponges. The database contains observations (records) of corals and sponges (primarily those deeper than 50 m), location and depth, and other relevant data that may be available, such as their size, abundance, and associated environmental conditions, as well as information on how the data were collected. Hourigan et al. (2015) provides an introduction and overview of the National Database.
 
-The database was originally conceived in 2009, building upon an initial United States Geological Survey Cold-Water Coral Database that was limited to Atlantic records (Scanlon et al., 2010). Since 2012, the database has undergone rapid development experiencing periods of exponential growth during major data harvests (**Figure 1**). From 2012 to 2015 was a period of internal growth and development of the database, including the establishment of new field names, definitions, and accepted (valid) values. Additionally, a web-based mapping and data download site was established and is available at DeepSeaCoralData.NOAA.gov. Online access to the database, through the DSCRTP map portal, began in the fall of 2015. Growth from 2015 and onward was marked by quarterly data updates made available to the public. The quarterly database updates include the addition of new occurrences as well as improvements to existing records.
+The database is designed to be a resource for both scientists and natural resource managers, and is a primary tool linking the Deep Sea Coral Research & Technology Program’s research to management. The database fulfills NOAA's requirements under the reauthorized [*Magnuson-Stevens Fishery Conservation and Management Act*](https://www.fisheries.noaa.gov/resource/document/magnuson-stevens-fishery-conservation-and-management-act) (MSA Sec. 408, 2007) to identify and map locations of deep-sea corals, and to submit this information for use by Regional Fishery Management Councils (FMCs). See http://www.fisherycouncils.org for an overview of the structure and function of the FMCs. The database focuses on deep-sea corals and sponges within the United States Exclusive Economic Zone (U.S.-EEZ), but increasingly includes records outside of the US-EEZ where available. The Program is actively encouraging partnerships worldwide to enhance the geographic scope of the data served. 
+
+The database was originally conceived in 2009, building upon an initial United States Geological Survey Cold-Water Coral Geographic Database that was limited to Atlantic coral records (Scanlon et al., 2010). NOAA's database was developed, and continues to be refined, in collaboration with data providers, data users from the science and resource management communities, and organizations involved in similar data efforts. Since 2012, the database has undergone rapid development experiencing periods of exponential growth during major data harvests (**Figure 1**). From 2012 to 2015 was a period of internal growth and development of the database, including the establishment of new field names, definitions, and accepted (valid) values. Additionally, a web-based mapping and data download site was established and is available at DeepSeaCoralData.NOAA.gov. Online access to the database, through the DSCRTP map portal, began in the fall of 2015. Growth from 2015 and onward was marked by quarterly data updates made available to the public. The quarterly database updates include the addition of new occurrences as well as improvements to existing records.
   
 The database includes `r bb` publically available fields that relate to the location, taxonomy, environmental conditions, and the provenance of the observations. All of the values in this report are based on version `r version` of the National Database. Some of the reported values will change as the database is updated each quarter with new records and corrections to old records. There are currently over `r prettyNum(a, big.mark = ",")` individual records in the database composed of `r length(unique(filt$DatasetID))` individual data sets from `r length(unique(factor(filt$DataProvider)))` different data providers.  See **Table 1** for a full summary of all of the data providers.
 
@@ -357,7 +367,7 @@ g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 #### Figure 1: Growth of NOAA's National Database for Deep-Sea Corals and Sponges through time.
 
-This document is a companion and update to an earlier NOAA Technical Memorandum entitled "An Introduction to NOAA's National Database for Deep-Sea Corals and Sponges" (Hourigan et al., 2015). The 2015 document is available online at: https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/database_intro.  Readers are referred to that document for more detail on the Program and its mandates, database structure, and on general principles that informed the design of the database and related data. The objectives of this status update are to:  
+This document is a companion and update to an earlier NOAA Technical Memorandum entitled "An Introduction to NOAA's National Database for Deep-Sea Corals and Sponges" (Hourigan et al., 2015). The 2015 document is available online at: https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/database_intro. Readers are referred to that document for more detail on the Program and its mandates, database structure, and on general principles that informed the design of the database and related data. The objectives of this status update are to:  
 
 * Acknowledge contributors to the database (as of the date of this publication).  
 * Describe quality assurance and control (QA/QC) processes used to build and maintain the database.  
@@ -371,7 +381,7 @@ Throughout this document, when referring to a field name from the National Datab
 
 ## Overview of Changes to Data Working Group Workflows
 
-Since the first publication of NOAA's National Database for Deep-Sea Corals and Sponges in 2015, the Program has continued to develop and implement workflows to increase the number of observations, to improve the quality of existing records, and to add related data products such as Geographic Information System (GIS)-formatted data layers. The following section describes the main changes and additions to the Data Working Group workflows and processes.  
+Since the first online publication of NOAA's National Database for Deep-Sea Corals and Sponges in 2015, the Program has continued to develop and implement workflows to increase the number of observations, to improve the quality of existing records, and to add related data products such as Geographic Information System (GIS)-formatted data layers. The following section describes the main changes and additions to the Data Working Group workflows and processes.  
 
 **Quarterly updates** 
 

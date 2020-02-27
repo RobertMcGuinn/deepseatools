@@ -4242,7 +4242,7 @@ x <- drive_ls(target, pattern = "20190404-0", type = "spreadsheet", recursive = 
 
 mtcars %>%
   filter(mpg > 20) %>%
-  pull(3)
+  pull(gear)
 
 
 
