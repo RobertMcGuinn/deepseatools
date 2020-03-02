@@ -1,0 +1,101 @@
+---
+title: "plot_db_growth_through_time"
+author: "Robert McGuinn"
+date: "3/2/2020"
+output: html_document
+---
+# packages
+
+``` {r install_packages, , echo=T, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(rmarkdown)
+library(knitr)
+library(flextable)
+library(googlesheets)
+library(googledrive)
+library(openxlsx)
+
+```
+
+# load NDB
+
+``` {r data_intake, echo=T, warning=FALSE, message=FALSE, cache=TRUE}
+##### input: latest version of NDB #####
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+##### remove files #####
+rm(indata)
+
+```
+
+# clean NDB
+
+```{r clean, echo=T, warning=FALSE, message=FALSE}
+##### data improvements (from version DSCRTP_NatDB_20191217-0)#####
+
+filt <- filt %>% mutate(DataProvider =
+                          ifelse(DataProvider == "California Academy of Sciences (CAS)",
+                                              'California Academy of Sciences',
+                                              as.character(DataProvider)))
+
+filt <- filt %>% mutate(DataProvider =
+                          ifelse(DataProvider == "NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i", "NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i", 
+                                 as.character(DataProvider)))
+
+```
+
+# load DatasetID Key
+
+``` {r merge_key, eval=T}
+
+x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
+
+# # browse to it
+# x %>% drive_browse()
+# getting the id as a character string
+y <- x$id
+
+# this downloads the file to the specified path
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
+
+# read the file into R as a data frame
+key <- read.xlsx(dl$local_path)
+d <- merge(filt, key, all.x = TRUE)
+
+##### remove data ##### 
+rm(filt)
+
+```
+
+# set up knitr options
+
+``` {r setup_opts, echo=T, warning=FALSE, message=FALSE}
+
+##### knitr options #####
+knitr::opts_chunk$set(
+  fig.width = 8.0, 
+  fig.asp = .5, 
+  warning = FALSE,
+  message=FALSE,
+  cache = TRUE,
+  dpi = 300, 
+  dev = c('png'), cache.lazy = FALSE, 
+  fig.path="C:/rworking/deepseatools/reports/figures/") 
+
+options(scipen=10000)
+
+##### setting digit options #####
+options(digits = 0)
+
+```
+
+
+
+
+
+
+
+

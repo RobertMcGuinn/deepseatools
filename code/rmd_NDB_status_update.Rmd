@@ -3,10 +3,15 @@ title: 'NOAA National Database for Deep-Sea Corals and Sponges'
 output: 
     word_document:
       reference_docx: c:\rworking\deepseatools\wordtemplates\mytemplate.docx
+editor_options: 
+  chunk_output_type: inline
 ---
 ``` {r install_packages, , echo=FALSE, warning=FALSE, message=FALSE}
-
 source('C:/rworking/deepseatools/install_packages.R')
+rm(theplantlist)
+rm(apg_families)
+rm(apg_orders)
+rm(rank_ref)
 
 ```
 
@@ -32,7 +37,6 @@ options(digits = 0)
 ``` {r data_intake, echo=FALSE, warning=FALSE, message=FALSE}
 
 ##### input: latest version of NDB #####
-
 setwd("C:/rworking/deepseatools/indata")
 indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
 filt <- indata %>%
@@ -68,8 +72,6 @@ filt <- filt %>% mutate(DataProvider =
 filt <- filt %>% mutate(DataProvider =
                           ifelse(DataProvider == "NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i", "NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i", 
                                  as.character(DataProvider)))
-
-
 
 ##### data improvements (from version DSCRTP_NatDB_20171214-0): Recorded in Redmine #####
 # filt <- filt %>% filter(ObservationYear != "-999" | 
@@ -148,11 +150,17 @@ s <- gs_read(s)
 # length of unflagged records 
 a <- round(length(filt$CatalogNumber), -4)
 
-# # length of unflagged coral records
-# a_coral <- round(filt %>% filtergroup_by(Phylum) %>% summarize(n=n()) %>% pull() -4)
-# 
-# # length of unflagged sponge records
-# a_sponge <- round(length(filt$CatalogNumber), -4)
+# length of unflagged coral records
+n_coral <- filt %>% 
+  group_by(Phylum) %>% 
+  summarize(n=n()) %>% 
+  pull(n) %>% nth(1)
+
+# length of unflagged sponge records
+n_sponge <- filt %>% 
+  group_by(Phylum) %>% 
+  summarize(n=n()) %>% 
+  pull(n) %>% nth(2)
 
 # number of DatasetID
 b <- length(unique(filt$DatasetID))
@@ -234,6 +242,8 @@ ll <- s %>%
   filter(TrawlProgram == 'R')
 ll <- length(ll$FieldName)
 
+rm(indata)
+
 ```
 
 # Robert P. McGuinn, Thomas F. Hourigan, Scott Cross, L. Matthew Dornback, Peter J. Etnoyer, David Sallis, Heather M. Coleman
@@ -267,7 +277,7 @@ McGuinn, Robert P. ^4,2^; Thomas F. Hourigan ^1^; Scott Cross ^2^; L. Matthew Do
 
 3. NOAA, National Centers for Coastal Ocean Science (NCCOS)  
 
-4. Mississippi State University, Northern Gulf Institute, NCEI Affiliate (NGI)
+4. Mississippi State University, Northern Gulf Institute (NGI), a NOAA Cooperative Institute
 
 5. NOAA, Office of Exploration and Research  
 
@@ -317,13 +327,13 @@ http://spo.nmfs.noaa.gov/tech-memos/ or http://deepseacoraldata.noaa.gov/libary/
 
 The National Oceanic and Atmospheric Administration (NOAA) Deep Sea Coral Research and Technology Program (Program) compiles, curates, and makes publically accessible a National Database of biogeographic data and information on deep-sea corals and sponges – the most important habitat-forming organisms in the deep sea. The database is accessible through the Program's Data Portal (https://deepseacoraldata.noaa.gov/) and provides geographically-specific information on the diversity, distribution and abundance of corals and sponges. The database focuses on records of occurrences within the United States Exclusive Economic Zone (US-EEZ), but the Program includes records outside of the US-EEZ where available and is actively encouraging partnerships worldwide to enhance the geographic scope of the data served. The database fulfills NOAA's requirements under the reauthorized Magnuson-Stevens Fishery Conservation and Management Act (MSA, 2007) to identify and map locations of deep-sea corals, and to submit this information for use by Regional Fishery Management Councils (FMCs). The database is the most comprehensive, quality-assured, national-scale, data portal for deep-sea corals and sponges available.
   
-This report presents information on the development and enhancements to the database since it became accessible through the online portal in 2015 (Hourigan et al., 2015). Through the sustained partnership and funding activities of the Program, and the contributions of 76 unique data providers, this database now includes over `r prettyNum(a, big.mark = ",")` records of deep-sea corals (`r prettyNum(a, big.mark = ",")`) and sponges (`r prettyNum(a, big.mark = ",")`) world-wide (at database version: `r version`) along with extensive metadata. The database is now being used as an essential trusted input to open ocean planning, management, and conservation activities at the Regional Fishery Management Councils and beyond.
+This report presents information on the development and enhancements to the database since it became accessible through the online portal in 2015 (Hourigan et al., 2015). Through the sustained partnership and funding activities of the Program, and the contributions of `r c` unique data providers, this database now includes over `r prettyNum(a, big.mark = ",")` records of deep-sea corals (n = `r prettyNum(n_coral, big.mark = ",")`) and sponges (n = `r prettyNum(n_sponge, big.mark = ",")`) world-wide (at database version: `r version`) along with extensive metadata. The database is now being used as an essential trusted input to open ocean planning, management, and conservation activities at the Regional Fishery Management Councils and beyond.
   
 The objectives of this report are to:
   
 * Provide an update on the continued development of the database through time in the form of a summary of its current contents for key variables.   
 * Identify enhancements and additions to the database and related data products since 2015.  These include, *inter alia*, the following:        
-+ Summaries and metadata for each data set (`r b` data sets to date);   
++ Summaries and metadata for each data set (`r b` data sets from `r c` data providers to date);   
 + Further standardization of coral taxonomy;    
 + Institution of additional fields that accommodate standardized habitat descriptions, comparisons of recorded depths to modeled bathymetry, additional information on areas surveyed, morphospecies descriptions, and highlight exemplary images of taxa.     
 * Describe quality control and assurance processes used to build and maintain the database.    
@@ -344,24 +354,96 @@ The database is designed to be a resource for both scientists and natural resour
 
 The database was originally conceived in 2009, building upon an initial United States Geological Survey Cold-Water Coral Geographic Database that was limited to Atlantic coral records (Scanlon et al., 2010). NOAA's database was developed, and continues to be refined, in collaboration with data providers, data users from the science and resource management communities, and organizations involved in similar data efforts. Since 2012, the database has undergone rapid development experiencing periods of exponential growth during major data harvests (**Figure 1**). From 2012 to 2015 was a period of internal growth and development of the database, including the establishment of new field names, definitions, and accepted (valid) values. Additionally, a web-based mapping and data download site was established and is available at DeepSeaCoralData.NOAA.gov. Online access to the database, through the DSCRTP map portal, began in the fall of 2015. Growth from 2015 and onward was marked by quarterly data updates made available to the public. The quarterly database updates include the addition of new occurrences as well as improvements to existing records.
   
-The database includes `r bb` publically available fields that relate to the location, taxonomy, environmental conditions, and the provenance of the observations. All of the values in this report are based on version `r version` of the National Database. Some of the reported values will change as the database is updated each quarter with new records and corrections to old records. There are currently over `r prettyNum(a, big.mark = ",")` individual records in the database composed of `r length(unique(filt$DatasetID))` individual data sets from `r length(unique(factor(filt$DataProvider)))` different data providers.  See **Table 1** for a full summary of all of the data providers.
+The database includes `r bb` publically available fields that relate to the location, taxonomy, environmental conditions, and the provenance of the observations. Not all records include values for all available fields. The completeness of the individual records depends on completeness of the incoming data set. All of the values in this report are based on version `r version` of the National Database. Some of the reported values will change as the database is updated each quarter with new records and corrections to old records. There are currently over `r prettyNum(a, big.mark = ",")` individual records in the database composed of `r length(unique(filt$DatasetID))` individual data sets from `r length(unique(factor(filt$DataProvider)))` different data providers. There are currently `r prettyNum(n_coral, big.mark = ",")` records of corals and `r prettyNum(n_sponge, big.mark = ",")` sponge records. See **Table 1** for a full summary of all of the data providers.
 
 ``` {r GrowthThroughTime, echo=FALSE, dpi=300}
+library(scales)
 
 # ordering factors
-
 filt2 <- filt %>%
-  filter(as.Date(EntryDate) > as.Date('2010-01-01'))
+  filter(as.Date(EntryDate) > as.Date('2010-01-01')) %>% 
+  dplyr::mutate(FishCouncilRegion = replace_na(FishCouncilRegion, "International")) %>% 
+  dplyr::mutate(Phylum=recode(Phylum, 
+                         'Cnidaria' = "Corals",
+                         'Porifera' = "Sponges"))
+
+## reorder levels of factors to manipulate the facet_wrap properties
+filt2$FishCouncilRegion = 
+  factor(filt2$FishCouncilRegion, levels = c("Caribbean", "Gulf of Mexico", "South Atlantic", "Mid-Atlantic", "New England", "North Pacific", "Pacific","Western Pacific", "International"))
+    
+## set options to remove scientific notation
 options(scipen=10000)
-g <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
-  stat_bin(data = subset(filt2, Phylum =="Porifera"),aes(y=cumsum(..count..)),geom="line", binwidth = 2, size = 2) +
-  stat_bin(data = subset(filt2, Phylum =="Cnidaria"),aes(y=cumsum(..count..)),geom="line", binwidth = 2, size = 2) +
+
+region <- 'Gulf of Mexico'
+plotname <- 'gomex'
+
+ North Pacific 
+           1946           39449           31895            3887            1650           81606 
+        Pacific Western Pacific   International 
+
+
+region <- 'Caribbean'
+plotname <- 'caribbean'
+
+region <- 'Gulf of Mexico'
+plotname <- 'gomex'
+
+region <- 'South Atlantic'
+plotname <- 'south_atlantic'
+
+region <- 'Mid-Atlantic'
+plotname <- 'mid_atlantic'
+
+region <- 'New England'
+plotname <- 'new_england'
+
+region <- 'North Pacific'
+plotname <- 'north_pacific'
+
+region <- 'Pacific'
+plotname <- 'pacific'
+
+region <- 'Western Pacific'
+plotname <- 'w_pacific'
+
+region <- 'International'
+plotname <- 'international'
+
+
+  x <- filt2 %>% filter (Phylum == "Corals", FishCouncilRegion == region)
+  y <- filt2 %>% filter (Phylum == "Sponges", FishCouncilRegion == region)
+ 
+  plotname <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
+  stat_bin(data = x,
+           aes(y=cumsum(..count..)), 
+           geom="line", 
+           binwidth = 2, 
+           size = 1) +
+  stat_bin(data = y,
+           aes(y=cumsum(..count..)),
+           geom="line", 
+           binwidth = 2, 
+           size = 1) +
   ylab("Cumulative Number of Records") + 
   xlab("Year Record Added") + 
+  xlim(as.Date('2012-01-01'), as.Date('2020-01-01')) +
+  scale_y_continuous(labels = comma) +
   guides(fill=FALSE) + 
-  theme_bw(base_size = 15, base_family = "Cambria")
+    theme_bw() +
+ # theme_bw(base_size = 14, base_family = "ArialMT") + 
+  theme(text=element_text(size=14,  family="Cambria")) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  theme(legend.title = element_blank()) +
+  theme(axis.title.x = element_text(vjust=-2.5)) +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"))+
+  scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])+
+  ggtitle(region)
 
-g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+  ggsave(paste("c:/rworking/deepseatools/images/", region, ".png", sep = ''), 
+         width = 6.5, 
+         height = 5.57, 
+         units = "in")
 
 ```
 

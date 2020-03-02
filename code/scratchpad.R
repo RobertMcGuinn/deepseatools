@@ -138,6 +138,8 @@ x <- filt %>%
 
 setwd("C:/rworking/digs/indata")
 
+version <- "ab"
+
 x %>%
   write.csv(paste("SurveyID_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
