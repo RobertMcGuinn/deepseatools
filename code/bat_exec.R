@@ -1,7 +1,9 @@
 ##### Header #####
 # author: Robert P. McGuinn, rpm@alumni.duke.edu
-# purpose: reading, writing, and executing batch files from R. This example here is for executing
-#   commands to work with VLC video annotation software..
+# purpose: reading, writing, and creating .bat files from with R.
+# * This example here is for executing
+#   commands to work with VLC video annotation software.
+# date_started: 2020-01-03
 
 ##### load annotation data: get annotation video run time stamps via Excel #####
 

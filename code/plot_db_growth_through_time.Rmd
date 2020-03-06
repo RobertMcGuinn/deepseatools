@@ -1,7 +1,7 @@
 ---
 title: "plot_db_growth_through_time"
 author: "Robert McGuinn"
-date: "3/2/2020"
+date: "3/3/2020"
 output: html_document
 ---
 # packages
@@ -47,6 +47,27 @@ filt <- filt %>% mutate(DataProvider =
 
 ```
 
+# load NDB_trajectory
+
+```{r}
+
+# read the file into R as a data frame from xl
+traj <- read.xlsx('../indata/NDB_trajectory.xlsx')
+
+## checking
+# names(traj)
+# View(traj)
+# plot(traj$totrecords)
+# plot(traj$corrected)
+# plot(traj$quarter)
+# plot(traj %>% filter(is.na(totrecords) == F) %>% pull(totrecords))
+# plot(traj$totrecord)
+# plot(traj$totrecords,as.Date(traj$text_date_posted))
+# plot(as.Date(traj$text_date_posted), traj$totrecords)
+
+
+```
+
 # load DatasetID Key
 
 ``` {r merge_key, eval=T}
@@ -85,9 +106,8 @@ knitr::opts_chunk$set(
   dev = c('png'), cache.lazy = FALSE, 
   fig.path="C:/rworking/deepseatools/reports/figures/") 
 
+##### setting scientific notation and digits options
 options(scipen=10000)
-
-##### setting digit options #####
 options(digits = 0)
 
 ```

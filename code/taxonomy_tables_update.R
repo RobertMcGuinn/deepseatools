@@ -4,23 +4,48 @@
 # robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 # 843-460-9696, 843-830-8845
 
-##### load the most current taxonomy from Google Sheets #####
+##### packages #####
 
+library(tidyverse)
+library(googledrive)
+library(googlesheets)
+
+##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 
-n <- '20191217-1'
+n <- '20191217-2'
 
 taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
-gs_browse(taxfl)
+#gs_browse(taxfl)
 taxfl <- gs_read(taxfl)
 
 taxch <- gs_title(paste(n, '_taxonomy_to_change', sep = ''))
-gs_browse(taxch)
+#gs_browse(taxch)
 taxch <- gs_read(taxch)
 
 tax <- gs_title(paste(n, '_taxonomy', sep = ''))
-gs_browse(tax)
+#gs_browse(tax)
 tax <- gs_read(tax)
+
+##### replace sp.#####
+
+tax$ScientificName <- str_replace(tax$ScientificName, " sp.", "")
+taxch$ScientificName <- str_replace(taxch$ScientificName, " sp.", "")
+
+## getting rid of duplicates now that ' .sp' is gone
+taxch <- taxch[!(taxch$VerbatimScientificName == taxch$ScientificName),]
+
+## write out results
+setwd("C:/rworking/deepseatools/indata")
+
+taxch %>%
+  write.csv(paste("20200303-0", '_taxonomy_to_change', ".csv", sep = ''), row.names = FALSE)
+
+tax %>%
+  write.csv(paste("20200303-0", '_taxonomy', ".csv", sep = ''), row.names = FALSE)
+
+## check
+tax %>% dplyr::select(ScientificName, ScientificNameNew) %>% View()
 
 ##### load in subset alone without running QA dash #####
 x <- "20191216-0_UnpurgedRecords_THourigan"

@@ -1,0 +1,199 @@
+---
+title: "Image_Sizes"
+author: "Robert McGuinn"
+date: "3/4/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# knitr setup
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, eval = F)
+options(scipen = 10000)
+options(digits = 3)
+
+```
+
+# packages
+
+``` {r install_packages, echo=T, warning=FALSE, message=FALSE, eval=T}
+
+library(tidyverse)
+library(rmarkdown)
+library(knitr)
+
+```
+
+# load data: NDB
+
+```{r load_NDB, echo=T, warning=F, message=F, cache=TRUE, eval=T}
+
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+rm(indata)
+
+```
+
+# load data: image info
+Obtained from David Sallis 2020-03-04.
+
+``` {r data_intake, echo=T, warning=FALSE, message=FALSE, cache=T, eval=T}
+
+setwd("C:/rworking/deepseatools/indata")
+images <- read.csv('DSCRTPImageInfo.csv', header = T)
+
+```
+
+# histogram of image size
+
+``` {r plotting, echo=T, warning=FALSE, message=FALSE, cache=TRUE}
+# check 
+#View(images)
+hist(images$Size)
+
+```
+
+# summary of image size
+
+```{r}
+
+summary(as.numeric(images$Size))
+
+```
+
+# histogram of height
+
+```{r}
+
+hist(images$Height)
+
+```
+
+# summary of image height
+
+```{r}
+
+summary(as.numeric(images$Height))
+
+```
+
+# histogram of width
+
+```{r}
+
+hist(images$Width)
+
+```
+
+# summary of image width
+
+```{r}
+
+summary(as.numeric(images$Width))
+
+```
+
+# plot of image size (arranged by size) 
+
+```{r}
+
+images <- images %>% arrange(Size)
+plot(images$Size)
+
+```
+
+# create totalPixels and storage efficiency variables
+
+```{r warning=FALSE, message=FALSE, eval=T}
+
+images_yo <- images %>% 
+  mutate(totPixels = Width*Height) %>% 
+  mutate(storageUsedPerPixel = Size/totPixels)
+
+```
+
+# image sizes in relation to total pixel width
+
+```{r warning=FALSE, message=FALSE}
+
+images_yo %>% ggplot(aes(x=Size, y=Width, color = totPixels)) +
+  geom_point() +
+  geom_rug() + 
+  geom_smooth()
+
+```
+
+# image sizes in relation to total pixel height
+
+```{r warning=FALSE, message=FALSE}
+
+images_yo %>% ggplot(aes(x=Size, y=Height, color = totPixels)) +
+  geom_point() +
+  geom_rug() + 
+  geom_smooth()
+
+```
+
+# image sizes in relation to total number of pixels 
+
+```{r warning=FALSE, message=FALSE}
+
+images_yo %>% ggplot(aes(x=Size, y=totPixels, color = totPixels)) +
+  geom_point() + 
+  geom_rug() + 
+  geom_smooth()
+
+```
+
+# storage efficiency 
+
+Width of image in pixels in relation to storage used per pixel. This is a measure of storage efficiency. 
+
+```{r warning=FALSE, message=FALSE}
+
+images_yo %>% ggplot(aes(x=storageUsedPerPixel, y=Width, color = totPixels)) +
+  geom_point()
+  
+```
+
+*interpretation*
+
+The smaller images (low pixel count) have more widely varying storage efficiecy than the larger ones (high pixel count). Smaller images are also more apt to be stored with less efficiency than the larger images.
+
+# finding specific images
+
+```{r eval=T}
+##### finding and displaying a singular image #####
+# x <- images_yo %>% filter(Size == max(Size)) %>% pull(Name)
+# x <- images_yo %>% filter(Name == "488361.JPG") %>% pull(Name)
+x <- images_yo %>% filter(Width == "1920") %>% pull(Name)
+
+name <- filt %>% filter(grepl(as.character(x[10]), ImageURL))
+
+yo <- filt %>% filter(grepl(as.character(x[10]), ImageURL)) %>% 
+  pull(ImageURL)
+
+browseURL(as.character(yo))
+# Define variable containing url
+url <- as.character(yo[1])
+```
+
+**DSCRTP CatalogNumber:** `r name$CatalogNumber[1]`  
+**Species:** _`r name$ScientificName[1]`_  
+**Depth:** `r name$DepthInMeters[1]` meters    
+**Marine Ecoregion:** `r name$gisMEOW[1]`     
+**Locality:** `r name$Locality[1]`     
+**Vessel:** `r name$Vessel[1]`  
+**Survey ID:** `r name$SurveyID[1]`   
+**Observation Year:** `r name$ObservationYear[1]`       
+**PI:** `r name$PI[1]`     
+**Data provider:** `r name$DataProvider[1]`  
+**Data contact:** `r name$DataContact[1]`  
+**Data reporter:** `r name$Reporter[1]`  
+
+![](`r url`)
