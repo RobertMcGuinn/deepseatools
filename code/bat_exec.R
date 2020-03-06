@@ -5,6 +5,9 @@
 #   commands to work with VLC video annotation software.
 # date_started: 2020-01-03
 
+##### packages #####
+library(openxlsx)
+
 ##### load annotation data: get annotation video run time stamps via Excel #####
 
 setwd("C:/rworking/deepseatools/indata")
@@ -19,7 +22,11 @@ x$cmd <- paste('vlc ', x$vidpath,' ',
                '--scene-path=', x$stillpath, ' ', 'vlc://quit', sep = '')
 
 
-##### ***OR*** build commands for videos stored on YouTube (change annotation data to 'annotations_yt.xlsx') #####
+##### ***OR*** build commands for videos stored on YouTube  #####
+
+## change annotation data to 'annotations_yt.xlsx')
+# setwd("C:/rworking/deepseatools/indata")
+# x <- read.xlsx('annotations_yt.xlsx', sheet = 1)
 
 # x$cmd <- paste('vlc ','-vvv',' ', x$vidpath,' ',
 #                '--video-filter=scene --start-time=',
