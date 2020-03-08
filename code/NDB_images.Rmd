@@ -1,7 +1,7 @@
 ---
 title: "Image_Sizes"
 author: "Robert McGuinn"
-date: "3/4/2020"
+date: '`r format(Sys.Date(), "%Y-%m-%d")`'
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -11,7 +11,7 @@ editor_options:
 
 ```{r setup, include=FALSE}
 
-knitr::opts_chunk$set(echo = TRUE, eval = F)
+knitr::opts_chunk$set(echo = TRUE, eval = T)
 options(scipen = 10000)
 options(digits = 3)
 
@@ -171,14 +171,17 @@ The smaller images (low pixel count) have more widely varying storage efficiecy 
 ##### finding and displaying a singular image #####
 # x <- images_yo %>% filter(Size == max(Size)) %>% pull(Name)
 # x <- images_yo %>% filter(Name == "488361.JPG") %>% pull(Name)
-x <- images_yo %>% filter(Width == "1920") %>% pull(Name)
+x <- images_yo %>% filter(
+  as.numeric(Width) > 3000, 
+  Name == '1002195.jpg') %>% 
+  pull(Name)
 
-name <- filt %>% filter(grepl(as.character(x[10]), ImageURL))
+name <- filt %>% filter(grepl(as.character(x), ImageURL))
 
-yo <- filt %>% filter(grepl(as.character(x[10]), ImageURL)) %>% 
+yo <- filt %>% filter(grepl(as.character(x), ImageURL)) %>% 
   pull(ImageURL)
 
-browseURL(as.character(yo))
+browseURL(as.character(yo[1]))
 # Define variable containing url
 url <- as.character(yo[1])
 ```

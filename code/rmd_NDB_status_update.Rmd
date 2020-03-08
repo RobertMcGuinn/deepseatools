@@ -7,11 +7,15 @@ editor_options:
   chunk_output_type: inline
 ---
 ``` {r install_packages, , echo=FALSE, warning=FALSE, message=FALSE}
-source('C:/rworking/deepseatools/install_packages.R')
-rm(theplantlist)
-rm(apg_families)
-rm(apg_orders)
-rm(rank_ref)
+library(tidyverse)
+library(rmarkdown)
+library(knitr)
+library(flextable)
+library(googlesheets)
+library(googledrive)
+library(openxlsx)
+library(scales)
+library(extrafont)
 
 ```
 
@@ -34,7 +38,7 @@ options(scipen=10000)
 options(digits = 0)
 ```
 
-``` {r data_intake, echo=FALSE, warning=FALSE, message=FALSE}
+``` {r data_intake, echo=FALSE, warning=FALSE, message=FALSE, eval = F}
 
 ##### input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
@@ -358,16 +362,18 @@ The database includes `r bb` publically available fields that relate to the loca
 
 ``` {r GrowthThroughTime, echo=FALSE, dpi=300}
 library(scales)
-
 # ordering factors
+
 filt2 <- filt %>%
-  filter(as.Date(EntryDate) > as.Date('2010-01-01')) %>% 
-  dplyr::mutate(FishCouncilRegion = replace_na(FishCouncilRegion, "International")) %>% 
+  #filter(as.Date(EntryDate) > as.Date('2010-01-01')) %>% 
+  dplyr::mutate(FishCouncilRegion = replace_na(as.character(FishCouncilRegion), "International")) %>% 
   dplyr::mutate(Phylum=recode(Phylum, 
                          'Cnidaria' = "Corals",
                          'Porifera' = "Sponges"))
 
+
 ## reorder levels of factors to manipulate the facet_wrap properties
+filt2$FishCouncilRegion = factor(filt2$FishCouncilRegion)
 filt2$FishCouncilRegion = 
   factor(filt2$FishCouncilRegion, levels = c("Caribbean", "Gulf of Mexico", "South Atlantic", "Mid-Atlantic", "New England", "North Pacific", "Pacific","Western Pacific", "International"))
     
@@ -376,11 +382,6 @@ options(scipen=10000)
 
 region <- 'Gulf of Mexico'
 plotname <- 'gomex'
-
- North Pacific 
-           1946           39449           31895            3887            1650           81606 
-        Pacific Western Pacific   International 
-
 
 region <- 'Caribbean'
 plotname <- 'caribbean'
@@ -409,11 +410,15 @@ plotname <- 'w_pacific'
 region <- 'International'
 plotname <- 'international'
 
+x <- filt2 %>% filter (Phylum == "Corals", FishCouncilRegion == region) %>% 
+  mutate(EntryDate = replace_na(as.character(EntryDate)), '2019-12-18') %>% 
+  mutate(EntryDate = as.factor(EntryDate))
 
-  x <- filt2 %>% filter (Phylum == "Corals", FishCouncilRegion == region)
-  y <- filt2 %>% filter (Phylum == "Sponges", FishCouncilRegion == region)
+y <- filt2 %>% filter (Phylum == "Sponges", FishCouncilRegion == region) %>%
+  mutate(EntryDate = replace_na(as.character(EntryDate)), '2019-12-18') %>% 
+  mutate(EntryDate = as.factor(EntryDate)) 
  
-  plotname <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
+plotname <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
   stat_bin(data = x,
            aes(y=cumsum(..count..)), 
            geom="line", 
@@ -426,11 +431,10 @@ plotname <- 'international'
            size = 1) +
   ylab("Cumulative Number of Records") + 
   xlab("Year Record Added") + 
-  xlim(as.Date('2012-01-01'), as.Date('2020-01-01')) +
+ # xlim(as.Date('2012-01-01'), as.Date('2020-01-01')) +
   scale_y_continuous(labels = comma) +
   guides(fill=FALSE) + 
-    theme_bw() +
- # theme_bw(base_size = 14, base_family = "ArialMT") + 
+  theme_bw() +
   theme(text=element_text(size=14,  family="Cambria")) +
   theme(axis.text.x = element_text(angle = 90)) +
   theme(legend.title = element_blank()) +
@@ -439,11 +443,12 @@ plotname <- 'international'
   scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])+
   ggtitle(region)
 
+plotname
 
-  ggsave(paste("c:/rworking/deepseatools/images/", region, ".png", sep = ''), 
-         width = 6.5, 
-         height = 5.57, 
-         units = "in")
+ggsave(paste("c:/rworking/deepseatools/images/", region, ".png", sep = ''), 
+       width = 6.5, 
+       height = 5.57, 
+       units = "in")
 
 ```
 

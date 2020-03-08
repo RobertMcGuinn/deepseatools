@@ -1,8 +1,10 @@
 ---
 title: "plot_db_growth_through_time"
 author: "Robert McGuinn"
-date: "3/3/2020"
+date: '`r format(Sys.Date(), "%Y-%m-%d")`'
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 # packages
 
@@ -14,6 +16,8 @@ library(flextable)
 library(googlesheets)
 library(googledrive)
 library(openxlsx)
+library(scales)
+library(extrafont)
 
 ```
 
@@ -65,7 +69,6 @@ traj <- read.xlsx('../indata/NDB_trajectory.xlsx')
 # plot(traj$totrecords,as.Date(traj$text_date_posted))
 # plot(as.Date(traj$text_date_posted), traj$totrecords)
 
-
 ```
 
 # load DatasetID Key
@@ -108,12 +111,85 @@ knitr::opts_chunk$set(
 
 ##### setting scientific notation and digits options
 options(scipen=10000)
-options(digits = 0)
+options(digits = 3)
 
 ```
 
+# prep the data 
+
+```{r new_and_corrected, echo=F, eval=T, warning=F, message=F}
+
+d <- traj %>%
+ pivot_longer(cols = c(totrecords, newrecords, corrected), names_to = "type", values_to = "count")
+
+d2 <- d %>% group_by(fy,type) %>% 
+  summarize(sum = sum(count, na.rm = T), max = max(count, na.rm = T)) %>% 
+  mutate(merge = ifelse(type == "totrecords", max, sum))
+
+d3 <- d2 %>% filter(type != "totrecords") %>% 
+  group_by(fy) %>% 
+  summarize(sum2 = sum(sum, na.rm = T))
+
+d4 <- merge(d2,d3, all.x = T)
+
+d5 <- d4 %>%  mutate(sum3 = ifelse(type == "totrecords", 
+                                   merge - sum2, 
+                                   merge))%>% 
+  filter(fy != 2015) %>% 
+  filter(fy != 2020)
+
+d5$type <- factor(d5$type)
+levels(d5$type)
+levels(d5$type) <- c("Improved", "New", "Un-touched")
+
+```
+
+# stacked bar chart
+
+```{r}
+
+cl <- colors(distinct = TRUE)
+set.seed(13) # to set random generator seed
+mycols <- sample(cl, 3)
+
+ggplot(d5, aes(fill=type, y=sum3, x=fy)) + 
+    geom_bar(position="stack", stat="identity") +
+scale_colour_manual(values = mycols, 
+                    aesthetics = c("colour", "fill"),
+                    drop = FALSE, 
+                    guide=guide_legend(reverse=F)) + 
+  scale_y_continuous(labels = comma) +
+  theme_bw() +
+  theme(text=element_text(size=14,  family="Cambria")) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  theme(legend.title = element_blank()) +
+  theme(axis.title.x = element_text(vjust=-2.5)) +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"))+
+  ggtitle("Proportion of new and improved records") + 
+  theme(plot.title = element_text(size=15)) +
+  theme(axis.title.y = element_text(vjust=5)) +
+  xlab('Fiscal Year') +
+  ylab('Number of Records')
 
 
+```
+
+# save the figure
+
+```{r}
+
+ggsave(paste("c:/rworking/deepseatools/images/", "20200306-0_new_improved_RPMcGuinn", ".png", sep = ''), 
+         width = 6.5, 
+         height = 5.57, 
+         units = "in")
+
+```
+
+# make some calculations 
+
+```{r}
+
+```
 
 
 

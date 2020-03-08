@@ -21,13 +21,14 @@ x$cmd <- paste('vlc ', x$vidpath,' ',
                '--scene-prefix=',x$annotationID,'_',x$start,'_',x$stop,'_',' ',
                '--scene-path=', x$stillpath, ' ', 'vlc://quit', sep = '')
 
-
 ##### ***OR*** build commands for videos stored on YouTube  #####
 
-## change annotation data to 'annotations_yt.xlsx')
+# # setwd("C:/rworking/deepseatools/indata")
+# x <- read.xlsx('annotations_yt.xlsx', sheet = 1)
+#
+# ## change annotation data to 'annotations_yt.xlsx')
 # setwd("C:/rworking/deepseatools/indata")
 # x <- read.xlsx('annotations_yt.xlsx', sheet = 1)
-
 # x$cmd <- paste('vlc ','-vvv',' ', x$vidpath,' ',
 #                '--video-filter=scene --start-time=',
 #                x$start, ' ', '--stop-time=', x$stop, ' ', '--scene-ratio=', x$fps, ' ',

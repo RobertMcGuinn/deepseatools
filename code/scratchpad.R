@@ -4247,7 +4247,11 @@ mtcars %>%
   pull(gear)
 
 
-
+##### download.file from web #####
+setwd("C:/rworking/deepseatools/vid"
+URL <- "https://download.bou.class.noaa.gov/download/3428925005/001/EX1905L2_VID_20190829_DIVE01_LIFE_IN_THE_GULLY.mov"
+destfile <- "yo.mov"
+download.file(URL, destfile)
 
 
 

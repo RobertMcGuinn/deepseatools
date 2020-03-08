@@ -1,3 +1,7 @@
 cd C:\Program Files\VideoLAN\VLC
 vlc "c:\\rworking\\deepseatools\\vid\\vid2.mp4" --video-filter=scene --start-time=295 --stop-time=296 --scene-ratio=31 --scene-prefix=lots_of_fish_295_296_ --scene-path=c:\\rworking\\deepseatools\\vid\\vidcaps vlc://quit
 vlc "c:\\rworking\\deepseatools\\vid\\vid2.mp4" --video-filter=scene --start-time=60 --stop-time=61 --scene-ratio=31 --scene-prefix=diver_60_61_ --scene-path=c:\\rworking\\deepseatools\\vid\\vidcaps vlc://quit
+vlc "c:\\rworking\\deepseatools\\vid\\EX1905L2_VID_20190829_DIVE01_LIFE_IN_THE_GULLY_lowres.mp4" --video-filter=scene --start-time=54 --stop-time=55 --scene-ratio=30 --scene-prefix=field_low_54_55_ --scene-path=c:\\rworking\\deepseatools\\vid\\vidcaps vlc://quit
+vlc "c:\\rworking\\deepseatools\\vid\\EX1905L2_VID_20190829_DIVE01_LIFE_IN_THE_GULLY_lowres.mp4" --video-filter=scene --start-time=66 --stop-time=67 --scene-ratio=30 --scene-prefix=red_low_66_67_ --scene-path=c:\\rworking\\deepseatools\\vid\\vidcaps vlc://quit
+vlc "c:\\rworking\\deepseatools\\vid\\EX1905L2_VID_20190829_DIVE01_LIFE_IN_THE_GULLY.mov" --video-filter=scene --start-time=54 --stop-time=56 --scene-ratio=31 --scene-prefix=field_54_56_ --scene-path=c:\\rworking\\deepseatools\\vid\\vidcaps vlc://quit
+vlc "c:\\rworking\\deepseatools\\vid\\EX1905L2_VID_20190829_DIVE01_LIFE_IN_THE_GULLY.mov" --video-filter=scene --start-time=66 --stop-time=68 --scene-ratio=31 --scene-prefix=red_66_68_ --scene-path=c:\\rworking\\deepseatools\\vid\\vidcaps vlc://quit
