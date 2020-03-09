@@ -16,6 +16,7 @@ library(googledrive)
 library(openxlsx)
 library(scales)
 library(extrafont)
+library(RColorBrewer)
 
 ```
 
@@ -38,7 +39,7 @@ options(scipen=10000)
 options(digits = 0)
 ```
 
-``` {r data_intake, echo=FALSE, warning=FALSE, message=FALSE, eval = F}
+``` {r data_intake, echo=FALSE, warning=FALSE, message=FALSE, eval = T}
 
 ##### input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
@@ -411,12 +412,14 @@ region <- 'International'
 plotname <- 'international'
 
 x <- filt2 %>% filter (Phylum == "Corals", FishCouncilRegion == region) %>% 
-  mutate(EntryDate = replace_na(as.character(EntryDate)), '2019-12-18') %>% 
-  mutate(EntryDate = as.factor(EntryDate))
+  mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
+  mutate(EntryDate = as.factor(EntryDate)) %>% 
+  mutate(as.Date(EntryDate))
 
 y <- filt2 %>% filter (Phylum == "Sponges", FishCouncilRegion == region) %>%
-  mutate(EntryDate = replace_na(as.character(EntryDate)), '2019-12-18') %>% 
-  mutate(EntryDate = as.factor(EntryDate)) 
+  mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
+  mutate(EntryDate = as.factor(EntryDate)) %>% 
+  mutate(as.Date(EntryDate))
  
 plotname <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
   stat_bin(data = x,
