@@ -4,7 +4,7 @@ output:
     word_document:
       reference_docx: c:\rworking\deepseatools\wordtemplates\mytemplate.docx
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 ``` {r install_packages, , echo=FALSE, warning=FALSE, message=FALSE}
 library(tidyverse)
@@ -381,8 +381,6 @@ filt2$FishCouncilRegion =
 ## set options to remove scientific notation
 options(scipen=10000)
 
-region <- 'Gulf of Mexico'
-plotname <- 'gomex'
 
 region <- 'Caribbean'
 plotname <- 'caribbean'
@@ -421,7 +419,7 @@ y <- filt2 %>% filter (Phylum == "Sponges", FishCouncilRegion == region) %>%
   mutate(EntryDate = as.factor(EntryDate)) %>% 
   mutate(as.Date(EntryDate))
  
-plotname <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
+ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
   stat_bin(data = x,
            aes(y=cumsum(..count..)), 
            geom="line", 
@@ -434,7 +432,7 @@ plotname <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
            size = 1) +
   ylab("Cumulative Number of Records") + 
   xlab("Year Record Added") + 
- # xlim(as.Date('2012-01-01'), as.Date('2020-01-01')) +
+  xlim(as.Date('2012-01-01'), as.Date('2020-01-01')) +
   scale_y_continuous(labels = comma) +
   guides(fill=FALSE) + 
   theme_bw() +
@@ -445,8 +443,6 @@ plotname <- ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))+
   scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])+
   ggtitle(region)
-
-plotname
 
 ggsave(paste("c:/rworking/deepseatools/images/", region, ".png", sep = ''), 
        width = 6.5, 
