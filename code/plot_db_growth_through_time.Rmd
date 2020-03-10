@@ -4,7 +4,7 @@ author: "Robert McGuinn"
 date: '`r format(Sys.Date(), "%Y-%m-%d")`'
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 # packages
 
@@ -18,6 +18,7 @@ library(googledrive)
 library(openxlsx)
 library(scales)
 library(extrafont)
+library(RColorBrewer)
 
 ```
 
@@ -29,9 +30,6 @@ setwd("C:/rworking/deepseatools/indata")
 indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0")
-
-##### remove files #####
-rm(indata)
 
 ```
 
@@ -48,6 +46,36 @@ filt <- filt %>% mutate(DataProvider =
 filt <- filt %>% mutate(DataProvider =
                           ifelse(DataProvider == "NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i", "NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i", 
                                  as.character(DataProvider)))
+
+
+
+##### bring in patch file. Raw from David Sallis on 2020-03-10 #####
+## edited by RPMcGuinn on 2020-03-10 
+
+yo <- read.xlsx('../indata/20200310-0_entrydate_fix_RPMcGuinn.xlsx')
+yo <- yo %>% dplyr::select(-EntryDate)
+
+## check
+
+# setdiff(yo$DatasetID, filt$DatasetID)
+# filt %>% filter(grepl('NOAA_CT-13', DatasetID)) %>% pull(DatasetID) %>% unique()
+
+##### mutate step to add missing EntryDate values #####
+
+## merge corrections using DatasetID as a key field
+filt <- merge(filt, yo, all.x = TRUE)
+
+## create new variable
+filt <- filt %>% 
+  mutate(EntryDate2 = if_else(is.na(as.character(EntryDate)), 
+                              EntryDate_txt, 
+                              as.character(EntryDate)))
+
+## put corrected values into the correct position 
+filt$EntryDate <- filt$EntryDate2
+
+## get rid of the extra EntryDate field
+filt <- filt %>% select(-EntryDate2, -EntryDate_txt)
 
 ```
 
@@ -68,29 +96,6 @@ traj <- read.xlsx('../indata/NDB_trajectory.xlsx')
 # plot(traj$totrecord)
 # plot(traj$totrecords,as.Date(traj$text_date_posted))
 # plot(as.Date(traj$text_date_posted), traj$totrecords)
-
-```
-
-# load DatasetID Key
-
-``` {r merge_key, eval=T}
-
-x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
-
-# # browse to it
-# x %>% drive_browse()
-# getting the id as a character string
-y <- x$id
-
-# this downloads the file to the specified path
-dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
-
-# read the file into R as a data frame
-key <- read.xlsx(dl$local_path)
-d <- merge(filt, key, all.x = TRUE)
-
-##### remove data ##### 
-rm(filt)
 
 ```
 
@@ -185,11 +190,90 @@ ggsave(paste("c:/rworking/deepseatools/images/", "20200306-0_new_improved_RPMcGu
 
 ```
 
-# make some calculations 
+# create the growth trajectory figures for each region (saved to file)
+
+``` {r GrowthThroughTime, echo=TRUE, dpi=300}
+
+library(scales)
+# ordering factors
+
+filt2 <- filt %>%
+  #filter(as.Date(EntryDate) > as.Date('2010-01-01')) %>% 
+  dplyr::mutate(FishCouncilRegion = replace_na(as.character(FishCouncilRegion), "International")) %>% 
+  dplyr::mutate(Phylum=recode(Phylum, 
+                         'Cnidaria' = "Corals",
+                         'Porifera' = "Sponges"))
+
+    
+## set options to remove scientific notation
+options(scipen=10000)
+
+## create a vector of FishCouncilRegions
+vect_region <-  c("Caribbean", "Gulf of Mexico", "South Atlantic", "Mid-Atlantic", "New England", "North Pacific", "Pacific","Western Pacific", "International")
+
+for (region in vect_region){
+  
+x <- filt2 %>% filter (Phylum == "Corals", FishCouncilRegion == region) %>%
+  mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
+  mutate(EntryDate = as.factor(EntryDate)) %>% 
+  mutate(as.Date(EntryDate))
+
+y <- filt2 %>% filter (Phylum == "Sponges", FishCouncilRegion == region) %>%
+  mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
+  mutate(EntryDate = as.factor(EntryDate)) %>% 
+  mutate(as.Date(EntryDate))
+ 
+ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
+  stat_bin(data = x,
+           aes(y=cumsum(..count..)), 
+           geom="line", 
+           binwidth = 2, 
+           size = 1) +
+  stat_bin(data = y,
+           aes(y=cumsum(..count..)),
+           geom="line", 
+           binwidth = 2, 
+           size = 1) +
+  ylab("Cumulative Number of Records") + 
+  xlab("Year Record Added") + 
+  xlim(as.Date('2012-01-01'), as.Date('2020-01-01')) +
+  scale_y_continuous(labels = comma) +
+  guides(fill=FALSE) + 
+  theme_bw() +
+  theme(text=element_text(size=14,  family="Cambria")) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  theme(legend.title = element_blank()) +
+  theme(axis.title.x = element_text(vjust=-2.5)) +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"))+
+  scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])+
+  ggtitle(region)
+
+ggsave(paste("c:/rworking/deepseatools/images/", "20200309-1_", region, ".png", sep = ''), 
+       width = 6.5, 
+       height = 5.57, 
+       units = "in")
+  
+}
+
+```
+
+# summarize EntryDate by Year by Region (save to Excel file) 
 
 ```{r}
 
+filt2$EntryDateYear <- format(as.Date(filt$EntryDate),"%Y")
+
+sum <- filt2 %>% group_by(FishCouncilRegion, EntryDateYear) %>% summarize(n = n()) 
+
+sum2 <- sum %>% group_by(FishCouncilRegion) %>% 
+  mutate(n_cumulative = cumsum(n))
+
+# View(sum2)
+setwd("C:/rworking/deepseatools/indata")
+write.xlsx(sum2, '20200310-0_summary_table_growth_by_region.xlsx')
+
 ```
+
 
 
 

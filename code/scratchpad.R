@@ -4253,6 +4253,15 @@ URL <- "https://download.bou.class.noaa.gov/download/3428925005/001/EX1905L2_VID
 destfile <- "yo.mov"
 download.file(URL, destfile)
 
+##### helping Meredith with some depth values #####
+y <- filt %>% filter(DatasetID == 'NOAA_NWFSC_FRAM') %>%
+  dplyr::select(CatalogNumber, SampleID, DepthInMeters, DepthMethod, MinimumDepthInMeters, MaximumDepthInMeters, gisCRMDepth)
+
+
+x <- filt %>% filter(DatasetID == 'NOAA_NWFSC_FRAM') %>%
+  select(EntryDate, AccessionID, Reporter) %>% unique()
+
+
 
 
 

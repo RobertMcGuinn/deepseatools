@@ -4,7 +4,7 @@ output:
     word_document:
       reference_docx: c:\rworking\deepseatools\wordtemplates\mytemplate.docx
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 ``` {r install_packages, , echo=FALSE, warning=FALSE, message=FALSE}
 library(tidyverse)
@@ -444,7 +444,7 @@ ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
   scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])+
   ggtitle(region)
 
-ggsave(paste("c:/rworking/deepseatools/images/", region, ".png", sep = ''), 
+ggsave(paste("c:/rworking/deepseatools/images/", "20200309-0_",region, ".png", sep = ''), 
        width = 6.5, 
        height = 5.57, 
        units = "in")
