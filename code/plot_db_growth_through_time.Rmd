@@ -79,6 +79,26 @@ filt <- filt %>% select(-EntryDate2, -EntryDate_txt)
 
 ```
 
+# merge datasetID key
+
+
+``` {r merge_key, eval=T}
+x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
+
+# # browse to it
+# x %>% drive_browse()
+
+# getting the id as a character string
+y <- x$id
+
+# this downloads the file to the specified path
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
+
+# read the file into R as a data frame
+key <- read.xlsx(dl$local_path)
+filt <- merge(filt, key, all.x = TRUE)
+```
+
 # load NDB_trajectory
 
 ```{r}
@@ -183,16 +203,16 @@ scale_colour_manual(values = mycols,
 
 ```{r}
 
-ggsave(paste("c:/rworking/deepseatools/images/", "20200306-0_new_improved_RPMcGuinn", ".png", sep = ''), 
+ggsave(paste("c:/rworking/deepseatools/images/", "20200311-0_new_improved_RPMcGuinn", ".png", sep = ''), 
          width = 6.5, 
          height = 5.57, 
          units = "in")
 
 ```
 
-# create the growth trajectory figures for each region (saved to file)
+# change FishCouncilRegion levels for charting purposes
 
-``` {r GrowthThroughTime, echo=TRUE, dpi=300}
+``` {r echo=TRUE, dpi=300}
 
 library(scales)
 # ordering factors
@@ -203,7 +223,11 @@ filt2 <- filt %>%
   dplyr::mutate(Phylum=recode(Phylum, 
                          'Cnidaria' = "Corals",
                          'Porifera' = "Sponges"))
+```
 
+# create the growth trajectory figures for each region (saved to file)
+
+``` {r GrowthThroughTime_charts, echo=TRUE, dpi=300, eval = F}
     
 ## set options to remove scientific notation
 options(scipen=10000)
@@ -248,7 +272,7 @@ ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
   scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])+
   ggtitle(region)
 
-ggsave(paste("c:/rworking/deepseatools/images/", "20200309-1_", region, ".png", sep = ''), 
+ggsave(paste("c:/rworking/deepseatools/images/", "20200311-1_", region, ".png", sep = ''), 
        width = 6.5, 
        height = 5.57, 
        units = "in")
@@ -271,6 +295,63 @@ sum2 <- sum %>% group_by(FishCouncilRegion) %>%
 # View(sum2)
 setwd("C:/rworking/deepseatools/indata")
 write.xlsx(sum2, '20200310-0_summary_table_growth_by_region.xlsx')
+
+```
+
+# summarize Entrydate by Year by Region, and by Phylum (save to Excel file)
+
+```{r}
+
+filt2$EntryDateYear <- format(as.Date(filt$EntryDate),"%Y") 
+
+sum3 <- filt2 %>% filter(is.na(Phylum) == F) %>% 
+  group_by(FishCouncilRegion, EntryDateYear, Phylum) %>% 
+  summarize(n = n()) %>% arrange(FishCouncilRegion, FishCouncilRegion, Phylum, EntryDateYear)
+   
+sum4 <- sum3 %>% group_by(FishCouncilRegion, Phylum) %>% 
+  mutate(n_cumulative = cumsum(n)) 
+
+# View(sum2)
+setwd("C:/rworking/deepseatools/indata")
+write.xlsx(sum4, '20200310-0_summary_table_growth_by_region_by_Phylum_RPMcGuinn.xlsx')
+
+```
+
+# list of institutional contributors in 2018 and 2019
+
+```{r}
+
+dataprovider_summary <- filt2 %>%  
+  filter(EntryDateYear == 2018 | EntryDateYear == 2019) %>% 
+  group_by(DataProvider) %>% 
+  summarize(
+    class = paste(unique(class), collapse = ' | '),
+    DatasetIDs = paste(unique(DatasetID), collapse = ' | '),
+    Repositories = paste(unique(Repository), collapse = ' | '),
+    PIs = paste(unique(PI), collapse = ' | '), 
+    DataContacts = paste(unique(DataContact), collapse = ' | '),
+    Reporter = paste(unique(Reporter), collapse = ' | '))
+    
+x <- dataprovider_summary$DataProvider
+y <- dataprovider_summary$Repositories
+
+institution_list <- c(x,y)
+institution_list <- unique(institution_list)
+# View(institution_list)
+
+## export
+setwd("C:/rworking/deepseatools/indata")
+write.xlsx(institution_list, "20200311-0_institution_list_2018_2019_from_NDB_20191207-0_RPMcGuinn.xlsx")
+
+##### final cleaned up list by manual inspection ##### 
+## import cleaned up file
+
+
+
+
+
+
+
 
 ```
 

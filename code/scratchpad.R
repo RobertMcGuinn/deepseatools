@@ -4254,13 +4254,15 @@ destfile <- "yo.mov"
 download.file(URL, destfile)
 
 ##### helping Meredith with some depth values #####
-y <- filt %>% filter(DatasetID == 'NOAA_NWFSC_FRAM') %>%
+y <- filt %>% filter(DatasetID == 'NOAA_NWFSC_Bottom_Trawl_Survey') %>%
   dplyr::select(CatalogNumber, SampleID, DepthInMeters, DepthMethod, MinimumDepthInMeters, MaximumDepthInMeters, gisCRMDepth)
 
 
 x <- filt %>% filter(DatasetID == 'NOAA_NWFSC_FRAM') %>%
   select(EntryDate, AccessionID, Reporter) %>% unique()
 
+setwd("C:/rworking/deepseatools/indata")
+write.xlsx(y, '20200311-0_DatasetID_NOAA_NWFSC_Bottom_Trawl_Survey_NDB_20191217-0.xlsx')
 
 
 
