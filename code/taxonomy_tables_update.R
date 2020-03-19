@@ -9,11 +9,12 @@
 library(tidyverse)
 library(googledrive)
 library(googlesheets)
+library(worrms)
 
 ##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 
-n <- '20191217-2'
+n <- '20200303-0'
 
 taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
 #gs_browse(taxfl)
@@ -48,7 +49,7 @@ tax %>%
 tax %>% dplyr::select(ScientificName, ScientificNameNew) %>% View()
 
 ##### load in subset alone without running QA dash #####
-x <- "20191216-0_UnpurgedRecords_THourigan"
+x <- "20200303-1_NOAA_FGBNMS_DFH35_DFH37_Manta_Mohawk_Blakeway_2018_2018"
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
@@ -106,8 +107,22 @@ x <- bind_rows(x, .id = "column_label")
 
 # merge back to get original submitted names
 
-y <- merge(taxa, x, by.x = "row.names", by.y = 'column_label')
+y <- merge(taxa, x, by.x = "row.names", by.y = 'row.names')
 
+
+##### search for a specfic taxa #####
+
+## assign
+yo <- 'Callogorgia'
+
+## -OR- get from matched taxa table from above table
+yo <- x$scientificname
+yo <- yo[6]
+yo
+
+tax %>% filter(ScientificName == yo)%>% View()
+taxfl %>% filter(ScientificName == yo)%>% View()
+taxch %>% filter(ScientificName == yo) %>% View()
 
 ##### do next block of records #####
 x <- wm_records_taxamatch(name = taxa2,

@@ -1,5 +1,5 @@
 ---
-title: "Accession QA Dashboard"
+title: "Accession QA Report"
 author: "NOAA-NFMS-OHC-DSCRTP: Robert.McGuinn@NOAA.gov; 843-460-9696"
 date: "Date of report: `r Sys.Date()`"
 output: word_document
@@ -9,22 +9,67 @@ output: word_document
 always_allow_html: yes
 ---
 
+```{r load_packs, echo=F, message=FALSE, warning=F}
+
+## load packages
+library(tidyverse)
+library(rmarkdown)
+library(knitr)
+library(flextable)
+library(googlesheets)
+library(googledrive)
+library(openxlsx)
+library(scales)
+library(extrafont)
+library(RColorBrewer)
+library(rgdal)
+library(sp)
+library(marmap)
+
+```
+
 ```{r setup, include=FALSE}
-opts_chunk$set(fig.width=7, fig.height=3.5, dpi = 300)
+opts_chunk$set(fig.width=7, 
+               fig.height=3.5, 
+               dpi = 300, 
+               fig.align = 'left')
+               
 ```
 
 ```{r data_and_subset, echo=FALSE, message=FALSE, warning=FALSE}
 
-# # if you want to use a specific dataset
-# dataset <- 'DWH_NRDA_WS-14-06' #'NOAA_M2-10-06_AUV'
-# sub <- indata %>% filter(grepl(dataset, DatasetID))
-
 setwd("C:/rworking/deepseatools/indata")
-sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
+x <- "20200303-1_NOAA_FGBNMS_DFH35_DFH37_Manta_Mohawk_Blakeway_2018_2018"
+
+## x is defined in the runner script 
+sub <- read.csv(paste(x,'.csv', sep = ''), header = T) 
 flagged <- sub %>%  filter(Flag == "1")
 
+```
+
+
+```{r echo = F}
+
+##### fix implicit NA #####
+sub$Family <- forcats::fct_explicit_na(sub$Family)
 
 ```
+
+
+```{r echo = F, cache=T, eval=T}
+
+##### load NDB #####
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+rm(indata)
+
+```
+
+
+
+
 
 # AccessionID: 
 *`r x`* 
@@ -41,29 +86,15 @@ SurveyComments: `r unique(factor(sub$SurveyComments))`
 * Maximum depth: *`r max(sub[sub$DepthInMeters != "-999",]$DepthInMeters)`*
 * Number of dives or tows recorded: *`r length(unique(sub[sub$EventID != "NA" | is.na(sub$EventID) == F,]$EventID))`* 
 * Time frame: *`r min(as.numeric(min(sub$ObservationYear)))` to `r min(as.numeric(max(sub$ObservationYear)))`*
-* Number of ImageURL populated:
-`r x <- sub %>%
-  filter(is.na(ImageURL) == F)  %>%
-  group_by(DataProvider, DatasetID, DataContact, Reporter, FlagReason) %>%
-  summarize(
-    n = n()
-  ) 
-sum(x$n)`
-* Number of ImageFilePath Populated: 
-`r x <- sub %>%
-  filter(is.na(ImageFilePath) == F)  %>%
-  group_by(DataProvider, DatasetID, DataContact, Reporter, FlagReason) %>%
-  summarize(
-    n = n()
-  ) 
-sum(x$n)`
+* Number of ImageURL populated: `r sub %>% filter(is.na(ImageURL) == F) %>% pull(ImageURL) %>% length()`
+* Number of ImageFilePath Populated: `r sub %>% filter(is.na(ImageFilePath) == F) %>% pull(ImageURL) %>% length()`   
 
 # Citation
 ``` {r Citation, echo=FALSE}
 sum_tbl <-
   sub %>%
   group_by(Citation) %>%
-  summarize(Records=n())
+  dplyr::summarize(Records=n())
 sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
 sum_tbl
 ```
@@ -73,17 +104,17 @@ sum_tbl
 sum_tbl <-
   sub %>%
   group_by(WebSite) %>%
-  summarize(Records=n())
+  dplyr::summarize(Records=n())
 sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
 sum_tbl
 ```
 
 # Data Origin
-``` {r SourceSummary, echo=FALSE}
+``` {r SourceSummary, echo=FALSE, warnings = F}
 sum_tbl <-
   sub %>%
   group_by(DatasetID) %>%
-  summarize(
+  dplyr::summarize(
             DataProvider = paste(unique(DataProvider), collapse=" | "),
             PI = paste(unique(PI), collapse=" | "),
             Reporter = paste(unique(Reporter), collapse=" | "),
@@ -92,17 +123,20 @@ sum_tbl <-
             Records = n()
             )
 
-colkeys <- names(sum_tbl[,-1])
+
 ft <- flextable(sum_tbl) %>% 
   theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, vader
   #set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
-  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  colformat_num(j = 7, 
+                digits = 0, 
+                big.mark = ",", 
+                na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 7, part = "all") %>%
-  autofit()  %>% 
-  width(j = ~ DataProvider + Reporter + ReporterEmail + DataContact + Records, width = 7.5/length(names(sum_tbl)))
- 
-
+  align(j = 1:6, align = 'left', part = 'all') %>% 
+  align(j = 7, align = 'right', part = 'all') %>% 
+  autofit() 
+  
 ft
 
 ```
@@ -223,7 +257,7 @@ x
 sum_tbl <-
   sub %>%
   group_by(SurveyID) %>%
-  summarize(
+  dplyr::summarize(
             Vessel = paste(unique(Vessel), collapse=" | "),
             VehicleName = paste(unique(VehicleName), collapse=" | "),
             SamplingEquipment = paste(unique(SamplingEquipment), collapse=" | "),
@@ -233,15 +267,15 @@ sum_tbl <-
             Records = n()
             )
 
-colkeys <- names(sum_tbl[,-1])
+colkeys <- c("Records")
 ft <- flextable(sum_tbl) %>% 
   theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, vader
   #set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
-  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  colformat_num(j = 8, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 7, part = "all") %>%
   autofit()  %>% 
-  width(j = ~ SurveyID + Vessel + VehicleName + SamplingEquipment + NavType + LocationAccuracy + ObservationDates, width = 7.5/length(names(sum_tbl)))
+  width(j = 4, 1)
  
 
 ft
@@ -255,17 +289,16 @@ sum_tbl <-
   sub %>%
   # filter(RecordType == 'specimen') %>% 
   group_by(IdentifiedBy, RecordType) %>%
-  summarize(
+  dplyr::summarize(
             IdentificationQualifier = paste(unique(IdentificationQualifier), collapse=" | "),
             #Identification_Date = toString(unique(IdentificationDate)),
             Records = n()) %>%
   arrange(desc(Records))
 
-colkeys <- names(sum_tbl[,-1])
 ft <- flextable(sum_tbl) %>% 
   theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, vader
   #set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
-  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  colformat_num(j=4, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 7, part = "all") %>%
   autofit()  %>% 
@@ -282,7 +315,7 @@ sum_tbl <-
   arrange(ScientificName) %>% 
   filter(Phylum == 'Cnidaria') %>% 
   group_by(Family) %>%
-  summarize(
+  dplyr::summarize(
     ScientificName = paste(unique(ScientificName), collapse=" | "),
     TaxonRank = paste(unique(TaxonRank), collapse=" | "),
     UnFlagged = length(Flag[Flag == "0"]), 
@@ -291,15 +324,14 @@ sum_tbl <-
     Records = n())
 
 
-colkeys <- names(sum_tbl[,-1])
 ft <- flextable(sum_tbl) %>% 
   theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, vader
-  #set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
-  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  colformat_num(j = 4, digits = 0, big.mark = ",", na_str = "NA") %>%
+  colformat_num(j = 7, digits = 0, big.mark = ",", na_str = "NA") %>%
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 7, part = "all") %>%
-  autofit()  %>% 
-  width(j = ~ Family + ScientificName + TaxonRank + UnFlagged + FlagReason + Records, width = 7.5/length(names(sum_tbl)))
+  autofit() %>% 
+  width(j = 2, 2)
  
 
 ft
@@ -312,7 +344,7 @@ sum_tbl <-
   arrange(ScientificName) %>% 
   filter(Phylum == 'Porifera') %>% 
   group_by(Family) %>%
-  summarize(
+  dplyr::summarize(
     ScientificName = paste(unique(ScientificName), collapse=" | "),
     TaxonRank = paste(unique(TaxonRank), collapse=" | "),
     UnFlagged = length(Flag[Flag == "0"]), 
@@ -323,15 +355,16 @@ sum_tbl <-
 colkeys <- names(sum_tbl[,-1])
 ft <- flextable(sum_tbl) %>% 
   theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, vader
-  #set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
-  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
+  colformat_num(j = 4, digits = 0, big.mark = ",", na_str = "NA") %>%
+  colformat_num(j = 7, digits = 0, big.mark = ",", na_str = "NA") %>%
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 7, part = "all") %>%
-  autofit()  %>% 
-  width(j = ~ Family + ScientificName + TaxonRank + UnFlagged + FlagReason + Records, width = 7.5/length(names(sum_tbl)))
+  autofit() %>% 
+  width(j = 2, 2)
  
 
 ft
+
 ```
 
 # Location
@@ -342,7 +375,7 @@ sum_tbl <-
   arrange(Locality, EventID) %>% 
   #filter(Phylum == "Porifera") %>%
   group_by(Locality) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -360,7 +393,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(NavType) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -377,7 +410,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(LocationAccuracy) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -394,7 +427,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(Ocean) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -412,7 +445,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(Country) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -429,7 +462,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(FishCouncilRegion) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -446,7 +479,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(gisMEOW) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -464,7 +497,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(gisLME) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -523,7 +556,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(CategoricalAbundance) %>%
-  summarize(
+  dplyr::summarize(
     n = n()) %>%
   arrange(desc(CategoricalAbundance))
 sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
@@ -532,25 +565,22 @@ sum_tbl
 
 ## Density Values (per square meter)
 
-Nothing will appear here if no 'Density' values are present
+Nothing will appear here if 'Density' values are not present
 
 ``` {r Density, echo=FALSE}
-sum_tbl <-
-  sub %>%
-  #filter(Phylum == "Porifera") %>%
-  group_by(Density) %>%
-  summarize(
-    n = n()) %>%
-  arrange(desc(Density))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 5)
-sum_tbl
+
+sub %>% ggplot(aes(x=Density)) +
+  geom_histogram(binwidth = .2) +
+  ylab("Number of Records")  +
+  theme_bw(base_size = 15, base_family = "Cambria")
+
 ```
 
 ## Cover Values (%)
 
 Arranged in descending order of median 'Cover' values. Nothing will appear here if no 'Cover' values are present
 
-``` {r PercentCover, echo=FALSE}
+``` {r PercentCover, echo=FALSE, message=F, warning = F}
 sum_tbl <-
   sub %>%
   filter(
@@ -558,7 +588,7 @@ sum_tbl <-
       is.na(Cover) == F
   ) %>%
   group_by(ScientificName) %>%
-  summarize(
+  dplyr::summarize(
     minCover = min(Cover),
     maxCover = max(Cover),
     medianCover = median(Cover),
@@ -573,14 +603,14 @@ sum_tbl
 
 This table will be empty if no size values present.
 
-``` {r SizeSummary, echo=FALSE}
+``` {r SizeSummary, echo=FALSE, warning = F}
 sum_tbl <-
   sub %>%
   filter(
     VerbatimSize != '-999'
     ) %>%
   group_by(Genus) %>%
-  summarize(
+  dplyr::summarize(
     VerbatimSize_values = toString(unique(VerbatimSize)),
     min.Size = min(as.numeric(MinimumSize)),
     max.Size = max(as.numeric(MaximumSize)), 
@@ -593,12 +623,13 @@ sum_tbl
 ```
 
 ## Weight Values 
-``` {r WeightInKg, echo=FALSE}
+
+``` {r WeightInKg, echo=FALSE,warning = F}
 sum_tbl <-
   sub %>%
   filter(WeightInKg != "-999") %>%
   group_by(WeightInKg) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -615,7 +646,7 @@ sum_tbl <-
   sub %>%
   #filter(is.na(Condition) == F) %>%
   group_by(Condition) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -629,12 +660,12 @@ sum_tbl
 # Environment
 ## Habitat and Substrate
 
-``` {r HabSub, echo=FALSE}
+``` {r HabSub, echo=FALSE, warning = F}
 sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(Habitat, Substrate) %>%
-  summarize(
+  dplyr::summarize(
     #Species = toString(unique(ScientificName)),
     # min.Depth = min(as.numeric(DepthInMeters)),
     # mean.Depth = mean(as.numeric(DepthInMeters)),
@@ -736,7 +767,7 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired"))#[c(10,9)])
 sum_tbl <- sub %>% 
   #filter(Phylum == "Porifera") %>%
   group_by(pH) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -753,7 +784,7 @@ sum_tbl
 sum_tbl <- sub %>% 
   #filter(Phylum == "Porifera") %>%
   group_by(pHscale) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -770,7 +801,7 @@ sum_tbl
 sum_tbl <- sub %>% 
   #filter(Phylum == "Porifera") %>%
   group_by(pCO2) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -787,7 +818,7 @@ sum_tbl
 sum_tbl <- sub %>% 
   #filter(Phylum == "Porifera") %>%
   group_by(TA) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -804,7 +835,7 @@ sum_tbl
 sum_tbl <- sub %>% 
   #filter(Phylum == "Porifera") %>%
   group_by(DIC) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -816,10 +847,8 @@ sum_tbl
 
 ```
 
-
-
-# Temporal
-## Observation Time Frame
+# Temporal  
+## Observation Time Frame  
 `r min(as.numeric(sub$ObservationYear[sub$ObservationYear != "-999"]), na.rm=TRUE)` to `r max(sub$ObservationYear, na.rm=TRUE)`
 
 ## Observation Dates 
@@ -832,7 +861,7 @@ is.na(ObservationDate) == F |
 ObservationDate != '-999'
 ) %>%
 group_by(DatasetID) %>%
-summarize(
+dplyr::summarize(
 n = n()
 ) 
 
@@ -846,7 +875,7 @@ is.na(ObservationDate) == F |
 ObservationDate != '-999'
 ) %>%
 group_by(ObservationDate) %>%
-summarize(
+dplyr::summarize(
 n = n()
 )
 
@@ -860,7 +889,7 @@ is.na(ObservationTime) == F |
 ObservationTime != '-999'
 ) %>%
 group_by(DatasetID) %>%
-summarize(
+dplyr::summarize(
 n = n()
 )`
 
@@ -874,7 +903,7 @@ is.na(ObservationTime) == F |
 ObservationTime != '-999'
 ) %>%
 group_by(ObservationTime) %>%
-summarize(
+dplyr::summarize(
 n = n()
 ) 
 
@@ -886,7 +915,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(Modified) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -904,7 +933,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(EntryDate) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -922,7 +951,7 @@ sum_tbl <-
   sub %>%
   #filter(Phylum == "Porifera") %>%
   group_by(EntryUpdate) %>%
-  summarize(
+  dplyr::summarize(
     #min.Depth = min(as.numeric(MinimumDepthInMeters)),
     #max.Depth = max(as.numeric(MinimumDepthInMeters)), 
     #mean.Depth = mean(as.numeric(MinimumDepthInMeters)),
@@ -940,7 +969,7 @@ sum_tbl <-
   sub %>%
   filter(Flag == "1") %>%
   group_by(FlagReason) %>%
-  summarize(
+  dplyr::summarize(
     #CatalogNumbers = toString(CatalogNumber),
     taxa = paste(unique(ScientificName), collapse=" | "),
     n = n()
@@ -988,6 +1017,7 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)]
 
 
 # DepthCheck
+
 ``` {r Depth_Check, echo=FALSE, message=FALSE, warning=FALSE,fig.width=7, fig.height=3.5, dpi=300, eval = TRUE, cache=FALSE}
 
 ##### setting thresholds for difference and creating flags##### 
@@ -1047,19 +1077,19 @@ dx <- dx[!duplicated(dx), ]
 
 ## Depth Summary by ScientificName (Corals)
 
-Table is sorted in alpabetical order.
+The is sorted by median depth in descending order.
 
 ``` {r DepthSumByScientificNameCorals, echo=FALSE}
 sum_tbl <-
   sub %>%
   filter(Phylum == "Cnidaria") %>%
   group_by(ScientificName) %>%
-  summarize(
+  dplyr::summarize(
     min.Depth = min(as.numeric(DepthInMeters)),
     median.Depth = median(as.numeric(DepthInMeters)),
     max.Depth = max(as.numeric(DepthInMeters)), 
     n = n()) %>%
-  arrange(ScientificName)
+  arrange(desc(median.Depth))
 sum_tbl <- kable(sum_tbl, row.names = F, digits = 0)
 sum_tbl
 ```
@@ -1073,7 +1103,7 @@ sum_tbl <-
   sub %>%
   filter(Phylum == "Porifera") %>%
   group_by(ScientificName) %>%
-  summarize(
+  dplyr::summarize(
     min.Depth = min(as.numeric(DepthInMeters)),
     median.Depth = median(as.numeric(DepthInMeters)),
     max.Depth = max(as.numeric(DepthInMeters)), 
@@ -1099,15 +1129,17 @@ p +
 
 ```  
 
-## Table of Points > `r percrm` percent different than Coastal Relief Model
-Nothing will show here if criteria is not met
 
-``` {r crmtable, echo=FALSE}
+``` {r crmtable, echo=FALSE, eval = F}
+
+# ## Table of Points > `r percrm` percent different than Coastal Relief Model
+# Nothing will show here if criteria is not met
+
 sum_tbl <-
   crm %>%
   #filter(Flag == "1") %>%
   group_by(CatalogNumber) %>%
-  summarize(
+  dplyr::summarize(
     Scientific_Name = ScientificName,
     Depth = DepthInMeters,
     Etopo = gisEtopoDepth,
@@ -1136,15 +1168,18 @@ p +
 
 ```
 
-## Table of Points > `r perother` percent different than ETOPO
-Nothing will show here if criteria is not met
 
-``` {r etopotable, echo=FALSE}
+
+``` {r etopotable, echo=FALSE, eval = F}
+
+# ## Table of Points > `r perother` percent different than ETOPO
+# Nothing will show here if criteria is not met
+
 sum_tbl <-
   etopo %>%
   #filter(Phylum == "Porifera") %>%
   group_by(CatalogNumber) %>%
-  summarize(
+  dplyr::summarize(
     Scientific_Name = ScientificName,
     Depth = DepthInMeters,
     Etopo = gisEtopoDepth,
@@ -1172,14 +1207,17 @@ p +
 
 ```
 
-## Table of Points > `r perother` percent different than GEBCO
-Nothing will show here if criteria is not met
-``` {r gebcotable, echo=FALSE}
+
+``` {r gebcotable, echo=FALSE, eval = F}
+
+# ## Table of Points > `r perother` percent different than GEBCO
+# Nothing will show here if criteria is not met## Table of Points 
+
 sum_tbl <-
   gebco %>%
   #filter(Phylum == "Porifera") %>%
   group_by(CatalogNumber) %>%
-  summarize(
+  dplyr::summarize(
     Scientific_Name = ScientificName,
     Depth = DepthInMeters,
     Etopo = gisEtopoDepth,
@@ -1214,7 +1252,7 @@ sum_tbl <-
   depth %>%
   #filter(Phylum == "Porifera") %>%
   group_by(CatalogNumber) %>%
-  summarize(
+  dplyr::summarize(
     Scientific_Name = ScientificName,
     Depth = DepthInMeters,
     Etopo = gisEtopoDepth,
@@ -1243,31 +1281,37 @@ SurveyID <- setdiff(unique(sub$SurveyID), unique(filt$SurveyID))
 
 If name appears below after variable, then it does not match the standard name. That means it needs to be changed to match, or it is actually a new name that we have not encountered before.
 
-* Vessel: `r Vessel`
-* VehicleName: `r VehicleName`
-* PI: `r PI`
-* PIAffiliation: `r PIAffiliation`
-* Repository: `r Repository`
-* IdentifiedBy: `r IdentifiedBy`
-* IdentificationQualifier: `r IdentificationQualifier`
-* DataProvider: `r DataProvider`
-* DatasetID: `r DatasetID`
-* SurveyID: `r SurveyID`
+* Vessel: **`r Vessel`**  
+* VehicleName: **`r VehicleName`**  
+* PI: **`r PI`**  
+* PIAffiliation: **`r PIAffiliation`**  
+* Repository: **`r Repository`**  
+* IdentifiedBy: **`r IdentifiedBy`**  
+* IdentificationQualifier: **`r IdentificationQualifier`**  
+* DataProvider: **`r DataProvider`**  
+* DatasetID: **`r DatasetID`**  
+* SurveyID: **`r SurveyID`**  
 
-# SurveyIDs for the same Vessel
-``` {r standardized_SurveyID_check, echo=FALSE, cache = FALSE}
+# Compare our current holdings for the same 'Vessel'
 
-SurveyIDPattern <- filt %>% filter(Vessel %in% unique(sub$Vessel)) %>% group_by(DatasetID, Vessel, SurveyID, ObservationDate, PI) %>% summarize(n=n())
+``` {r standardized_SurveyID_check, echo=FALSE, cache = FALSE, warning = F}
+
+SurveyIDPattern <- filt %>% 
+  filter(Vessel %in% unique(sub$Vessel)) %>% 
+  group_by(Vessel) %>% 
+  dplyr::summarise(
+    SurveyIDs = paste(unique(SurveyID), collapse = ' | '),
+    DatasetIDs = paste(unique(DatasetID), collapse = ' | '),
+    DataProviders = paste(unique(DataProvider), collapse = ' | '),
+    Repository = paste(unique(Repository), collapse = ' | '),
+    #ObservationDates = paste(unique(ObservationDate), collapse = ' | '),
+    PIs = paste(unique(PI), collapse = ' | '), 
+    DataContacts = paste(unique(DataContact), collapse = ' | '),
+    #Reporters = paste(unique(Reporter), collapse = ' | ')
+  )
+  
 sum_tbl <- kable(SurveyIDPattern, row.names = F, digits = 2)
 sum_tbl
 
 ```
 
-# DatasetIDs for the same Vessel
-``` {r standardized_DatasetID_check, echo=FALSE}
-
-DatasetIDPattern <- filt %>% filter(Vessel %in% unique(sub$Vessel)) %>% group_by(DatasetID, Vessel, SurveyID, ObservationDate, PI) %>% summarize(n=n())
-sum_tbl <- kable(DatasetIDPattern, row.names = F, digits = 2)
-sum_tbl
-
-```

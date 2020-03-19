@@ -9,6 +9,7 @@
 .httr-oauth
 /wordtemplates
 /code/rmd_NDB_status_update_cache/
+/code/rmd_accession_qa_dashboard_cache/
 /code/yo_cache/
 /code/yo1_cache/
 /code/master_cache/

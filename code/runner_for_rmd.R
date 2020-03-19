@@ -49,7 +49,6 @@ d <- indata %>%
            DatasetID == "NOAA_EX-14-02-L3")
 table(factor(d$DatasetID), useNA = "always")
 
-
 library("rmarkdown")
 
 for (id in unique(d$AccessionID)){
@@ -157,7 +156,7 @@ render("2019_ISDSC7_high_density_THourigan_RPMcGuinn.Rmd",
 
 library(rmarkdown)
 # add the prefix of the dataset you want to report on
-x <- "20191125-1_University_of_Hawaii_Smith_Durden_Kilo_Moana_KM1808_2018_2018"
+x <- "20200303-1_NOAA_FGBNMS_DFH35_DFH37_Manta_Mohawk_Blakeway_2018_2018"
 
 render("C:/rworking/deepseatools/code/rmd_accession_qa_dashboard.rmd",
        output_file =  paste(x,".doc", sep=''),

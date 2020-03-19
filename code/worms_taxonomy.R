@@ -41,17 +41,6 @@ setwd("C:/rworking/digs/outdata")
 write.csv(taxon_names1,"20181204_0_Taxonomy_Table_names1_version_20181130-0.csv", row.names = F, quote = T)
 
 
-
-
-
-
-
-
-
-
-
-
-
 ##### use taxize instead #####
 
 

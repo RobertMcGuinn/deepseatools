@@ -1,0 +1,159 @@
+---
+title: "West_Coast_Sanctuary_Analysis"
+author: "Robert McGuinn"
+date: "3/18/2020"
+output: html_document 
+---
+
+# packages
+
+``` {r install_packages, , echo=T, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(rmarkdown)
+library(knitr)
+library(flextable)
+library(googlesheets)
+library(googledrive)
+library(openxlsx)
+library(scales)
+library(extrafont)
+library(RColorBrewer)
+library(rgdal)
+library(arcgisbinding)
+arc.check_product()
+library(sf)
+
+```
+
+# load NDB
+
+``` {r data_intake, echo=T, warning=FALSE, message=FALSE, cache=TRUE}
+##### input: latest version of NDB #####
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+```
+
+# bring in polygon files
+
+```{r}
+##### All data in this folder downloaded from https://protectedseas.net/mpa-downloads on 20200124
+## Last update of layers listed as: 06-19-2019
+## by Robert P McGuinn. robert.mcguinn@noaa.gov
+x <- 'mpa_ca_shp'
+y <- 'aicampas'
+
+fpath <- paste("C:/data/BaseLayers/MPA_ProtectedSeas_2020/", x, "/shapefile/", y, "_attributes/", y, "_attributes.shp", sep='')
+aicampas <- st_read(fpath)
+
+```
+
+# filter polygon files
+
+```{r}
+##### create a specific subset ##### 
+sub <- aicampas %>% filter(
+  grepl('Sanctuary', SITE_NAME),
+  SITE_NAME != 'Greater Farallones National Marine Sanctuary - Boating Restricted Areas'
+)
+
+##### get rid of M #####
+sub <- st_zm(sub)
+```
+
+# write out database as sf object and as ESRI feature class
+
+```{r}
+
+##### create spdf #####
+
+filtgeo <- filt %>% dplyr::select(CatalogNumber, Latitude, Longitude)
+coordinates(filtgeo) <- c("Longitude", "Latitude")
+proj4string(filtgeo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/data/aprx/sanctuaries_and_monuments/sanctuaries_and_monutments.gdb'
+arc.write(file.path(fgdb_path, 'filtgeo'), data=filtgeo, overwrite = TRUE)
+
+##### turn the sp object into sf object ##### sf
+
+filtsf <- st_as_sf(filtgeo)
+class(filtsf)
+st_crs(filtsf)
+
+```
+
+# getting point count in polyons
+
+```{r}
+count <- lengths(st_covers(sub, filtsf))
+count <- cbind(sub, x)
+count <- count %>% dplyr::select(SITE_NAME, x)
+count
+```
+
+# bring in summary tables from the GIS exports
+
+```{r}
+
+setwd("C:/rworking/deepseatools/indata")
+eez <- read.csv("pacific_islands_eez.csv", header = T)
+sancmon <- read.csv("sanc_mon.csv", header = T)
+sancmon_pac <- read.csv("sanc_mon_pacific.csv", header = T)
+sancmon_wa <- read.csv("sanc_mon_wa.csv", header = T)
+ca_eez <- read.csv("ca_eez.csv", header = T)
+or_eez <- read.csv("or_eez.csv", header = T)
+wa_eez <- read.csv("wa_eez.csv", header = T)
+
+```
+
+# summary for pacific islands
+
+```{r}
+
+sancmon %>% select(SITE_NAME, Point_Count) %>% View()
+
+eez %>% select(SITE_NAME, Point_Count) %>% View()
+
+length(eez$SITE_ID)
+
+(sum(sancmon$Point_Count)/sum(eez$Point_Count))*100
+(sum(sancmon$Shape_Area)/sum(eez$Shape_Area))*100
+
+sancmon$SITE_NAME
+eez$SITE_NAME
+
+```
+
+
+# summary for pacific and washington 
+
+```{r}
+sancmon_pac
+sancmon_wa 
+ca_eez 
+or_eez 
+wa_eez 
+
+# percent of corals within boundaries 
+(sum(sancmon_pac$Point_Count) + sancmon_wa$Point_Count)/(ca_eez$Point_Count + or_eez$Point_Count + wa_eez$Point_Count) * 100
+
+# percent of area 
+
+(sum(sancmon_pac$Shape_Area) + sancmon_wa$Shape_Area)/(ca_eez$Shape_Area + or_eez$Shape_Area + wa_eez$Shape_Area) * 100
+
+sancmon_pac$SITE_NAME
+sancmon_wa$SITE_NAME
+
+
+
+
+```
+
+
+
+
+

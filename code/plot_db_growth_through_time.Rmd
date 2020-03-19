@@ -301,9 +301,7 @@ write.xlsx(sum2, '20200310-0_summary_table_growth_by_region.xlsx')
 # summarize Entrydate by Year by Region, and by Phylum (save to Excel file)
 
 ```{r}
-
 filt2$EntryDateYear <- format(as.Date(filt$EntryDate),"%Y") 
-
 sum3 <- filt2 %>% filter(is.na(Phylum) == F) %>% 
   group_by(FishCouncilRegion, EntryDateYear, Phylum) %>% 
   summarize(n = n()) %>% arrange(FishCouncilRegion, FishCouncilRegion, Phylum, EntryDateYear)
@@ -314,7 +312,24 @@ sum4 <- sum3 %>% group_by(FishCouncilRegion, Phylum) %>%
 # View(sum2)
 setwd("C:/rworking/deepseatools/indata")
 write.xlsx(sum4, '20200310-0_summary_table_growth_by_region_by_Phylum_RPMcGuinn.xlsx')
+```
 
+# filtering for just Gulf of Mexico latest records
+
+```{r}
+## checking for GOMEX records
+
+x <- filt2 %>% filter(
+  #as.Date(EntryDate) > '2019-04-18', 
+  FishCouncilRegion == 'Gulf of Mexico') %>% 
+  group_by(DataProvider,FishCouncilRegion, EntryDate, EntryDateYear) %>% 
+  dplyr::summarize(n=n())
+
+# View(x)
+# 
+# sum(x$n)
+# table(filt2$EntryDateYear, useNA = 'always')
+# class(filt2$EntryDateYear)
 ```
 
 # list of institutional contributors in 2018 and 2019
@@ -345,12 +360,6 @@ write.xlsx(institution_list, "20200311-0_institution_list_2018_2019_from_NDB_201
 
 ##### final cleaned up list by manual inspection ##### 
 ## import cleaned up file
-
-
-
-
-
-
 
 
 ```
