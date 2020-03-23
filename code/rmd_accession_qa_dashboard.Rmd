@@ -874,8 +874,8 @@ filter(
 is.na(ObservationDate) == F |
 ObservationDate != '-999'
 ) %>%
-group_by(ObservationDate) %>%
-dplyr::summarize(
+group_by(SurveyID) %>%
+dplyr::summarize(ObservationDates = paste(unique(ObservationDate), collapse = ' | '),
 n = n()
 )
 
