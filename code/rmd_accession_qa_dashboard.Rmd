@@ -39,7 +39,6 @@ opts_chunk$set(fig.width=7,
 ```{r data_and_subset, echo=FALSE, message=FALSE, warning=FALSE}
 
 setwd("C:/rworking/deepseatools/indata")
-x <- "20200303-1_NOAA_FGBNMS_DFH35_DFH37_Manta_Mohawk_Blakeway_2018_2018"
 
 ## x is defined in the runner script 
 sub <- read.csv(paste(x,'.csv', sep = ''), header = T) 
@@ -134,8 +133,8 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 7, part = "all") %>%
   align(j = 1:6, align = 'left', part = 'all') %>% 
-  align(j = 7, align = 'right', part = 'all') %>% 
-  autofit() 
+  align(j = 7, align = 'right', part = 'all')# %>% 
+  #autofit() 
   
 ft
 
@@ -195,7 +194,7 @@ z + geom_point(data=sub2,
 
 ## Area of Interest Map
 
-```{r mapzoomed, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=TRUE, fig.align='center'}
+```{r mapzoomed, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=FALSE, fig.align='center'}
 ##### using marmap and ggplot2 to make a map #####
 
 # create a spatial points data frame
@@ -274,8 +273,9 @@ ft <- flextable(sum_tbl) %>%
   colformat_num(j = 8, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 7, part = "all") %>%
-  autofit()  %>% 
-  width(j = 4, 1)
+  #autofit()  %>% 
+  width(j = 6, 1.5) %>% 
+  width(j = 7, 1.5)
  
 
 ft
@@ -300,9 +300,9 @@ ft <- flextable(sum_tbl) %>%
   #set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
   colformat_num(j=4, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  fontsize(size = 7, part = "all") %>%
-  autofit()  %>% 
-  width(j = ~ IdentifiedBy + RecordType + IdentificationQualifier + Records, width = 7/length(names(sum_tbl)))
+  fontsize(size = 7, part = "all")
+  
+  
  
 
 ft
@@ -1014,7 +1014,6 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)]
 # g
 
 ```
-
 
 # DepthCheck
 

@@ -1,0 +1,119 @@
+---
+title: "taxonomy_checker"
+author: "Robert McGuinn"
+date: "3/24/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# opts
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# packages
+
+```{r}
+library(tidyverse)
+library(googledrive)
+library(googlesheets)
+library(worrms)
+library(rmarkdown)
+library(knitr)
+```
+
+# load taxonomy tables
+
+```{r}
+##### load the most current taxonomy from Google Sheets #####
+# https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
+
+n <- '20200313-0'
+
+taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
+#gs_browse(taxfl)
+taxfl <- gs_read(taxfl)
+
+taxch <- gs_title(paste(n, '_taxonomy_to_change', sep = ''))
+#gs_browse(taxch)
+taxch <- gs_read(taxch)
+
+tax <- gs_title(paste(n, '_taxonomy', sep = ''))
+#gs_browse(tax)
+tax <- gs_read(tax)
+```
+
+# load dataset of interest 
+
+
+```{r}
+x <- '20200304-0_Hourigan_Records_YPM_and_MBMCAS_2003_2018'
+setwd("C:/rworking/deepseatools/indata")
+sub <- read.csv(paste(x,'.csv', sep = ''), header = T) 
+```
+
+# create taxa list 4 possible ways
+
+```{r}
+##### create a character vector of non-matching taxa #####
+taxa <- as.character(
+  setdiff(unique(sub$ScientificName),
+          tax$ScientificName)
+  )
+
+taxa <- taxa[2:3]
+## checking
+# taxa
+# length(taxa)
+
+##### -OR- just bring in a list of mismatches from csv #####
+
+# setwd("C:/rworking/deepseatools/indata")
+# taxa <- read.csv('taxa.csv', header = F)
+# taxa$V1 <- gsub("'", '', taxa$V1)
+
+##### -OR- bring in a single taxa
+
+#taxa <- as.character("Chrysogorgia binata")
+
+```
+
+# match taxa (nonmatching taxa will not show)
+
+```{r}
+
+for (val in taxa)
+{
+  tryCatch({
+  x <- wm_records_taxamatch(name = val,
+                            ids = TRUE,
+                            verbose = TRUE,
+                            marine_only = TRUE,
+                            sleep_btw_chunks_in_sec = 0.2
+  )
+
+  x <- x[[1]]
+  x$VerbatimScientificName <- val
+  assign(paste('spec', str_replace(val, ' ', '_'), sep='_'), x)
+  }, error=function(e){})
+}
+
+z <- mget(ls(pattern='spec')) %>%
+              bind_rows()
+
+## checking
+# z %>% select(VerbatimScientificName, 
+#              scientificname, 
+#              valid_name) %>% View()
+
+## cleanup
+# rm(list = ls(pattern = 'spec'))
+# rm(z)
+```
+
+# get the synonyms
+
+
+
+

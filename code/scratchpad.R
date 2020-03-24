@@ -716,12 +716,12 @@ table(s$DSCRTPCategory, useNA = 'always')
 ##### _____ valid values #####
 x <- s %>%
   filter(
-    grepl("VernacularNameCategory", FieldName)
+    grepl("LocationAccuracy", FieldName)
   ) %>%
   group_by(
     FieldName
   ) %>%
-  summarise(
+  dplyr::summarise(
     description = toString(unique(FieldDescription)),
     valid_values = toString(unique(ValidValues)),
     internal = toString(unique(InternalUseOnly)),

@@ -14,7 +14,7 @@ library(worrms)
 ##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 
-n <- '20200303-0'
+n <- '20200313-0'
 
 taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
 #gs_browse(taxfl)
@@ -78,9 +78,13 @@ setwd("C:/rworking/deepseatools/indata")
 taxa <- read.csv('taxa.csv', header = F)
 taxa$V1 <- gsub("'", '', taxa$V1)
 
+##### -OR- create a list of mismatches #####
+
+taxa <- setdiff(sub$ScientificName, tax$ScientificName)
+
 ##### -OR- bring in a single taxa
 
-taxa <- as.character("Taiaroa")
+taxa <- as.character("Sessiliflorae")
 
 #### __OPTIONAL__ break them into chunks for WoRMs interface #####
 taxa1 <- taxa[1:50]
