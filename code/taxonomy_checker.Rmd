@@ -46,9 +46,8 @@ tax <- gs_read(tax)
 
 # load dataset of interest 
 
-
 ```{r}
-x <- '20200304-0_Hourigan_Records_YPM_and_MBMCAS_2003_2018'
+x <- '20200324-1_NOAA_AFSC_Oscar_Dyson_OD2017-06_Jones_Wilborn_Goddard_2017_2017'
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.csv(paste(x,'.csv', sep = ''), header = T) 
 ```
@@ -57,12 +56,13 @@ sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
 ```{r}
 ##### create a character vector of non-matching taxa #####
-taxa <- as.character(
-  setdiff(unique(sub$ScientificName),
-          tax$ScientificName)
-  )
+# taxa <- as.character(
+#   setdiff(unique(sub$ScientificName),
+#           tax$ScientificName)
+#   )
+# 
+# taxa <- taxa[2:3]
 
-taxa <- taxa[2:3]
 ## checking
 # taxa
 # length(taxa)
@@ -77,6 +77,8 @@ taxa <- taxa[2:3]
 
 #taxa <- as.character("Chrysogorgia binata")
 
+##### -OR- just bring in all of the taxa from the sub
+taxa <- unique(sub$ScientificName)
 ```
 
 # match taxa (nonmatching taxa will not show)
@@ -103,13 +105,21 @@ z <- mget(ls(pattern='spec')) %>%
               bind_rows()
 
 ## checking
-# z %>% select(VerbatimScientificName, 
-#              scientificname, 
-#              valid_name) %>% View()
+z %>% select(VerbatimScientificName,
+             scientificname,
+             valid_name) %>% View()
+
+x <- tax %>%  filter(tax$ScientificName %in% z$scientificname) %>% 
+  select(ScientificName, AphiaID)
+
+setdiff(x$AphiaID, z$AphiaID)
+setdiff(z$AphiaID, x$AphiaID)
 
 ## cleanup
 # rm(list = ls(pattern = 'spec'))
 # rm(z)
+
+
 ```
 
 # get the synonyms
