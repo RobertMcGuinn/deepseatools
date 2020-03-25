@@ -526,7 +526,7 @@ sub <- read.table("", header = T, sep="\t", fill = TRUE)
 
 ##### _____ get modified and original datasets via Excel #####
 setwd("C:/rworking/deepseatools/indata")
-sub <- read.xlsx('20191108-1_NOAA_OER_EX1806_NCarolina_Morrison_Sautter_2018_2018-TH.xlsx', sheet = 1)
+sub <- read.xlsx('20200313-0_NMNH-NewRecords_11-2019a_THourigan.xlsx', sheet = 1)
 
 #sub2 <- read.csv()
 
@@ -661,7 +661,7 @@ g + geom_point(aes(x=Longitude, y=Latitude), colour='red', data=sub, alpha=0.5) 
 
 ##### download Google Sheet version of schema for use in R #####
 # Register and download Google Sheet
-s <- gs_title('2019_DSCRTP_National_Database_Schema')
+s <- gs_title('2020_DSCRTP_National_Database_Schema')
 #s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 s <- gs_read(s)
 names(s)

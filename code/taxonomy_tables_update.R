@@ -74,7 +74,7 @@ taxa <- as.character(setdiff(unique(sub1$ScientificName), tax$ScientificName))
 
 ##### -OR- just bring in a list of mismatches #####
 
-setwd("C:/rworking/deepseatools/indata")
+setwd("C:/rworkin==g/deepseatools/indata")
 taxa <- read.csv('taxa.csv', header = F)
 taxa$V1 <- gsub("'", '', taxa$V1)
 

@@ -50,18 +50,20 @@ tax <- gs_read(tax)
 x <- '20200324-1_NOAA_AFSC_Oscar_Dyson_OD2017-06_Jones_Wilborn_Goddard_2017_2017'
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.csv(paste(x,'.csv', sep = ''), header = T) 
+
+##### --OR-- get dataset via Excel #####
+setwd("C:/rworking/deepseatools/indata")
+sub <- read.xlsx('20200313-0_NMNH-NewRecords_11-2019a_THourigan.xlsx', sheet = 1)
 ```
 
 # create taxa list 4 possible ways
 
 ```{r}
 ##### create a character vector of non-matching taxa #####
-# taxa <- as.character(
-#   setdiff(unique(sub$ScientificName),
-#           tax$ScientificName)
-#   )
-# 
-# taxa <- taxa[2:3]
+taxa <- as.character(
+  setdiff(unique(sub$ScientificName),
+          tax$ScientificName)
+  )
 
 ## checking
 # taxa
@@ -78,7 +80,28 @@ sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 #taxa <- as.character("Chrysogorgia binata")
 
 ##### -OR- just bring in all of the taxa from the sub
-taxa <- unique(sub$ScientificName)
+# taxa <- unique(sub$ScientificName)
+```
+
+# clean taxa list 
+
+```{r}
+
+taxa <- taxa %>% str_replace(' sp.', '')
+taxa <- taxa %>% str_replace('cf. ', '')
+taxa <- setdiff(taxa, tax$ScientificName)
+taxa <- trimws(taxa)
+taxa <- str_sort(taxa)
+
+```
+
+# check taxa list 
+
+```{r}
+
+length(taxa)
+length(setdiff(sub$AphiaID, tax$AphiaID))
+
 ```
 
 # match taxa (nonmatching taxa will not show)
@@ -105,15 +128,16 @@ z <- mget(ls(pattern='spec')) %>%
               bind_rows()
 
 ## checking
-z %>% select(VerbatimScientificName,
-             scientificname,
-             valid_name) %>% View()
-
-x <- tax %>%  filter(tax$ScientificName %in% z$scientificname) %>% 
-  select(ScientificName, AphiaID)
-
-setdiff(x$AphiaID, z$AphiaID)
-setdiff(z$AphiaID, x$AphiaID)
+# z %>% select(VerbatimScientificName,
+#              scientificname,
+#              valid_name) %>% View()
+# 
+# x <- tax %>%  filter(tax$ScientificName %in% z$scientificname) %>% 
+#   select(ScientificName, AphiaID)
+# View(x)
+# 
+# setdiff(x$AphiaID, z$AphiaID)
+# setdiff(z$AphiaID, x$AphiaID)
 
 ## cleanup
 # rm(list = ls(pattern = 'spec'))
@@ -122,7 +146,62 @@ setdiff(z$AphiaID, x$AphiaID)
 
 ```
 
-# get the synonyms
+# creating a new taxonomy table
+
+```{r}
+
+##### creating an empty taxonomy table (using information from accepted names) to populate (output: newtax_un) #####
+newtax <- tax[0,]
+
+#adding enough empty rows
+newtax[1:length(z$scientificname),] <- NA
+
+```
+
+# bringing info from taxonomic match table (z)
+
+```{r}
+
+##### adding information from (match from Worms) to taxonomy table #####
+newtax$ScientificName <- z$valid_name
+newtax$AphiaID <- z$valid_AphiaID
+newtax$ScientificNameAuthorship <- z$valid_authority
+newtax$Phylum <- z$phylum
+newtax$Class <- z$class
+newtax$Order <- z$order
+newtax$Family <- z$family
+newtax$Genus <- z$genus
+newtax$TaxonRank <- tolower(z$rank)
+newtax$SynonymAphiaID <- "-999"
+newtax$HigherTaxonNameAuthorship <- NA
+
+```
+
+# joining new records with taxonomy table 
+
+```{r}
+
+##### binding new taxonomy table with existing #####
+newtax <- rbind(tax, newtax)
+
+## checking
+# length(tax$VernacularNameCategory)
+# length(newtax$VernacularNameCategory)
+
+```
+
+# write updated taxonomy table to file
+
+```{r}
+
+##### write out new file #####
+setwd("C:/rworking/deepseatools/indata")
+newtax %>%
+  write.csv('newtax.csv', row.names = FALSE)
+
+```
+
+
 
 
 

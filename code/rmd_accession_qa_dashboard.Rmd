@@ -194,7 +194,7 @@ z + geom_point(data=sub2,
 
 ## Area of Interest Map
 
-```{r mapzoomed, echo=FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=TRUE, fig.align='center'}
+```{r mapzoomed, echo=FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=FALSE, fig.align='center'}
 ##### using marmap and ggplot2 to make a map #####
 
 # create a spatial points data frame

@@ -156,7 +156,7 @@ render("2019_ISDSC7_high_density_THourigan_RPMcGuinn.Rmd",
 
 library(rmarkdown)
 # add the prefix of the dataset you want to report on
-x <- "20200324-1_NOAA_AFSC_Oscar_Dyson_OD2017-06_Jones_Wilborn_Goddard_2017_2017"
+x <- "20200324-0_DSCRTP_NatDB_20191217-0_Corrections_THourigan"
 
 render("C:/rworking/deepseatools/code/rmd_accession_qa_dashboard.rmd",
        output_file =  paste(x,".doc", sep=''),
