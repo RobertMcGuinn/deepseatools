@@ -189,7 +189,6 @@ newtax <- rbind(tax, newtax_un)
 # length(newtax_un$Class)
 # length(newtax$VernacularNameCategory)
 
-
 ##### write out new file #####
 setwd("C:/rworking/deepseatools/indata")
 

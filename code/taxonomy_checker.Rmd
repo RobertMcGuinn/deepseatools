@@ -21,6 +21,7 @@ library(googlesheets)
 library(worrms)
 library(rmarkdown)
 library(knitr)
+library(openxlsx)
 ```
 
 # load taxonomy tables
@@ -47,13 +48,15 @@ tax <- gs_read(tax)
 # load dataset of interest 
 
 ```{r}
-x <- '20200324-1_NOAA_AFSC_Oscar_Dyson_OD2017-06_Jones_Wilborn_Goddard_2017_2017'
+##### get dataset from CSV #####
+x <- '20200325-1_NOAA_FGBNMS_DFH35_DFH37_Manta_Mohawk_Blakeway_2018_2018'
 setwd("C:/rworking/deepseatools/indata")
-sub <- read.csv(paste(x,'.csv', sep = ''), header = T) 
+sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
 ##### --OR-- get dataset via Excel #####
-setwd("C:/rworking/deepseatools/indata")
-sub <- read.xlsx('20200313-0_NMNH-NewRecords_11-2019a_THourigan.xlsx', sheet = 1)
+# setwd("C:/rworking/deepseatools/indata")
+# sub <- read.xlsx('20200313-0_NMNH-NewRecords_11-2019a_THourigan.xlsx', sheet = 1)
+
 ```
 
 # create taxa list 4 possible ways
@@ -64,7 +67,6 @@ taxa <- as.character(
   setdiff(unique(sub$ScientificName),
           tax$ScientificName)
   )
-
 ## checking
 # taxa
 # length(taxa)
@@ -75,43 +77,58 @@ taxa <- as.character(
 # taxa <- read.csv('taxa.csv', header = F)
 # taxa$V1 <- gsub("'", '', taxa$V1)
 
-##### -OR- bring in a single taxa
+##### -OR- bring in a single taxa #####
 
 #taxa <- as.character("Chrysogorgia binata")
 
-##### -OR- just bring in all of the taxa from the sub
+##### -OR- just bring in all of the taxa from the sub #####
 # taxa <- unique(sub$ScientificName)
+
+##### create a raw version of taxa list #####
+taxaraw <- taxa
+
+##### note: taxa list will go on for cleaning #####
+## 'taxaraw' will be used for stripping taxonomy string
+## directly from the 'sub' when it exists. This
+## condition happens often with incoming Smithsonian records. 
+## Warning: the incoming taxonomy is sometimes problematic and
+## accepting it, whole cloth into the master taxonomy table 
+## is probably risky no matter how expedient. Getting the 
+## match directly from WoRMS is the preferred method.  
+## Addtional code development time is needed to operationalize that.
+## This would also mean the retirement of the master taxonomy list 
+## as a customized entity. The manual assignment
+
 ```
 
 # clean taxa list 
 
 ```{r}
-
 taxa <- taxa %>% str_replace(' sp.', '')
 taxa <- taxa %>% str_replace('cf. ', '')
 taxa <- setdiff(taxa, tax$ScientificName)
 taxa <- trimws(taxa)
 taxa <- str_sort(taxa)
-
 ```
 
 # check taxa list 
 
 ```{r}
-
 length(taxa)
 length(setdiff(sub$AphiaID, tax$AphiaID))
-
 ```
 
 # match taxa (nonmatching taxa will not show)
 
 ```{r}
+##### run the loop to match World Registry of Marine Species (WoRMS) for matching #####
+## this loop and the subsequent rbind()step is helpful in getting around the
+## WoRMS 50 taxa limit within their API.
 
 for (val in taxa)
 {
   tryCatch({
-  x <- wm_records_taxamatch(name = val,
+   x <- wm_records_taxamatch(name = val,
                             ids = TRUE,
                             verbose = TRUE,
                             marine_only = TRUE,
@@ -124,6 +141,7 @@ for (val in taxa)
   }, error=function(e){})
 }
 
+##### bind all of the resulting matches together #####
 z <- mget(ls(pattern='spec')) %>%
               bind_rows()
 
@@ -138,19 +156,19 @@ z <- mget(ls(pattern='spec')) %>%
 # 
 # setdiff(x$AphiaID, z$AphiaID)
 # setdiff(z$AphiaID, x$AphiaID)
+# val
 
 ## cleanup
 # rm(list = ls(pattern = 'spec'))
 # rm(z)
 
-
 ```
 
-# creating a new taxonomy table
+# creating a new taxonomy empty table
 
 ```{r}
 
-##### creating an empty taxonomy table (using information from accepted names) to populate (output: newtax_un) #####
+##### creating an empty taxonomy table (using information from accepted names) to populate (output new object) #####
 newtax <- tax[0,]
 
 #adding enough empty rows
@@ -161,7 +179,6 @@ newtax[1:length(z$scientificname),] <- NA
 # bringing info from taxonomic match table (z)
 
 ```{r}
-
 ##### adding information from (match from Worms) to taxonomy table #####
 newtax$ScientificName <- z$valid_name
 newtax$AphiaID <- z$valid_AphiaID
@@ -174,35 +191,59 @@ newtax$Genus <- z$genus
 newtax$TaxonRank <- tolower(z$rank)
 newtax$SynonymAphiaID <- "-999"
 newtax$HigherTaxonNameAuthorship <- NA
-
 ```
 
-# joining new records with taxonomy table 
+# joining new records with current taxonomy table 
 
 ```{r}
-
 ##### binding new taxonomy table with existing #####
 newtax <- rbind(tax, newtax)
-
 ## checking
-# length(tax$VernacularNameCategory)
-# length(newtax$VernacularNameCategory)
-
+length(tax$VernacularNameCategory)
+length(newtax$VernacularNameCategory)
 ```
 
 # write updated taxonomy table to file
 
 ```{r}
-
 ##### write out new file #####
 setwd("C:/rworking/deepseatools/indata")
 newtax %>%
   write.csv('newtax.csv', row.names = FALSE)
-
 ```
 
+# --OR-- : extract a taxonomic table from the 'sub'
 
+```{r}
+##### prepare the column names list to use for select statment #####
+taxstring <- names(tax) %>% 
+  str_remove('HigherTaxonNameAuthorship') %>% 
+  str_remove('SynonymAphiaID')
+## getting rid of NA
+taxstring <- taxstring[taxstring != ""]
 
+##### select columns and create distinct record list #####
+x <- sub %>% filter(sub$ScientificName %in% taxaraw) %>% 
+  select(taxstring) %>% distinct()
+## checking
+# setdiff(x$ScientificName, sub$ScientificName)
 
+##### adding back missing variables #####
+x$HigherTaxonNameAuthorship <- NA
+x$SynonymAphiaID <- -999
+##checking
+setdiff(names(tax), names(x))
+setdiff(names(x), names(tax))
+```
+
+# joining extracted records with current taxonomy table 
+
+```{r}
+##### binding new taxonomy table with existing #####
+newtax <- rbind(tax, x)
+## checking
+length(tax$VernacularNameCategory)
+length(newtax$VernacularNameCategory)
+```
 
 

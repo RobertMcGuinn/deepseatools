@@ -66,10 +66,6 @@ rm(indata)
 
 ```
 
-
-
-
-
 # AccessionID: 
 *`r x`* 
 
@@ -1076,7 +1072,7 @@ dx <- dx[!duplicated(dx), ]
 
 ## Depth Summary by ScientificName (Corals)
 
-The is sorted by median depth in descending order.
+Table is sorted by median depth in ascending order.
 
 ``` {r DepthSumByScientificNameCorals, echo=FALSE}
 sum_tbl <-
@@ -1088,7 +1084,7 @@ sum_tbl <-
     median.Depth = median(as.numeric(DepthInMeters)),
     max.Depth = max(as.numeric(DepthInMeters)), 
     n = n()) %>%
-  arrange(desc(median.Depth))
+  arrange(median.Depth)
 sum_tbl <- kable(sum_tbl, row.names = F, digits = 0)
 sum_tbl
 ```
