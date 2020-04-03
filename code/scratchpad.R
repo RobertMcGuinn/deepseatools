@@ -4266,3 +4266,17 @@ write.xlsx(y, '20200311-0_DatasetID_NOAA_NWFSC_Bottom_Trawl_Survey_NDB_20191217-
 ##### looking at missing images #####
 indata %>% filter(grepl('951120', ImageURL))
 
+
+##### bad depth values #####
+filt %>% filter(CatalogNumber == '585101') %>%
+  dplyr::select(
+    DepthMethod,
+    DepthInMeters,
+    gisGEBCODepth,
+    gisCRMDepth,
+    gisEtopoDepth,
+    MinimumDepthInMeters,
+    MaximumDepthInMeters) %>%
+  View()
+
+
