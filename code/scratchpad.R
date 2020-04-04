@@ -4279,4 +4279,24 @@ filt %>% filter(CatalogNumber == '585101') %>%
     MaximumDepthInMeters) %>%
   View()
 
+##### extrafont stuff #####
+library(extrafont)
+
+##### load fonts #####
+## This tries to autodetect the directory containing the TrueType fonts.
+## If it fails on your system, please let me know.
+font_import()
+
+# Only necessary in session where you ran font_import()
+# For PostScript output, use loadfonts(device="postscript")
+# Suppress output with loadfonts(quiet=TRUE)
+loadfonts()
+
+## Vector of font family names
+fonts()
+
+## Show entire table
+fonttable()
+
+
 

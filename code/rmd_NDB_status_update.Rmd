@@ -7,22 +7,22 @@ editor_options:
   chunk_output_type: inline
 ---
 ``` {r install_packages, , echo=FALSE, warning=FALSE, message=FALSE}
-
 library(tidyverse)
+library(dplyr)
 library(rmarkdown)
 library(knitr)
 library(flextable)
+library(googlesheets4)
 library(googlesheets)
 library(googledrive)
 library(openxlsx)
 library(scales)
 library(extrafont)
+loadfonts()
 library(RColorBrewer)
-
 ```
 
 ``` {r setup_opts, , echo=FALSE, warning=FALSE, message=FALSE}
-
 ##### knitr options #####
 knitr::opts_chunk$set(
   fig.width = 8.0, 
@@ -41,7 +41,6 @@ options(digits = 0)
 ```
 
 ``` {r data_intake, echo=FALSE, warning=FALSE, message=FALSE, eval = T}
-
 ##### input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
 indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
@@ -64,7 +63,7 @@ dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-
 
 # read the file into R as a data frame
 key <- read.xlsx(dl$local_path)
-d <- merge(filt, key, all.x = TRUE)
+merge <- merge(filt, key, all.x = TRUE)
 ```
 
 ``` {r data_prep, echo=FALSE, warning=FALSE, message=FALSE}
@@ -79,43 +78,35 @@ filt <- filt %>% mutate(DataProvider =
                           ifelse(DataProvider == "NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i", "NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i", 
                                  as.character(DataProvider)))
 
-##### data improvements (from version DSCRTP_NatDB_20171214-0): Recorded in Redmine #####
-# filt <- filt %>% filter(ObservationYear != "-999" | 
-#                           is.na(TaxonRank) == F |
-#                           DepthInMeters != '-999') 
-# 
-# filt <- filt %>% mutate(DataProvider = 
-#                           ifelse(DataProvider == "Yoklavich, Mary",
-#                                               'NOAA, Southwest Fisheries Science Center, Santa Cruz', 
-#                                               as.character(DataProvider)))
-# filt <- filt %>% mutate(DataProvider = 
-#                           ifelse(DataProvider == "Flower Garden Banks National Marine Sanctuary (FGBNMS)",
-#                                               'NOAA, Flower Garden Banks National Marine Sanctuary', 
-#                                               as.character(DataProvider)))
-# 
-# filt <- filt %>% mutate(DataProvider = 
-#                           ifelse(DataProvider == "Hall-Spencer, Jason",
-#                                               'Hall-Spencer, J.', 
-#                                               as.character(DataProvider)))
-# 
-# 
-# filt <- filt %>% mutate(DataProvider = 
-#                           ifelse(DataProvider == "National Undersea Research Center",
-#                                               'National Undersea Research Center, University of Connecticut', 
-#                                               as.character(DataProvider)))
-# 
-# filt <- filt %>% mutate(DataProvider = 
-#                           ifelse(DataProvider == "NOAA Center for Coastal Monitoring and Assessment",
-#                                               'NOAA, Center for Coastal Monitoring and Assessment', 
-#                                               as.character(DataProvider)))
-# 
-# filt <- filt %>% mutate(LocationAccuracy = 
-#                           ifelse(LocationAccuracy == "300 m",
-#                                               '500m', 
-#           
 
-# filt <- filt %>% filter(is.na(Phylum) == F)
-                         
+##### Patch for problems with EntryDate
+## bring in patch file. Raw from David Sallis on 2020-03-10 #####
+## edited by RPMcGuinn on 2020-03-10 
+
+yo <- read.xlsx('../indata/20200310-0_entrydate_fix_RPMcGuinn.xlsx')
+yo <- yo %>% dplyr::select(-EntryDate)
+
+## check
+# setdiff(yo$DatasetID, filt$DatasetID)
+# filt %>% filter(grepl('NOAA_CT-13', DatasetID)) %>% pull(DatasetID) %>% unique()
+
+##### mutate step to add missing EntryDate values #####
+
+## merge corrections using DatasetID as a key field
+filt <- merge(filt, yo, all.x = TRUE)
+
+## create new variable
+filt <- filt %>% 
+  mutate(EntryDate2 = if_else(is.na(as.character(EntryDate)), 
+                              EntryDate_txt, 
+                              as.character(EntryDate)))
+
+## put corrected values into the correct position 
+filt$EntryDate <- filt$EntryDate2
+
+## get rid of the extra EntryDate field
+filt <- filt %>% select(-EntryDate2, -EntryDate_txt)
+
 ##### checker #####
 
 # length(filt1$CatalogNumber)
@@ -137,22 +128,17 @@ filt <- filt %>% mutate(DataProvider =
 #   ) %>% 
 #   arrange(desc(Records))
 # View(sum_tbl)
-
 ```
 
 ``` {r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
 ##### download Google Sheet version of schema for use in R  documents ##### 
 # Register and download Google Sheet
-s <- gs_title('2019_DSCRTP_National_Database_Schema')
-#s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
-s <- gs_read(s)
-# s<- s[,-(33:35)]
-#names(s)
+options(gargle_oauth_email = "robert.mcguinn@noaa.gov")
+s <- read_sheet('https://docs.google.com/spreadsheets/d/1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI/edit#gid=450007262')
 
 ```
 
 ``` {r setup_variables, echo=FALSE, warning=FALSE, message=FALSE}
-
 # length of unflagged records 
 a <- round(length(filt$CatalogNumber), -4)
 
@@ -382,40 +368,12 @@ filt2$FishCouncilRegion =
 ## set options to remove scientific notation
 options(scipen=10000)
 
-
-region <- 'Caribbean'
-plotname <- 'caribbean'
-
-region <- 'Gulf of Mexico'
-plotname <- 'gomex'
-
-region <- 'South Atlantic'
-plotname <- 'south_atlantic'
-
-region <- 'Mid-Atlantic'
-plotname <- 'mid_atlantic'
-
-region <- 'New England'
-plotname <- 'new_england'
-
-region <- 'North Pacific'
-plotname <- 'north_pacific'
-
-region <- 'Pacific'
-plotname <- 'pacific'
-
-region <- 'Western Pacific'
-plotname <- 'w_pacific'
-
-region <- 'International'
-plotname <- 'international'
-
-x <- filt2 %>% filter (Phylum == "Corals", FishCouncilRegion == region) %>% 
+x <- filt2 %>% filter (Phylum == "Corals") %>% 
   mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
   mutate(EntryDate = as.factor(EntryDate)) %>% 
   mutate(as.Date(EntryDate))
 
-y <- filt2 %>% filter (Phylum == "Sponges", FishCouncilRegion == region) %>%
+y <- filt2 %>% filter (Phylum == "Sponges") %>%
   mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
   mutate(EntryDate = as.factor(EntryDate)) %>% 
   mutate(as.Date(EntryDate))
@@ -442,14 +400,15 @@ ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
   theme(legend.title = element_blank()) +
   theme(axis.title.x = element_text(vjust=-2.5)) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))+
-  scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])+
-  ggtitle(region)
+  scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+  
 
-ggsave(paste("c:/rworking/deepseatools/images/", "20200309-0_",region, ".png", sep = ''), 
-       width = 6.5, 
-       height = 5.57, 
-       units = "in")
+## save figure if needed
 
+# ggsave(paste("c:/rworking/deepseatools/images/", "20200404-0_","all", ".png", sep = ''), 
+#        width = 6.5, 
+#        height = 5.57, 
+#        units = "in")
 ```
 
 #### Figure 1: Growth of NOAA's National Database for Deep-Sea Corals and Sponges through time.
@@ -506,38 +465,13 @@ The National Database contains contributions from museums, research programs, re
  
   
 ``` {r dataprovider_table, echo=FALSE}
-# options(scipen=999)
-# # create a list of files (or single file) that meets title query
-# x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
-# 
-# # # browse to it
-# # x %>% drive_browse()
-# 
-# # getting the id as a character string
-# y <- x$id
-# 
-# # this downloads the file to the specified path
-# dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
-# 
-# # read the file into R as a data frame
-# key <- read.xlsx(dl$local_path)
-# d <- merge(filt, key, all.x = TRUE)
-
-# checking merge step
-# View(d %>% filter(DataProvider == 'Ross (2012)') %>% 
-#   group_by(DatasetID, DataProvider, class) %>% 
-#   summarize(n=n()))
-
 x <-
-  d %>%
+  merge %>%
   group_by(DataProvider, class) %>% 
-  summarize(#class = paste(unique(class), collapse= " | "),
-            #Number_Datasets = length(unique(DatasetID)),
-            DatasetIDs = paste(unique(DatasetID), collapse= " | "),
+  dplyr::summarize(
+    DatasetIDs = paste(unique(DatasetID), collapse= " | "),
     Records = n()
-            )
-
-x <- x[,c("DataProvider","DatasetIDs","class","Records")]
+  )
 
 colkeys <- col_keys <- c("Records")
 

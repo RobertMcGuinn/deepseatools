@@ -18,6 +18,7 @@ library(googledrive)
 library(openxlsx)
 library(scales)
 library(extrafont)
+loadfonts()
 library(RColorBrewer)
 
 ```
@@ -46,8 +47,6 @@ filt <- filt %>% mutate(DataProvider =
 filt <- filt %>% mutate(DataProvider =
                           ifelse(DataProvider == "NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i", "NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i", 
                                  as.character(DataProvider)))
-
-
 
 ##### bring in patch file. Raw from David Sallis on 2020-03-10 #####
 ## edited by RPMcGuinn on 2020-03-10 
