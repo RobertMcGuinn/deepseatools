@@ -255,7 +255,7 @@ rm(indata)
 #### National Marine Fisheries Service    
 ####   
 #### NOAA Technical Memorandum NMFS-OHC-006  
-#### December, 2019   
+#### April, 2020   
 
 #####
 
@@ -284,7 +284,7 @@ McGuinn, Robert P. ^4,2^; Thomas F. Hourigan ^1^; Scott Cross ^2^; L. Matthew Do
 ####
 ####
 #### NOAA Technical Memorandum NMFS-OHC-006  
-#### December, 2019  
+#### April, 2020  
 
 
 ![](C:\rworking\deepseatools\indata\images\noaa_logo_bw.png)  
@@ -462,7 +462,7 @@ For the purposes of attribution, maintaining clear provenance, and facilitating 
   
 **Changes to field definitions and valid values**   
 
-Changes are occasionally needed to make improvements to database fields, definitions, and valid values. The details of these changes are given below in the section, 'Important Changes to the Field Definitions and Valid Values'.
+Changes are occasionally needed to make improvements to database fields, definitions, and valid values. The details of these changes are given below in the section, 'Important Changes and Additions to Database Fields'.
 
 **Availability of related content**  
   
@@ -1211,7 +1211,7 @@ This report has summarized the current holdings and quality level of NOAA's Nati
 
 ## Acknowledgements
 
-The Program would like to thank all the individuals and institutions who have contributed their data to be published in the common framework of the National Database. We recognize the considerable time and effort that it takes to collaborate with us, and for that, we are grateful. Also, thanks to all the contributors to the conceptualization and design of the database and the deep sea coral data portal. This resource is only possible with all of the individual and institutional contributors from the deep-sea research community. We would also like to thank all of the users of the data and portal for providing the real-world application of these resources. A huge thanks to all of the reviewers for their insights and improvements to this document (in alphabetical order by last name): Rachel Bassett, Abigail Benson, Just Cebrian, Elizabeth Duncan, Meredith Everett, Enrique Salgado, and Curt Whitmire. Thanks to all who continue to help us evolve these information resources to enhance deep sea conservation and management. 
+The Program would like to thank all the individuals and institutions who have contributed their data to be published in the common framework of the National Database. We recognize the considerable time and effort that it takes to collaborate with us, and for that, we are grateful. Also, thanks to all the contributors to the conceptualization and design of the database and the deep sea coral data portal. This resource is only possible with all of the individual and institutional contributors from the deep-sea research community. We would also like to thank all of the users of the data and portal for providing the real-world application of these resources. A huge thanks to all of the reviewers for their insights and improvements to this document (in alphabetical order by last name): Rachel Bassett, Abigail Benson, Just Cebrian, Elizabeth Duncan, Meredith Everett, Enrique Salgado, and Curt Whitmire. Thanks to all who continue to help us evolve these information resources to enhance deep-sea conservation and management. 
 
 ## References
 
