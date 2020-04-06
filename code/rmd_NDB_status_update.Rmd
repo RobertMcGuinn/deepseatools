@@ -46,24 +46,6 @@ setwd("C:/rworking/deepseatools/indata")
 indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0")
-
-```
-
-``` {r merge_key, eval=T}
-x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
-
-# # browse to it
-# x %>% drive_browse()
-
-# getting the id as a character string
-y <- x$id
-
-# this downloads the file to the specified path
-dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
-
-# read the file into R as a data frame
-key <- read.xlsx(dl$local_path)
-merge <- merge(filt, key, all.x = TRUE)
 ```
 
 ``` {r data_prep, echo=FALSE, warning=FALSE, message=FALSE}
@@ -78,11 +60,13 @@ filt <- filt %>% mutate(DataProvider =
                           ifelse(DataProvider == "NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i", "NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i", 
                                  as.character(DataProvider)))
 
+filt <- filt %>% mutate(DataProvider =
+                          ifelse(DataProvider == 'Ross (2012)', 'Harbor Branch Oceanographic Institute', as.character(DataProvider)))
+
 
 ##### Patch for problems with EntryDate
 ## bring in patch file. Raw from David Sallis on 2020-03-10 #####
 ## edited by RPMcGuinn on 2020-03-10 
-
 yo <- read.xlsx('../indata/20200310-0_entrydate_fix_RPMcGuinn.xlsx')
 yo <- yo %>% dplyr::select(-EntryDate)
 
@@ -128,6 +112,23 @@ filt <- filt %>% select(-EntryDate2, -EntryDate_txt)
 #   ) %>% 
 #   arrange(desc(Records))
 # View(sum_tbl)
+```
+
+``` {r merge_key, eval=T}
+x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
+
+# # browse to it
+# x %>% drive_browse()
+
+# getting the id as a character string
+y <- x$id
+
+# this downloads the file to the specified path
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx", overwrite = TRUE)
+
+# read the file into R as a data frame
+key <- read.xlsx(dl$local_path)
+merge <- merge(filt, key, all.x = TRUE)
 ```
 
 ``` {r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
@@ -234,6 +235,7 @@ ll <- s %>%
   filter(TrawlProgram == 'R')
 ll <- length(ll$FieldName)
 
+version <- '20191217-0'
 rm(indata)
 
 ```
@@ -323,13 +325,20 @@ This report presents information on the development and enhancements to the data
   
 The objectives of this report are to:
   
-* Provide an update on the continued development of the database through time in the form of a summary of its current contents for key variables.   
-* Identify enhancements and additions to the database and related data products since 2015.  These include, *inter alia*, the following:        
-+ Summaries and metadata for each data set (`r b` data sets from `r c` data providers to date);   
-+ Further standardization of coral taxonomy;    
-+ Institution of additional fields that accommodate standardized habitat descriptions, comparisons of recorded depths to modeled bathymetry, additional information on areas surveyed, morphospecies descriptions, and highlight exemplary images of taxa.     
+* Provide an update on the continued development of the database through time in the form of a summary of its current contents for key variables. 
+
+* Identify enhancements and additions to the database and related data products since 2015.  These include, *inter alia*, the following:
+
+  + Summaries and metadata for each data set (`r b` data sets from `r c` unique data providers to date);  
+
+  + Further standardization of coral taxonomy;    
+
+  + Institution of additional fields that accommodate standardized habitat descriptions, comparisons of recorded depths to modeled bathymetry, additional information on areas surveyed, morphospecies descriptions, and highlight exemplary images of taxa.
+
 * Describe quality control and assurance processes used to build and maintain the database.    
-* Acknowledge the many contributors to the database (as of the date of this publication).    
+
+* Acknowledge the many contributors to the database (as of the date of this publication). 
+
 * Direct data providers and data users to additional online resources.    
   
 #####  
@@ -342,7 +351,7 @@ The objectives of this report are to:
 
 Corals and sponges are the most important organisms creating deepwater biogenic habitats, and have become a centerpiece of deep-sea conservation in both the United States and internationally (Hourigan et al. 2017). The National Oceanic and Atmospheric Administration (NOAA) Deep Sea Coral Research and Technology Program (DSCRTP), herein referred to as the 'Program', compiles, curates, and makes publically accessible a National Database of biogeographic data and information on deep-sea corals and sponges. The database contains observations (records) of corals and sponges (primarily those deeper than 50 m), location and depth, and other relevant data that may be available, such as their size, abundance, and associated environmental conditions, as well as information on how the data were collected. Hourigan et al. (2015) provides an introduction and overview of the National Database.
 
-The database is designed to be a resource for both scientists and natural resource managers, and is a primary tool linking the Deep Sea Coral Research & Technology Program’s research to management. The database fulfills NOAA's requirements under the reauthorized [*Magnuson-Stevens Fishery Conservation and Management Act*](https://www.fisheries.noaa.gov/resource/document/magnuson-stevens-fishery-conservation-and-management-act) (MSA Sec. 408, 2007) to identify and map locations of deep-sea corals, and to submit this information for use by Regional Fishery Management Councils (FMCs). See http://www.fisherycouncils.org for an overview of the structure and function of the FMCs. The database focuses on deep-sea corals and sponges within the United States Exclusive Economic Zone (U.S.-EEZ), but increasingly includes records outside of the US-EEZ where available. The Program is actively encouraging partnerships worldwide to enhance the geographic scope of the data served. 
+The database is designed to be a resource for both scientists and natural resource managers, and is a primary tool linking the Deep Sea Coral Research & Technology Program’s research to management. The database fulfills NOAA's requirements under the reauthorized [*Magnuson-Stevens Fishery Conservation and Management Act*](https://www.fisheries.noaa.gov/resource/document/magnuson-stevens-fishery-conservation-and-management-act) (MSA Sec. 408, 2007) to identify and map locations of deep-sea corals, and to submit this information for use by Regional Fishery Management Councils (FMCs). See http://www.fisherycouncils.org for an overview of the structure and function of the FMCs. The database focuses on deep-sea corals and sponges within the United States Exclusive Economic Zone (U.S.-EEZ), but increasingly includes records outside of the US-EEZ where available. To enhance interoperability with other global biological occurrence databases, the field names, definitions, and valid values adhere to [Darwin Core standards](https://dwc.tdwg.org/terms/) where possible. The Program is actively encouraging partnerships worldwide to enhance the geographic reach of the data served. To encourage these partnerships and to further data awareness and usage globally, the database is also shared with the Ocean Biogeographic Information System, USA, [OBIS-USA](https://www.usgs.gov/core_science_systems/sas/obis-usa), and the Global Biodiversity Information Facility, [GBIF](https://www.gbif.org/) on a quarterly basis.
 
 The database was originally conceived in 2009, building upon an initial United States Geological Survey Cold-Water Coral Geographic Database that was limited to Atlantic coral records (Scanlon et al., 2010). NOAA's database was developed, and continues to be refined, in collaboration with data providers, data users from the science and resource management communities, and organizations involved in similar data efforts. Since 2012, the database has undergone rapid development experiencing periods of exponential growth during major data harvests (**Figure 1**). From 2012 to 2015 was a period of internal growth and development of the database, including the establishment of new field names, definitions, and accepted (valid) values. Additionally, a web-based mapping and data download site was established and is available at DeepSeaCoralData.NOAA.gov. Online access to the database, through the DSCRTP map portal, began in the fall of 2015. Growth from 2015 and onward was marked by quarterly data updates made available to the public. The quarterly database updates include the addition of new occurrences as well as improvements to existing records.
   
@@ -415,15 +424,19 @@ ggplot(filt2,aes(x=as.Date(EntryDate), color=Phylum)) +
 
 This document is a companion and update to an earlier NOAA Technical Memorandum entitled "An Introduction to NOAA's National Database for Deep-Sea Corals and Sponges" (Hourigan et al., 2015). The 2015 document is available online at: https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/database_intro. Readers are referred to that document for more detail on the Program and its mandates, database structure, and on general principles that informed the design of the database and related data. The objectives of this status update are to:  
 
-* Acknowledge contributors to the database (as of the date of this publication).  
-* Describe quality assurance and control (QA/QC) processes used to build and maintain the database.  
-* Provide an update on the continued development of the database through time in the form of a summary of its current contents for key variables.    
-* Direct data providers and data users to additional online resources.    
+* Acknowledge contributors to the database (as of the date of this publication).
+
+* Describe quality assurance and control (QA/QC) processes used to build and maintain the database.
+
+* Provide an update on the continued development of the database through time in the form of a summary of its current contents for key variables.
+
+* Direct data providers and data users to additional online resources.
+
 
 **Note to readers:**    
 Throughout this document, the term 'DSCRTP web portal' is used to refer to the Program's general web portal at https://deepseacoraldata.noaa.gov/. The term, 'DSCRTP map portal' refers specifically to the interactive map and data download functionality available here: https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm    
   
-Throughout this document, when referring to a field name from the National Database, it will be shown in single quotes exactly as it appears in the database, for example, 'DataProvider'. These field names are also used in the tables and figures for consistency and to familiarize the reader with the vocabulary used in the database. For a full list of all the field names, their definitions, and the valid values see **Appendix 2**. For convenience, the most current spreadsheet-compatible version of the data dictionary is located on the DSCRTP web portal at the following URL. Please note data dictionary version number. https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view
+Throughout this document, when referring to a field name from the National Database, it will be shown in single quotes exactly as it appears in the database, for example, 'DataProvider'. These field names are also used in the tables and figures for consistency and to familiarize the reader with the vocabulary used in the database. For a full list of all the field names, their definitions, and the valid values see **Appendix 2**. For convenience, the most current Excel spreadsheet version of the data dictionary is located on the DSCRTP web portal at this [URL](https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/view). Please note data dictionary version number. The most recent version of the data dictionary published online at that link should be used instead of the version published in this document as changes may have occurred post-publication.
 
 ## Overview of Changes to Data Working Group Workflows
 
@@ -433,7 +446,7 @@ Since the first online publication of NOAA's National Database for Deep-Sea Cora
 
 The Program's Data Working Group updates the National Database with new observations and improvements to existing records on a quarterly basis, rather than handling changes in an ad hoc manner as before. The quarterly release cycle allows for better internal coordination and external communication regarding database improvements and anticipated additions and changes.    
   
-New versions of the database are published on the DSCRTP map portal. The most recent database version number is indicated in the bottom left corner of the DSCRTP map portal screen as a date expressed in the format 'YYYYMMDD_X' where 'X' is an integer that captures additional iterations for a given version as needed. Older versions of the database are kept in perpetuity and are available upon request from the Program. The Program also uses these older versions to return individual records to an earlier time point if errors are recognized. The database is also archived annually at the NOAA National Centers for Environmental Information (NCEI) at the following location: https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0145037. *It is important to note* that the most current National Database is always the version available at the DSCRTP map portal and not at the preceding NCEI archive link. 
+New versions of the database are published on the DSCRTP map portal. The most recent database version number is indicated in the bottom left corner of the DSCRTP map portal screen as a date expressed in the format 'YYYYMMDD_X' where 'X' is an integer that captures additional iterations for a given version as needed. Older versions of the database are kept in perpetuity and are available upon request from the Program. The Program also uses these older versions to return individual records to an earlier time point if errors are recognized. The database is also archived annually at the NOAA National Centers for Environmental Information (NCEI) at the following location: https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0145037. *It is important to note* that the most current National Database is always the version available at the [DSCRTP map portal](https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm) and not at the preceding NCEI archive link. 
 
 **Automated quality control**  
   
@@ -445,7 +458,7 @@ The Program has implemented a master taxonomy table to standardize all taxonomic
 
 **Standard metadata describing component data sets** 
   
-For the purposes of attribution, maintaining clear provenance, and facilitating QA/QC and end-user confidence, data are identified and tracked as discrete data sets. The Program recognizes four different categories of data set: (1) data from a specific cruise, 'cruise'; (2) data from an identifiable multiyear program, such as a fisheries survey series, 'program'; (3) records from museum collections 'repository'; and (4) records from the published literature, 'literature'. As of this writing there are `r b` data sets as defined by the Program; this number grows with each quarterly update. International Standards Organization (ISO) compliant metadata for each component data set are published on the DSCRTP web portal. The 'DatasetID' field is used to identify unique data sets as defined by the program. See Appendix 4 of this document for details on accessing summary dashboards for each 'DatasetID' and downloading individual data sets and metadata.  
+For the purposes of attribution, maintaining clear provenance, and facilitating QA/QC and end-user confidence, data are identified and tracked as discrete data sets. The Program recognizes four different categories of data set: (1) data from a specific cruise, 'cruise'; (2) data from an identifiable multiyear program, such as a fisheries survey series, 'program'; (3) records from museum collections 'repository'; and (4) records from the published literature, 'literature'. As of this writing there are `r b` data sets as defined by the Program; this number grows with each quarterly update (**Table 1**). International Standards Organization (ISO) compliant metadata for each component data set are published on the DSCRTP web portal. The 'DatasetID' field is used to identify unique data sets as defined by the program. See **Appendix 4** of this document for details on accessing summary dashboards for each 'DatasetID' and downloading individual data sets and metadata. 
   
 **Changes to field definitions and valid values**   
 
@@ -461,7 +474,7 @@ Some types of content are added to the DSCRTP web portal as they become availabl
   
 The National Database contains contributions from museums, research programs, research cruises, and literature (**Table 1**). The database currently contains data contributions from `r c` unique data providers.
 
-#### Table 1: Data providers to NOAA's National Database for Deep-Sea Corals and Sponges. `r c` data providers and `r b` individual data sets.
+#### Table 1: Data providers to NOAA's National Database for Deep-Sea Corals and Sponges. `r c` data providers and `r b` individual data sets. The database version used for the creation of this table is `r version`
  
   
 ``` {r dataprovider_table, echo=FALSE}
@@ -490,7 +503,7 @@ ft
 
 ```
 
-####    
+#####    
     
 ## How to Contribute to the National Database
 
@@ -520,21 +533,21 @@ Contributing data to NOAA's National Database for Deep-Sea Corals and Sponges ca
   
 ## Overview of Data Ingestion and Quality Assurance Processes
   
-The Program is intent on building a high-quality, value-added aggregation of deep sea coral and sponge occurrence data that overcomes the limitations of individual incoming data sets by placing them in the context of other resources. Incoming data are checked against valid values for taxonomy, vessel names, vehicle names, and data providers. A systematic QA/QC process matches incoming values against standard value sets and thereby identifies, flags, and corrects errors where possible. All changes are documented and all previous versions of each data set, starting from the original file, are saved on NOAA computer systems for provenance tracking. The intention of the information presented below is to inform and update the reader on the Program's latest quality assurance procedures. 
+The Program is intent on building a high-quality, value-added aggregation of deep-sea coral and sponge occurrence data that overcomes the limitations of individual incoming data sets by placing them in the context of other resources. Incoming data are checked against valid values for taxonomy, vessel names, vehicle names, and data providers. A systematic QA/QC process matches incoming values against standard value sets and thereby identifies, flags, and corrects errors where possible. All changes are documented and all previous versions of each data set, starting from the original file, are saved on NOAA computer systems for provenance tracking. The intention of the information presented below is to inform and update the reader on the Program's latest quality assurance procedures. 
 
 ### Initial Intake Inspection and Documentation Phase  
 
 * The original data set is received from the data provider and archived as a 'Level 0' data product. The Program's data submission template facilitates data entry and streamlines incorporating data into the database.  
 * Level 0 data are then saved in a uniform folder structure on NOAA systems with notes and correspondence from the data provider.   
 * Data sets are assigned a standard file name and assigned an 'AccessionID', which tracks each data set received, along with any changes that occur between initial submission to publication.  
-* Data sets are reviewed by Program staff familiar with deep sea corals and NOAA data protocols. Additional notes on the submission are captured and filed. Additional communication with the data provider is initiated, if needed, to correct recognized errors or to clarify certain values.  
+* Data sets are reviewed by Program staff familiar with deep-sea corals and NOAA data protocols. Additional notes on the submission are captured and filed. Additional communication with the data provider is initiated, if needed, to correct recognized errors or to clarify certain values.  
 * All changes from the original are documented and tracked in an issue tracking system and all subsequent versions of the data are saved so that incorrect transformations or corrections can be easily reversed.  
 
 ####  
 
 ### Initial conformation
   
-* Data undergo a coded QA/QC process using R-based scripting.  
+* Data undergo a coded QA/QC process using R and Python scripts.  
 
 * Initial automated routines are performed to make sure data conform to the Program's data dictionary (see **Appendix 2**).   
 
@@ -658,7 +671,7 @@ ft
 ```
   
     
-**Field Additions**  
+**New Database Fields**  
   
 Several additions of internal and external fields, updates to field definitions, and updates to valid values have occurred since 2015. The Program recognizes the need for field definitions to remain as stable as possible through time, but the field definitions and valid values are revisited periodically to make additions or changes in order to capture critical new incoming information, or to clarify and refine the way a field should be implemented. Typical changes include adding a new field, improving the definition of an existing field, and changing the valid value set for an existing field. Highlighted below are the key changes to the database fields that have occurred since 2015.  
 
@@ -673,11 +686,13 @@ Four new taxonomy-related fields were added.
 * **'IdentificationVerificationStatus'**: `r s$FieldDescription[s$FieldName == "IdentificationVerificationStatus"]`
 * **'LifeScienceIdentifier'**: `r s$FieldDescription[s$FieldName == "LifeScienceIdentifier"]`
 
-Several new fields have been added that relate to capturing and reporting morphological descriptions of taxa.
+Several new fields have been added that relate to capturing and reporting morphological descriptions of taxa and highlight images.
 
 * **OperationalTaxonomicUnit**: `r s$FieldDescription[s$FieldName == "OperationalTaxonomicUnit"]`
 * **Morphospecies**: `r s$FieldDescription[s$FieldName == "Morphospecies"]`
 * **CombinedNameID**: `r s$FieldDescription[s$FieldName == "CombinedNameID"]`
+* **HighlightImageURL**: ``r s$FieldDescription[s$FieldName == "HighlightImageURL"]`
+* **HighlightImageFilePath**: ``r s$FieldDescription[s$FieldName == "HighlightImageFilePath"]`
 
 The previous 'Size' field was changed to 'VerbatimSize' and two new fields were added to capture the minimum and maximum size of the individual corals and sponges where these measurements are provided. 
 
@@ -742,68 +757,32 @@ For convenience and simplicity, each record in the database, regardless of sampl
 
 The Program places a high value on detailed quantification of the sample area, as it helps quantify total sampling effort and is essential for analysis of the density of coral and sponge communities.  
 
-## Connection between the Ocean Biogeographic Information System, USA (OBIS-USA) and the National Database
+## Connection between the Ocean Biogeographic Information System, USA (OBIS-USA), the Global Biodiversity Information Facility (GBIF), and the National Database
 
-The Program is committed to contributing to national and international aggregations of occurrence data. To this end, the Program contributes updated coral and sponge data on an annual basis to OBIS-USA, the U.S. node of OBIS which is part of the International Oceanographic Data and Information Exchange (IODE) of the Intergovernmental Oceanographic Commission (IOC) of the United Nations Educational, Scientific and Cultural Organization (UNESCO). The National Database contributes a particular subset of fields from its database to OBIS-USA during annual submissions and these fields align to the Darwin Core standard, the standard used by OBIS-USA (**Table 3**).
+The Program is committed to contributing to national and international aggregations of biological occurrence data. To this end, the Program contributes updated coral and sponge data quarterly to [OBIS-USA](https://www.usgs.gov/core_science_systems/sas/obis-usa), the U.S. node of OBIS, which is part of the International Oceanographic Data and Information Exchange (IODE) of the Intergovernmental Oceanographic Commission (IOC) of the United Nations Educational, Scientific and Cultural Organization (UNESCO). OBIS-USA is coordinated by the Science Analytics and Synthesis (SAS) Program of the United States Geological Survey (USGS). The National Database contributes a particular subset of fields from its database to OBIS-USA during quarterly submissions, and these fields align to the [Darwin Core standard](https://dwc.tdwg.org/terms/), the standard used by OBIS-USA and GBIF . OBIS-USA is also a participant node of the Global Biodiversity Information Facility, [GBIF](https://www.gbif.org/). **Table 3** shows the National Database fields that are contributed to these global databases. The data that is contributed to OBIS-USA is synchronized at GBIF as well. These data sharing efforts are intended to increase the global awareness, availability, and interoperability of the National Database.
 
-#### Table 3: Fields from the National Database for Deep Sea Corals and Sponges that are contributed to the Ocean Biogeographic Information System, USA (OBIS-USA). The vocabulary crosswalk table below is in alphabetical order by DSCRTP field names. The corresponding Darwin Core term is given that matches the term used within OBIS. The OBIS-required fields are highlighted.
+* Direct links to National Database on [OBIS](https://obis.org/dataset/f5a4799e-dc24-4807-89d9-01da47d52e3b) and [GBIF](https://www.gbif.org/dataset/df8e3fb8-3da7-4104-a866-748f6da20a3c)
+
+#### Table 3: Fields from the National Database for Deep-Sea Corals and Sponges that are contributed to the Ocean Biogeographic Information System, USA (OBIS-USA) and the Global Biodiversity Information Facility (GBIF). The corresponding DarwinCore Term is given that matches the term used within the National Database (DSCRTP Field Name). In addition to the fields listed below, a **'references'** field is created, which is a URL that provides a direct link to the full record within the National Database.
 
 ``` {r obis_table, echo=FALSE}
 
-z <- c('samplingEquipment',
-'sailingVessel',
-'vehicleName',
-'categoricalAbundance',
-'organismDensity',
-'cover',
-'verbatimSize',
-'minimumSize',
-'maximumSize',
-'weight',
-'condition',
-'startLatitude',
-'startLongitude',
-'endLatitude',
-'endLongitude',
-'habitat',
-'substrate',
-'geoformCMECS',
-'substrateCMECS',
-'bioticCMECS',
-'temperature',
-'salinity',
-'oxygen',
-'pH',
-'pHScale',
-'pCO2',
-'totalAlkalinity',
-'dissolvedInorganicCarbon')
+DarwinCoreTerm <- c('scientificName', 'scientificNameID', 'occurrenceID', 'individualCount', 'eventDate', 'decimalLatitude', 'decimalLongitude', 'coordinateUncertaintyInMeters', 'minimumDepthInMeters', 'maximumDepthInMeters', 'basisOfRecord', 'associatedMedia')
 
-'%!in%' <- function(x,y)!('%in%'(x,y))
+FieldName <- c('ScientificName', 'AphiaID', 'CatalogNumber', 'IndividualCount', 'ObservationDate', 'Latitude', 'Longitude', 'LocationAccuracy', 'MinimumDepthInMeters', 'MaximumDepthInMeters', 'RecordType', 'ImageURL')
 
-options(scipen=999)
-x <-
-  s %>% arrange(DarwinCoreTerm) %>% 
-  filter(ReleaseToOBIS == '1', DarwinCoreTerm %!in% z ) %>% 
-  group_by(FieldName) %>%
-  summarize(
-    DarwinCoreTerm = toString(unique(DarwinCoreTerm))
-            )
-
-colkeys <- names(x)
+x <- data.frame(FieldName, DarwinCoreTerm)
 
 ft <- flextable(x) %>% 
   theme_box() %>% #booktabs, vanilla, box, tron, tron_legacy
   set_header_labels(DarwinCoreTerm = "DarwinCore Term",
                     FieldName = "DSCRTP Field Name"
                     ) %>% 
-  colformat_num(col_keys = colkeys, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all") %>% #header, body, all
   fontsize(size = 10, part = "body") %>% 
   autofit() %>% 
   width(j = ~ DarwinCoreTerm, width = 2.2) %>% 
   width(j = ~ FieldName, width = 2.2) %>% 
-  #width(j = ~ DSCRTPCategory, width = 2) %>% 
   align(align = "right", part = 'all') 
   
 ft
@@ -814,13 +793,13 @@ ft
 
 ## Summary of Database Contents
 
-The following figures and statistics provide insight into the completeness and quality status of data sets included within the National Database. These results are meant to inform and caution data users about the adequacy of using the database for various analytical objectives. **Appendix 4** includes a link to an online resource that describes each unique data set in detail as well as providing an interactive map to explore those data in isolation. The data set dashboards also have a link to download the data set as well as International Standards Organization compliant metadata (ISO 19115-2).
+The following figures and statistics provide insight into the completeness and quality status of data sets included within the National Database. These results are meant to inform and caution data users about the adequacy of using the database for various analytical objectives. **Appendix 4** includes a link to an online resource (data set dashboards) that describes each unique data set in detail as well as providing an interactive map to explore those data in isolation. The data set dashboards also have a link to download the data set as well as International Standards Organization compliant metadata (ISO 19115-Parts 1 and 2).
 
 The figures and tables that are presented in the following section are designed to give readers greater insight into the current contents and status of a few key fields in the database. For clarity and brevity, not all variables within the database are covered here. We elected to summarize fields and highlight relationships that clarify the distribution of data holdings and well as identify issues that data users may find useful for their analytical goals.
 
 ### Analysis Details  
   
-The analyses presented here use version `r version` of the database. In some cases, the data have been filtered to enhance readability or interpretation of a figure or table. These filters will be called out explicitly in the text or captions when used. The purpose of this analysis is to succinctly summarize the current contents and quality of the database, so that any major limitations are apparent to end. The numerical and graphical summaries provided in this document were created using R and R-Markdown used within the RStudio development environment (R Core Team, 2017; RStudio Team, 2016). All R code is shared on GitHub at https://github.com/RobertMcGuinn/deepseatools.   
+The analyses presented here use version `r version` of the database. In some cases, the data have been filtered to enhance readability or interpretation of a figure or table. These filters will be called out explicitly in the text or captions when used. The purpose of this analysis is to succinctly summarize the current contents and quality of the database, so that any major limitations are apparent to users. The numerical and graphical summaries provided in this document were created using R and R-Markdown used within the RStudio development environment (R Core Team, 2017; RStudio Team, 2016). All R code is shared on GitHub at https://github.com/RobertMcGuinn/deepseatools.   
 
 ### Distribution of Records by U.S. Fishery Management Council Region  
 
@@ -834,7 +813,7 @@ a <- round(a*100, 0)
 
 ```
   
-Primary clients for the National Database are the United States Regional Fishery Management Councils. The 'FishCouncilRegion' field identifies the council region within which a record occurs. Around `r prettyNum(a, big.mark = ",")`% of records are not found within U.S. Fishery Management Council regions, as they are either within international waters or within the boundaries of other countries' exclusive economic zones (**Figure 2**).
+The primary geographic focus of NOAA's Deep Sea Coral Research & Technology Program is in the U.S. EEZ. Primary clients for the National Database are the United States Regional Fishery Management Councils. The 'FishCouncilRegion' field identifies the council region (and adjacent state waters) within which a record occurs. **Figure 2** shows the distribution of records by region. The large number of records from the Pacific Council Region (i.e., U.S. West Coast) reflects our partnership with the Monterey Bay Aquarium Research Institute (MBARI). We also recognize the scientific value of data from around the world and hope that our database can serve as an international resource. Currently, around `r prettyNum(a, big.mark = ",")`% of records occur outside U.S. Fishery Management Council regions, either in international waters (areas beyond national jurisdiction) or within the boundaries of other countries' EEZs (**Figure 2**).
 
 ``` {r FishCouncilRegion, echo=FALSE}
 # ordering factors
