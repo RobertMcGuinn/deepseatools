@@ -8,9 +8,9 @@
 ##### set an option #####
 options(lifecycle_disable_warnings = TRUE)
 
-##### _____ Bringing in database #####
+##### load database #####
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+indata<-read.csv("DSCRTP_NatDB_20200408-1.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
 filt <- indata %>%
   filter(Flag == "0")
 
@@ -25,7 +25,7 @@ version <- as.character(version)
 
 ##### bringing in datasetID key from xls stored on drive #####
 # create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20191217-0_DatasetID_Key_DSCRTP'")
+x <- drive_find(q = "name contains '20200408-1_DatasetID_Key_DSCRTP'")
 
 # # browse to it
 # x %>% drive_browse()
@@ -52,25 +52,24 @@ setdiff(key$DatasetID, filt$DatasetID)
 setdiff(indata$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, indata$DatasetID)
 
-##### ***OPTIONAL***updating DatasetID key with new 'n' #####
-
-# build a frequency table by DatasetID
+##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
+## build a frequency table by DatasetID
 x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
-names(key)
 
 # strip n from fieds
+names(key)
 y <- key[,1:8]
 names(y)
 
-# merge new numbers
+## merge new numbers
 z <- merge(y,x)
 names(z)
 
-# write out result
-write.xlsx(z, "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx",
+## write out result
+write.xlsx(z, "C:/rworking/deepseatools/indata/20200408-1_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
-##### subsetting of indata to d (optional step for testing purposes) #####
+##### ***OPTIONAL*** subsetting of indata to d (optional step for testing purposes) #####
 d <- indata %>%
   filter(
     # DatasetID == 'MCZ_IZ' | # Repository
@@ -80,8 +79,7 @@ d <- indata %>%
   )
 
 ##### ***OR*** full run set indata to d #####
-d <- indata
-rm(indata)
+d <- filt
 
 ##### checking #####
 # table(unique(factor(d$DataProvider)))
@@ -95,7 +93,6 @@ rm(indata)
 #   summarise(DatasetID = paste(unique(DatasetID), collapse = " | "),
 #             n=n())
 # View(yo)
-
 
 ##### checking #####
 # x <- d %>%
@@ -123,7 +120,7 @@ rm(indata)
 #
 # View(x)
 
-##### Fixing DatasetID Problems (optional) #####
+##### ***OPTIONAL*** Fixing DatasetID Problems (optional) #####
 # d <- d %>% mutate(DatasetID =
 #                     ifelse(DatasetID == "MCZ_IZ_1968_1880",
 #                            'MCZ_IZ',
@@ -167,14 +164,14 @@ d <- merge(d, key, all.x = TRUE)
 # table(factor(x$class), useNA = 'always')
 
 ##### *** run the reports *** #####
-## create the folders for each type of report
+##### _create the folders for each type of report #####
 
 dir.create('C:/rworking/deepseatools/reports/datasetid/cruise')
 dir.create('C:/rworking/deepseatools/reports/datasetid/literature')
 dir.create('C:/rworking/deepseatools/reports/datasetid/program')
 dir.create('C:/rworking/deepseatools/reports/datasetid/repository')
 
-## cruise: run RMD on each unique DatasetID group
+##### _cruise: run RMD on each unique DatasetID group #####
 #cruise subset
 yo <- d %>%
   filter(
@@ -190,7 +187,7 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/cruise')
 }
 
-## literature: run RMD on each unique DatasetID group
+##### _literature: run RMD on each unique DatasetID group ######
 yo <- d %>%
   filter(
     class == 'Literature'
@@ -204,8 +201,7 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/literature')
 }
 
-
-## program: run RMD on each unique DatasetID group
+##### _program: run RMD on each unique DatasetID group #####
 yo <- d %>%
   filter(
     class == 'Program'
@@ -220,7 +216,7 @@ for (id in unique(yo$DatasetID)){
 }
 
 
-## repository: run RMD on each unique DatasetID group
+##### _repository: run RMD on each unique DatasetID group #####
 yo <- d %>%
   filter(
     class == 'Repository',
@@ -235,7 +231,7 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/repository')
 }
 
-## repository:MBARI
+##### _repository:MBARI #####
 yo <- d %>%
   filter(
     DatasetID == 'MBARI'
@@ -249,7 +245,7 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/repository')
 }
 
-##### checking #####
+##### _checking #####
 cruise <- list.files('C:/rworking/deepseatools/reports/datasetid/cruise/')
 literature <- list.files('C:/rworking/deepseatools/reports/datasetid/literature/')
 program <- list.files('C:/rworking/deepseatools/reports/datasetid/program/')

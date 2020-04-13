@@ -3,7 +3,7 @@
 # date started: 20200113
 # purpose: publish a set of standardized tables for NDB each quarter
 
-##### Installation/Loading of Packages #####
+##### packages #####
 # install.packages('xlsx')
 #install.packages('openxlsx')
 library(openxlsx)
@@ -46,29 +46,30 @@ library(devtools)
 library(httr)
 library(jsonlite)
 
-##### _____ Bringing in database #####
-
-# setwd("C:/rworking/digs/indata")
-# indata1<-read.csv("DSCRTP_NatDB_20190620-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
-# filt1 <- indata1 %>%
-#   filter(Flag == "0")
-
+##### load National DB #####
+## old
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+indata_old <- read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+filt_old <- indata_old %>%
+  filter(Flag == "0")
+
+## new
+setwd("C:/rworking/deepseatools/indata")
+indata <- read.csv("DSCRTP_NatDB_20200408-1.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0")
 
-# save.image("C:/rworking/deepseatools/.RData")
+##### strip off DatasetID #####
+datasetID_old <- unique(filt_old$DatasetID)
+datasetID_new <- unique(filt$DatasetID)
 
-# # save the R workspace
-# save.image("C:/rworking/deepseatools/.RData")
-# #from table delimited text file (from David Sallis on 20190307)
-# indata <- read.table("DSCRTP_NatDB_20190306-0.txt", header = T, sep="\t", fill = TRUE)
+## checking
+# setdiff(datasetID_old, datasetID_new)
+# setdiff(datasetID_new, datasetID_old)
 
-##### _____ Create standardized tables of key variables at latest DB version #####
-# IdentificationQualifier
-
-version <- '201901217-0'
+##### create standardized tables of key variables at latest DB version #####
+##### _IdentificationQualifier #####
+version <- '20200408-1'
 
 x <- filt %>%
   arrange(ObservationYear) %>%
@@ -98,16 +99,12 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-setwd("C:/rworking/digs/indata")
+setwd("C:/rworking/deepseatools/indata")
 
 x %>%
   write.csv(paste("IdentificationQualifier_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
-upload <- gs_upload(paste("IdentificationQualifier_NatDB_", version,".csv", sep = ''))
-# gs_browse(upload, ws = 1)
-
-# SurveyID
-
+##### _SurveyID #####
 x <- filt %>%
   arrange(ObservationYear) %>%
   # filter(
@@ -136,16 +133,10 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-setwd("C:/rworking/digs/indata")
-
 x %>%
   write.csv(paste("SurveyID_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
-upload <- gs_upload(paste("SurveyID_NatDB_", version,".csv", sep = ''))
-# gs_browse(upload, ws = 1)
-
-# DataProvider
-
+##### _DataProvider #####
 x <- filt %>%
   arrange(ObservationYear) %>%
   # filter(
@@ -174,17 +165,10 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-
-setwd("C:/rworking/digs/indata")
-
 x %>%
   write.csv(paste("DataProvider_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
-upload <- gs_upload(paste("DataProvider_NatDB_", version,".csv", sep = ''))
-# gs_browse(upload, ws = 1)
-
-# DatasetID
-
+##### _DatasetID #####
 x <- filt %>%
   arrange(ObservationYear) %>%
   # filter(
@@ -213,16 +197,11 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-setwd("C:/rworking/digs/indata")
-
 x %>%
   write.csv(paste("DatasetID_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
-upload <- gs_upload(paste("DatasetID_NatDB_", version,".csv", sep = ''))
-# gs_browse(upload, ws = 1)
 
-# Repository
-
+##### _Repository #####
 x <- filt %>%
   arrange(ObservationYear) %>%
   # filter(
@@ -251,16 +230,10 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-
-setwd("C:/rworking/digs/indata")
-
 x %>%
   write.csv(paste("Repository_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
-upload <- gs_upload(paste("Repository_NatDB_", version,".csv", sep = ''))
-# gs_browse(upload, ws = 1)
-
-# Vessel
+##### _Vessel #####
 
 x <- filt %>%
   arrange(ObservationYear) %>%
@@ -290,15 +263,10 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-setwd("C:/rworking/digs/indata")
-
 x %>%
   write.csv(paste("Vessel_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
-upload <- gs_upload(paste("Vessel_NatDB_", version,".csv", sep = ''))
-# gs_browse(upload, ws = 1)
-
-# VehicleName
+##### _VehicleName #####
 
 x <- filt %>%
   arrange(ObservationYear) %>%
@@ -328,16 +296,10 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-
-setwd("C:/rworking/digs/indata")
-
 x %>%
   write.csv(paste("VehicleName_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
-upload <- gs_upload(paste("VehicleName_NatDB_", version,".csv", sep = ''))
-# gs_browse(upload, ws = 1)
-
-# PI
+##### _PI #####
 
 x <- filt %>%
   arrange(ObservationYear) %>%
@@ -367,15 +329,10 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-setwd("C:/rworking/digs/indata")
-
 x %>%
   write.csv(paste("PI_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
-upload <- gs_upload(paste("PI_NatDB_", version,".csv", sep = ''))
-# gs_browse(upload, ws = 1)
-
-# PIAffiliation
+##### _PIAffiliation #####
 
 x <- filt %>%
   arrange(ObservationYear) %>%
@@ -405,17 +362,10 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-
-setwd("C:/rworking/digs/indata")
-
 x %>%
   write.csv(paste("PIAffiliation_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
-upload <- gs_upload(paste("PIAffiliation_NatDB_", version,".csv", sep = ''))
-# gs_browse(upload, ws = 1)
-
-# IdentifiedBy
-
+##### _IdentifiedBy #####
 x <- filt %>%
   arrange(ObservationYear) %>%
   # filter(
@@ -444,12 +394,7 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-
-setwd("C:/rworking/digs/indata")
-
 x %>%
   write.csv(paste("IdentifiedBy_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
-upload <- gs_upload(paste("IdentifiedBy_NatDB_", version,".csv", sep = ''))
-# gs_browse(upload, ws = 1)
 
