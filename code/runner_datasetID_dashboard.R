@@ -171,7 +171,7 @@ dir.create('C:/rworking/deepseatools/reports/datasetid/literature')
 dir.create('C:/rworking/deepseatools/reports/datasetid/program')
 dir.create('C:/rworking/deepseatools/reports/datasetid/repository')
 
-##### _cruise: run RMD on each unique DatasetID group #####
+##### _cruise #####
 #cruise subset
 yo <- d %>%
   filter(
@@ -187,7 +187,7 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/cruise')
 }
 
-##### _literature: run RMD on each unique DatasetID group ######
+##### _literature ######
 yo <- d %>%
   filter(
     class == 'Literature'
@@ -201,7 +201,7 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/literature')
 }
 
-##### _program: run RMD on each unique DatasetID group #####
+##### _program #####
 yo <- d %>%
   filter(
     class == 'Program'
@@ -216,7 +216,7 @@ for (id in unique(yo$DatasetID)){
 }
 
 
-##### _repository: run RMD on each unique DatasetID group #####
+##### _repository #####
 yo <- d %>%
   filter(
     class == 'Repository',
