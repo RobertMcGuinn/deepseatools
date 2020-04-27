@@ -63,7 +63,7 @@ Use the 'info' function from the 'rerddap' package to get information about the 
 ```{r}
 
 info <- info(datasetid='deep_sea_corals', 
-              url = "https://ecowatch.ncddc.noaa.gov/erddap/")
+              url = "https://www.ncei.noaa.gov/erddap/")
 ```
 
 Now take a look at the first 5 field names using the 'head' function.
@@ -97,7 +97,7 @@ d <- tabledap("deep_sea_corals", 'longitude<50', 'latitude>20', 'latitude<30',
                        'Vessel', 'RecordType', 'DatasetID', 'SurveyID', 'SampleID', 'TrackingID',
                        'Station', 'Locality', 'ObservationYear', 'Genus', 'Phylum', 'TaxonRank',
                        'DepthInMeters'),
-              url = "https://ecowatch.ncddc.noaa.gov/erddap/")
+              url = "https://www.ncei.noaa.gov/erddap/")
               
 ```
 

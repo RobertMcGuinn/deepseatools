@@ -216,7 +216,7 @@ library(rmarkdown)
 library(knitr)
 
 setwd("C:\\rworking\\deepseatools\\code")
-x <- "20191217-0_Quarterly_Report_for_Database_Update_RPMcGuinn"
+x <- "20200408-0_Quarterly_Report_for_Database_Update_RPMcGuinn"
 render("C:/rworking/deepseatools/code/rmd_quarterly_report_for_database_update.Rmd" ,
        output_file =  paste(x,".doc", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')

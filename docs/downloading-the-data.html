@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html >
-
+<html lang="" xml:lang="">
 <head>
 
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>2 Downloading the data | Deep Sea Code Book</title>
-  <meta name="description" content="2 Downloading the data | Deep Sea Code Book">
-  <meta name="generator" content="bookdown  and GitBook 2.6.7">
+  <meta name="description" content="2 Downloading the data | Deep Sea Code Book" />
+  <meta name="generator" content="bookdown 0.18 and GitBook 2.6.7" />
 
   <meta property="og:title" content="2 Downloading the data | Deep Sea Code Book" />
   <meta property="og:type" content="book" />
@@ -22,17 +21,17 @@
   
   
 
-<meta name="author" content="Robert P. McGuinn">
+<meta name="author" content="Robert P. McGuinn" />
 
 
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="index.html">
-<link rel="next" href="creating-interactive-maps-using-leaflet.html">
+<link rel="prev" href="index.html"/>
+<link rel="next" href="creating-interactive-maps-using-leaflet.html"/>
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
@@ -40,6 +39,7 @@
 <link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
 
 
 
@@ -47,16 +47,18 @@
 
 
 
-<script src="libs/htmlwidgets-1.3/htmlwidgets.js"></script>
+
+
+<script src="libs/htmlwidgets-1.5.1/htmlwidgets.js"></script>
 <link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
 <script src="libs/leaflet-1.3.1/leaflet.js"></script>
 <link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
 <script src="libs/Proj4Leaflet-1.0.1/proj4-compressed.js"></script>
 <script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
 <link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
-<script src="libs/leaflet-binding-2.0.2/leaflet.js"></script>
-<script src="libs/leaflet-providers-1.1.17/leaflet-providers.js"></script>
-<script src="libs/leaflet-providers-plugin-2.0.2/leaflet-providers-plugin.js"></script>
+<script src="libs/leaflet-binding-2.0.3/leaflet.js"></script>
+<script src="libs/leaflet-providers-1.9.0/leaflet-providers_1.9.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.0.3/leaflet-providers-plugin.js"></script>
 
 
 <style type="text/css">
@@ -65,7 +67,6 @@ a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
 a.sourceLine:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
-div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
@@ -169,116 +170,107 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="downloading-the-data" class="section level1">
 <h1><span class="header-section-number">2</span> Downloading the data</h1>
 <p>In preparation for downloading and working with these data, you will need to load some additional R packages. The ‘install.packages’ commands below are commented out, so if you need to install, you will need to un-comment those before running this code.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># install.packages(&quot;dplyr&quot;)</span>
-<span class="kw">library</span>(dplyr)
-<span class="co"># install.packages(&quot;rerddap&quot;)</span>
-<span class="kw">library</span>(rerddap)
-<span class="co"># install.packages(&quot;leaflet&quot;)</span>
-<span class="kw">library</span>(leaflet)
-<span class="co"># install.packages(&quot;RColorBrewer&quot;)</span>
-<span class="kw">library</span>(RColorBrewer)
-<span class="co"># install.packages(&quot;ggplot2&quot;)</span>
-<span class="kw">library</span>(ggplot2)
-<span class="co"># install.packages(&quot;rmarkdown&quot;)</span>
-<span class="kw">library</span>(rmarkdown)
-<span class="co"># install.packages(&quot;knitr&quot;)</span>
-<span class="kw">library</span>(knitr)</code></pre>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="co"># install.packages(&quot;dplyr&quot;)</span></a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">library</span>(dplyr)</a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="co"># install.packages(&quot;rerddap&quot;)</span></a>
+<a class="sourceLine" id="cb1-4" title="4"><span class="kw">library</span>(rerddap)</a>
+<a class="sourceLine" id="cb1-5" title="5"><span class="co"># install.packages(&quot;leaflet&quot;)</span></a>
+<a class="sourceLine" id="cb1-6" title="6"><span class="kw">library</span>(leaflet)</a>
+<a class="sourceLine" id="cb1-7" title="7"><span class="co"># install.packages(&quot;RColorBrewer&quot;)</span></a>
+<a class="sourceLine" id="cb1-8" title="8"><span class="kw">library</span>(RColorBrewer)</a>
+<a class="sourceLine" id="cb1-9" title="9"><span class="co"># install.packages(&quot;ggplot2&quot;)</span></a>
+<a class="sourceLine" id="cb1-10" title="10"><span class="kw">library</span>(ggplot2)</a>
+<a class="sourceLine" id="cb1-11" title="11"><span class="co"># install.packages(&quot;rmarkdown&quot;)</span></a>
+<a class="sourceLine" id="cb1-12" title="12"><span class="kw">library</span>(rmarkdown)</a>
+<a class="sourceLine" id="cb1-13" title="13"><span class="co"># install.packages(&quot;knitr&quot;)</span></a>
+<a class="sourceLine" id="cb1-14" title="14"><span class="kw">library</span>(knitr)</a></code></pre></div>
 <div id="using-erddap-to-download-data" class="section level2">
 <h2><span class="header-section-number">2.1</span> Using ERDDAP to download data</h2>
 <p>Getting data directly from ERDDAP (Environmental Resource Division Data Access Protocol) using ‘rerddap’ package in R.</p>
 <p>To see the meanings and valid values for all of the fields in National Database, download an Excel version of the full data dictionary following location: <a href="https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/at_download/file">LINK</a></p>
 <p>Use the ‘info’ function from the ‘rerddap’ package to get information about the variables (fields) in the database. Note that the ‘Latitude’ and ‘Longitude’ fields are in ERDDAP as ‘latitude’ and ‘longitude’, with no capital letters. These are the only field names that differ from what is in the data dictionary.</p>
-<pre class="sourceCode r"><code class="sourceCode r">info &lt;-<span class="st"> </span><span class="kw">info</span>(<span class="dt">datasetid=</span><span class="st">&#39;deep_sea_corals&#39;</span>, 
-              <span class="dt">url =</span> <span class="st">&quot;https://ecowatch.ncddc.noaa.gov/erddap/&quot;</span>)</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">info &lt;-<span class="st"> </span><span class="kw">info</span>(<span class="dt">datasetid=</span><span class="st">&#39;deep_sea_corals&#39;</span>, </a>
+<a class="sourceLine" id="cb2-2" title="2">              <span class="dt">url =</span> <span class="st">&quot;https://www.ncei.noaa.gov/erddap/&quot;</span>)</a></code></pre></div>
 <p>Now take a look at the first 5 field names using the ‘head’ function.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(info<span class="op">$</span>variables)</code></pre>
-<pre><code>##          variable_name data_type actual_range
-## 1              AphiaID       int             
-## 2  AssociatedSequences    String             
-## 3       AssociatedTaxa    String             
-## 4        CatalogNumber       int             
-## 5 CategoricalAbundance    String             
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">head</span>(info<span class="op">$</span>variables)</a></code></pre></div>
+<pre><code>##          variable_name data_type  actual_range
+## 1              AphiaID       int -999, 1419323
+## 2  AssociatedSequences    String              
+## 3       AssociatedTaxa    String              
+## 4        CatalogNumber       int    1, 1015597
+## 5 CategoricalAbundance    String              
 ## 6             Citation    String</code></pre>
 <p>To list all variables in the NOAA, National Database for Deep Sea Corals and Sponges , then use the following:</p>
-<pre class="sourceCode r"><code class="sourceCode r">info<span class="op">$</span>variables</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1">info<span class="op">$</span>variables</a></code></pre></div>
 <p>When you have the variables (fields) that you want to download in mind after reviewing the data dictionary, you can download them using the following ‘tabledap’ function from the ‘rerddap’ package. In the code below, you can see an example of setting specific geographic bounding box constraints and selecting a particular Vessel. You can set any numeric or character-based constraint on your downloads using this basic syntax. If you set no contraints, you will download all data. <em>Warning</em>: If you add no constraints, the data download will take more time, so be patient.</p>
 <p>You can also filter your data after downloading if you would prefer, rather than using constraints in the ‘tabledap’ function. This might be preferable if you want to intially download all of the data and all of the fields for exploration. The example below contains constraints. <em>Note</em>: Character constraints must be enclosed in double quotes. So the syntax for a constraint is: ‘Vessel=“Okeanos Explorer R/V”’. Variables can be listed in any order desired.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rerddap)
-d &lt;-<span class="st"> </span><span class="kw">tabledap</span>(<span class="st">&quot;deep_sea_corals&quot;</span>, <span class="st">&#39;longitude&lt;50&#39;</span>, <span class="st">&#39;latitude&gt;20&#39;</span>, <span class="st">&#39;latitude&lt;30&#39;</span>, 
-              <span class="st">&#39;Vessel=&quot;Okeanos Explorer R/V&quot;&#39;</span>,
-              <span class="dt">fields=</span><span class="kw">c</span>(<span class="st">&#39;CatalogNumber&#39;</span>, <span class="st">&#39;latitude&#39;</span>, <span class="st">&#39;longitude&#39;</span>, <span class="st">&#39;ScientificName&#39;</span>, <span class="st">&#39;ImageURL&#39;</span>, 
-                       <span class="st">&#39;Vessel&#39;</span>, <span class="st">&#39;RecordType&#39;</span>, <span class="st">&#39;DatasetID&#39;</span>, <span class="st">&#39;SurveyID&#39;</span>, <span class="st">&#39;SampleID&#39;</span>, <span class="st">&#39;TrackingID&#39;</span>,
-                       <span class="st">&#39;Station&#39;</span>, <span class="st">&#39;Locality&#39;</span>, <span class="st">&#39;ObservationYear&#39;</span>, <span class="st">&#39;Genus&#39;</span>, <span class="st">&#39;Phylum&#39;</span>, <span class="st">&#39;TaxonRank&#39;</span>,
-                       <span class="st">&#39;DepthInMeters&#39;</span>),
-              <span class="dt">url =</span> <span class="st">&quot;https://ecowatch.ncddc.noaa.gov/erddap/&quot;</span>)</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">library</span>(rerddap)</a>
+<a class="sourceLine" id="cb6-2" title="2">d &lt;-<span class="st"> </span><span class="kw">tabledap</span>(<span class="st">&quot;deep_sea_corals&quot;</span>, <span class="st">&#39;longitude&lt;50&#39;</span>, <span class="st">&#39;latitude&gt;20&#39;</span>, <span class="st">&#39;latitude&lt;30&#39;</span>, </a>
+<a class="sourceLine" id="cb6-3" title="3">              <span class="st">&#39;Vessel=&quot;Okeanos Explorer R/V&quot;&#39;</span>,</a>
+<a class="sourceLine" id="cb6-4" title="4">              <span class="dt">fields=</span><span class="kw">c</span>(<span class="st">&#39;CatalogNumber&#39;</span>, <span class="st">&#39;latitude&#39;</span>, <span class="st">&#39;longitude&#39;</span>, <span class="st">&#39;ScientificName&#39;</span>, <span class="st">&#39;ImageURL&#39;</span>, </a>
+<a class="sourceLine" id="cb6-5" title="5">                       <span class="st">&#39;Vessel&#39;</span>, <span class="st">&#39;RecordType&#39;</span>, <span class="st">&#39;DatasetID&#39;</span>, <span class="st">&#39;SurveyID&#39;</span>, <span class="st">&#39;SampleID&#39;</span>, <span class="st">&#39;TrackingID&#39;</span>,</a>
+<a class="sourceLine" id="cb6-6" title="6">                       <span class="st">&#39;Station&#39;</span>, <span class="st">&#39;Locality&#39;</span>, <span class="st">&#39;ObservationYear&#39;</span>, <span class="st">&#39;Genus&#39;</span>, <span class="st">&#39;Phylum&#39;</span>, <span class="st">&#39;TaxonRank&#39;</span>,</a>
+<a class="sourceLine" id="cb6-7" title="7">                       <span class="st">&#39;DepthInMeters&#39;</span>),</a>
+<a class="sourceLine" id="cb6-8" title="8">              <span class="dt">url =</span> <span class="st">&quot;https://www.ncei.noaa.gov/erddap/&quot;</span>)</a></code></pre></div>
 <p>Check the size of the data frame that you just downloaded using the ‘dim’ function.</p>
-<pre class="sourceCode r"><code class="sourceCode r">x &lt;-<span class="st"> </span><span class="kw">dim</span>(d)
-x</code></pre>
-<pre><code>## [1] 28242    18</code></pre>
-<p>The dataframe that you downloaded contains 28242 rows (occurrences) by 18 fields.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">x &lt;-<span class="st"> </span><span class="kw">dim</span>(d)</a>
+<a class="sourceLine" id="cb7-2" title="2">x</a></code></pre></div>
+<pre><code>## [1] 30562    18</code></pre>
+<p>The dataframe that you downloaded contains 30562 rows (occurrences) by 18 fields.</p>
 <p>Now list the names of the fields to check that you downloaded the fields that you wanted.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">names</span>(d)</code></pre>
-<pre><code>##  [1] &quot;CatalogNumber&quot;   &quot;latitude&quot;        &quot;longitude&quot;      
-##  [4] &quot;ScientificName&quot;  &quot;ImageURL&quot;        &quot;Vessel&quot;         
-##  [7] &quot;RecordType&quot;      &quot;DatasetID&quot;       &quot;SurveyID&quot;       
-## [10] &quot;SampleID&quot;        &quot;TrackingID&quot;      &quot;Station&quot;        
-## [13] &quot;Locality&quot;        &quot;ObservationYear&quot; &quot;Genus&quot;          
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">names</span>(d)</a></code></pre></div>
+<pre><code>##  [1] &quot;CatalogNumber&quot;   &quot;latitude&quot;        &quot;longitude&quot;       &quot;ScientificName&quot;  &quot;ImageURL&quot;       
+##  [6] &quot;Vessel&quot;          &quot;RecordType&quot;      &quot;DatasetID&quot;       &quot;SurveyID&quot;        &quot;SampleID&quot;       
+## [11] &quot;TrackingID&quot;      &quot;Station&quot;         &quot;Locality&quot;        &quot;ObservationYear&quot; &quot;Genus&quot;          
 ## [16] &quot;Phylum&quot;          &quot;TaxonRank&quot;       &quot;DepthInMeters&quot;</code></pre>
 <p>Now filter the downloaded data for only those records which have images and take a look at the ‘head’ of the dataframe.</p>
-<pre class="sourceCode r"><code class="sourceCode r">d &lt;-<span class="st"> </span>d <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(d<span class="op">$</span>ImageURL) <span class="op">==</span><span class="st"> </span>F)
-<span class="kw">head</span>(d)</code></pre>
-<pre><code>##   CatalogNumber latitude  longitude    ScientificName
-## 1        625378 21.23882 -158.00285 Madrepora oculata
-## 2        625374 21.23873 -158.00284 Madrepora oculata
-## 3        625369 21.23898 -158.00307 Madrepora oculata
-## 4        625368 21.23898 -158.00307 Madrepora oculata
-## 5        625388 21.23924 -158.00293 Madrepora oculata
-## 6        625377 21.23915  -158.0029 Madrepora oculata
-##                                                 ImageURL
-## 1 https://deepseacoraldata.noaa.gov/db-images/625378.JPG
-## 2 https://deepseacoraldata.noaa.gov/db-images/625374.JPG
-## 3 https://deepseacoraldata.noaa.gov/db-images/625369.JPG
-## 4 https://deepseacoraldata.noaa.gov/db-images/625368.JPG
-## 5 https://deepseacoraldata.noaa.gov/db-images/625388.JPG
-## 6 https://deepseacoraldata.noaa.gov/db-images/625377.JPG
-##                 Vessel        RecordType        DatasetID    SurveyID
-## 1 Okeanos Explorer R/V video observation NOAA_EX-15-04-L3 EX-15-04-L3
-## 2 Okeanos Explorer R/V video observation NOAA_EX-15-04-L3 EX-15-04-L3
-## 3 Okeanos Explorer R/V video observation NOAA_EX-15-04-L3 EX-15-04-L3
-## 4 Okeanos Explorer R/V video observation NOAA_EX-15-04-L3 EX-15-04-L3
-## 5 Okeanos Explorer R/V video observation NOAA_EX-15-04-L3 EX-15-04-L3
-## 6 Okeanos Explorer R/V video observation NOAA_EX-15-04-L3 EX-15-04-L3
-##                                       SampleID TrackingID        Station
-## 1 EX1504L3_07_20150903T185627Z.mp4_02:05:19:93     112936 D2-EX1504L3-07
-## 2 EX1504L3_07_20150903T185627Z.mp4_01:59:00:39     112917 D2-EX1504L3-07
-## 3 EX1504L3_07_20150903T185627Z.mp4_01:11:06:99     111881 D2-EX1504L3-07
-## 4 EX1504L3_07_20150903T185627Z.mp4_01:11:06:99     111881 D2-EX1504L3-07
-## 5 EX1504L3_07_20150903T185627Z.mp4_02:45:33:14     116916 D2-EX1504L3-07
-## 6 EX1504L3_07_20150903T185627Z.mp4_02:40:59:25     116722 D2-EX1504L3-07
-##                                         Locality ObservationYear     Genus
-## 1 Main Hawaiian Islands, Oahu Island, Barbers Pt            2015 Madrepora
-## 2 Main Hawaiian Islands, Oahu Island, Barbers Pt            2015 Madrepora
-## 3 Main Hawaiian Islands, Oahu Island, Barbers Pt            2015 Madrepora
-## 4 Main Hawaiian Islands, Oahu Island, Barbers Pt            2015 Madrepora
-## 5 Main Hawaiian Islands, Oahu Island, Barbers Pt            2015 Madrepora
-## 6 Main Hawaiian Islands, Oahu Island, Barbers Pt            2015 Madrepora
-##     Phylum TaxonRank DepthInMeters
-## 1 Cnidaria   species           400
-## 2 Cnidaria   species           399
-## 3 Cnidaria   species           397
-## 4 Cnidaria   species           397
-## 5 Cnidaria   species           396
-## 6 Cnidaria   species           397</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1">d &lt;-<span class="st"> </span>d <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(d<span class="op">$</span>ImageURL) <span class="op">==</span><span class="st"> </span>F)</a>
+<a class="sourceLine" id="cb11-2" title="2"><span class="kw">head</span>(d)</a></code></pre></div>
+<pre><code>##   CatalogNumber latitude longitude ScientificName
+## 1        419497 26.46665 -84.77803      Stylaster
+## 2        419498 26.46664 -84.77803      Stylaster
+## 3        419499 26.46664 -84.77804      Stylaster
+## 4        419500 26.46662 -84.77801      Stylaster
+## 5        419501 26.46662   -84.778     Alcyonacea
+## 6        419502 26.46664   -84.778      Stylaster
+##                                                                                                                                    ImageURL
+## 1 https://data.nodc.noaa.gov/oer/video/EX1202L2/Imagery/EX1202L2_DIVE01_20120320/EX1202L2_IMG_20120320T132118Z_ROVHD_ROCK_FSH_SQA_CR_00.jpg
+## 2                https://data.nodc.noaa.gov/oer/video/EX1202L2/Imagery/EX1202L2_DIVE01_20120320/EX1202L2_IMG_20120320T132326Z_ROVHD_COR.jpg
+## 3            https://data.nodc.noaa.gov/oer/video/EX1202L2/Imagery/EX1202L2_DIVE01_20120320/EX1202L2_IMG_20120320T133933Z_ROVHD_SPO_CRI.jpg
+## 4        https://data.nodc.noaa.gov/oer/video/EX1202L2/Imagery/EX1202L2_DIVE01_20120320/EX1202L2_IMG_20120320T134724Z_ROVHD_ANTHOMASTUS.jpg
+## 5                https://data.nodc.noaa.gov/oer/video/EX1202L2/Imagery/EX1202L2_DIVE01_20120320/EX1202L2_IMG_20120320T135954Z_ROVHD_OPH.jpg
+## 6   https://data.nodc.noaa.gov/oer/video/EX1202L2/Imagery/EX1202L2_DIVE01_20120320/EX1202L2_IMG_20120320T140039Z_ROVHD_FSH_TUBEWORMS_WI.jpg
+##                 Vessel  RecordType        DatasetID SurveyID
+## 1 Okeanos Explorer R/V still image NOAA_EX-12-02-L2 EX1202L2
+## 2 Okeanos Explorer R/V still image NOAA_EX-12-02-L2 EX1202L2
+## 3 Okeanos Explorer R/V still image NOAA_EX-12-02-L2 EX1202L2
+## 4 Okeanos Explorer R/V still image NOAA_EX-12-02-L2 EX1202L2
+## 5 Okeanos Explorer R/V still image NOAA_EX-12-02-L2 EX1202L2
+## 6 Okeanos Explorer R/V still image NOAA_EX-12-02-L2 EX1202L2
+##                                                     SampleID TrackingID Station                    Locality
+## 1 EX1202L2_IMG_20120320T132118Z_ROVHD_ROCK_FSH_SQA_CR_00.jpg       &lt;NA&gt;    &lt;NA&gt; Northwestern Gulf of Mexico
+## 2                EX1202L2_IMG_20120320T132326Z_ROVHD_COR.jpg       &lt;NA&gt;    &lt;NA&gt; Northwestern Gulf of Mexico
+## 3            EX1202L2_IMG_20120320T133933Z_ROVHD_SPO_CRI.jpg       &lt;NA&gt;    &lt;NA&gt; Northwestern Gulf of Mexico
+## 4        EX1202L2_IMG_20120320T134724Z_ROVHD_ANTHOMASTUS.jpg       &lt;NA&gt;    &lt;NA&gt; Northwestern Gulf of Mexico
+## 5                EX1202L2_IMG_20120320T135954Z_ROVHD_OPH.jpg       &lt;NA&gt;    &lt;NA&gt; Northwestern Gulf of Mexico
+## 6   EX1202L2_IMG_20120320T140039Z_ROVHD_FSH_TUBEWORMS_WI.jpg       &lt;NA&gt;    &lt;NA&gt; Northwestern Gulf of Mexico
+##   ObservationYear     Genus   Phylum TaxonRank DepthInMeters
+## 1            2012 Stylaster Cnidaria     genus           445
+## 2            2012 Stylaster Cnidaria     genus           446
+## 3            2012 Stylaster Cnidaria     genus           447
+## 4            2012 Stylaster Cnidaria     genus           446
+## 5            2012      &lt;NA&gt; Cnidaria     order           446
+## 6            2012 Stylaster Cnidaria     genus           445</code></pre>
 <p>Use the following loop function to browse the first 5 images in the set. The ‘ImageURL’ variable contains the URL of the hosted images. The ‘browseURL’ function will open the images in your default image editing program. Warning: Careful when using this function in a loop as it will open as many URLs as you feed it, so it could crash your computer.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="cf">for</span> (i <span class="cf">in</span> <span class="kw">head</span>(d<span class="op">$</span>ImageURL)){
-  <span class="kw">browseURL</span>(i)
-}</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" title="1"><span class="cf">for</span> (i <span class="cf">in</span> <span class="kw">head</span>(d<span class="op">$</span>ImageURL)){</a>
+<a class="sourceLine" id="cb13-2" title="2">  <span class="kw">browseURL</span>(i)</a>
+<a class="sourceLine" id="cb13-3" title="3">}</a></code></pre></div>
 </div>
 <div id="get-data-using-a-csv" class="section level2">
 <h2><span class="header-section-number">2.2</span> Get data using a CSV</h2>
 <p>Alternatively, you can upload data directly from CSV file into R, if you already have a subset of the National Database on your local machine that you would like to use instead.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">setwd</span>(<span class="st">&quot;C:/your/working/directory&quot;</span>)
-d &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;data_records.csv&quot;</span>, <span class="dt">header =</span> T)</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">setwd</span>(<span class="st">&quot;C:/your/working/directory&quot;</span>)</a>
+<a class="sourceLine" id="cb14-2" title="2">d &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;data_records.csv&quot;</span>, <span class="dt">header =</span> T)</a></code></pre></div>
 </div>
 </div>
             </section>
@@ -292,11 +284,13 @@ d &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
 <script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
 <script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
 <script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
 <script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
 <script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
 <script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
 <script>
 gitbook.require(["gitbook"], function(gitbook) {
 gitbook.start({
@@ -304,12 +298,11 @@ gitbook.start({
 "github": false,
 "facebook": true,
 "twitter": true,
-"google": false,
 "linkedin": false,
 "weibo": false,
 "instapaper": false,
 "vk": false,
-"all": ["facebook", "google", "twitter", "linkedin", "weibo", "instapaper"]
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
 },
 "fontsettings": {
 "theme": "white",
@@ -321,6 +314,10 @@ gitbook.start({
 "text": null
 },
 "history": {
+"link": null,
+"text": null
+},
+"view": {
 "link": null,
 "text": null
 },

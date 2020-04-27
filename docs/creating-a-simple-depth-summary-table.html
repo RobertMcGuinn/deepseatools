@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html >
-
+<html lang="" xml:lang="">
 <head>
 
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>4 Creating a simple depth summary table | Deep Sea Code Book</title>
-  <meta name="description" content="4 Creating a simple depth summary table | Deep Sea Code Book">
-  <meta name="generator" content="bookdown  and GitBook 2.6.7">
+  <meta name="description" content="4 Creating a simple depth summary table | Deep Sea Code Book" />
+  <meta name="generator" content="bookdown 0.18 and GitBook 2.6.7" />
 
   <meta property="og:title" content="4 Creating a simple depth summary table | Deep Sea Code Book" />
   <meta property="og:type" content="book" />
@@ -22,17 +21,17 @@
   
   
 
-<meta name="author" content="Robert P. McGuinn">
+<meta name="author" content="Robert P. McGuinn" />
 
 
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="creating-interactive-maps-using-leaflet.html">
-<link rel="next" href="example-rmarkdown-reports.html">
+<link rel="prev" href="creating-interactive-maps-using-leaflet.html"/>
+<link rel="next" href="example-rmarkdown-reports.html"/>
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
@@ -40,6 +39,7 @@
 <link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
 
 
 
@@ -47,16 +47,18 @@
 
 
 
-<script src="libs/htmlwidgets-1.3/htmlwidgets.js"></script>
+
+
+<script src="libs/htmlwidgets-1.5.1/htmlwidgets.js"></script>
 <link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
 <script src="libs/leaflet-1.3.1/leaflet.js"></script>
 <link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
 <script src="libs/Proj4Leaflet-1.0.1/proj4-compressed.js"></script>
 <script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
 <link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
-<script src="libs/leaflet-binding-2.0.2/leaflet.js"></script>
-<script src="libs/leaflet-providers-1.1.17/leaflet-providers.js"></script>
-<script src="libs/leaflet-providers-plugin-2.0.2/leaflet-providers-plugin.js"></script>
+<script src="libs/leaflet-binding-2.0.3/leaflet.js"></script>
+<script src="libs/leaflet-providers-1.9.0/leaflet-providers_1.9.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.0.3/leaflet-providers-plugin.js"></script>
 
 
 <style type="text/css">
@@ -65,7 +67,6 @@ a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
 a.sourceLine:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
-div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
@@ -169,19 +170,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="creating-a-simple-depth-summary-table" class="section level1">
 <h1><span class="header-section-number">4</span> Creating a simple depth summary table</h1>
 <p>Make a depth summary table and just take a look at the first 5 entries using the ‘head’ function.</p>
-<pre class="sourceCode r"><code class="sourceCode r">sum_tbl &lt;-
-<span class="st">  </span>d <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">group_by</span>(Genus) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">summarize</span>(
-    <span class="dt">Phylum =</span> <span class="kw">paste</span>(<span class="kw">unique</span>(Phylum), <span class="dt">collapse=</span> <span class="st">&quot; | &quot;</span>),
-    <span class="dt">ScientificName =</span> <span class="kw">paste</span>(<span class="kw">unique</span>(ScientificName), <span class="dt">collapse=</span> <span class="st">&quot; | &quot;</span>),
-    <span class="dt">Records =</span> <span class="kw">n</span>(),
-    <span class="dt">MinDepth =</span> <span class="kw">min</span>(<span class="kw">as.numeric</span>(DepthInMeters)),
-    <span class="dt">MedianDepth =</span> <span class="kw">median</span>(<span class="kw">as.numeric</span>(DepthInMeters)),
-    <span class="dt">MaxDepth =</span> <span class="kw">max</span>(<span class="kw">as.numeric</span>(DepthInMeters))) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">arrange</span>(MedianDepth)
-
-<span class="kw">kable</span>(<span class="kw">head</span>(sum_tbl))</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" title="1">sum_tbl &lt;-</a>
+<a class="sourceLine" id="cb16-2" title="2"><span class="st">  </span>d <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb16-3" title="3"><span class="st">  </span><span class="kw">group_by</span>(Genus) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb16-4" title="4"><span class="st">  </span><span class="kw">summarize</span>(</a>
+<a class="sourceLine" id="cb16-5" title="5">    <span class="dt">Phylum =</span> <span class="kw">paste</span>(<span class="kw">unique</span>(Phylum), <span class="dt">collapse=</span> <span class="st">&quot; | &quot;</span>),</a>
+<a class="sourceLine" id="cb16-6" title="6">    <span class="dt">ScientificName =</span> <span class="kw">paste</span>(<span class="kw">unique</span>(ScientificName), <span class="dt">collapse=</span> <span class="st">&quot; | &quot;</span>),</a>
+<a class="sourceLine" id="cb16-7" title="7">    <span class="dt">Records =</span> <span class="kw">n</span>(),</a>
+<a class="sourceLine" id="cb16-8" title="8">    <span class="dt">MinDepth =</span> <span class="kw">min</span>(<span class="kw">as.numeric</span>(DepthInMeters)),</a>
+<a class="sourceLine" id="cb16-9" title="9">    <span class="dt">MedianDepth =</span> <span class="kw">median</span>(<span class="kw">as.numeric</span>(DepthInMeters)),</a>
+<a class="sourceLine" id="cb16-10" title="10">    <span class="dt">MaxDepth =</span> <span class="kw">max</span>(<span class="kw">as.numeric</span>(DepthInMeters))) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb16-11" title="11"><span class="st">  </span><span class="kw">arrange</span>(MedianDepth)</a>
+<a class="sourceLine" id="cb16-12" title="12"></a>
+<a class="sourceLine" id="cb16-13" title="13"><span class="kw">kable</span>(<span class="kw">head</span>(sum_tbl))</a></code></pre></div>
 <table>
 <thead>
 <tr class="header">
@@ -198,7 +199,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <tr class="odd">
 <td align="left">Antipathella</td>
 <td align="left">Cnidaria</td>
-<td align="left">Antipathella sp.</td>
+<td align="left">Antipathella</td>
 <td align="right">4</td>
 <td align="right">306</td>
 <td align="right">335.5</td>
@@ -216,38 +217,38 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <tr class="odd">
 <td align="left">Gymnorete</td>
 <td align="left">Porifera</td>
-<td align="left">Gymnorete sp.</td>
+<td align="left">Gymnorete</td>
 <td align="right">3</td>
 <td align="right">343</td>
 <td align="right">353.0</td>
 <td align="right">392</td>
 </tr>
 <tr class="even">
-<td align="left">Telopathes</td>
-<td align="left">Cnidaria</td>
-<td align="left">Telopathes sp.</td>
-<td align="right">3</td>
-<td align="right">334</td>
-<td align="right">359.0</td>
-<td align="right">2449</td>
-</tr>
-<tr class="odd">
 <td align="left">Dendropathes</td>
 <td align="left">Cnidaria</td>
-<td align="left">Dendropathes sp.</td>
+<td align="left">Dendropathes</td>
 <td align="right">2</td>
 <td align="right">363</td>
 <td align="right">367.0</td>
 <td align="right">371</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">Aphanipathes</td>
 <td align="left">Cnidaria</td>
-<td align="left">Aphanipathes sp.</td>
+<td align="left">Aphanipathes</td>
 <td align="right">2</td>
 <td align="right">350</td>
 <td align="right">377.0</td>
 <td align="right">404</td>
+</tr>
+<tr class="even">
+<td align="left">Tylopathes</td>
+<td align="left">Cnidaria</td>
+<td align="left">Tylopathes</td>
+<td align="right">4</td>
+<td align="right">362</td>
+<td align="right">392.0</td>
+<td align="right">423</td>
 </tr>
 </tbody>
 </table>
@@ -263,11 +264,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
 <script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
 <script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
 <script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
 <script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
 <script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
 <script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
 <script>
 gitbook.require(["gitbook"], function(gitbook) {
 gitbook.start({
@@ -275,12 +278,11 @@ gitbook.start({
 "github": false,
 "facebook": true,
 "twitter": true,
-"google": false,
 "linkedin": false,
 "weibo": false,
 "instapaper": false,
 "vk": false,
-"all": ["facebook", "google", "twitter", "linkedin", "weibo", "instapaper"]
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
 },
 "fontsettings": {
 "theme": "white",
@@ -292,6 +294,10 @@ gitbook.start({
 "text": null
 },
 "history": {
+"link": null,
+"text": null
+},
+"view": {
 "link": null,
 "text": null
 },
