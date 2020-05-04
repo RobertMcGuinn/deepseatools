@@ -17,7 +17,7 @@ library(googledrive)
 library(openxlsx)
 library(scales)
 library(extrafont)
-loadfonts()
+#loadfonts()
 library(RColorBrewer)
 
 ##### load NDB #####
