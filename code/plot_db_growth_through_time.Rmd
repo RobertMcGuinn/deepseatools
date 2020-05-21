@@ -164,7 +164,7 @@ d5 <- d4 %>%  mutate(sum3 = ifelse(type == "totrecords",
 
 d5$type <- factor(d5$type)
 levels(d5$type)
-levels(d5$type) <- c("Improved", "New", "Un-touched")
+levels(d5$type) <- c("Updated", "New", "Original")
 
 ```
 
@@ -173,8 +173,9 @@ levels(d5$type) <- c("Improved", "New", "Un-touched")
 ```{r}
 
 cl <- colors(distinct = TRUE)
-set.seed(13) # to set random generator seed
-mycols <- sample(cl, 3)
+set.seed(12) # to set random generator seed
+mycols <- #sample(cl, 3)
+  c("springgreen3","gray","darkgreen")
 
 ggplot(d5, aes(fill=type, y=sum3, x=fy)) + 
     geom_bar(position="stack", stat="identity") +
@@ -189,11 +190,11 @@ scale_colour_manual(values = mycols,
   theme(legend.title = element_blank()) +
   theme(axis.title.x = element_text(vjust=-2.5)) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))+
-  ggtitle("Proportion of new and improved records") + 
+ # ggtitle("Proportion of new and improved records") + 
   theme(plot.title = element_text(size=15)) +
   theme(axis.title.y = element_text(vjust=5)) +
   xlab('Fiscal Year') +
-  ylab('Number of Records')
+  ylab('Number of records in the National Database')
 
 
 ```
@@ -202,7 +203,7 @@ scale_colour_manual(values = mycols,
 
 ```{r}
 
-ggsave(paste("c:/rworking/deepseatools/images/", "20200311-0_new_improved_RPMcGuinn", ".png", sep = ''), 
+ggsave(paste("c:/rworking/deepseatools/images/", "20200521-1_new_updated_RPMcGuinn", ".png", sep = ''), 
          width = 6.5, 
          height = 5.57, 
          units = "in")

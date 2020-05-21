@@ -1,0 +1,78 @@
+---
+title: "30 Day Map Challenge"
+author: "Robert McGuinn"
+date: "5/16/2020"
+output: html_document
+---
+# purpose
+
+The writer here is Robert P. McGuinn on 2020-05-16 at 1648 in Charleston, South Carolina, USA.  
+
+I will be working through the 30 day map challenge from https://rud.is/books/30-day-map-challenge/index.html written by Bob Rudis. Please see his original for more detail. This document is my copy and includes experimentation outside of the realm of original work by Rudis.  
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# packages
+
+```{r}
+library(sf)
+library(hrbrthemes)
+library(googlesheets4)
+library(ggthemes)
+library(tidyverse)
+```
+
+# load data
+
+* accessing the sheet via the sheet ID
+* making a year_public variable so we can facet by year
+* thinning out the data frame to just the year and address
+
+```{r}
+xdf <-read_sheet("https://docs.google.com/spreadsheets/d/1p-_GRo4YPW7m4QnjvErKD4U67t8-O6aDBlRjy9V8g8Y/edit?usp=sharing") %>% 
+  mutate(
+    year_public = ifelse(
+      year_public < 2000, lubridate::year(date_added), year_public
+    ) %>% factor()) %>% 
+  select(year_public, city_st, lat, lng) 
+
+## checking
+glimpse(xdf)
+```
+
+# make it spatial
+
+* get rid of missing lat/lng
+* make it an sf object
+
+```{r}
+incidents <- xdf %>% filter(is.na(lat) == F)
+incidents <- incidents %>% filter(is.na(lng) == F)
+incidents <- incidents %>% st_as_sf(coords = c("lng", "lat"), crs =  '+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs')
+```
+
+
+```{r}
+ggplot() +
+  # geom_sf( # plot the base map
+  #   data = usa, fill = "#3B454A", size = 0.125, color = "#b2b2b277"
+  # ) +
+  geom_sf( # plot the points
+    data = incidents, aes(fill = lab), 
+    color = "white", size = 1.5, alpha = 2/3, shape = 21,
+    show.legend = FALSE # no legend since we're using facets and it'd just be redundant
+  ) + 
+  scale_color_tableau() +
+  coord_sf(datum = NA) + # using datum = NA turns off the graticule 
+  facet_wrap(~lab) +
+  labs(
+    title = "Locations of K-12 Ransomware Incidents 2016-2019 (Sept)",
+    caption = "2019 #30DayMapChallenge"
+  ) +
+  theme_ft_rc(grid="", strip_text_face = "bold") +
+  theme(axis.text = element_blank()) +
+  theme(strip.text = element_text(color = "white"))
+```
+

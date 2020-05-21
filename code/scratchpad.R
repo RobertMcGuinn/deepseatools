@@ -4300,3 +4300,10 @@ fonttable()
 
 
 
+
+##### analysis of vessels #####
+filt %>% filter(grepl('water', Vessel)) %>%
+  group_by(Vessel, SurveyID) %>%
+  summarize(n=n())
+
+
