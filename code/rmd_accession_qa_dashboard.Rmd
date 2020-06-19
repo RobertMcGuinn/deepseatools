@@ -25,6 +25,8 @@ library(RColorBrewer)
 library(rgdal)
 library(sp)
 library(marmap)
+library(worrms)
+library(worms)
 
 ```
 
@@ -46,7 +48,6 @@ flagged <- sub %>%  filter(Flag == "1")
 
 ```
 
-
 ```{r echo = F}
 
 ##### fix implicit NA #####
@@ -58,11 +59,11 @@ sub$Family <- forcats::fct_explicit_na(sub$Family)
 ```{r echo = F, cache=T, eval=T}
 
 ##### load NDB #####
-setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
-filt <- indata %>%
-  filter(Flag == "0")
-rm(indata)
+# setwd("C:/rworking/deepseatools/indata")
+# indata<-read.csv("DSCRTP_NatDB_20200408-1.csv", header = T)
+# filt <- indata %>%
+#   filter(Flag == "0")
+# rm(indata)
 
 ```
 

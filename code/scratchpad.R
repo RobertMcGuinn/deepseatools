@@ -4306,4 +4306,12 @@ filt %>% filter(grepl('water', Vessel)) %>%
   group_by(Vessel, SurveyID) %>%
   summarize(n=n())
 
+##### analysis of search #####
+filt %>% filter(VerbatimScientificName == "Muricea",
+                ScientificName == "Muricea") %>%
+  group_by(ScientificName, VerbatimScientificName) %>%
+  summarize(n=n())
+
+
+
 

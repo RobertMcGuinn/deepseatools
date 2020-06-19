@@ -28,7 +28,7 @@ library(RColorBrewer)
 ``` {r data_intake, echo=T, warning=FALSE, message=FALSE, cache=TRUE}
 ##### input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+indata <- read.csv("DSCRTP_NatDB_20200408-1.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0")
 
@@ -39,14 +39,23 @@ filt <- indata %>%
 ```{r clean, echo=T, warning=FALSE, message=FALSE}
 ##### data improvements (from version DSCRTP_NatDB_20191217-0)#####
 
-filt <- filt %>% mutate(DataProvider =
-                          ifelse(DataProvider == "California Academy of Sciences (CAS)",
-                                              'California Academy of Sciences',
-                                              as.character(DataProvider)))
+filt <- filt %>% mutate(
+  DataProvider =
+    ifelse(
+      DataProvider == "California Academy of Sciences (CAS)",
+      'California Academy of Sciences',
+      as.character(DataProvider)
+    )
+)
 
-filt <- filt %>% mutate(DataProvider =
-                          ifelse(DataProvider == "NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i", "NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i", 
-                                 as.character(DataProvider)))
+filt <- filt %>% mutate(
+  DataProvider =
+    ifelse(
+      DataProvider == "NOAA, Office of Exploration and Research | Hawai’i Undersea Research Laboratory, University of Hawai’i",
+      "NOAA, Office of Exploration and Research | Hawai'i Undersea Research Laboratory, University of Hawai'i",
+      as.character(DataProvider)
+    )
+)
 
 ##### bring in patch file. Raw from David Sallis on 2020-03-10 #####
 ## edited by RPMcGuinn on 2020-03-10 
