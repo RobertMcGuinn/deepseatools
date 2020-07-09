@@ -541,7 +541,8 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 `r options(digits = 3)`
 * min: `r min(sub2$IndividualCount, digits = 3)`
 * median: `r median(sub2$IndividualCount, digits = 3)`
-* max: `r max(sub2$IndividualCount, digits = 3)`
+* max: `r max(sub2$IndividualCount)`
+
 `r options(digits = 5)`
 
 ## Categorical Abundance Values

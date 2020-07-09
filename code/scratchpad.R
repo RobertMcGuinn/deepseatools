@@ -4313,5 +4313,41 @@ filt %>% filter(VerbatimScientificName == "Muricea",
   summarize(n=n())
 
 
+##### Subsetting according to geography (Derek Sowers) #####
+
+## bounding box from Derek Sowers
+# NW corner: 32.44, -80.66
+# NE corner: 32.56, -76.60
+# SE corner: 25.30, -76.48
+# SW corner: 25.21, -80.28
+
+## set bounding box variables
+minlat <- 25.21
+maxlat <- 32.56
+minlon <- -80.66
+maxlon <- -76.48
+
+## subset data
+sub <- subset(filt, as.numeric(Latitude) > minlat &
+                   as.numeric(Latitude) < maxlat &
+                   as.numeric(Longitude) > minlon &
+                   as.numeric(Longitude) < maxlon &
+                   Flag == "0")
+
+
+
+
+
+
+setwd("C:/rworking/digs/outdata")
+write.csv(indatafilter,"DSCRTP_NatDB_20160728-0_GOMEX_bounding_box.csv", row.names = F, quote = T)
+
+##### Subset for Pam and Rachel #####
+x <- filt %>% filter(FishCouncilRegion == 'North Pacific')
+
+setwd("C:/rworking/deepseatools/indata")
+write.csv(x,"DSCRTP_NatDB_20200408-1_FMC_North_Pacific.csv",
+          row.names = F,
+          quote = T)
 
 

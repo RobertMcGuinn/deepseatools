@@ -2,9 +2,61 @@
 # Original Code Author: Robert McGuinn (rpm@alumni.duke.edu, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu)
 # Latest Status: working with new datasets.
 
+##### Installation/Loading of Packages #####
+# install.packages('xlsx')
+#install.packages('openxlsx')
+library(openxlsx)
+library(sp)
+library(tidyverse)
+library(rerddap)
+#install.packages('leaflet')
+library(leaflet)
+# install.packages('extrafont')
+library(extrafont)
+# install.packages('RColorBrewer')
+library(RColorBrewer)
+# install.packages('googlesheets')
+library(googlesheets4)
+# install.packages('googledrive')
+library(googledrive)
+library(rmarkdown)
+library(knitr)
+#install.packages("maps")
+library(maps)
+#install.packages("rgdal")
+library(rgdal)
+#install('raster')
+library(raster)
+#install.packages("spocc")
+library(spocc)
+#install.packages('arcgisbinding')
+library(arcgisbinding)
+arc.check_product()
+#install.packages('refinr')
+library(refinr)
+# install.packages('marmap')
+library(marmap) #yo
+#install.packages('prettydoc')
+library(prettydoc)
+#install.packages('robis')
+library(robis)
+#install.packages('devtools')
+library(devtools)
+library(httr)
+library(jsonlite)
+
+
+##### read in schema using googlesheets4 #####
+sheetid <- "1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI"
+s <- read_sheet(sheetid)
+sheets_browse(sheetid)
+## checking
+names(s)
+s %>% filter(FieldName == 'LocationAccuracy') %>% pull(ValidValues)
+
 ##### load dataset from CSV #####
-DatasetID <- "20180712_1_R2006_database-TH_RPMcGuinn"
-d <- read.csv(paste("C:/rworking/digs/indata/", paste(DatasetID, ".csv", sep = ""), sep = ""),header = T)
+DatasetID <- "20200629-0_NSU_Kraken_II_Messing_2011_2011"
+d <- read.csv(paste("C:/rworking/deepseatools/indata/", paste(DatasetID, ".csv", sep = ""), sep = ""),header = T)
 
 ##### ***OR*** get modified and original datasets via Excel #####
 setwd("C:/rworking/deepseatools/indata")
@@ -16,34 +68,23 @@ x <- x[1]
 x <- paste('~/SeaTubeImages_20190621_Dive01.000Z/', x, sep = '')
 z <- team_drive_get("SeaTubeImages_20190621_Dive01.000Z")
 
-##### load taxonomy google sheets #####
+##### load taxonomy from google sheets and de-dup #####
+## Location for taxonomy tables: https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
+## Pay attention to the IDs below.  You should visit URL above and see
+## if you have the correct IDs
 
-# https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
+taxfl <- sheets_read("1ac48C1ETeJD1mAhtaV8RTHh59ur4I8DRG4ZHnkZx-Jk")
+taxch <- sheets_read("1mQVeKJ7eYz4O3IsZWEb9572Uqsm3akwmGRLSCPhzxT4")
+tax <- sheets_read("1ro62OeK0j98I2izQvw7uYyrbkSLxh9aKVULSqWPXn4M")
 
-n <- '20191217-2'
-
-taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
-gs_browse(taxfl)
-taxfl <- gs_read(taxfl)
-
-taxch <- gs_title(paste(n, '_taxonomy_to_change', sep = ''))
-gs_browse(taxch)
-taxch <- gs_read(taxch)
-
-tax <- gs_title(paste(n, '_taxonomy', sep = ''))
-gs_browse(tax)
-tax <- gs_read(tax)
-
-
-#deduplicate the taxonomy table
+#de-duplicate the taxonomy table
 tax <- subset(tax,!duplicated(tax$ScientificName))
 
-##### load schema #####
-s <- gs_title('2019_DSCRTP_National_Database_Schema')# gs_browse(s)
-# s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
-s <- gs_read(s)
-# names(s)
-
+## check
+# dups <- subset(tax, duplicated(tax$ScientificName))
+# dups <- tax %>% filter(ScientificName == "Auletta tuberosa")
+# dups$ScientificName
+# tax %>% filter(grepl('Paramuricea', ScientificName)) %>% pull(ScientificName)
 
 ##### look at images
 setwd("C:/rworking/deepseatools/indata")
