@@ -87,12 +87,12 @@ dl <- drive_download(as_id(y),
                      path = "C:/rworking/deepseatools/indata/20200710-2_DatasetID_Key_DSCRTP.xlsx",
                      overwrite = TRUE)
 
-# read the file into R as a data frame
+## read the file into R as a data frame
 key <- read.xlsx(dl$local_path)
 
-# clean up
-rm(y)
-rm(x)
+## clean up
+# rm(y)
+# rm(x)
 
 ##### checking #####
 setdiff(filt$DatasetID, key$DatasetID)
@@ -101,7 +101,7 @@ setdiff(key$DatasetID, filt$DatasetID)
 x <- c("NOAA_CINMS_Shimada_SH-17-05","NOAA_CINMS_SW-19-06",
        "NOAA_RESTORE_MT18", "NOAA_RESTORE_MT17", "NOAA_RESTORE_OP17")
 x <- filt %>% filter(DatasetID %in% x) %>%
-  group_by(SurveyComments, Citation, Vessel, WebSite) %>%
+  group_by(DatasetID, SurveyComments, Citation, Vessel, WebSite) %>%
   summarize(n=n())
 
 rm(x)
