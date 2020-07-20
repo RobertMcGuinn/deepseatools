@@ -5,12 +5,61 @@
 #   4 groups: Cruise, Literature, Program, Repository, and then Repository-MBARI
 #(because it is so huge it can't have an interactive map)
 
+##### install packages #####
+# install.packages('xlsx')
+#install.packages('openxlsx')
+library(openxlsx)
+library(sp)
+library(tidyverse)
+library(rerddap)
+#install.packages('leaflet')
+library(leaflet)
+# install.packages('extrafont')
+library(extrafont)
+# install.packages('RColorBrewer')
+library(RColorBrewer)
+# install.packages('googlesheets')
+library(googlesheets)
+# install.packages('googledrive')
+library(googledrive)
+library(rmarkdown)
+library(knitr)
+#install.packages("maps")
+library(maps)
+#install.packages("rgdal")
+library(rgdal)
+#install('raster')
+library(raster)
+#install.packages("spocc")
+library(spocc)
+#install.packages('arcgisbinding')
+library(arcgisbinding)
+arc.check_product()
+#install.packages('refinr')
+library(refinr)
+# install.packages('marmap')
+library(marmap) #yo
+#install.packages('prettydoc')
+library(prettydoc)
+#install.packages('robis')
+library(robis)
+#install.packages('devtools')
+library(devtools)
+library(httr)
+library(jsonlite)
+
+
 ##### set an option #####
 options(lifecycle_disable_warnings = TRUE)
 
-##### load database #####
+##### load database(old_and_new)#####
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20200408-1.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+indata_old<-read.csv("DSCRTP_NatDB_20200408-1.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+filt_old <- indata_old %>%
+  filter(Flag == "0")
+
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20200710-2.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
 filt <- indata %>%
   filter(Flag == "0")
 
@@ -24,10 +73,10 @@ version <- unique(indata$DatabaseVersion)
 version <- as.character(version)
 
 ##### bringing in datasetID key from xls stored on drive #####
-# create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20200408-1_DatasetID_Key_DSCRTP'")
+## create a list of files (or single file) that meets title query
+x <- drive_find(q = "name contains '20200710-2_DatasetID_Key_DSCRTP'")
 
-# # browse to it
+## browse to it
 # x %>% drive_browse()
 
 # getting the id as a character string
@@ -35,7 +84,7 @@ y <- x$id
 
 # this downloads the file to the specified path
 dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx",
+                     path = "C:/rworking/deepseatools/indata/20200710-2_DatasetID_Key_DSCRTP.xlsx",
                      overwrite = TRUE)
 
 # read the file into R as a data frame
@@ -49,8 +98,17 @@ rm(x)
 setdiff(filt$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, filt$DatasetID)
 
+x <- c("NOAA_CINMS_Shimada_SH-17-05","NOAA_CINMS_SW-19-06",
+       "NOAA_RESTORE_MT18", "NOAA_RESTORE_MT17", "NOAA_RESTORE_OP17")
+x <- filt %>% filter(DatasetID %in% x) %>%
+  group_by(SurveyComments, Citation, Vessel, WebSite) %>%
+  summarize(n=n())
+
+rm(x)
+
 setdiff(indata$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, indata$DatasetID)
+
 
 ##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
 ## build a frequency table by DatasetID
