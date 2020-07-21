@@ -74,7 +74,7 @@ version <- as.character(version)
 
 ##### bringing in datasetID key from xls stored on drive #####
 ## create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20200710-2_DatasetID_Key_DSCRTP'")
+x <- drive_find(q = "name contains '20200710-3_DatasetID_Key_DSCRTP'")
 
 ## browse to it
 # x %>% drive_browse()
@@ -101,8 +101,13 @@ setdiff(key$DatasetID, filt$DatasetID)
 x <- c("NOAA_CINMS_Shimada_SH-17-05","NOAA_CINMS_SW-19-06",
        "NOAA_RESTORE_MT18", "NOAA_RESTORE_MT17", "NOAA_RESTORE_OP17")
 x <- filt %>% filter(DatasetID %in% x) %>%
-  group_by(DatasetID, SurveyComments, Citation, Vessel, WebSite) %>%
+  group_by(DatasetID, Locality, SurveyComments, Citation, Vessel, WebSite) %>%
   summarize(n=n())
+View(x)
+
+x <- "NOAA_CINMS_SW-19-06"
+x <- filt %>% filter(DatasetID == x) %>% pull(Locality) %>% unique()
+View(x)
 
 rm(x)
 
@@ -124,7 +129,7 @@ z <- merge(y,x)
 names(z)
 
 ## write out result
-write.xlsx(z, "C:/rworking/deepseatools/indata/20200408-1_DatasetID_Key_DSCRTP.xlsx",
+write.xlsx(z, "C:/rworking/deepseatools/indata/20200710-3_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
 ##### ***OPTIONAL*** subsetting of indata to d (optional step for testing purposes) #####
@@ -138,6 +143,14 @@ d <- indata %>%
 
 ##### ***OR*** full run set indata to d #####
 d <- filt
+
+##### cleanup #####
+rm(indata)
+rm(filt_old)
+rm(indata_old)
+rm(x)
+rm(z)
+rm(y)
 
 ##### checking #####
 # table(unique(factor(d$DataProvider)))
