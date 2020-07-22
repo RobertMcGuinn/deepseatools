@@ -47,16 +47,15 @@ library(httr)
 library(jsonlite)
 ```
 
-
 ```{r load_both_db, echo=FALSE, cache=T}
 ##### bring 
 setwd("C:/rworking/deepseatools/indata")
-indata1<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+indata1<-read.csv("DSCRTP_NatDB_20200408-1.csv", header = T)
 filt1 <- indata1 %>%
   filter(Flag == "0")
 
 setwd("C:/rworking/deepseatools/indata")
-indata2<-read.csv("DSCRTP_NatDB_20200408-1.csv", header = T)
+indata2<-read.csv("DSCRTP_NatDB_20200710-2.csv", header = T)
 filt <- indata2 %>%
   filter(Flag == "0")
 # 
@@ -80,10 +79,10 @@ x <- filt %>%
 
 
 ```{r manual_set_variables, echo=FALSE}
-quarter <- 'Q2, FY-2020'
-version <- 'DSCRTP_NatDB_20200408-1'
-releasedate <- '2020-04-16'
-corrections <- 119800
+quarter <- 'Q3, FY-2020'
+version <- 'DSCRTP_NatDB_20200710-2'
+releasedate <- '2020-07-20'
+corrections <- 47+7905
 ```
 
 
@@ -105,10 +104,10 @@ TrimAll <- function(x){
 
 The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(length(unique(x$DatasetID)), big.mark = ',')`** new datasets were added with a total of **`r prettyNum(length(x$CatalogNumber), big.mark = ',')`** new records, for a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
 
-Go here to view and download custom data subsets of voyour choosing:
+Go here to view and download custom data subsets of your choosing:
 https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm
 
-*A big thank you to all of our data providers! We hope this database is providing a needed service to deep sea coral and sponge conservation. We welcome your questions and feedback.*
+*A big thank you to all of our data providers! This database is providing an essential service to data-driven deep sea coral and sponge habitat conservation and management. We welcome your questions and feedback.*
 
 Please see the following tables and figures for additional detail regarding this update.  
 
