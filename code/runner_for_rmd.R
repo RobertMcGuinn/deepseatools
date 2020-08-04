@@ -1,12 +1,63 @@
 ##### Author: Robert McGuinn #####
-##### Run a bunch of RMD reports on factor based groups of data #####
+##### load packages #####
+# install.packages('xlsx')
+#install.packages('openxlsx')
+library(openxlsx)
+library(sp)
+library(tidyverse)
+library(rerddap)
+#install.packages('leaflet')
+library(leaflet)
+# install.packages('extrafont')
+library(extrafont)
+# install.packages('RColorBrewer')
+library(RColorBrewer)
+# install.packages('googlesheets')
+library(googlesheets)
+# install.packages('googledrive')
+library(googledrive)
+library(rmarkdown)
+library(knitr)
+#install.packages("maps")
+library(maps)
+#install.packages("rgdal")
+library(rgdal)
+#install('raster')
+library(raster)
+#install.packages("spocc")
+library(spocc)
+#install.packages('arcgisbinding')
+library(arcgisbinding)
+arc.check_product()
+#install.packages('refinr')
+library(refinr)
+# install.packages('marmap')
+library(marmap) #yo
+#install.packages('prettydoc')
+library(prettydoc)
+#install.packages('robis')
+library(robis)
+#install.packages('devtools')
+library(devtools)
+library(httr)
+library(jsonlite)
+
+
+##### _____ Bringing in database #####
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20200710-2.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+
+
+##### run loop of DatasetID reports #####
 
 # see this reference: http://www.reed.edu/data-at-reed/software/R/markdown_multiple_reports.html
 ##### first subset the data that you want from the larger dataset #####
-#install.packages("prettydoc")
 table(factor(indata$DatasetID), useNA = "always")
-
 library(prettydoc)
+
 d <- indata %>%
   filter(Flag == "0", DatasetID == "NOAA_SH-10-11" |
            DatasetID == "Thoma_J_2013" |
@@ -151,12 +202,16 @@ render("2019_ISDSC7_high_density_THourigan_RPMcGuinn.Rmd",
        output_file =  paste(x,".doc", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
 
+##### create a subset of the NDB #####
+
+sub <- filt %>% filter(FishCouncilRegion == "Caribbean")
+write_csv(sub, "20200722_caribbean_subset_NDB_20200710-2.csv")
+
 ##### render the QA dashboard (non-museum) #####
 # install.packages("rmarkdown")
-
 library(rmarkdown)
 # add the prefix of the dataset you want to report on
-x <- "20200630-1_NSU_Kraken_II_Messing_2011_2011"
+x <- "20200722_caribbean_subset_NDB_20200710-2"
 
 render("C:/rworking/deepseatools/code/rmd_accession_qa_dashboard.rmd",
        output_file =  paste(x,".doc", sep=''),

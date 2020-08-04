@@ -54,7 +54,7 @@ library(jsonlite)
 #   filter(Flag == "0")
 
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+indata<-read.csv("DSCRTP_NatDB_20200710-2.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0")
 

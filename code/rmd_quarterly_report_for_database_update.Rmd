@@ -102,12 +102,12 @@ TrimAll <- function(x){
 # Quarterly update for: `r quarter`
 ## Database Version: `r version`
 
-The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(length(unique(x$DatasetID)), big.mark = ',')`** new datasets were added with a total of **`r prettyNum(length(x$CatalogNumber), big.mark = ',')`** new records, for a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
+The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(length(unique(x$DatasetID)), big.mark = ',')`** new datasets were added with a total of **`r prettyNum(length(x$CatalogNumber), big.mark = ',')`** new records representing **`r prettyNum(sum(x$IndividualCount[x$IndividualCount != "-999"]), big.mark = ',')`** individual occurrences of corals and sponges. There is now a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
 
 Go here to view and download custom data subsets of your choosing:
 https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm
 
-*A big thank you to all of our data providers! This database is providing an essential service to data-driven deep sea coral and sponge habitat conservation and management. We welcome your questions and feedback.*
+*A big thank you to all of our data providers! This database is a key resource for data-driven deep sea coral and sponge habitat conservation and management. We welcome your questions and feedback.*
 
 Please see the following tables and figures for additional detail regarding this update.  
 
@@ -216,9 +216,10 @@ x <- x %>% mutate(Country = ifelse(is.na(Country) == T, 'International Waters', 
 sum_tbl <-
   x %>%
   #filter(Phylum == "Porifera") %>%
-  group_by(Country) %>%
+  group_by(FishCouncilRegion) %>%
   summarize(Ocean = toString(unique(Ocean)), 
-            FishCouncilRegion = toString(unique(FishCouncilRegion)),
+            #FishCouncilRegion = toString(unique(FishCouncilRegion)),
+            Country = toString(unique(Country)),
             n = n()) %>%
   arrange(desc(n))
 sum_tbl <- kable(sum_tbl, row.names = F, digits = 2, format.args = list(big.mark = ","))
@@ -273,10 +274,10 @@ g <- ggplot(x, aes(Order)) +
   #theme(text = element_text(size=10)) + 
   ylab("Number of Records") + 
   facet_wrap(~Phylum, scales="free") +
-  theme_bw(base_size = 12, base_family = "Cambria")
+  theme_bw(base_size = 15, base_family = "Cambria")
 
 set.seed(7)
-g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.05))
+g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.05, size = 15))
 
 ```
 
@@ -336,7 +337,7 @@ sum_tbl <-
             #BeginYear= min(as.numeric(ObservationYear)),
             EndYear= max(as.numeric(ObservationYear)),
             n = prettyNum(n(),big.mark = ',')) %>% 
-  arrange(desc(EndYear))
+  arrange(desc(DatasetID))
 
 sum_tbl$url <- paste0('https://deepseacoraldata.noaa.gov/Dataset%20Summaries/',
                       sum_tbl$DatasetID, 

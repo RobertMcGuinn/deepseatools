@@ -31,8 +31,8 @@ library(raster)
 #install.packages("spocc")
 library(spocc)
 #install.packages('arcgisbinding')
-library(arcgisbinding)
-arc.check_product()
+# library(arcgisbinding)
+# arc.check_product()
 #install.packages('refinr')
 library(refinr)
 # install.packages('marmap')
@@ -49,13 +49,13 @@ library(jsonlite)
 ##### load National DB #####
 ## old
 setwd("C:/rworking/deepseatools/indata")
-indata_old <- read.csv("DSCRTP_NatDB_20191217-0.csv", header = T)
+indata_old <- read.csv("DSCRTP_NatDB_20200408-1.csv", header = T)
 filt_old <- indata_old %>%
   filter(Flag == "0")
 
 ## new
 setwd("C:/rworking/deepseatools/indata")
-indata <- read.csv("DSCRTP_NatDB_20200408-1.csv", header = T)
+indata <- read.csv("DSCRTP_NatDB_20200710-2.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0")
 
@@ -69,7 +69,7 @@ datasetID_new <- unique(filt$DatasetID)
 
 ##### create standardized tables of key variables at latest DB version #####
 ##### _IdentificationQualifier #####
-version <- '20200408-1'
+version <- '20200710-2'
 
 x <- filt %>%
   arrange(ObservationYear) %>%
@@ -99,7 +99,7 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-setwd("C:/rworking/deepseatools/indata")
+setwd("C:/rworking/deepseatools/reports/standard")
 
 x %>%
   write.csv(paste("IdentificationQualifier_NatDB_", version, ".csv", sep = ''), row.names = FALSE)

@@ -22,7 +22,7 @@ library(RColorBrewer)
 
 ##### load NDB #####
 setwd("C:/rworking/deepseatools/indata")
-indata<-read_csv("DSCRTP_NatDB_20200408-1.csv", na = c("-999", "NA"))
+indata<-read_csv("DSCRTP_NatDB_20200710-2.csv", na = c("-999", "NA"))
 
 ##### filter the NDB #####
 filt <- indata %>%
@@ -118,7 +118,7 @@ recode_list <- list('specimen' = 'PreservedSpecimen',
 obis$basisOfRecord <- recode(obis$basisOfRecord, !!!recode_list)
 
 ##### write out file for submission #####
-today <- '20200415-1'
+today <- '20200723-0'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
