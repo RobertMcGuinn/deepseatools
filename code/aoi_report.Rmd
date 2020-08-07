@@ -73,21 +73,24 @@ x <- subset(filt, as.numeric(Latitude) > minlat &
                    Flag == "0")
 ```
 
-```{r filter_query, echo=F, warning=F, message=F, eval=T}
+# Query used in this Report 
+Language: R
+
+```{r filter_query, echo=T, warning=F, message=F, eval=T}
 x <- filt %>%  
-  filter(grepl("Clarke", PI))#| 
-           #grepl("NWFSC", DatasetID))
+  filter(grepl("Southwest Fisheries",DataProvider) |
+           grepl("Northwest Fisheries", DataProvider))
 
-## check
-# x %>% pull(DatasetID) %>% table()
-# x %>% pull(SurveyID) %>% table()
+```
 
+```{r bbox_from_query, echo=F, warning=F, message=F, eval=T}
 ## set bounding box variables with query results.
 minlat <- min(x$Latitude)
 maxlat <- max(x$Latitude)
 minlon <- min(x$Longitude)
 maxlon <- max(x$Longitude)
 ```
+
 
 ```{r write_data, echo=F, warning=F, message=F, eval=F}
 ## write data to Excel
@@ -157,7 +160,7 @@ bbox<-bbox(spdf)
 bbox
 ```
 
-# Summary of AOI by the numbers
+# Summary of this Selection by the Numbers
 
 *Note:* The numbers below only reflect published records. Additional records may be retained by the Program for further review.
 
@@ -238,7 +241,7 @@ g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_
 
 ```
 
-# Who Contributed to this AOI?
+# Who Contributed to this Selection?
 
 ``` {r DataProvider, echo=FALSE}
 
@@ -301,13 +304,13 @@ sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
 sum_tbl
 ```
 
-# Growth Through Time within AOI
+# Growth of Database Through Time within this Selection
 
 ``` {r GrowthThroughTime_charts, echo=FALSE, dpi=300, eval = T}
     
 ## set options to remove scientific notation
 options(scipen=10000)
-region <- "Caribbean"
+
     
 subx <- x %>% filter (Phylum == "Cnidaria") %>%
   mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
@@ -341,13 +344,13 @@ ggplot(subx,aes(x=as.Date(EntryDate), color=Phylum)) +
   theme(legend.title = element_blank()) +
   theme(axis.title.x = element_text(vjust=-2.5)) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))+
-  scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)])+
-  ggtitle(unique(filt$DatabaseVersion))
+  scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)]) #+
+  ggtitle(paste("Database Version", unique(filt$DatabaseVersion)))
 
-ggsave(paste("c:/rworking/deepseatools/images/", "20200624-1_", region, ".png", sep = ''),
-       width = 6.5,
-       height = 5.57,
-       units = "in")
+# ggsave(paste("c:/rworking/deepseatools/images/", "20200624-1_", region, ".png", sep = ''),
+#        width = 6.5,
+#        height = 5.57,
+#        units = "in")
 
 ```
 
