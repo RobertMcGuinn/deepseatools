@@ -78,8 +78,9 @@ Language: R
 
 ```{r filter_query, echo=T, warning=F, message=F, eval=T}
 x <- filt %>%  
-  filter(grepl("Southwest Fisheries",DataProvider) |
-           grepl("Northwest Fisheries", DataProvider))
+  filter(grepl("Western Pacific", FishCouncilRegion), 
+         ObservationYear == 2018 |
+           ObservationYear == 2019)
 
 ```
 
@@ -90,7 +91,6 @@ maxlat <- max(x$Latitude)
 minlon <- min(x$Longitude)
 maxlon <- max(x$Longitude)
 ```
-
 
 ```{r write_data, echo=F, warning=F, message=F, eval=F}
 ## write data to Excel
@@ -244,7 +244,6 @@ g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_
 # Who Contributed to this Selection?
 
 ``` {r DataProvider, echo=FALSE}
-
 # # Data Provider corrections
 # x$DataProvider <- 
 #   plyr::revalue(x$DataProvider,
@@ -257,6 +256,7 @@ g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_
 # table(factor(x$DataProvider))
 # table(factor(x$PI))
 # table(factor(x$DataContact))
+
 x$url <- paste0('https://deepseacoraldata.noaa.gov/Dataset%20Summaries/',
                       x$DatasetID, 
                       '.html', 
@@ -275,12 +275,11 @@ sum_tbl <-
   arrange(desc(DatasetID))
 sum_tbl <- kable(sum_tbl, row.names = F, digits = 2, format.args = list(big.mark = ","))
 sum_tbl
-```
+``` 
 
 # Expedition Details
 
 ``` {r Vessel, echo=FALSE}
-
 sum_tbl <-
   x %>%
   group_by(DatasetID) %>%
@@ -307,7 +306,6 @@ sum_tbl
 # Growth of Database Through Time within this Selection
 
 ``` {r GrowthThroughTime_charts, echo=FALSE, dpi=300, eval = T}
-    
 ## set options to remove scientific notation
 options(scipen=10000)
 
@@ -344,8 +342,8 @@ ggplot(subx,aes(x=as.Date(EntryDate), color=Phylum)) +
   theme(legend.title = element_blank()) +
   theme(axis.title.x = element_text(vjust=-2.5)) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))+
-  scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)]) #+
-  ggtitle(paste("Database Version", unique(filt$DatabaseVersion)))
+  scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)]) +
+  ggtitle(paste("Database Version:", unique(filt$DatabaseVersion)))
 
 # ggsave(paste("c:/rworking/deepseatools/images/", "20200624-1_", region, ".png", sep = ''),
 #        width = 6.5,
