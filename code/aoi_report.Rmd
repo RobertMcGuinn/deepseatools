@@ -82,6 +82,25 @@ x <- filt %>%
          ObservationYear == 2018 |
            ObservationYear == 2019)
 
+## check
+
+# filt %>%
+#   filter(grepl("Gulf of Mexico", FishCouncilRegion),
+#          is.na(ObservationDate) == T#,
+#          #ObservationDate == '-999'
+#          ) %>%
+#   pull(ObservationDate) %>% length()
+# 
+# filt %>%
+#   filter(grepl("EX", DatasetID),
+#          is.na(ImageURL) == F#,
+#          #ObservationDate == '-999'
+#          ) %>%
+#   pull(DatasetID) %>% 
+#   unique() %>% 
+#   length()
+  
+
 ```
 
 ```{r bbox_from_query, echo=F, warning=F, message=F, eval=T}
