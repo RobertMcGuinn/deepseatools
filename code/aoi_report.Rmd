@@ -10,7 +10,7 @@ output: word_document
 
 
 library(tidyverse)
-library(openxlsx)
+library(openxlsx) ne
 
 
 
