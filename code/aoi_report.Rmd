@@ -8,9 +8,8 @@ output: word_document
 ```{r packages, echo=F, warning=F, message=F}
 #install.packages(tidyverse)
 
-
 library(tidyverse)
-library(openxlsx) ne
+library(openxlsx)
 
 
 
