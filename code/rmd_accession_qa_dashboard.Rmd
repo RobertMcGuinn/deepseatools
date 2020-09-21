@@ -106,6 +106,33 @@ sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
 sum_tbl
 ```
 
+
+``` {r CitationMaker, include = FALSE}
+
+sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ', 
+                         min(sub$ObservationYear[sub$ObservationYear != "-999"]),' to ',
+                         max(sub$ObservationYear[sub$ObservationYear != "-999"]),'. ',
+                         'Coral or sponge occurrence observations submitted to the NOAA National Database for Deep Sea Corals and Sponges (www.deepseacoraldata.noaa.gov)', '. ',
+                         #'DSCRTP Accession ID: ',sub$AccessionID, '. ',
+                         #'Record type: ', sub$RecordType, '. ',
+                         #'Vessel(s): ', sub$Vessel,'. ',
+                         #'Sampling vehicle: ', sub$VehicleName,'. ',
+                         #'Survey ID: ', sub$SurveyID,'. ',
+                         'DSCRTP Dataset ID: ', sub$DatasetID, '. ',
+                         'Principal investigator: ', sub$PI,'. ',
+                         'Reporter: ', sub$Reporter, '. ',
+                         'Database version: ', sub$DatabaseVersion, '. ',
+                         #'Data contact: ', sub$DataContact,'. ',
+                         #'Reporter: ', sub$Reporter,'. ', 
+                         #'Repository: ', sub$Repository,'. ',
+                         # 'Web site [last accessed on YYYY-MM-DD]: ', sub$WebSite,'.', 
+                         sep = '')
+unique(sub$CitationMaker)
+
+
+```
+
+
 # Web site
 ``` {r Website, echo=FALSE}
 sum_tbl <-
