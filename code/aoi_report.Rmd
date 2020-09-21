@@ -7,10 +7,10 @@ output: word_document
 
 ```{r packages, echo=F, warning=F, message=F}
 #install.packages(tidyverse)
+#install.packages('openxlsx')
 
 library(tidyverse)
 library(openxlsx)
-
 
 
 # library(sp)

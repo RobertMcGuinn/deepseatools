@@ -39,5 +39,8 @@ code/aoi_report_cache/
 code/aoi_report_files/
 code/20200624-aoi_report_for_DSowers_RPMcGuinn.docx
 code/20200624-aoi_report_for_DSowers_RPMcGuinn.pdf
+code/*.html
+code/*.docx
+code/*.doc
 
 
