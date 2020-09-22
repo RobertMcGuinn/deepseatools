@@ -45,10 +45,10 @@ opts_chunk$set(fig.width=7,
 
 ```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
 ##### input: latest version of NDB #####
-setwd("C:/rworking/deepseatools/indata")
-indata <- read_csv("DSCRTP_NatDB_20200710-2.csv")
-filt <- indata %>%
-  filter(Flag == "0", is.na(Phylum) == F)
+# setwd("C:/rworking/deepseatools/indata")
+# indata <- read_csv("DSCRTP_NatDB_20200710-2.csv")
+# filt <- indata %>%
+#   filter(Flag == "0", is.na(Phylum) == F)
 ```
 
 ```{r data_and_subset, echo=FALSE, message=FALSE, warning=FALSE}
@@ -607,7 +607,7 @@ Nothing will appear here if 'Density' values are not present
 
 ``` {r Density, echo=FALSE}
 
-sub %>% ggplot(aes(x=Density)) +
+sub %>% filter(Density != -999) %>% ggplot(aes(x=Density)) +
   geom_histogram(binwidth = .2) +
   ylab("Number of Records")  +
   theme_bw(base_size = 15, base_family = "Cambria")
@@ -661,6 +661,8 @@ sum_tbl
 ```
 
 ## Weight Values 
+
+Table will be empty if no weight values are given.
 
 ``` {r WeightInKg, echo=FALSE,warning = F}
 sum_tbl <-
