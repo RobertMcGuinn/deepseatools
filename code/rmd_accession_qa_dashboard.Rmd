@@ -53,8 +53,11 @@ filt <- indata %>%
 
 ```{r data_and_subset, echo=FALSE, message=FALSE, warning=FALSE}
 setwd("C:/rworking/deepseatools/indata")
-x <- "20200701-0_NOAA_NEFSC_Connecticut_ISIS2_Towcam_Packer_2015_2015"
+
 ## x is defined in the runner script 
+# or you could define it here like this
+# x <- "20200701-0_NOAA_NEFSC_Connecticut_ISIS2_Towcam_Packer_2015_2015"
+
 sub <- read.csv(paste(x,'.csv', sep = ''), header = T) 
 flagged <- sub %>%  filter(Flag == "1")
 ```
@@ -106,8 +109,9 @@ sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
 sum_tbl
 ```
 
+# Citation Maker
 
-``` {r CitationMaker, include = FALSE}
+``` {r CitationMaker, echo = FALSE}
 
 sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ', 
                          min(sub$ObservationYear[sub$ObservationYear != "-999"]),' to ',
@@ -121,15 +125,13 @@ sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ',
                          'DSCRTP Dataset ID: ', sub$DatasetID, '. ',
                          'Principal investigator: ', sub$PI,'. ',
                          'Reporter: ', sub$Reporter, '. ',
-                         'Database version: ', sub$DatabaseVersion, '. ',
+                         'Database version: ', unique(filt$DatabaseVersion), '. ',
                          #'Data contact: ', sub$DataContact,'. ',
                          #'Reporter: ', sub$Reporter,'. ', 
                          #'Repository: ', sub$Repository,'. ',
                          # 'Web site [last accessed on YYYY-MM-DD]: ', sub$WebSite,'.', 
                          sep = '')
 unique(sub$CitationMaker)
-
-
 ```
 
 
@@ -694,6 +696,7 @@ sum_tbl
 ```
 
 # Environment
+
 ## Habitat and Substrate
 
 ``` {r HabSub, echo=FALSE, warning = F}
@@ -717,7 +720,7 @@ sum_tbl
 
 ```
 
-1## Temperature, Salinity, Oxygen
+## Temperature, Salinity, Oxygen
 
 Histogram of Temperature Values (Celcius) (empty if no Temperature values)
 
