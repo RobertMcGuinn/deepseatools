@@ -18,7 +18,7 @@ arc.check_product()
 
 ##### __OR__ create x from sub #####
 
-x <- sub
+x <- sub %>% filter(Flag == 1, grepl("depth is questionable", FlagReason))
 
 ##### filter data #####
 
@@ -32,6 +32,6 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 ##### create feature-class #####
 
-fgdb_path <- 'C:/data/aprx/geozones/geozones.gdb'
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
 arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
 

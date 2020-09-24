@@ -2,7 +2,7 @@
 # Author: Robert McGuinn
 # Email: rpm@alumni.duke.edu
 # Purpose: Interacting with Google Drive using R
-##### installation/loading of packages ##### 
+##### installation/loading of packages #####
 #install.packages('pandoc')
 library(pandoc)
 #install.packages("pacman")
@@ -65,15 +65,20 @@ library(extrafont)
 library(RColorBrewer)
 library(googlesheets)
 library(googledrive)
+library(googlesheets4)
 
-##### download Google Sheet version of schema for use in R  documents ##### 
+##### download Google Sheet version of schema for use in R  documents #####
 # Register and download Google Sheet
 s <- gs_key('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 schema<- gs_read(s)
 #gs_browse(s)
 
+# write out to CSV
 setwd("C:/rworking/digs/indata")
 write.csv(schema, "2018_DSCRTP_Schema.csv")
+
+##### reading in sheet googlesheets4 #####
+s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 
 ##### help and documentation for googlesheets. #####
 ##### connecting and listing
@@ -91,7 +96,8 @@ class(y)
 y
 
 # getting an object from Google Drive by name
-x <- drive_get("2018_DSCRTP_National_Database_Schema")
+x <- drive_get("2020_DSCRTP_National_Database_Schema")
+1
 as_id(x)
 x
 
@@ -115,7 +121,7 @@ x <- as_dribble("photos")
 View(x)
 as_id(x)
 
-# specify dribble using by path 
+# specify dribble using by path
 x <- as_dribble("photos/Portugal2015/")
 View(x)
 as_id(x)
@@ -127,9 +133,9 @@ library(googlesheets)
 #list your google sheets
 (my_sheets <- gs_ls())
 
-# copy a google sheets to your Google Drive 
+# copy a google sheets to your Google Drive
 ?gs_gap()
-gs_gap() %>% 
+gs_gap() %>%
   gs_copy(to = "Gapminder")
 
 # register your google sheet
@@ -177,7 +183,7 @@ gs_read() returns the contents of a worksheet as a data frame.
 oceania <- gap %>%
   gs_read(ws = "Oceania")
 
-##### working with the package markdrive ##### 
+##### working with the package markdrive #####
 #devtools::install_github("milesmcbain/markdrive")
 library(markdrive)
 markdrive::gdoc_checkout(filename = "markdrive")
@@ -185,11 +191,11 @@ getwd()
 
 ##### markdrive help ######
 # gdoc_checkout(filename = "GOT") Will search your Google drive for Google docs with "GOT" in the name and prompt to download one. After download it will be converted to .md for editing. Let's say the file that was downloaded was my_GOT_theory.docx, my_GOT_theory.md will be created in the working dir.
-# 
+#
 # gdoc_push(filname = "GOT") Will push a markdown file matching the name pattern back to Google drive and update the source document. You could also supply a dribble output from gdoc_checkout. It updates the google doc via a html conversion along the way.
-# 
+#
 # gdoc_render(filename = "./test.Rmd") will render an .md or .Rmd file to html and push it to Google Drive as a google doc. This package includes an Rstudio addin that will do this for the currently active source tab.
-# 
+#
 # Checkout to get the markdown file. Push to "save" your edits to Google drive.
 
 ##### using gdoc to push to google drive #####
