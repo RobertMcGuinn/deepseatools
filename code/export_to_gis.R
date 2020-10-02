@@ -12,13 +12,13 @@ arc.check_product()
 
 ##### __OR__ import the data frame from disk #####
 
-# x <- "20191112-1_HBOI_Walton_Smith_Cuba_Reed_Farrington_2017_2017"
+# x <- "20201001-4_NOAA_OER_EX1811_Oceano_Profundo_2018_2018"
 # setwd("C:/rworking/deepseatools/indata")
 # x <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
 ##### __OR__ create x from sub #####
 
-x <- sub %>% filter(Flag == 1, grepl("depth is questionable", FlagReason))
+x <- sub %>% filter(grepl("Virgin Islands Trough South Wall", Locality))
 
 ##### filter data #####
 

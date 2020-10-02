@@ -75,7 +75,7 @@ s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 # s %>% filter(FieldName == 'VernacularNameCategory') %>% pull(ValidValues)
 ```
 
-```{r mapit, include = T, eval=F}
+```{r mapit, include = F, eval=F}
 
 # sub <- sub %>% filter(grepl('horizontal', FlagReason))
 
@@ -84,8 +84,8 @@ m <- addProviderTiles(m, "Esri.OceanBasemap")
 m <- addCircleMarkers(m, data=sub,
                       radius=5,
                       weight=0,
-                      fillColor= "blue",
-                      fillOpacity=1,
+                      fillColor= "red",
+                      fillOpacity=.5,
                       popup = paste(
                         "<b><em>","Flag:","</b></em>", sub$Flag, "<br>",
                         "<b><em>","Catalog Number:","</b></em>", sub$CatalogNumber, "<br>",

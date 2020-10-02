@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(googledrive)
-library(googlesheets)
+library(googlesheets4)
 library(worrms)
 library(rmarkdown)
 library(knitr)
@@ -30,26 +30,17 @@ library(openxlsx)
 ##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 
-n <- '20200313-0'
+taxfl <- read_sheet('11xq5N-13lPdadmoYmNG8kXm_7r4ZdmmlDWNafUQ79I8')
+taxch <- read_sheet('1Io9Xv7Uh1AU0S2NMBwhtz-3MT1Q6L0VvXEqay1F15Ig')
+tax <- read_sheet('1NNeCqkPmrXZ9hDkEpRTlbZGulOR8fXToAL-K3wALm2Y')
 
-taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
-#gs_browse(taxfl)
-taxfl <- gs_read(taxfl)
-
-taxch <- gs_title(paste(n, '_taxonomy_to_change', sep = ''))
-#gs_browse(taxch)
-taxch <- gs_read(taxch)
-
-tax <- gs_title(paste(n, '_taxonomy', sep = ''))
-#gs_browse(tax)
-tax <- gs_read(tax)
 ```
 
 # load dataset of interest 
 
 ```{r}
 ##### get dataset from CSV #####
-x <- '20200325-1_NOAA_FGBNMS_DFH35_DFH37_Manta_Mohawk_Blakeway_2018_2018'
+x <- '20201001-4_NOAA_OER_EX1811_Oceano_Profundo_2018_2018'
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
@@ -85,7 +76,7 @@ taxa <- as.character(
 # taxa <- unique(sub$ScientificName)
 
 ##### create a raw version of taxa list #####
-taxaraw <- taxa
+# taxaraw <- taxa
 
 ##### note: taxa list will go on for cleaning #####
 ## 'taxaraw' will be used for stripping taxonomy string
@@ -104,11 +95,12 @@ taxaraw <- taxa
 # clean taxa list 
 
 ```{r}
-taxa <- taxa %>% str_replace(' sp.', '')
-taxa <- taxa %>% str_replace('cf. ', '')
+# taxa <- taxa %>% str_replace(' sp.', '')
+# taxa <- taxa %>% str_replace('cf. ', '')
 taxa <- setdiff(taxa, tax$ScientificName)
 taxa <- trimws(taxa)
 taxa <- str_sort(taxa)
+
 ```
 
 # check taxa list 
@@ -201,6 +193,9 @@ newtax <- rbind(tax, newtax)
 ## checking
 length(tax$VernacularNameCategory)
 length(newtax$VernacularNameCategory)
+
+## creating just data.frame
+newtax <- as.data.frame(newtax)
 ```
 
 # write updated taxonomy table to file
@@ -209,7 +204,7 @@ length(newtax$VernacularNameCategory)
 ##### write out new file #####
 setwd("C:/rworking/deepseatools/indata")
 newtax %>%
-  write.csv('newtax.csv', row.names = FALSE)
+  write_csv('newtax.csv')
 ```
 
 # --OR-- : extract a taxonomic table from the 'sub'

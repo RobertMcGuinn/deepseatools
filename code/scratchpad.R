@@ -4351,3 +4351,21 @@ write.csv(x,"DSCRTP_NatDB_20200408-1_FMC_North_Pacific.csv",
           quote = T)
 
 
+
+##### data logging Q4 2020 #####
+filt %>% filter(grepl("Nautilus", Vessel)) %>% pull(SurveyID) %>% unique()
+filt %>% filter(grepl("Manta", Vessel)) %>% pull(SurveyID) %>% unique()
+filt %>% filter(grepl("Okeanos", Vessel)) %>% pull(SurveyID) %>% unique()
+filt %>% filter(grepl("EX1811", SurveyID)) %>% pull(Reporter) %>% unique()
+filt %>% filter(grepl("EX1811", SurveyID)) %>% pull(Reporter) %>% unique()
+
+
+
+
+
+
+
+
+
+
+
