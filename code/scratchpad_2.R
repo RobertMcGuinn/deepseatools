@@ -60,6 +60,11 @@ sub %>% filter(grepl('Insufficient', FlagReason))%>%
   group_by(ScientificName, FlagReason, Flag) %>%
   summarize(n=n())
 
+sub %>%
+  group_by(SampleID) %>% arrange
+  summarize(n=n())
+
+
 ##### accessionID Kaitlin Graff #####
 indata %>% filter(AccessionID == 'NOAA_CBNMS_Nautilus_Graiff_2017_2017') %>%
   pull(CatalogNumber) %>%
