@@ -18,7 +18,7 @@ arc.check_product()
 
 ##### __OR__ create x from sub #####
 
-x <- sub %>% filter(grepl("Virgin Islands Trough South Wall", Locality))
+x <- sub
 
 ##### filter data #####
 

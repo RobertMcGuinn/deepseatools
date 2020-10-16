@@ -157,7 +157,7 @@ sum_tbl
 
 # Citation Maker
 
-``` {r CitationMaker, echo = FALSE}
+``` {r CitationMaker, echo = FALSE, eval = F}
 
 sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ', 
                          min(sub$ObservationYear[sub$ObservationYear != "-999"]),' to ',

@@ -36,7 +36,7 @@ flagged <- sub %>%  filter(Flag == "1")
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 
 ## checking
-s %>% filter(FieldName == 'LocationComments') %>% pull(ValidValues)
+s %>% filter(FieldName == 'RecordType') %>% pull(ValidValues)
 s %>% filter(FieldName == 'LocationComments') %>% pull(FieldDescription)
 s %>% filter(FieldName == 'IdentificationComments') %>% pull(FieldDescription)
 
@@ -45,8 +45,10 @@ filt %>% filter(grepl("Nautilus", Vessel)) %>% pull(SurveyID) %>% unique()
 filt %>% filter(grepl("Manta", Vessel)) %>% pull(SurveyID) %>% unique()
 filt %>% filter(grepl("Okeanos", Vessel)) %>% pull(SurveyID) %>% unique()
 filt %>% filter(grepl("EX1811", SurveyID)) %>% pull(DatasetID) %>% unique()
-filt %>% filter(grepl("EX1811", SurveyID)) %>% pull(Reporter) %>% unique()
+filt %>% filter(grepl("EX1903", SurveyID)) %>% pull(Reporter) %>% unique()
 filt %>% filter(grepl("EX", AccessionID)) %>% pull(AccessionID) %>% unique()
+filt %>% filter(grepl("EX1903", SurveyID)) %>% pull(Reporter) %>%  length()
+
 
 sub %>% filter(VernacularNameCategory == 'check with dataprovider') %>%
   pull(AphiaID)
@@ -60,9 +62,11 @@ sub %>% filter(grepl('Insufficient', FlagReason))%>%
   group_by(ScientificName, FlagReason, Flag) %>%
   summarize(n=n())
 
-sub %>%
-  group_by(SampleID) %>% arrange
-  summarize(n=n())
+x <- sub %>% filter(grepl('DIVE', SampleID)) %>%
+  group_by(SampleID) %>%
+  summarize(n=n()) %>%
+  arrange(desc(SampleID))
+View(x)
 
 
 ##### accessionID Kaitlin Graff #####
@@ -81,6 +85,10 @@ write_csv("20200710-2_NOAA_CBNMS_Nautilus_Graiff_2017_2017.csv")
 
 filt %>% filter(grepl("Graiff", Reporter)) %>%
   pull(AccessionID) %>%
+  unique()
+
+filt %>% filter(grepl("YPM", DatasetID)) %>%
+  pull(WebSite) %>% length() %>%
   unique()
 
 

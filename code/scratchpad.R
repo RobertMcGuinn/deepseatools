@@ -4358,7 +4358,7 @@ filt %>% filter(grepl("Manta", Vessel)) %>% pull(SurveyID) %>% unique()
 filt %>% filter(grepl("Okeanos", Vessel)) %>% pull(SurveyID) %>% unique()
 filt %>% filter(grepl("EX1811", SurveyID)) %>% pull(Reporter) %>% unique()
 filt %>% filter(grepl("EX1811", SurveyID)) %>% pull(Reporter) %>% unique()
-
+sub %>% pull(SampleID) %>% unique() %>%
 
 
 
