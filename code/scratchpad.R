@@ -588,14 +588,12 @@ plot(aoibox)
 #          overwrite_layer = T)
 
 ##### write 2d envelope to shapefile #####
-
 setwd("C:/data/aprx/explore/shapefiles")
 writeOGR(aoibox, dsn="sweet",
          layer= "sweet",
          driver = "ESRI Shapefile",
          #dataset_options=c("NameField=ScientificName"),
          overwrite_layer = T)
-
 
 ##### read in some shapefiles #####
 setwd("C:/data/BaseLayers/NaturalEarth")

@@ -8,52 +8,29 @@ output: word_document
 ```{r packages, echo=F, warning=F, message=F}
 #install.packages(tidyverse)
 #install.packages('openxlsx')
-
 library(tidyverse)
 library(openxlsx)
+library(sf)
+library(rgdal)
+library(RColorBrewer)
+library(raster)
+library(marmap)
+library(leaflet)
+library(extrafont)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(maps)
+library(rgdal)
+library(raster)
+library(marmap)
+library(httr)
+library(jsonlite)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(openxlsx)
+library(rgeos)
 
-
-# library(sp)
-# library(tidyverse)
-# library(rerddap)
-# #install.packages('leaflet')
-# library(leaflet)
-# # install.packages('extrafont')
-# library(extrafont)
-# # install.packages('RColorBrewer')
-# library(RColorBrewer)
-# # install.packages('googlesheets')
-# library(googlesheets)
-# # install.packages('googledrive')
-# library(googledrive)
-# library(rmarkdown)
-# library(knitr)
-# #install.packages("maps")
-# library(maps)
-# #install.packages("rgdal")
-# library(rgdal)
-# #install('raster')
-# library(raster)
-# #install.packages("spocc")
-# library(spocc)
-# # install.packages('arcgisbinding')
-# # library(arcgisbinding)
-# # arc.check_product()
-# #install.packages('refinr')
-# library(refinr)
-# # install.packages('marmap')
-# library(marmap) #yo
-# #install.packages('prettydoc')
-# library(prettydoc)
-# #install.packages('robis')
-# library(robis)
-# #install.packages('devtools')
-# library(devtools)
-# library(httr)
-# library(jsonlite)
-# library(rnaturalearth)
-# library(rnaturalearthdata)
-# library(openxlsx)
 ```
 
 ```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
@@ -64,7 +41,7 @@ filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 ```
 
-```{r filter_geo, echo=F, warning=F, message=F, eval=F}
+```{r filter_geo_OR, echo= T, warning=F, message=F, eval=F}
 ## set bounding box variables
 minlat <- 14.87
 maxlat <- 21.89
@@ -82,20 +59,14 @@ x <- subset(filt, as.numeric(Latitude) > minlat &
 # Query used in this Report 
 Language: R
 
-```{r filter_query, echo=T, warning=F, message=F, eval=T}
-x <- filt %>%  
-  filter(grepl("Western Pacific", FishCouncilRegion), 
-         ObservationYear == 2018 |
-           ObservationYear == 2019)
-
+```{r filter_query_OR, echo=T, warning=F, message=F, eval=T}
+x <- filt %>% filter(FishCouncilRegion == 'Caribbean' | 
+                       FishCouncilRegion ==  'Gulf of Mexico' | 
+                       FishCouncilRegion == 'South Atlantic') 
+                
 ## check
+x %>% pull(CatalogNumber) %>% length()
 
-# filt %>%
-#   filter(grepl("Gulf of Mexico", FishCouncilRegion),
-#          is.na(ObservationDate) == T#,
-#          #ObservationDate == '-999'
-#          ) %>%
-#   pull(ObservationDate) %>% length()
 # 
 # filt %>%
 #   filter(grepl("EX", DatasetID),
@@ -105,7 +76,6 @@ x <- filt %>%
 #   pull(DatasetID) %>% 
 #   unique() %>% 
 #   length()
-  
 
 ```
 

@@ -1,0 +1,443 @@
+---
+title: "Southeast US Deep Sea Community Analysis"
+author: "Robert P. McGuinn"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: word_document
+---
+
+```{r installpackages, echo = FALSE, warning=FALSE, message=FALSE, cache=FALSE}
+
+#install.packages("beanplot")
+library(beanplot)
+#install.packages("stringr")
+library(stringr)
+#install.packages("knitr")
+library(knitr)
+#install.packages("tidyr")
+library(tidyr)
+#install.packages("sp")
+library(sp)
+#install.packages("maptools")
+library(maptools)
+#install.packages("maps")
+library(maps)
+#install.packages("reshape")
+library(reshape)
+#install.packages("reshape2")
+library(reshape2)
+#install.packages("psych")
+library(psych)
+#install.packages("ggplot2")
+library(ggplot2)
+#install.packages("data.table")
+library(data.table)
+#install.packages("dplyr")
+library(dplyr)
+#install.packages("car")
+library(car)
+#install.packages("gdata")
+library(gdata)
+#install.packages("digest")
+library(digest)
+#install.packages("rgdal")
+library(rgdal)
+#install.packages("ggmap")
+library(ggmap)
+#install.packages("rerddap")
+library(rerddap)
+#install.packages("raster")
+library(raster)
+#install.packages("rworldxtra")
+library(rworldxtra)
+#install.packages("ggrepel")
+library(ggrepel)
+#install.packages("xtable")
+library(xtable)
+library(taxize)
+library(rgdal)
+library(dplyr)
+#install.packages("tidyverse")
+library(tidyverse)
+library(lattice)
+library(extrafont)
+library(RColorBrewer)
+library(googlesheets)
+```
+
+```{r data, cache = FALSE, echo=FALSE}
+
+setwd("C:/rworking/digs/indata")
+#indata<-read.csv("DSCRTP_NatDB_20171214-0.csv", header = T)
+indata<-read.csv('20180130_0_Genus_NoFlag_TH.csv')
+
+filt <- indata %>%
+  filter(Flag == '0' | Flag == '2', 
+         ObservationYear != "-999",
+         DepthInMeters != "-999", 
+         is.na(Phylum)== F)
+options(digits = 1)
+
+# changing levels of 'Ecoregion'
+filt2 <- filt %>% mutate(Ecoregion = ifelse(Ecoregion == 'N_Carolinean', 'North Carolinean', as.character(Ecoregion)))
+
+minLon <- -83
+maxLon <- -74 
+minLat <- 23
+maxLat <- 36
+
+geofilt <- 
+  filt2 %>% filter(as.numeric(Latitude) > minLat, 
+                       as.numeric(Latitude) < maxLat, 
+                       as.numeric(Longitude) < maxLon,
+                       as.numeric(Longitude) > minLon)
+
+coordinates(geofilt) <- c("Longitude", "Latitude")
+proj4string(geofilt) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.height = 4, fig.width = 7.5)
+##### building big pallette #####
+# to get the colors from a palette:
+palette1 <- brewer.pal(9,"Set1")
+palette2 <- brewer.pal(8,"Set2")
+palette3 <- brewer.pal(9,"Set3")
+palette4 <- brewer.pal(8,"Dark2")
+palette5 <- brewer.pal(8,"Accent")
+
+# We can just stick a few color palettes together
+big_palette <- c(palette1,palette2,palette3, palette4, palette5)
+```
+
+``` {r DepthClassTable, echo=FALSE, cache = FALSE} 
+
+x <- 600
+y <- 300
+z <- 150
+
+geofilt$DepthCat[geofilt$DepthInMeters > x] <- "very deep"
+geofilt$DepthCat[geofilt$DepthInMeters > y & geofilt$DepthInMeters <= x] <- "deep"
+geofilt$DepthCat[geofilt$DepthInMeters >= z & geofilt$DepthInMeters <= y] <- "mesophotic"
+geofilt$DepthCat[geofilt$DepthInMeters < z] <- "very shallow"
+geofilt$DepthCat <- factor(geofilt$DepthCat, levels = c('very deep', 'deep', 'mesophotic', 'very shallow'))
+
+```
+
+######Figure 1: North Carolinean ecoregion - all depths. These data are filtered for genera that have more than 30 occurrence. 'very deep' = >`r x` meters. 'deep' is <= `r x` and >= `r y`. 'mesophotic' is <= `r y` and >= `r z`. 'very shallow' is < `r z` 
+
+``` {r ordered histograms1, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 30)
+
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% sum_tbl$Genus, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'North Carolinean',
+         as.numeric(DepthInMeters) < 1250 )
+
+g <- ggplot(geofilt2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 14, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') +
+  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+GenusCounts = summary(geofilt2$Genus)
+set.seed(8)
+pie(GenusCounts[GenusCounts>5],col=sample(big_palette), cex = .7)
+
+```
+
+######Figure 2: South Carolinean ecoregion - all depths. These data are filtered for genera that have more than 30 occurrences. 'very deep' = >`r x` meters. 'deep' is <= `r x` and >= `r y`. 'mesophotic' is <= `r y` and >= `r z`. 'very shallow' is < `r z` 
+
+``` {r ordered histograms2, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 30)
+
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% sum_tbl$Genus, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'South Carolinean',
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) < 1250 )
+g <- ggplot(geofilt2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 14, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  + 
+  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') +
+  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+GenusCounts = summary(geofilt2$Genus)
+set.seed(8)
+pie(GenusCounts[GenusCounts > 30],col=sample(big_palette), cex = .7)
+
+```
+
+######Figure 3: Floridian ecoregion - all depths. These data are filtered for genera that have more than 30 occurrences. 'very deep' = >`r x` meters. 'deep' is <= `r x` and >= `r y`. 'mesophotic' is <= `r y` and >= `r z`. 'very shallow' is < `r z` 
+
+``` {r ordered histograms3, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(Records)
+options(scipen=10000)
+#View(sum_tbl)
+
+sum_tbl <- sum_tbl %>%
+  filter(Records > 30)
+
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% sum_tbl$Genus, 
+         Phylum == "Cnidaria", 
+         Ecoregion == 'Floridian',#,
+         #DepthCat == 'very shallow'
+         as.numeric(DepthInMeters) < 1250 )
+g <- ggplot(geofilt2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters))) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 14, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))  +
+  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') +
+  geom_hline(yintercept = 600, col = 'grey')
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+
+# Pie charts
+GenusCounts = summary(geofilt2$Genus)
+set.seed(8)
+pie(GenusCounts[GenusCounts>30],col=sample(big_palette),cex = .7)
+
+```
+
+######Figure 4: Bean plots of 'DepthInMeters' by 'Genus'. This depicts the genera ranked 1-6 by number of records within the study region. 
+
+```{r Genus1, echo=FALSE, cache = FALSE, dpi=300}
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    Records = n()) %>%
+  arrange(desc(Records))
+
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% sum_tbl$Genus[2:7])
+g <- ggplot(geofilt2, aes(factor(Genus), as.numeric(DepthInMeters))) +   
+  geom_violin() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  facet_wrap(~Order) +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5)])
+
+```
+
+######Figure 5: Bean plots of 'DepthInMeters' by 'Genus'. This depicts the genera ranked 7-12 by number of records within the study region.  
+
+```{r Genus2, echo=FALSE, cache = FALSE, dpi=300}
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% sum_tbl$Genus[8:13])
+
+g <- ggplot(geofilt2, aes(factor(Genus), as.numeric(DepthInMeters))) +   geom_violin() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  facet_wrap(~Order) +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5)])
+```
+
+######Figure 6: Bean plots of 'DepthInMeters' by 'Genus'. This depicts the genera ranked 13-18 by number of records within the study region.  
+
+```{r Genus3, echo=FALSE, cache = FALSE, dpi=300}
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% sum_tbl$Genus[14:19])
+g <- ggplot(geofilt2, aes(factor(Genus), as.numeric(DepthInMeters))) +   
+  geom_violin() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  facet_wrap(~Order) +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5)])
+```
+
+######Figure 7: Bean plots of 'DepthInMeters' by 'Genus'. This depicts the genera ranked 19-24 by number of records within the study region.  
+
+```{r Genus4, echo=FALSE, cache = FALSE, dpi=300}
+
+geofilt2 <- as.data.frame(geofilt) %>%
+  filter(Genus %in% sum_tbl$Genus[20:25])
+g <- ggplot(geofilt2, aes(factor(Genus), as.numeric(DepthInMeters))) +   geom_violin() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  facet_wrap(~Order) +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5)])
+```
+
+######Figure 8: Shows the number of records within each Depth Category regardless of subregion. 'very deep' = >`r x` meters. 'deep' is <= `r x` and >= `r y`. 'mesophotic' is <= `r y` and >= `r z`. 'very shallow' is < `r z`
+
+``` {r DepthClassPlotFacet, echo=FALSE, cache = FALSE, dpi=300} 
+
+options(scipen=10000)
+geofilt <- as.data.frame(geofilt) %>%
+  filter(Ecoregion != 'Virginian' , is.na(Ecoregion) == F)
+g <- ggplot(as.data.frame(geofilt), aes(DepthCat, fill = Order)) +
+  geom_bar() + 
+  coord_flip() + 
+  theme(text = element_text(size=20)) + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria")
+
+#display.brewer.all(colorblindFriendly=TRUE)
+set.seed(8)
+g + scale_fill_manual(values = sample(big_palette))
+
+```
+
+######Figure 9: shows the number of records within each Depth Category, faceted by Ecoregion. 'very deep' = >`r x` meters. 'deep' is <= `r x` and >= `r y`. 'mesophotic' is <= `r y` and >= `r z`. 'very shallow' is < `r z`
+ 
+``` {r DepthClassPlot, echo=FALSE, cache = FALSE, dpi=300} 
+
+options(scipen=10000)
+geofilt <- as.data.frame(geofilt) %>%
+  filter(Ecoregion != 'Virginian' , is.na(Ecoregion) == F)
+g <- ggplot(as.data.frame(geofilt), aes(DepthCat, fill = Order)) +
+  geom_bar() + 
+  coord_flip() +
+ #scale_x_reverse() +
+  facet_wrap(~Ecoregion) +
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+set.seed(8)
+g + scale_fill_manual(values = sample(big_palette))
+
+```
+
+######Table 1: Table of records by depth category grouped by Ecoregion.  The 'Genera' column is simply the number of unique genera and 'n' is the number of records. 'very deep' = >`r x` meters. 'deep' is <= `r x` and >= `r y`. 'mesophotic' is <= `r y` and >= `r z`. 'very shallow' is < `r z`.
+
+``` {r DepthClassPlotFacetByMEOW, echo=FALSE, cache = FALSE, dpi=300}
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  filter(is.na(DepthInMeters) != '-999')%>%
+  group_by(Ecoregion, DepthCat) %>%
+  summarize(
+    Genera_n = length(unique(na.omit(Genus))),
+    n = n()
+  )
+kable <- kable(sum_tbl, row.names = F, digits = 2)
+kable
+
+```
+
+######Table 2: Frequency table of the number of records within each genera within the study area.  Table is descending order by the *frequency of occurrence* within each genera.
+
+``` {r ByGenusCount, echo=FALSE }
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(desc(Records))
+kable <- kable(sum_tbl, row.names = F, digits = 2)
+kable
+
+```
+
+######Table 3:  Frequency table grouped by 'Genus'. Arranged in *ascending order by median depth* of each genera. 
+
+``` {r ByGenusMedianDepth, echo=FALSE }
+sum_tbl <-
+  as.data.frame(geofilt) %>%
+  group_by(Genus) %>%
+  summarize(
+    Phylum = toString(unique(Phylum)),
+    Taxon_Rank = toString(unique(TaxonRank)),
+    ScientificNames = toString(unique(ScientificName)),
+    Records = n(),
+    MinDepth = min(DepthInMeters),
+    MedianDepth = median(DepthInMeters),
+    MaxDepth = max(DepthInMeters)) %>%
+  arrange(MedianDepth)
+kable <- kable(sum_tbl, row.names = F, digits = 2)
+kable
+```
+

@@ -1,0 +1,221 @@
+---
+title: "Target Community Analysis"
+author: "Robert P. McGuinn"
+date: "2018-11-06"
+output: word_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      #fig.height = 4.5,
+                      #fig.width = 7.5,
+                      fig.height = 9.5,
+                      fig.width = 17
+                      )
+
+```
+
+```{r dataprep, echo=FALSE}
+##### reading from feature class (after some GIS selection), creates 'arc.feature_impl'object #####
+fgdb_path <- 'C:/data/aprx/explore/explore.gdb'
+target <- arc.open(file.path(fgdb_path, 'miami_stetson'))
+
+##### checking ##### 
+# class(miami_stetson)
+
+##### _____ creating 'sp' spatial polygon dataframes of the polygons ##### 
+target <- arc.select(target)
+target <- arc.data2sp(target)
+
+##### checking ######
+# class(target)
+# proj4string(target)
+
+##### creating a geographic bounding box (south atlantic) ##### 
+minLon <- -84
+maxLon <- -73
+minLat <- 22
+maxLat <- 37
+
+##### filtering data by bounding box #####
+geofilt <-
+  filt %>% filter(as.numeric(Latitude) > minLat,
+                       as.numeric(Latitude) < maxLat,
+                       as.numeric(Longitude) < maxLon,
+                       as.numeric(Longitude) > minLon)
+
+##### making the geofilter a spatial points object #####
+coordinates(geofilt) <- c("Longitude", "Latitude")
+proj4string(geofilt) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +towgs84=0,0,0"
+
+geofilt <- spTransform(geofilt, proj4string(target))
+
+
+
+```
+
+```{r intersecting, echo=FALSE }
+# plot(target)
+# points(geofilt)
+intersect <- geofilt[target,]
+
+# plot(target)
+# plot(intersect)
+
+##### write out intersecting points to arcgis #####
+# fgdb_path <- 'C:/data/aprx/explore/explore.gdb'
+# arc.write(file.path(fgdb_path, 'natdb/intersect'), data=intersect)
+```
+
+```{r building_pallette, echo=FALSE}
+
+##### building big pallette #####
+# to get the colors from a palette:
+palette1 <- brewer.pal(9,"Set1")
+palette2 <- brewer.pal(8,"Set2")
+palette3 <- brewer.pal(9,"Set3")
+palette4 <- brewer.pal(8,"Dark2")
+palette5 <- brewer.pal(8,"Accent")
+
+# We can just stick a few color palettes together
+big_palette <- c(palette1,palette2,palette3, palette4, palette5)
+```
+
+``` {r genera_list, echo=FALSE}
+##### creating list of specific genera from Tom #####
+# shallow genera 
+genera_1 <- c('Phyllangia',
+              'Renilla',
+              'Leptogorgia',
+              'Titanideum',
+              'Balanophyllia',
+              'Stichopathes',
+              'Ellisella',
+              'Tanacetipathes',
+              'Diodogorgia', 
+              'Nidalia',
+              'Telesto',
+              'Oculina',
+              'Cladocora',
+              'Thesea',
+              'Paracyathus',
+              'Dasmosmilia',
+              'Polymyces')
+
+# deeper genera
+genera_2 <- c('Bathypathes',
+              'Stylaster',
+              'Paramuricea',
+              'Plumarella',
+              'Thecopsammia',
+              'Leiopathes',
+              'Deltocyathus',
+              'Madrepora',
+              'Lophelia',
+              'Enallopsammia',
+              'Bathypsammia',
+              'Swiftia',
+              'Javania',
+              'Pseudodrifa',
+              'Clavularia',
+              'Anthomastus',
+              'Acanella',
+              'Keratoisis',
+              'Eunicella'
+)
+
+#all genera
+genera <- c('Phyllangia',
+            'Renilla',
+            'Leptogorgia',
+            'Titanideum',
+            'Balanophyllia',
+            'Stichopathes',
+            'Ellisella',
+            'Tanacetipathes',
+            'Diodogorgia', 
+            'Nidalia',
+            'Telesto',
+            'Oculina',
+            'Cladocora',
+            'Thesea',
+            'Paracyathus',
+            'Dasmosmilia',
+            'Polymyces',
+            'Bathypathes',
+            'Stylaster',
+            'Paramuricea',
+            'Plumarella',
+            'Thecopsammia',
+            'Leiopathes',
+            'Deltocyathus',
+            'Madrepora',
+            'Lophelia',
+            'Enallopsammia',
+            'Bathypsammia',
+            'Swiftia',
+            'Javania',
+            'Pseudodrifa',
+            'Clavularia',
+            'Anthomastus',
+            'Acanella',
+            'Keratoisis',
+            'Eunicella'
+)
+
+```
+
+``` {r ordered_allregion_all_genera, echo=FALSE, cache=FALSE, dpi=300, warnings = FALSE}
+
+intersect2 <- as.data.frame(intersect) %>%
+  filter(#Genus %in% genera_1, 
+         Phylum == "Cnidaria", 
+         as.numeric(DepthInMeters) > 0,
+         as.numeric(DepthInMeters < 1250))
+
+g <- ggplot(intersect2, aes(reorder(Genus, DepthInMeters, FUN=median), as.numeric(DepthInMeters),fill=Order)) +   
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") + 
+  xlab("Genus") +
+  theme_bw(base_size = 22, base_family = "Cambria") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0, face = 'italic'))  +
+#  geom_hline(yintercept = 150, col = 'grey') +
+  geom_hline(yintercept = 300, col = 'grey') #+
+#  geom_hline(yintercept = 600, col = 'grey')
+  
+set.seed(8)
+g + scale_fill_manual(values = sample(big_palette))
+#g + scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9,8,7,6,5,4,3,2,1)])
+```
+
+``` {r piecharts, echo = FALSE}
+
+# Pie charts
+#####
+set.seed(3)
+# build a color matching data frame
+colormatchdf <- data.frame(Genus = genera, color = sample(big_palette[1:36], length(genera)))
+#get a summary vector of Genus Counts
+GenusCounts <- summary(intersect2$Genus)
+# limit by count
+GenusCounts <- GenusCounts[GenusCounts>50]
+# make count into data frame
+GenusCounts <- data.frame(Genus=names(GenusCounts), value=GenusCounts, row.names=NULL)
+# merge to get color field into cound summary dataframe
+GenusCountsColor <- merge(GenusCounts, colormatchdf, by = "Genus")
+# sort by value to make prettyer chart
+GenusCountsColor <- GenusCountsColor[order(as.numeric(GenusCountsColor$value)),]
+# make color vector
+colors <- as.vector(GenusCountsColor$color)
+# set pallete
+palette(colors)
+# make pie chart
+pie(GenusCountsColor$value,labels = GenusCountsColor$Genus, col = c(1:length(GenusCountsColor$value)), cex = 1.5)
+
+```
+
+
+
+
+
+

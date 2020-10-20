@@ -40,6 +40,8 @@ s %>% filter(FieldName == 'RecordType') %>% pull(ValidValues)
 s %>% filter(FieldName == 'LocationComments') %>% pull(FieldDescription)
 s %>% filter(FieldName == 'IdentificationComments') %>% pull(FieldDescription)
 
+
+
 ##### checking some key filters #####
 filt %>% filter(grepl("Nautilus", Vessel)) %>% pull(SurveyID) %>% unique()
 filt %>% filter(grepl("Manta", Vessel)) %>% pull(SurveyID) %>% unique()
