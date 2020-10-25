@@ -1,0 +1,250 @@
+---
+title: "HAPC_GOMEX"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# packages 
+```{r packages, echo=F, warning=F, message=F}
+#install.packages(tidyverse)
+#install.packages('openxlsx')
+#install.packages('here')
+library(here)
+library(tidyverse)
+library(openxlsx)
+library(sf)
+library(rgdal)
+library(RColorBrewer)
+library(raster)
+library(marmap)
+library(leaflet)
+library(extrafont)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(maps)
+library(rgdal)
+library(raster)
+library(marmap)
+library(httr)
+library(jsonlite)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(openxlsx)
+library(rgeos)
+
+```
+
+# load NDB
+```{r, cache=T, message=F, warning=F}
+setwd("C:/rworking/deepseatools/indata")
+indata <- read_csv("DSCRTP_NatDB_20200710-2.csv")
+filt <- indata %>%
+  filter(Flag == "0", is.na(Phylum) == F)
+
+```
+
+# subset the data (create 'sub')
+```{r}
+sub <- filt %>% filter(FishCouncilRegion == 'Gulf of Mexico',
+                      as.Date(ObservationDate) > as.Date("2013-12-30")
+                       )
+
+```
+
+# load geodata
+```{r}
+##### set project crs #####
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+##### load from data subset #####
+geosub <- st_as_sf(x = sub,                         
+           coords = c("Longitude", "Latitude"),
+           crs = projcrs)
+
+##### load from geodatabase #####
+# geo_hapc <- here("C:/data/") %>% 
+#   sf::st_read(dsn = "geoindata.gdb", layer = "")
+
+##### load from shapefile ##### 
+hapc_c9nr <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/Coral9NoRegs.shp")
+hapc_c9r <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/Coral9Regs.shp")
+hapc_ewor <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/ExistingWithOutRegs.shp")
+hapc_ewr <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/ExistingWithRegs.shp")
+
+```
+
+# align all geo files to project level crs
+```{r}
+##### set project crs #####
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+## check projections ## 
+# crs(hapc_c9nr)
+# crs(hapc_c9r)
+# crs(geosub)
+# crs(hapc_ewor)
+
+##### get everything into the same projection #####
+# mpas <- st_transform(mpas, crs = proj4string(x_geo))
+# oculina <- st_transform(oculina, crs = proj4string(x_geo))
+# oculinaexp <- st_transform(oculinaexp, crs = proj4string(x_geo))
+# hapc <- st_transform(hapc, crs = proj4string(x_geo))
+
+```
+
+# spatial join
+```{r}
+##### spatial joins with points #####
+geosub_hapc_c9nr <- st_join(geosub, hapc_c9nr)
+geosub_hapc_c9r <- st_join(geosub, hapc_c9r)
+geosub_hapc_ewor <- st_join(geosub, hapc_ewor)
+geosub_hapc_ewr <- st_join(geosub, hapc_ewr)
+
+## checking
+# plot(geosub["CatalogNumber"])
+# plot(geosub_hapc_c9nr["CatalogNumber"])
+```
+
+# create selections from spatial joins
+```{r}
+## checking
+# names(geosub_hapc_c9nr)
+# length(geosub_hapc_c9nr$DatasetID)
+# table(geosub_hapc_c9nr_cats$Name, useNA = 'always')
+
+##### stripping off CatalogNumbers from spatial joins #####
+geosub_hapc_c9nr_cats <- geosub_hapc_c9nr %>% filter(is.na(Name) == F)
+geosub_hapc_c9r_cats <- geosub_hapc_c9r %>% filter(is.na(Name) == F)
+geosub_hapc_ewor_cats <- geosub_hapc_ewor %>% filter(is.na(Name) == F)
+geosub_hapc_ewr_cats <- geosub_hapc_ewr %>% filter(is.na(Name) == F)
+
+## checking
+# table(geosub_hapc_c9nr_cats$Name, useNA = 'always')
+# table(geosub_hapc_c9r_cats$Name, useNA = 'always')
+# table(geosub_hapc_ewor_cats$Name, useNA = 'always')
+# table(geosub_hapc_ewr_cats$Name, useNA = 'always')
+
+##### adding all of the CatalogNumbers together.  
+yo <- c(geosub_hapc_c9nr_cats$CatalogNumber, 
+        geosub_hapc_c9r_cats$CatalogNumber, 
+        geosub_hapc_ewor_cats$CatalogNumber,
+        geosub_hapc_ewr_cats$CatalogNumber
+        )
+
+## define not in
+`%notin%` <- Negate(`%in%`)
+
+## assign management status back to original subset## 
+sub$HAPC <- 
+  case_when(
+  sub$CatalogNumber %in% yo ~ "Inside Managed Area",
+  sub$CatalogNumber %notin% yo ~ "Outside Managed Area"
+)
+
+## checking
+# length(mpas_cats$CatalogNumber)
+# length(oculina_cats$CatalogNumber)
+# length(oculinaexp_cats$CatalogNumber)
+# length(hapc_cats$CatalogNumber)
+# names(points_oculina)
+# z <- points_oculina %>% filter(is.na(AREA_NAME) == F)
+# plot(z["AREA_NAME"])
+# names(points_mpas)
+# z <- points_mpas %>% filter(is.na(NAME) == F)
+# plot(z["NAME"])
+# names(points_mpas)
+# z <- points_oculinaexp %>% filter(is.na(AREA_NAME) == F)
+# plot(z["AREA_NAME"])
+
+```
+
+# create tables for export
+```{r}
+#### making frequency tables
+hapc_c9nr_tab <- table(geosub_hapc_c9nr_cats$Name, useNA = 'always')
+hapc_c9r_tab <- table(geosub_hapc_c9r_cats$Name, useNA = 'always')
+hapc_ewor_tab <- table(geosub_hapc_ewor_cats$Name, useNA = 'always')
+hapc_ewr_tab <- table(geosub_hapc_ewr_cats$Name, useNA = 'always')
+
+hapc_c9nr_tab_df <- as.data.frame(hapc_c9nr_tab)
+hapc_c9r_tab_df <- as.data.frame(hapc_c9r_tab)
+hapc_ewor_tab_df <- as.data.frame(hapc_ewor_tab)
+hapc_ewr_tab_df <- as.data.frame(hapc_ewr_tab)
+
+hapc_c9nr_tab_df$designation <- "c9_no_reg"
+hapc_c9r_tab_df$designation <- "c9_reg"
+hapc_ewor_tab_df$designation <- "existing_no_reg"
+hapc_ewr_tab_df$designation <- "existing_reg"
+
+hapc_all_tab_df <- rbind(hapc_c9nr_tab_df, 
+                         hapc_c9r_tab_df, 
+                         hapc_ewor_tab_df, 
+                         hapc_ewr_tab_df)
+
+##### rename variable ##### 
+#hapc_all_tab_df2 <- hapc_all_tab_df %>% rename(Name = Var1)
+
+##### here I started over with a different selection from the top ##### 
+hapc_all_tab_df2_2013 <- hapc_all_tab_df %>% rename(Name = Var1)
+
+##### get rid of NAs before merging 
+table(hapc_all_tab_df$Var1, useNA = 'always')
+
+
+hapc_all_tab_df2_2013_merge <- left_join(hapc_all_tab_df2,
+                                         hapc_all_tab_df2_2013, 
+                                         by = "Name"
+                                         ) 
+##### change the names #####
+names(hapc_all_tab_df2_2013_merge) <- c("Name", "Freq_up_to_2013", "designation","Freq_2014_and_up", "designation2")
+names(hapc_all_tab_df2_2013_merge)
+
+##### get rid of NA #####
+hapc_all_tab_df2_2013_merge_cl <-  hapc_all_tab_df2_2013_merge %>% filter(is.na(Name) == F)
+
+z <- c(hapc_c9nr$Name, hapc_c9r$Name, hapc_ewor$Name, hapc_ewr$Name)
+
+x <- as.data.frame(x)
+x <- x %>% rename(Name = x)
+names(x)
+
+table <- left_join(x, hapc_all_tab_df2_2013_merge_cl,
+                                         by = "Name")
+
+
+setwd("C:/rworking/deepseatools/indata")
+table %>%
+  write.csv(paste("table.csv", sep = ''), row.names = FALSE)
+
+
+```
+
+# histogram of 'ObservationDate' by month
+```{r}
+sub %>%  pull(ObservationDate) %>% as.Date() %>% hist("years")
+
+```
+
+# export to GIS
+```{r gis_export, eval=F}
+##### load packages #####
+library(arcgisbinding)
+arc.check_product()
+
+#### filter out data without coordinates
+x <- sub %>% filter(Latitude != -999 | Longitude != -999)
+x_geo <- x
+
+##### create spdf #####
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+```
+

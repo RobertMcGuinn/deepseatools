@@ -18,15 +18,14 @@ arc.check_product()
 
 ##### __OR__ create x from sub #####
 
-#x <- sub
+x <-
 
 ##### filter data #####
 
-# x <- sub %>% filter(VernacularNameCategory == 'gorgonian coral')
+x <- sub %>% filter(Latitude != -999 | Longitude != -999)
 x_geo <- x
 
 ##### create spdf #####
-
 coordinates(x_geo) <- c("Longitude", "Latitude")
 proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
