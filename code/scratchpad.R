@@ -4360,10 +4360,17 @@ sub %>% pull(SampleID) %>% unique() %>%
 
 
 
-
-
-
-
+##### string to character vector #####
+x <- c("asfef", "qwerty", "yuiop[", "b", "stuff.blah.yech")
+# split x on the letter e
+strsplit(x,"e")
+unlist(strsplit("a.b.c", "."))
+## [1] "" "" "" "" ""
+## Note that `split' is a regexp!
+## If you really want to split on `.', use
+vec <- unlist(strsplit("a.b.c", "\\."))
+## [1] "a" "b" "c"
+matrix(vec,nrow = 3,ncol = 1)
 
 
 
