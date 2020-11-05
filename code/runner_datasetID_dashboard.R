@@ -54,12 +54,12 @@ options(lifecycle_disable_warnings = TRUE)
 
 ##### load database(old_and_new)#####
 setwd("C:/rworking/deepseatools/indata")
-indata_old<-read.csv("DSCRTP_NatDB_20200408-1.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+indata_old<-read.csv("DSCRTP_NatDB_20200710-2.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
 filt_old <- indata_old %>%
   filter(Flag == "0")
 
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20200710-2.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+indata<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
 filt <- indata %>%
   filter(Flag == "0")
 
@@ -74,7 +74,7 @@ version <- as.character(version)
 
 ##### bringing in datasetID key from xls stored on drive #####
 ## create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20200710-3_DatasetID_Key_DSCRTP'")
+x <- drive_find(q = "name contains '20201021-1_DatasetID_Key_DSCRTP'")
 
 ## browse to it
 # x %>% drive_browse()
@@ -98,10 +98,9 @@ key <- read.xlsx(dl$local_path)
 setdiff(filt$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, filt$DatasetID)
 
-x <- c("NOAA_CINMS_Shimada_SH-17-05","NOAA_CINMS_SW-19-06",
-       "NOAA_RESTORE_MT18", "NOAA_RESTORE_MT17", "NOAA_RESTORE_OP17")
+x <- setdiff(filt$DatasetID, key$DatasetID)
 x <- filt %>% filter(DatasetID %in% x) %>%
-  group_by(DatasetID, Locality, SurveyComments, Citation, Vessel, WebSite) %>%
+  group_by(DatasetID, RecordType, SamplingEquipment, VehicleName, DataProvider, Repository, Locality, SurveyComments, Citation, Vessel, WebSite) %>%
   summarize(n=n())
 View(x)
 
@@ -129,7 +128,7 @@ z <- merge(y,x)
 names(z)
 
 ## write out result
-write.xlsx(z, "C:/rworking/deepseatools/indata/20200710-3_DatasetID_Key_DSCRTP.xlsx",
+write.xlsx(z, "C:/rworking/deepseatools/indata/20201021-1_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
 ##### ***OPTIONAL*** subsetting of indata to d (optional step for testing purposes) #####
