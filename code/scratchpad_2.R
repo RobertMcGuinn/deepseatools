@@ -94,6 +94,10 @@ filt %>% filter(grepl("YPM", DatasetID)) %>%
   unique()
 
 
+##### summary for Tom #####
 
+z <- c("NOAA_SWFSC_Submersible", "NOAA_M2-10-06-L1-AUV", "NOAA_M2-10-06-L2-ROV", "NOAA_M2-10-06-L3-AUV", "NOAA_M2-10-06-L3-ROV", "NOAA_PU-11-08", "NOAA_PU-14-13")
 
+setdiff(z, unique(filt$DatasetID))
 
+summary <- filt %>% filter(DatasetID %in% z) %>% group_by(DatasetID) %>% summarize(number_eventID = length(unique(EventID)))

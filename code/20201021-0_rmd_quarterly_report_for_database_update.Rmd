@@ -78,14 +78,12 @@ a <- length(setdiff(unique(x$DatasetID), unique(filt1$DatasetID)))
 
 ```
 
-
 ```{r manual_set_variables, echo=FALSE}
 quarter <- 'Q4, FY-2020'
-version <- 'DSCRTP_NatDB_20201002-0'
+version <- 'DSCRTP_NatDB_20201021-0'
 releasedate <- '2020-11-03'
 corrections <- 14075
 ```
-
 
 ```{r load_functions, warning = FALSE, message=FALSE, echo=FALSE}
 
