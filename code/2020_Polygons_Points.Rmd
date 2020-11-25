@@ -76,7 +76,6 @@ hapc_c9nr <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/Cor
 hapc_c9r <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/Coral9Regs.shp")
 hapc_ewor <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/ExistingWithOutRegs.shp")
 hapc_ewr <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/ExistingWithRegs.shp")
-
 ```
 
 # align all geo files to project level crs

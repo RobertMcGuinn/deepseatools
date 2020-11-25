@@ -2518,11 +2518,17 @@ for (url in urls) {
 }
 
 ##### Select records that have images and save to a folder with data driven file nameing #####
-# be careful not to include any variable in the file name that
-d <- filt %>% filter(is.na(ImageURL) == F)
+# be careful not to include any variable in the file name that has spaces
+d <- filt %>% filter(#is.na(ImageURL) == F,
+                     ScientificName == "Antipathes sylospongia" |
+                       ScientificName == "Alternatipathes venusta" |
+                       ScientificName == "Umbellapathes litocrada"
+                     #grepl("Okeanos", Vessel)
+                     )
+
 d <- d[sample(nrow(d), 10),]
 
-setwd("C:/rworking/digs/outdata/imageset")
+setwd("C:/rworking/deepseatools/indata/imageset")
 
 for( i in 1:length(d$CatalogNumber)){
   download.file(as.character(d$ImageURL[i]),
