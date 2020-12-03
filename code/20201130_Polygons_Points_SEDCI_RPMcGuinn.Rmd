@@ -1,0 +1,554 @@
+---
+title: "HAPC_GOMEX"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# packages 
+```{r packages, echo=F, warning=F, message=F}
+#install.packages(tidyverse)
+#install.packages('openxlsx')
+#install.packages('here')
+library(here)
+library(tidyverse)
+library(openxlsx)
+library(sf)
+library(rgdal)
+library(RColorBrewer)
+library(raster)
+library(marmap)
+library(leaflet)
+library(extrafont)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(maps)
+library(rgdal)
+library(raster)
+library(marmap)
+library(httr)
+library(jsonlite)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(openxlsx)
+library(rgeos)
+
+```
+
+# load NDB
+```{r, cache=T, message=F, warning=F}
+setwd("C:/rworking/deepseatools/indata")
+indata <- read.csv("DSCRTP_NatDB_20201021-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+rm(indata)
+
+```
+
+# subset the data and make into sp layer (create 'sub')
+```{r}
+sub <- filt
+
+##### load from data subset #####
+
+##  set project crs
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+geosub <- st_as_sf(x = sub,                         
+           coords = c("Longitude", "Latitude"),
+           crs = projcrs)
+
+```
+
+# load geodata
+```{r}
+
+##### load protected areas from geodatabase and shapefiles #####
+
+## CaribbeanFMC
+setwd("C:/Users/Robert.McGuinn/Documents/ArcGIS/Packages/RTC2020_0d88f3/p20/")
+grammanik <- sf::st_read(dsn = "reporttocongress6.gdb", layer = 'Grammanik_Bank_po_Project')
+hind <- sf::st_read(dsn = "reporttocongress6.gdb", layer = 'Hind_Bank_Marine_Conservation_District')
+mutton <- sf::st_read(dsn = "reporttocongress6.gdb", layer = 'mutton_snapper_spawn_po_Proj')
+redhind <- sf::st_read(dsn = "reporttocongress6.gdb", layer = 'red_hind_spawn_po_Project')
+navassa <- sf::st_read(dsn = "reporttocongress6.gdb", layer = 'Navassa')
+bajodesico <- sf::st_read(dsn = "reporttocongress6.gdb", layer = 'Bajo_de_Sico_po_Project')
+
+## SAFMC
+stetson_miami <- sf::st_read("C:/Users/Robert.McGuinn/Documents/ArcGIS/Packages/RTC2020_0d88f3/commondata/stetson_update/StetsonMiami_po.shp")
+oculinabankoeca <- sf::st_read(dsn = "C:/Users/Robert.McGuinn/Documents/ArcGIS/Packages/RTC2020_0d88f3/p20/reporttocongress1.gdb", layer = "OculinaBank_oeca_po_Project")
+mpaIMS <- sf::st_read(dsn = "C:/Users/Robert.McGuinn/Documents/ArcGIS/Packages/RTC2020_0d88f3/p20/reporttocongress1.gdb", layer = "MPA_IMS_Project")
+oculinabankold <- sf::st_read(dsn = "C:/Users/Robert.McGuinn/Documents/ArcGIS/Packages/RTC2020_0d88f3/p20/reporttocongress1.gdb", layer = "OculinaBank_po_old_Project1")
+oculinabank <- sf::st_read(dsn = "C:/Users/Robert.McGuinn/Documents/ArcGIS/Packages/RTC2020_0d88f3/p20/reporttocongress1.gdb", layer = "OculinaBank_po_Project")
+pourtales_minus_crab <- sf::st_read(dsn = "C:/Users/Robert.McGuinn/Documents/ArcGIS/Packages/RTC2020_0d88f3/p20/reporttocongress1.gdb", layer = "Pourtales_minus_crab")
+capefear <- sf::st_read(dsn = "C:/Users/Robert.McGuinn/Documents/ArcGIS/Packages/RTC2020_0d88f3/p20/reporttocongress1.gdb", layer = "CapeFear_po_Project")
+capelookout <- sf::st_read(dsn = "C:/Users/Robert.McGuinn/Documents/ArcGIS/Packages/RTC2020_0d88f3/p20/reporttocongress1.gdb", layer = "CapeLookout_po_Project")
+capelookout_dissolve <- sf::st_read(dsn = "C:/Users/Robert.McGuinn/Documents/ArcGIS/Packages/RTC2020_0d88f3/p20/reporttocongress1.gdb", layer = "CL_merge_Dissolve")
+
+## GOMEXFMC
+hapc_c9nr <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/Coral9NoRegs.shp")
+hapc_c9r <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/Coral9Regs.shp")
+hapc_ewor <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/ExistingWithOutRegs.shp")
+hapc_ewr <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/ExistingWithRegs.shp")
+
+```
+
+# align all geo files to project level crs
+```{r}
+##### set project crs #####
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+## caribbean
+grammanik <- st_transform(grammanik, crs = projcrs)
+hind <- st_transform(hind, crs = projcrs)
+mutton <- st_transform(mutton, crs = projcrs)
+redhind <- st_transform(redhind, crs = projcrs)
+navassa <- st_transform(navassa, crs = projcrs)
+bajodesico <- st_transform(bajodesico, crs = projcrs)
+
+## southeast
+stetson_miami <- st_transform(stetson_miami, crs = projcrs)
+oculinabankoeca <- st_transform(oculinabankoeca, crs = projcrs)
+mpaIMS <- st_transform(mpaIMS, crs = projcrs)
+oculinabankold <- st_transform(oculinabankold, crs = projcrs)
+oculinabank <- st_transform(oculinabank, crs = projcrs)
+pourtales_minus_crab <- st_transform(pourtales_minus_crab, crs = projcrs)
+capefear <- st_transform(capefear, crs = projcrs)
+capelookout <- st_transform(capelookout, crs = projcrs)
+capelookout_dissolve <- st_transform(capelookout_dissolve, crs = projcrs)
+
+## hapc
+hapc_c9nr <- st_transform(hapc_c9nr, crs = projcrs)
+hapc_c9r <- st_transform(hapc_c9r, crs = projcrs)
+hapc_ewor <- st_transform(hapc_ewor, crs = projcrs)
+hapc_ewr <- st_transform(hapc_ewr, crs = projcrs)
+
+```
+
+# spatial intersect
+```{r}
+## caribbean
+grammanik_points <- st_intersection(geosub, grammanik)
+hind_points <- st_intersection(geosub, hind)
+mutton_points <- st_intersection(geosub, mutton)
+redhind_points <- st_intersection(geosub, redhind)
+navassa_points <- st_intersection(geosub, navassa)
+bajodesico_points <- st_intersection(geosub, bajodesico)
+
+## southeast
+stetson_miami_points <-  st_intersection(geosub, stetson_miami)
+oculinabankoeca_points <- st_intersection(geosub, oculinabankoeca)
+mpaIMS_points <- st_intersection(geosub, mpaIMS)
+oculinabankold_points <- st_intersection(geosub, oculinabankold) 
+oculinabank_points <- st_intersection(geosub, oculinabank) 
+pourtales_minus_crab_points <- st_intersection(geosub, pourtales_minus_crab)
+capefear_points <- st_intersection(geosub, capefear)
+capelookout_points <- st_intersection(geosub, capelookout) 
+capelookout_dissolve_points <- st_intersection(geosub, capelookout_dissolve)
+
+## gomex
+hapc_c9nr_points <- st_intersection(geosub, hapc_c9nr)
+hapc_c9r_points <- st_intersection(geosub, hapc_c9r)
+hapc_ewor_points <- st_intersection(geosub, hapc_ewor)
+hapc_ewr_points <- st_intersection(geosub, hapc_ewr)
+
+## checking
+# plot(geosub["CatalogNumber"])
+# plot(geosub_hapc_c9nr["CatalogNumber"])
+```
+
+# do all interesections
+```{r}
+
+grammanik_points <- st_intersection(geosub, grammanik)
+hind_points <- st_intersection(geosub, hind)
+mutton_points <- st_intersection(geosub, mutton)
+redhind_points <- st_intersection(geosub, redhind)
+navassa_points <- st_intersection(geosub, navassa)
+bajodesico_points <- st_intersection(geosub, bajodesico)
+
+## southeast
+stetson_miami_points <-  st_intersection(geosub, stetson_miami)
+oculinabankoeca_points <- st_intersection(geosub, oculinabankoeca)
+mpaIMS_points <- st_intersection(geosub, mpaIMS)
+oculinabankold_points <- st_intersection(geosub, oculinabankold) 
+oculinabank_points <- st_intersection(geosub, oculinabank) 
+pourtales_minus_crab_points <- st_intersection(geosub, pourtales_minus_crab)
+capefear_points <- st_intersection(geosub, capefear)
+capelookout_points <- st_intersection(geosub, capelookout) 
+capelookout_dissolve_points <- st_intersection(geosub, capelookout_dissolve)
+
+## gomex
+hapc_c9nr_points <- st_intersection(geosub, hapc_c9nr)
+hapc_c9r_points <- st_intersection(geosub, hapc_c9r)
+hapc_ewor_points <- st_intersection(geosub, hapc_ewor)
+hapc_ewr_points <- st_intersection(geosub, hapc_ewr)
+
+
+## create a vector of all 
+yo <- c(grammanik_points$CatalogNumber, 
+hind_points$CatalogNumber,
+mutton_points$CatalogNumber,
+redhind_points$CatalogNumber,
+navassa_points$CatalogNumber,
+bajodesico_points$CatalogNumber,
+stetson_miami_points$CatalogNumber,
+oculinabankoeca_points$CatalogNumber,
+mpaIMS_points$CatalogNumber,
+oculinabankold_points$CatalogNumber,
+oculinabank_points$CatalogNumber,
+pourtales_minus_crab_points$CatalogNumber,
+capefear_points$CatalogNumber,
+capelookout_points$CatalogNumber,
+capelookout_dissolve_points$CatalogNumber,
+hapc_c9nr_points$CatalogNumber,
+hapc_c9r_points$CatalogNumber,
+hapc_ewor_points$CatalogNumber,
+hapc_ewr_points$CatalogNumber)
+
+## define not in
+`%notin%` <- Negate(`%in%`)
+
+## assign management status back to original subset## 
+sub$HAPC <- 
+  case_when(
+  sub$CatalogNumber %in% yo ~ "Inside Managed Area",
+  sub$CatalogNumber %notin% yo ~ "Outside Managed Area"
+)
+
+## checking
+# length(mpas_cats$CatalogNumber)
+# length(oculina_cats$CatalogNumber)
+# length(oculinaexp_cats$CatalogNumber)
+# length(hapc_cats$CatalogNumber)
+# names(points_oculina)
+# z <- points_oculina %>% filter(is.na(AREA_NAME) == F)
+# plot(z["AREA_NAME"])
+# names(points_mpas)
+# z <- points_mpas %>% filter(is.na(NAME) == F)
+# plot(z["NAME"])
+# names(points_mpas)
+# z <- points_oculinaexp %>% filter(is.na(AREA_NAME) == F)
+# plot(z["AREA_NAME"])
+
+```
+
+
+# assigning classes based on SEDCI work 
+
+```{r}
+##### get all the DatasetIDs in SEDCI region #####
+ecogig <- c("NOAA_EX-12-02-L2",
+            "BOEM_Lophelia_II",
+            "WHOI_AT-18",
+            "SOI_FK006B",
+            "NOAA_HC-11-10",
+            "OET_NA028",
+            "OET_NA043",
+            "OET_NA057",
+            "OET_NA058",
+            "ECOGIG_OI-16-10",
+            "ECOGIG_O2-17-06")
+
+ecogig <- unique(ecogig)
+
+## DatasetIDs in the SEDCI rescue project (as of 2020-10-19)
+sedci_rescue <- c("HBOI_SJ-10-07", "HBOI_SJ-10-07", "NOAA_SJ-09-08", "NOAA_SJ-09-08","HBOI_SJ-08-09","NOAA_SJ-07-05", "NOAA_SJ-07-05", "NOAA_SJ-07-06", "HBOI_SJ-06-02", "HBOI_SJ-06-05-L1", "HBOI_SJ-06-05-L3", "HBOI_SJ-06-02", "NOAA_SJ-05-04", "NOAA_SJ-05-08", "NOAA_SJ-05-10", "NOAA_SJ-05-11", "NOAA_SJ-04-05", "NOAA_SJ-02-08", "HBOI_EL-99-08", "HBOI_SJ-88-11", "USGS_TM-97-10", "NOAA_RB-03-07", "NOAA_SJ-05-11",
+                  "NOAA_NF-09-01", "NOAA_NF-08-04", "NOAA_NF-07-06", "NOAA_NF-05-05", "NOAA_SJ-07-06", "HBOI_SJ-08-09", "NOAA_SJ-09-08", "NOAA_PC-10-02",
+                  "NOAA_NF-14-01", "NOAA_NF-13-02", "NOAA_NF-12-01", "NOAA_NF-11-09", "NOAA_NF-11-09-L3", "NOAA_PC-11-05-L1", "NOAA_NF-11-09", "NOAA_NF-11-09-L3", "Sharuga_SM_2014", "NOAA_PC-12-03", "NOAA_NF-13-02", "NOAA_PC-13-03", "NOAA_NF-14-08","NOAA_PC-15-02", "NOAA_PC-16-02", "OET_NA058", "OET_NA028", "NOAA_PC-17-02", "HBOI_WS-17-125")
+
+## unique DatasetIDs
+sedci_rescue <- unique(sedci_rescue)
+
+## sedci_rescue add ecogig
+sedci_rescue <- union(sedci_rescue, ecogig)
+
+## datasetIDs in the SEDCI rescue project (as of 2020-11-25)
+sedci_new <- c("NOAA_DFH-30", "NOAA_NF-17-08",
+               "NOAA_NF-17-08", "NOAA_DFH-32-33",
+               "NOAA_DFH-32-33", "NOAA_EX-17-11",
+               "NOAA_EX-18-03", "NOAA_EX-18-06",
+               "NOAA_NF-18-04","NOAA_FGBNMS_DFH-35",
+               "NOAA_FGBNMS_DFH-37", "NOAA_RESTORE_MT18")
+
+sedci_new <- unique(sedci_new)
+
+##### build a variable for new vs. rescue datasets #####
+sub$sedci <-
+  case_when(
+    sub$DatasetID %in% sedci_rescue ~ "rescue" ,
+    sub$DatasetID %in% sedci_new ~ "new",
+  )
+
+#length(x$Flag)
+#table(x$sedci, useNA = 'always')
+
+##### build a variable for pre-SEDCI and post-SEDCI
+sub$sedci2 <-
+  case_when(
+    sub$DatasetID %in% sedci_rescue ~ "Post SEDCI" ,
+    sub$DatasetID %in% sedci_new ~ "Post SEDCI",
+    sub$DatasetID %notin% sedci_rescue ~ "Pre SEDCI",
+    sub$DatasetID %notin% sedci_new ~ "Pre SEDCI"
+  )
+
+##### order the levels properly #####
+sub$sedci2 <- factor(sub$sedci2, levels = c('Post SEDCI', 'Pre SEDCI'))
+
+```
+
+# Assigning Depth Bins
+
+``` {r DepthClassTable, echo=FALSE, cache = FALSE} 
+hi <- 600
+y <- 300
+z <- 150
+
+sub$DepthCat[sub$DepthInMeters > hi] <- "very deep"
+sub$DepthCat[sub$DepthInMeters > y & sub$DepthInMeters <= hi] <- "deep"
+sub$DepthCat[sub$DepthInMeters >= z & sub$DepthInMeters <= y] <- "mesophotic"
+sub$DepthCat[sub$DepthInMeters < z] <- "very shallow"
+sub$DepthCat <- factor(sub$DepthCat, levels = c('very shallow','mesophotic', 'deep', 'very deep'))
+
+```
+
+# making the protection by depth figure
+
+# Figure: Protection by DepthCat in Caribbean
+
+```{r}
+##### building big pallette #####
+# to get the colors from a palette:
+palette1 <- brewer.pal(9,"Set1")
+palette2 <- brewer.pal(8,"Set2")
+palette3 <- brewer.pal(9,"Set3")
+palette4 <- brewer.pal(8,"Dark2")
+palette5 <- brewer.pal(8,"Accent")
+
+# We can just stick a few color palettes together
+big_palette <- c(palette1,palette2,palette3, palette4, palette5)
+
+##### making the figure #####
+options(scipen=10000)
+
+g <- sub %>% filter(FishCouncilRegion == "Caribbean"
+  ) %>% 
+  ggplot(aes(DepthCat, fill = sedci2)) +
+  geom_bar() + 
+  coord_flip() + 
+  facet_wrap(~ HAPC) +
+  theme(text = element_text(size=20)) + 
+  ylab("Number of Records") + 
+    xlab("Depth Zone") + 
+    scale_x_discrete(limits = rev(levels(sub$DepthCat))) + 
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(legend.title = element_blank())
+
+#display.brewer.all(colorblindFriendly=TRUE)
+set.seed(10)
+g + scale_fill_manual(values = sample(big_palette)) + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## save the plot
+ggsave(paste("c:/rworking/deepseatools/images/", 
+             "20201202-0_Caribbean_Protection_by_Depth_SEDCI_", 
+             "NatDB_", 
+             unique(sub$DatabaseVersion), 
+             ".png", 
+             sep = ''),
+       width = 8,
+       height = 5.57,
+       units = "in")
+
+
+```
+
+
+# Figure: Protection by DepthCat in South Atlantic
+
+```{r}
+##### building big pallette #####
+# to get the colors from a palette:
+palette1 <- brewer.pal(9,"Set1")
+palette2 <- brewer.pal(8,"Set2")
+palette3 <- brewer.pal(9,"Set3")
+palette4 <- brewer.pal(8,"Dark2")
+palette5 <- brewer.pal(8,"Accent")
+
+# We can just stick a few color palettes together
+big_palette <- c(palette1,palette2,palette3, palette4, palette5)
+
+##### making the figure #####
+options(scipen=10000)
+
+g <- sub %>% filter(FishCouncilRegion == "South Atlantic"
+  ) %>% 
+  ggplot(aes(DepthCat, fill = sedci2)) +
+  geom_bar() + 
+  coord_flip() + 
+  facet_wrap(~ HAPC) +
+  theme(text = element_text(size=20)) + 
+  ylab("Number of Records") + 
+    xlab("Depth Zone") + 
+    scale_x_discrete(limits = rev(levels(sub$DepthCat))) + 
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(legend.title = element_blank())
+
+#display.brewer.all(colorblindFriendly=TRUE)
+set.seed(10)
+g + scale_fill_manual(values = sample(big_palette)) + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## save the plot
+ggsave(paste("c:/rworking/deepseatools/images/", 
+             "20201202-0_South_Atlantic_Protection_by_Depth_SEDCI_", 
+             "NatDB_", 
+             unique(sub$DatabaseVersion), 
+             ".png", 
+             sep = ''),
+       width = 8,
+       height = 5.57,
+       units = "in")
+
+
+```
+
+# Figure: Protection by DepthCat in Gulf of Mexico
+
+```{r}
+##### building big pallette #####
+# to get the colors from a palette:
+palette1 <- brewer.pal(9,"Set1")
+palette2 <- brewer.pal(8,"Set2")
+palette3 <- brewer.pal(9,"Set3")
+palette4 <- brewer.pal(8,"Dark2")
+palette5 <- brewer.pal(8,"Accent")
+
+# We can just stick a few color palettes together
+big_palette <- c(palette1,palette2,palette3, palette4, palette5)
+
+##### making the figure #####
+options(scipen=10000)
+
+g <- sub %>% filter(FishCouncilRegion == "Gulf of Mexico"
+  ) %>% 
+  ggplot(aes(DepthCat, fill = sedci2)) +
+  geom_bar() + 
+  coord_flip() + 
+  facet_wrap(~ HAPC) +
+  theme(text = element_text(size=20)) + 
+  ylab("Number of Records") + 
+    xlab("Depth Zone") + 
+    scale_x_discrete(limits = rev(levels(sub$DepthCat))) + 
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(legend.title = element_blank())
+
+#display.brewer.all(colorblindFriendly=TRUE)
+set.seed(10)
+g + scale_fill_manual(values = sample(big_palette)) + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## save the plot
+ggsave(paste("c:/rworking/deepseatools/images/", 
+             "20201202-0_GOMEX_Protection_by_Depth_SEDCI_", 
+             "NatDB_", 
+             unique(sub$DatabaseVersion), 
+             ".png", 
+             sep = ''),
+       width = 8,
+       height = 5.57,
+       units = "in")
+
+
+```
+
+# create tables for export
+```{r}
+#### making frequency tables
+hapc_c9nr_tab <- table(geosub_hapc_c9nr_cats$Name, useNA = 'always')
+hapc_c9r_tab <- table(geosub_hapc_c9r_cats$Name, useNA = 'always')
+hapc_ewor_tab <- table(geosub_hapc_ewor_cats$Name, useNA = 'always')
+hapc_ewr_tab <- table(geosub_hapc_ewr_cats$Name, useNA = 'always')
+
+hapc_c9nr_tab_df <- as.data.frame(hapc_c9nr_tab)
+hapc_c9r_tab_df <- as.data.frame(hapc_c9r_tab)
+hapc_ewor_tab_df <- as.data.frame(hapc_ewor_tab)
+hapc_ewr_tab_df <- as.data.frame(hapc_ewr_tab)
+
+hapc_c9nr_tab_df$designation <- "c9_no_reg"
+hapc_c9r_tab_df$designation <- "c9_reg"
+hapc_ewor_tab_df$designation <- "existing_no_reg"
+hapc_ewr_tab_df$designation <- "existing_reg"
+
+hapc_all_tab_df <- rbind(hapc_c9nr_tab_df, 
+                         hapc_c9r_tab_df, 
+                         hapc_ewor_tab_df, 
+                         hapc_ewr_tab_df)
+
+##### rename variable ##### 
+#hapc_all_tab_df2 <- hapc_all_tab_df %>% rename(Name = Var1)
+
+##### here I started over with a different selection from the top ##### 
+hapc_all_tab_df2_2013 <- hapc_all_tab_df %>% rename(Name = Var1)
+
+##### get rid of NAs before merging 
+table(hapc_all_tab_df$Var1, useNA = 'always')
+
+
+hapc_all_tab_df2_2013_merge <- left_join(hapc_all_tab_df2,
+                                         hapc_all_tab_df2_2013, 
+                                         by = "Name"
+                                         ) 
+##### change the names #####
+names(hapc_all_tab_df2_2013_merge) <- c("Name", "Freq_up_to_2013", "designation","Freq_2014_and_up", "designation2")
+names(hapc_all_tab_df2_2013_merge)
+
+##### get rid of NA #####
+hapc_all_tab_df2_2013_merge_cl <-  hapc_all_tab_df2_2013_merge %>% filter(is.na(Name) == F)
+
+z <- c(hapc_c9nr$Name, hapc_c9r$Name, hapc_ewor$Name, hapc_ewr$Name)
+
+x <- as.data.frame(x)
+x <- x %>% rename(Name = x)
+names(x)
+
+table <- left_join(x, hapc_all_tab_df2_2013_merge_cl,
+                                         by = "Name")
+
+##### export table ##### 
+setwd("C:/rworking/deepseatools/indata")
+table %>%
+  write.csv(paste("table.csv", sep = ''), row.names = FALSE)
+
+
+```
+
+# histogram of 'ObservationDate' by month
+```{r}
+sub %>%  pull(ObservationDate) %>% as.Date() %>% hist("years")
+
+```
+
+# export to GIS
+```{r gis_export, eval=F}
+##### load packages #####
+library(arcgisbinding)
+arc.check_product()
+
+#### filter out data without coordinates
+x <- sub %>% filter(Latitude != -999 | Longitude != -999)
+x_geo <- x
+
+##### create spdf #####
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+```
+
