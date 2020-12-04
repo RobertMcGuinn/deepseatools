@@ -101,3 +101,16 @@ setdiff(z, unique(filt$DatasetID))
 summary <- filt %>% filter(DatasetID %in% z) %>%
   group_by(DatasetID) %>%
   summarize(number_eventID = length(unique(EventID)))
+
+
+##### arvind #####
+filt %>% filter(AccessionID == "NMNH_1868_2011") %>%
+  group_by(AccessionID, Station) %>% summarize(foo=n()) %>% View()
+
+
+
+
+
+
+
+
