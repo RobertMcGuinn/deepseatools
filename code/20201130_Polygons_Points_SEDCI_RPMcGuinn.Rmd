@@ -1,10 +1,10 @@
 ---
-title: "HAPC_GOMEX"
+title: "SEDCI Final Report Contribution"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning=F, message=F)
 ```
 
 # packages 
@@ -50,8 +50,10 @@ rm(indata)
 ```
 
 # subset the data and make into sp layer (create 'sub')
+
 ```{r}
-sub <- filt
+##### filter the NDB to your liking #####
+sub <- filt #%>% filter()
 
 ##### load from data subset #####
 
@@ -61,6 +63,9 @@ projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 geosub <- st_as_sf(x = sub,                         
            coords = c("Longitude", "Latitude"),
            crs = projcrs)
+
+## cleanup 
+#rm(filt)
 
 ```
 
@@ -98,6 +103,7 @@ hapc_ewr <- sf::st_read("C:/rworking/sf/indata/geo/HAPCshapefiles/shpFinal2/Exis
 ```
 
 # align all geo files to project level crs
+
 ```{r}
 ##### set project crs #####
 projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
@@ -129,41 +135,8 @@ hapc_ewr <- st_transform(hapc_ewr, crs = projcrs)
 
 ```
 
-# spatial intersect
-```{r}
-## caribbean
-grammanik_points <- st_intersection(geosub, grammanik)
-hind_points <- st_intersection(geosub, hind)
-mutton_points <- st_intersection(geosub, mutton)
-redhind_points <- st_intersection(geosub, redhind)
-navassa_points <- st_intersection(geosub, navassa)
-bajodesico_points <- st_intersection(geosub, bajodesico)
-
-## southeast
-stetson_miami_points <-  st_intersection(geosub, stetson_miami)
-oculinabankoeca_points <- st_intersection(geosub, oculinabankoeca)
-mpaIMS_points <- st_intersection(geosub, mpaIMS)
-oculinabankold_points <- st_intersection(geosub, oculinabankold) 
-oculinabank_points <- st_intersection(geosub, oculinabank) 
-pourtales_minus_crab_points <- st_intersection(geosub, pourtales_minus_crab)
-capefear_points <- st_intersection(geosub, capefear)
-capelookout_points <- st_intersection(geosub, capelookout) 
-capelookout_dissolve_points <- st_intersection(geosub, capelookout_dissolve)
-
-## gomex
-hapc_c9nr_points <- st_intersection(geosub, hapc_c9nr)
-hapc_c9r_points <- st_intersection(geosub, hapc_c9r)
-hapc_ewor_points <- st_intersection(geosub, hapc_ewor)
-hapc_ewr_points <- st_intersection(geosub, hapc_ewr)
-
-## checking
-# plot(geosub["CatalogNumber"])
-# plot(geosub_hapc_c9nr["CatalogNumber"])
-```
-
 # do all interesections
 ```{r}
-
 grammanik_points <- st_intersection(geosub, grammanik)
 hind_points <- st_intersection(geosub, hind)
 mutton_points <- st_intersection(geosub, mutton)
@@ -187,28 +160,32 @@ hapc_c9nr_points <- st_intersection(geosub, hapc_c9nr)
 hapc_c9r_points <- st_intersection(geosub, hapc_c9r)
 hapc_ewor_points <- st_intersection(geosub, hapc_ewor)
 hapc_ewr_points <- st_intersection(geosub, hapc_ewr)
+```
 
+# assigning inside vs. outside fishing restricted area
 
-## create a vector of all 
-yo <- c(grammanik_points$CatalogNumber, 
-hind_points$CatalogNumber,
-mutton_points$CatalogNumber,
-redhind_points$CatalogNumber,
-navassa_points$CatalogNumber,
-bajodesico_points$CatalogNumber,
-stetson_miami_points$CatalogNumber,
-oculinabankoeca_points$CatalogNumber,
-mpaIMS_points$CatalogNumber,
-oculinabankold_points$CatalogNumber,
-oculinabank_points$CatalogNumber,
-pourtales_minus_crab_points$CatalogNumber,
-capefear_points$CatalogNumber,
-capelookout_points$CatalogNumber,
-capelookout_dissolve_points$CatalogNumber,
-hapc_c9nr_points$CatalogNumber,
-hapc_c9r_points$CatalogNumber,
-hapc_ewor_points$CatalogNumber,
-hapc_ewr_points$CatalogNumber)
+```{r}
+## create a vector of all CatalogNumbers 
+yo <- 
+  c(grammanik_points$CatalogNumber, 
+    hind_points$CatalogNumber,
+    mutton_points$CatalogNumber,
+    redhind_points$CatalogNumber,
+    navassa_points$CatalogNumber,
+    bajodesico_points$CatalogNumber,
+    stetson_miami_points$CatalogNumber,
+    oculinabankoeca_points$CatalogNumber,
+    mpaIMS_points$CatalogNumber,
+    oculinabankold_points$CatalogNumber,
+    oculinabank_points$CatalogNumber,
+    pourtales_minus_crab_points$CatalogNumber,
+    capefear_points$CatalogNumber,
+    capelookout_points$CatalogNumber,
+    capelookout_dissolve_points$CatalogNumber,
+    hapc_c9nr_points$CatalogNumber,
+    hapc_c9r_points$CatalogNumber,
+    hapc_ewor_points$CatalogNumber,
+    hapc_ewr_points$CatalogNumber)
 
 ## define not in
 `%notin%` <- Negate(`%in%`)
@@ -234,11 +211,9 @@ sub$HAPC <-
 # names(points_mpas)
 # z <- points_oculinaexp %>% filter(is.na(AREA_NAME) == F)
 # plot(z["AREA_NAME"])
-
 ```
 
-
-# assigning classes based on SEDCI work 
+# new variable: 'sedci', with values 'new' vs. 'rescue' 
 
 ```{r}
 ##### get all the DatasetIDs in SEDCI region #####
@@ -286,7 +261,55 @@ sub$sedci <-
 
 #length(x$Flag)
 #table(x$sedci, useNA = 'always')
+```
 
+# summary stats for SEDCI final report
+
+```{r}
+length(sedci_new)
+length(sedci_rescue)
+table(sub$sedci, useNA = 'always')
+
+x <- sub %>% filter(sedci == "new" | sedci == "rescue")
+
+x %>% pull(PI) %>% unique() 
+
+```
+# Expedition Details
+
+``` {r exped_details, echo=FALSE}
+sum_tbl <-
+  sub %>% 
+  filter(sedci == "new" | sedci == "rescue") %>% 
+  group_by(DatasetID) %>% 
+  summarize(SurveyID = toString(unique(SurveyID)),
+            Vessel = toString(unique(Vessel)),
+            VehicleName = toString(unique(VehicleName)),
+            PI = toString(unique(PI)),
+            SamplingEquipment = toString(unique(SamplingEquipment)),
+            RecordType = toString(unique(RecordType)),
+            #BeginYear= min(as.numeric(ObservationYear)),
+            EndYear= max(as.numeric(ObservationYear)),
+            n = prettyNum(n(),big.mark = ',')) %>% 
+  arrange(desc(EndYear))
+
+View(sum_tbl)
+
+sum_tbl$url <- paste0('https://deepseacoraldata.noaa.gov/Dataset%20Summaries/',
+                      sum_tbl$DatasetID, 
+                      '.html', 
+                      sep = '')
+
+sum_tbl$DashBoard <- paste0("[", "Dashboard Link", "](", sum_tbl$url, ")")
+sum_tbl <- sum_tbl %>% dplyr::select(-url)
+write.csv(sum_tbl, "c:/rworking/deepseatools/reports/20201207_SEDCI_Dataset_Summary_RPMcGuinn.csv")
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+```
+
+# new variable: 'sedci2' with values 'Post SEDCI' and 'Pre SEDCI'
+
+```{r}
 ##### build a variable for pre-SEDCI and post-SEDCI
 sub$sedci2 <-
   case_when(
@@ -296,14 +319,13 @@ sub$sedci2 <-
     sub$DatasetID %notin% sedci_new ~ "Pre SEDCI"
   )
 
-##### order the levels properly #####
+##### order the levels properly to fit figure requirements #####
 sub$sedci2 <- factor(sub$sedci2, levels = c('Post SEDCI', 'Pre SEDCI'))
-
 ```
 
-# Assigning Depth Bins
+# assigning depth bins
 
-``` {r DepthClassTable, echo=FALSE, cache = FALSE} 
+``` {r DepthClassTable_1, echo=FALSE, cache = FALSE} 
 hi <- 600
 y <- 300
 z <- 150
@@ -316,9 +338,9 @@ sub$DepthCat <- factor(sub$DepthCat, levels = c('very shallow','mesophotic', 'de
 
 ```
 
-# making the protection by depth figure
+# making the protection by depth figures
 
-# Figure: Protection by DepthCat in Caribbean
+## Figure: Protection by DepthCat in Caribbean
 
 ```{r}
 ##### building big pallette #####
@@ -367,8 +389,7 @@ ggsave(paste("c:/rworking/deepseatools/images/",
 
 ```
 
-
-# Figure: Protection by DepthCat in South Atlantic
+## Figure: Protection by DepthCat in South Atlantic
 
 ```{r}
 ##### building big pallette #####
@@ -417,7 +438,7 @@ ggsave(paste("c:/rworking/deepseatools/images/",
 
 ```
 
-# Figure: Protection by DepthCat in Gulf of Mexico
+## Figure: Protection by DepthCat in Gulf of Mexico
 
 ```{r}
 ##### building big pallette #####
@@ -466,89 +487,276 @@ ggsave(paste("c:/rworking/deepseatools/images/",
 
 ```
 
-# create tables for export
+# prep data for special GOMEX figure
+
 ```{r}
-#### making frequency tables
-hapc_c9nr_tab <- table(geosub_hapc_c9nr_cats$Name, useNA = 'always')
-hapc_c9r_tab <- table(geosub_hapc_c9r_cats$Name, useNA = 'always')
-hapc_ewor_tab <- table(geosub_hapc_ewor_cats$Name, useNA = 'always')
-hapc_ewr_tab <- table(geosub_hapc_ewr_cats$Name, useNA = 'always')
+## subset data to only that within GOMEX
+sub <- filt %>% filter(FishCouncilRegion == 'Gulf of Mexico')
 
-hapc_c9nr_tab_df <- as.data.frame(hapc_c9nr_tab)
-hapc_c9r_tab_df <- as.data.frame(hapc_c9r_tab)
-hapc_ewor_tab_df <- as.data.frame(hapc_ewor_tab)
-hapc_ewr_tab_df <- as.data.frame(hapc_ewr_tab)
+## create a vector of all CatalogNumbers 
+gomex_designation_all <- 
+  c(hapc_c9nr_points$CatalogNumber,
+    hapc_c9r_points$CatalogNumber,
+    hapc_ewor_points$CatalogNumber,
+    hapc_ewr_points$CatalogNumber)
 
-hapc_c9nr_tab_df$designation <- "c9_no_reg"
-hapc_c9r_tab_df$designation <- "c9_reg"
-hapc_ewor_tab_df$designation <- "existing_no_reg"
-hapc_ewr_tab_df$designation <- "existing_reg"
+gomex_designation_2020 <-
+  c(hapc_c9nr_points$CatalogNumber,
+    hapc_c9r_points$CatalogNumber)
 
-hapc_all_tab_df <- rbind(hapc_c9nr_tab_df, 
-                         hapc_c9r_tab_df, 
-                         hapc_ewor_tab_df, 
-                         hapc_ewr_tab_df)
+gomex_designation_existing <-
+  c(hapc_ewor_points$CatalogNumber,
+    hapc_ewr_points$CatalogNumber)
 
-##### rename variable ##### 
-#hapc_all_tab_df2 <- hapc_all_tab_df %>% rename(Name = Var1)
+gomex_restricted_existing <- c(hapc_ewr_points$CatalogNumber)
+gomex_restricted_2020 <- c(hapc_c9r_points$CatalogNumber)
+gomex_unrestricted_existing <- c(hapc_ewor_points$CatalogNumber)
+gomex_unrestricted_2020 <- c(hapc_c9nr_points$CatalogNumber)
 
-##### here I started over with a different selection from the top ##### 
-hapc_all_tab_df2_2013 <- hapc_all_tab_df %>% rename(Name = Var1)
+## define not in
+`%notin%` <- Negate(`%in%`)
 
-##### get rid of NAs before merging 
-table(hapc_all_tab_df$Var1, useNA = 'always')
+## assign management status back to original subset## 
+sub$designation <- 
+  case_when(
+  sub$CatalogNumber %in% gomex_designation ~ "Inside Designated Area",
+  sub$CatalogNumber %notin% gomex_designation ~ "Outside Designated Area"
+)
 
+sub$fishing_restriction <- 
+  case_when(
+  sub$CatalogNumber %in% gomex_restricted_existing ~ "Pre-2016 Fishing-Restricted",
+  sub$CatalogNumber %in% gomex_restricted_2020 ~ "2020 Fishing-Restricted",
+  sub$CatalogNumber %in% gomex_unrestricted_existing ~ "Pre-2016 Fishing-Unrestricted",
+  sub$CatalogNumber %in% gomex_unrestricted_2020 ~ "2020 Fishing-Unrestricted",
+  sub$CatalogNumber %notin% gomex_designation_all ~ "Outside of HAPCs"
+  )
 
-hapc_all_tab_df2_2013_merge <- left_join(hapc_all_tab_df2,
-                                         hapc_all_tab_df2_2013, 
-                                         by = "Name"
-                                         ) 
-##### change the names #####
-names(hapc_all_tab_df2_2013_merge) <- c("Name", "Freq_up_to_2013", "designation","Freq_2014_and_up", "designation2")
-names(hapc_all_tab_df2_2013_merge)
+##### order the levels properly to fit figure requirements #####
+sub$fishing_restriction <- factor(sub$fishing_restriction, levels = c('Pre-2016 Fishing-Restricted', '2020 Fishing-Restricted','Outside of HAPCs','Pre-2016 Fishing-Unrestricted', '2020 Fishing-Unrestricted' ))
 
-##### get rid of NA #####
-hapc_all_tab_df2_2013_merge_cl <-  hapc_all_tab_df2_2013_merge %>% filter(is.na(Name) == F)
+##### Build sedci variable ##### 
+##### get all the DatasetIDs in SEDCI region #####
+ecogig <- c("NOAA_EX-12-02-L2",
+            "BOEM_Lophelia_II",
+            "WHOI_AT-18",
+            "SOI_FK006B",
+            "NOAA_HC-11-10",
+            "OET_NA028",
+            "OET_NA043",
+            "OET_NA057",
+            "OET_NA058",
+            "ECOGIG_OI-16-10",
+            "ECOGIG_O2-17-06")
 
-z <- c(hapc_c9nr$Name, hapc_c9r$Name, hapc_ewor$Name, hapc_ewr$Name)
+ecogig <- unique(ecogig)
 
-x <- as.data.frame(x)
-x <- x %>% rename(Name = x)
-names(x)
+## DatasetIDs in the SEDCI rescue project (as of 2020-10-19)
+sedci_rescue <- c("HBOI_SJ-10-07", "HBOI_SJ-10-07", "NOAA_SJ-09-08", "NOAA_SJ-09-08","HBOI_SJ-08-09","NOAA_SJ-07-05", "NOAA_SJ-07-05", "NOAA_SJ-07-06", "HBOI_SJ-06-02", "HBOI_SJ-06-05-L1", "HBOI_SJ-06-05-L3", "HBOI_SJ-06-02", "NOAA_SJ-05-04", "NOAA_SJ-05-08", "NOAA_SJ-05-10", "NOAA_SJ-05-11", "NOAA_SJ-04-05", "NOAA_SJ-02-08", "HBOI_EL-99-08", "HBOI_SJ-88-11", "USGS_TM-97-10", "NOAA_RB-03-07", "NOAA_SJ-05-11",
+                  "NOAA_NF-09-01", "NOAA_NF-08-04", "NOAA_NF-07-06", "NOAA_NF-05-05", "NOAA_SJ-07-06", "HBOI_SJ-08-09", "NOAA_SJ-09-08", "NOAA_PC-10-02",
+                  "NOAA_NF-14-01", "NOAA_NF-13-02", "NOAA_NF-12-01", "NOAA_NF-11-09", "NOAA_NF-11-09-L3", "NOAA_PC-11-05-L1", "NOAA_NF-11-09", "NOAA_NF-11-09-L3", "Sharuga_SM_2014", "NOAA_PC-12-03", "NOAA_NF-13-02", "NOAA_PC-13-03", "NOAA_NF-14-08","NOAA_PC-15-02", "NOAA_PC-16-02", "OET_NA058", "OET_NA028", "NOAA_PC-17-02", "HBOI_WS-17-125")
 
-table <- left_join(x, hapc_all_tab_df2_2013_merge_cl,
-                                         by = "Name")
+## unique DatasetIDs
+sedci_rescue <- unique(sedci_rescue)
 
-##### export table ##### 
-setwd("C:/rworking/deepseatools/indata")
-table %>%
-  write.csv(paste("table.csv", sep = ''), row.names = FALSE)
+## sedci_rescue add ecogig
+sedci_rescue <- union(sedci_rescue, ecogig)
 
+## datasetIDs in the SEDCI rescue project (as of 2020-11-25)
+sedci_new <- c("NOAA_DFH-30", "NOAA_NF-17-08",
+               "NOAA_NF-17-08", "NOAA_DFH-32-33",
+               "NOAA_DFH-32-33", "NOAA_EX-17-11",
+               "NOAA_EX-18-03", "NOAA_EX-18-06",
+               "NOAA_NF-18-04","NOAA_FGBNMS_DFH-35",
+               "NOAA_FGBNMS_DFH-37", "NOAA_RESTORE_MT18")
 
+sedci_new <- unique(sedci_new)
+
+##### build a variable for new vs. rescue datasets #####
+sub$sedci <-
+  case_when(
+    sub$DatasetID %in% sedci_rescue ~ "rescue" ,
+    sub$DatasetID %in% sedci_new ~ "new",
+  )
 ```
 
-# histogram of 'ObservationDate' by month
+## new variable: 'sedci2' with values 'Post SEDCI' and 'Pre SEDCI'
+
 ```{r}
-sub %>%  pull(ObservationDate) %>% as.Date() %>% hist("years")
+##### build a variable for pre-SEDCI and post-SEDCI
+sub$sedci2 <-
+  case_when(
+    sub$DatasetID %in% sedci_rescue ~ "Post SEDCI" ,
+    sub$DatasetID %in% sedci_new ~ "Post SEDCI",
+    sub$DatasetID %notin% sedci_rescue ~ "Pre SEDCI",
+    sub$DatasetID %notin% sedci_new ~ "Pre SEDCI"
+  )
+
+##### order the levels properly to fit figure requirements #####
+sub$sedci2 <- factor(sub$sedci2, levels = c('Post SEDCI', 'Pre SEDCI'))
+```
+
+## new variable: assigning depth bins
+
+``` {r DepthClassTable2, echo=FALSE, cache = FALSE} 
+hi <- 600
+y <- 300
+z <- 150
+
+sub$DepthCat[sub$DepthInMeters > hi] <- "very deep"
+sub$DepthCat[sub$DepthInMeters > y & sub$DepthInMeters <= hi] <- "deep"
+sub$DepthCat[sub$DepthInMeters >= z & sub$DepthInMeters <= y] <- "mesophotic"
+sub$DepthCat[sub$DepthInMeters < z] <- "very shallow"
+sub$DepthCat <- factor(sub$DepthCat, levels = c('very shallow','mesophotic', 'deep', 'very deep'))
 
 ```
 
-# export to GIS
-```{r gis_export, eval=F}
-##### load packages #####
-library(arcgisbinding)
-arc.check_product()
+## Figure: GOMEX Restricted fishing analysis
 
-#### filter out data without coordinates
-x <- sub %>% filter(Latitude != -999 | Longitude != -999)
-x_geo <- x
+```{r}
+##### building big pallette #####
+# to get the colors from a palette:
+palette1 <- brewer.pal(9,"Set1")
+palette2 <- brewer.pal(8,"Set2")
+palette3 <- brewer.pal(9,"Set3")
+palette4 <- brewer.pal(8,"Dark2")
+palette5 <- brewer.pal(8,"Accent")
 
-##### create spdf #####
-coordinates(x_geo) <- c("Longitude", "Latitude")
-proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+# We can just stick a few color palettes together
+big_palette <- c(palette1,palette2,palette3, palette4, palette5)
 
-##### create feature-class #####
-fgdb_path <- 'C:/rworking/sf/sf.gdb'
-arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+##### making the figure #####
+options(scipen=10000)
+
+g <- sub %>% #filter(
+  # FishCouncilRegion == "Gulf of Mexico"
+  # ) %>% 
+  ggplot(aes(DepthCat, fill = sedci2)) +
+  geom_bar() + 
+  coord_flip() + 
+  facet_wrap(~ fishing_restriction) +
+  theme(text = element_text(size=10)) + 
+  ylab("Number of Records") + 
+    xlab("Depth Zone") + 
+    scale_x_discrete(limits = rev(levels(sub$DepthCat))) + 
+  theme_bw(base_size = 12, base_family = "Cambria") +
+  theme(legend.title = element_blank()) +
+  theme(legend.position = c(0.8, 0.2))
+
+#display.brewer.all(colorblindFriendly=TRUE)
+set.seed(10)
+g + scale_fill_manual(values = sample(big_palette)) + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+## save the plot
+ggsave(paste("c:/rworking/deepseatools/images/", 
+             "20201207-0_GOMEX_Fish_Resctriction_by_Depth_SEDCI_", 
+             "NatDB_", 
+             unique(sub$DatabaseVersion), 
+             ".png", 
+             sep = ''),
+       width = 8,
+       height = 5.57,
+       units = "in")
+
 ```
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<!-- # create tables for export -->
+<!-- ```{r} -->
+<!-- #### making frequency tables for each region -->
+<!-- hapc_c9nr_tab <- table(geosub_hapc_c9nr_cats$Name, useNA = 'always') -->
+<!-- hapc_c9r_tab <- table(geosub_hapc_c9r_cats$Name, useNA = 'always') -->
+<!-- hapc_ewor_tab <- table(geosub_hapc_ewor_cats$Name, useNA = 'always') -->
+<!-- hapc_ewr_tab <- table(geosub_hapc_ewr_cats$Name, useNA = 'always') -->
+
+<!-- hapc_c9nr_tab_df <- as.data.frame(hapc_c9nr_tab) -->
+<!-- hapc_c9r_tab_df <- as.data.frame(hapc_c9r_tab) -->
+<!-- hapc_ewor_tab_df <- as.data.frame(hapc_ewor_tab) -->
+<!-- hapc_ewr_tab_df <- as.data.frame(hapc_ewr_tab) -->
+
+<!-- hapc_c9nr_tab_df$designation <- "c9_no_reg" -->
+<!-- hapc_c9r_tab_df$designation <- "c9_reg" -->
+<!-- hapc_ewor_tab_df$designation <- "existing_no_reg" -->
+<!-- hapc_ewr_tab_df$designation <- "existing_reg" -->
+
+<!-- hapc_all_tab_df <- rbind(hapc_c9nr_tab_df, -->
+<!--                          hapc_c9r_tab_df, -->
+<!--                          hapc_ewor_tab_df, -->
+<!--                          hapc_ewr_tab_df) -->
+
+<!-- ##### rename variable ##### -->
+<!-- #hapc_all_tab_df2 <- hapc_all_tab_df %>% rename(Name = Var1) -->
+
+<!-- ##### here I started over with a different selection from the top ##### -->
+<!-- hapc_all_tab_df2_2013 <- hapc_all_tab_df %>% rename(Name = Var1) -->
+
+<!-- ##### get rid of NAs before merging -->
+<!-- table(hapc_all_tab_df$Var1, useNA = 'always') -->
+
+
+<!-- hapc_all_tab_df2_2013_merge <- left_join(hapc_all_tab_df2, -->
+<!--                                          hapc_all_tab_df2_2013, -->
+<!--                                          by = "Name" -->
+<!--                                          ) -->
+<!-- ##### change the names ##### -->
+<!-- names(hapc_all_tab_df2_2013_merge) <- c("Name", "Freq_up_to_2013", "designation","Freq_2014_and_up", "designation2") -->
+<!-- names(hapc_all_tab_df2_2013_merge) -->
+
+<!-- ##### get rid of NA ##### -->
+<!-- hapc_all_tab_df2_2013_merge_cl <-  hapc_all_tab_df2_2013_merge %>% filter(is.na(Name) == F) -->
+
+<!-- z <- c(hapc_c9nr$Name, hapc_c9r$Name, hapc_ewor$Name, hapc_ewr$Name) -->
+
+<!-- x <- as.data.frame(x) -->
+<!-- x <- x %>% rename(Name = x) -->
+<!-- names(x) -->
+
+<!-- table <- left_join(x, hapc_all_tab_df2_2013_merge_cl, -->
+<!--                                          by = "Name") -->
+
+<!-- ##### export table ##### -->
+<!-- setwd("C:/rworking/deepseatools/indata") -->
+<!-- table %>% -->
+<!--   write.csv(paste("table.csv", sep = ''), row.names = FALSE) -->
+
+
+<!-- ``` -->
+
+<!-- # histogram of 'ObservationDate' by month -->
+<!-- ```{r} -->
+<!-- sub %>%  pull(ObservationDate) %>% as.Date() %>% hist("years") -->
+
+<!-- ``` -->
+
+<!-- # export to GIS -->
+<!-- ```{r gis_export, eval=F} -->
+<!-- ##### load packages ##### -->
+<!-- library(arcgisbinding) -->
+<!-- arc.check_product() -->
+
+<!-- #### filter out data without coordinates -->
+<!-- x <- sub %>% filter(Latitude != -999 | Longitude != -999) -->
+<!-- x_geo <- x -->
+
+<!-- ##### create spdf ##### -->
+<!-- coordinates(x_geo) <- c("Longitude", "Latitude") -->
+<!-- proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84" -->
+
+<!-- ##### create feature-class ##### -->
+<!-- fgdb_path <- 'C:/rworking/sf/sf.gdb' -->
+<!-- arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE) -->
+<!-- ``` -->
 
