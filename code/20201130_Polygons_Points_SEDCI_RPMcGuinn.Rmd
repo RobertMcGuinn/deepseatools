@@ -519,8 +519,8 @@ gomex_unrestricted_2020 <- c(hapc_c9nr_points$CatalogNumber)
 ## assign management status back to original subset## 
 sub$designation <- 
   case_when(
-  sub$CatalogNumber %in% gomex_designation ~ "Inside Designated Area",
-  sub$CatalogNumber %notin% gomex_designation ~ "Outside Designated Area"
+  sub$CatalogNumber %in% gomex_designation_all ~ "Inside Designated Area",
+  sub$CatalogNumber %notin% gomex_designation_all ~ "Outside Designated Area"
 )
 
 sub$fishing_restriction <- 
@@ -529,11 +529,11 @@ sub$fishing_restriction <-
   sub$CatalogNumber %in% gomex_restricted_2020 ~ "2020 Fishing-Restricted",
   sub$CatalogNumber %in% gomex_unrestricted_existing ~ "Pre-2016 Fishing-Unrestricted",
   sub$CatalogNumber %in% gomex_unrestricted_2020 ~ "2020 Fishing-Unrestricted",
-  sub$CatalogNumber %notin% gomex_designation_all ~ "Outside of HAPCs"
+  sub$CatalogNumber %notin% gomex_designation_all ~ "Outside Managed Area"
   )
 
 ##### order the levels properly to fit figure requirements #####
-sub$fishing_restriction <- factor(sub$fishing_restriction, levels = c('Pre-2016 Fishing-Restricted', '2020 Fishing-Restricted','Outside of HAPCs','Pre-2016 Fishing-Unrestricted', '2020 Fishing-Unrestricted' ))
+sub$fishing_restriction <- factor(sub$fishing_restriction, levels = c('Pre-2016 Fishing-Restricted', '2020 Fishing-Restricted','Outside Managed Area','Pre-2016 Fishing-Unrestricted', '2020 Fishing-Unrestricted' ))
 
 ##### Build sedci variable ##### 
 ##### get all the DatasetIDs in SEDCI region #####
@@ -649,11 +649,11 @@ g + scale_fill_manual(values = sample(big_palette)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 ## save the plot
-ggsave(paste("c:/rworking/deepseatools/images/", 
-             "20201207-0_GOMEX_Fish_Resctriction_by_Depth_SEDCI_", 
-             "NatDB_", 
-             unique(sub$DatabaseVersion), 
-             ".png", 
+ggsave(paste("c:/rworking/deepseatools/images/",
+             "20201208-0_GOMEX_Fish_Resctriction_by_Depth_SEDCI_",
+             "NatDB_",
+             unique(sub$DatabaseVersion),
+             ".png",
              sep = ''),
        width = 8,
        height = 5.57,

@@ -151,7 +151,7 @@ maxlon <- max(x$Longitude)
 
 # Create SPDF from subset of points
 
-```{r export_GIS, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE', eval=T}
+```{r export_GIS, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
 
 ##### load packages #####
 library(arcgisbinding)
