@@ -1,0 +1,74 @@
+---
+title: "Transform EX1907 data from wide to long"
+author: "Robert McGuinn"
+date: "12/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load packages
+
+```{r}
+library(googledrive)
+library(openxlsx)
+library(tidyverse)
+```
+
+# get XLS file from Google Drive
+
+```{r}
+# set name of file
+id <- "1qf76RNErEJXfr_48rRCY4mBi7-OgG6t1"
+
+# this downloads the file to the specified path
+dl <- drive_download(as_id(id), path = "C:/rworking/deepseatools/indata/sheet.xlsx", overwrite = TRUE)
+
+# read the file into R as a data frame
+sheet <- read.xlsx(dl$local_path, sheet = 1, startRow = 1)
+
+## check 
+# View(sheet)
+# names(sheet)
+
+```
+
+# transform from wide to long
+
+```{r}
+##### extract each layer  #####
+positions <- c(1:25)
+x1 <- sheet %>% dplyr::select(all_of(positions))
+
+positions2 <- c(6:12, 19:24, 26:37)
+x2 <- sheet %>% dplyr::select(all_of(positions2))
+
+positions3 <- c(6:12, 19:24, 38:49)
+x3 <- sheet %>% dplyr::select(all_of(positions3))
+
+positions4 <- c(6:12, 19:24, 50:61)
+x4 <- sheet %>% dplyr::select(all_of(positions4))
+
+positions5 <- c(6:12, 19:24, 62:73)
+x5 <- sheet %>% dplyr::select(all_of(positions5))
+
+##### make the names the same ##### 
+names(x2) <- gsub(x = names(x2), pattern = "2", replacement = "") 
+names(x3) <- gsub(x = names(x3), pattern = "3", replacement = "")
+names(x4) <- gsub(x = names(x4), pattern = "4", replacement = "")
+names(x5) <- gsub(x = names(x5), pattern = "5", replacement = "")
+
+##### rbind all of them together ##### 
+longdf <- do.call("rbind", list(x1,x2,x3,x4,x5))
+
+##### fixing SampleID across all records ##### 
+longdf$SampleID <- sheet$SampleID
+
+```
+
+
+
+
+

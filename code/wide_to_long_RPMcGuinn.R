@@ -4,7 +4,7 @@
 ## date_started: 20201222
 ## purpose:  transforming data from wide to long format (generic)
 
-##### create an example data frame #####
+##### create an example data frame for use #####
 library(tidyverse)
 set.seed(519)
 longdata1 <- data.frame(ID = 1:3,
