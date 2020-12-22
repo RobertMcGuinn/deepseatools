@@ -211,7 +211,7 @@ x <- filt %>%
 # # add sampleSizeUnit column and populate all non-NA sampleSizeValue rows with "Square Meters"
 # obis$sampleSizeUnit <- ifelse(is.na(obis$sampleSizeValue) == FALSE, "Square Meters", NA)
 
-##### later we will work on emof variables #####
+##### later we will work on emof "extended measurement or fact" variables #####
 
 # # create a list of emof fields and occurenceID
 # emof_fields <- emof %>% select(measurementType) %>% pull()

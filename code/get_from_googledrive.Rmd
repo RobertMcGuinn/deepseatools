@@ -1,0 +1,38 @@
+---
+title: "Get XLS from Google Drive"
+author: "Robert McGuinn"
+date: "12/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load packages
+
+```{r}
+library(googledrive)
+library(openxlsx)
+```
+
+# get XLS file from Google Drive
+
+```{r}
+# set name of file
+yo <- '20200731_Shuler_NF1901'
+
+x <- drive_find(q = "name contains '20200731_Shuler_NF1901.xlsx'")
+# getting the id as a character string
+y <- x$id
+
+# this downloads the file to the specified path
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/sheet.xlsx", overwrite = TRUE)
+
+# read the file into R as a data frame
+sheet <- read.xlsx(dl$local_path, sheet = 4, startRow = 11)
+
+# strip of first 10 rows
+```
+
+
