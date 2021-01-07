@@ -1,7 +1,7 @@
 ---
 title: "Transform EX1907 data from wide to long"
 author: "Robert McGuinn"
-date: "12/22/2020"
+date: "2020-01-07"
 output: html_document
 ---
 
@@ -20,8 +20,9 @@ library(tidyverse)
 # get XLS file from Google Drive
 
 ```{r}
-# set name of file
-id <- "1qf76RNErEJXfr_48rRCY4mBi7-OgG6t1"
+##  set google ID of file
+# id <- "1qf76RNErEJXfr_48rRCY4mBi7-OgG6t1"
+id <- "1aPJHwJW3tI-C-LdemTj97zlfEPTyJjuN"
 
 # this downloads the file to the specified path
 dl <- drive_download(as_id(id), path = "C:/rworking/deepseatools/indata/sheet.xlsx", overwrite = TRUE)
@@ -32,6 +33,8 @@ sheet <- read.xlsx(dl$local_path, sheet = 1, startRow = 1)
 ## check 
 # View(sheet)
 # names(sheet)
+
+## cleanup
 
 ```
 
@@ -63,10 +66,45 @@ names(x5) <- gsub(x = names(x5), pattern = "5", replacement = "")
 ##### rbind all of them together ##### 
 longdf <- do.call("rbind", list(x1,x2,x3,x4,x5))
 
+## checking 
+# x <- longdf %>% filter(is.na(SampleID) == T)
+# x
+
 ##### fixing SampleID across all records ##### 
 longdf$SampleID <- sheet$SampleID
 
+##### remove NA #####
+longdf <- longdf %>% filter(is.na(ScientificName) == F)
+
+# check 
+# x <- longdf %>% filter(is.na(SampleID) == T)
+
+##### fix TransectID/SampleID #####
+## first get all blanks in Tracking ID to be NA
+longdf <- longdf %>% mutate(TrackingID = ifelse(TrackingID == '', NA, TrackingID))
+
+## assign TrackingID to SampleID where present
+longdf <- longdf %>% mutate(SampleID = ifelse(is.na(TrackingID) == F, TrackingID, SampleID))
+
+## check
+# longdf %>% filter(is.na(SampleID) == T) %>% pull(SampleID) %>% length()
+# longdf %>% filter(is.na(TrackingID) == F) %>% pull(TrackingID) %>% View()
+# longdf %>% filter(is.na(TrackingID) == F) %>% group_by(SampleID, TrackingID) %>% summarize(n=n()) %>% View()
+# longdf %>% filter(is.na(TrackingID) == F) %>% pull(TrackingID) %>% View()
+# longdf %>% pull(TrackingID) %>% table(useNA = 'always') %>% View()
+# longdf %>% filter(grepl('.jpg', SampleID)) %>% pull(SampleID) %>% length()
+
 ```
+
+# write to CSV
+
+```{r}
+# write.csv(longdf, "c:/rworking/deepseatools/indata/20210107_test_file_RPMcGuinn.csv", row.names = F)
+
+write.xlsx(longdf, "c:/rworking/deepseatools/indata/20210107_test_file_RPMcGuinn.xlsx", row.names = F)
+
+```
+
 
 
 
