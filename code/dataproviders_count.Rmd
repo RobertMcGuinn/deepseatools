@@ -1,0 +1,80 @@
+---
+title: "dataproviders_count"
+author: "Robert McGuinn"
+date: "1/7/2021"
+output: html_document
+---
+
+# options
+
+```{r setup, include=FALSE, echo=T, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load packages
+
+```{r packages, echo=F, warning=F, message=F}
+#install.packages(tidyverse)
+#install.packages('openxlsx')
+library(tidyverse)
+library(openxlsx)
+library(sf)
+library(rgdal)
+library(RColorBrewer)
+library(raster)
+library(marmap)
+library(leaflet)
+library(extrafont)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(maps)
+library(rgdal)
+library(raster)
+library(marmap)
+library(httr)
+library(jsonlite)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(openxlsx)
+library(rgeos)
+
+```
+
+# load NDB
+
+```{r load_NDB, eval=T, , cache=TRUE}
+##### input: latest version of NDB #####
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+rm(indata)
+
+```
+
+# calculate DataProvider contributions 2018 and 2019
+
+```{r}
+ 
+x <- filt %>% filter(as.Date(EntryDate) > "2017-12-31", 
+                as.Date(EntryDate) < "2020-01-01") %>% 
+  pull(DataProvider) %>% table()
+
+# transform to df
+x <- as.data.frame(x)
+
+# fix column names
+names(x) <- c("DataProvider", "Freq")
+# ames(x)
+
+```
+
+# write it out 
+
+```{r}
+x %>% write.csv("20210107_2018_2019_DataProvider_Summary.csv")
+```
+
+

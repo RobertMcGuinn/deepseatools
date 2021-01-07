@@ -73,8 +73,13 @@ longdf <- do.call("rbind", list(x1,x2,x3,x4,x5))
 ##### fixing SampleID across all records ##### 
 longdf$SampleID <- sheet$SampleID
 
+## checking
+# longdf %>% filter(ScientificName == '') %>% pull(ScientificName) %>% length()
+# longdf %>% filter(is.na(ScientificName) == T) %>% pull(ScientificName) %>% length()
+
 ##### remove NA #####
 longdf <- longdf %>% filter(is.na(ScientificName) == F)
+longdf <- longdf %>% filter(ScientificName != '')
 
 # check 
 # x <- longdf %>% filter(is.na(SampleID) == T)
@@ -82,9 +87,6 @@ longdf <- longdf %>% filter(is.na(ScientificName) == F)
 ##### fix TransectID/SampleID #####
 ## first get all blanks in Tracking ID to be NA
 longdf <- longdf %>% mutate(TrackingID = ifelse(TrackingID == '', NA, TrackingID))
-
-## assign TrackingID to SampleID where present
-longdf <- longdf %>% mutate(SampleID = ifelse(is.na(TrackingID) == F, TrackingID, SampleID))
 
 ## check
 # longdf %>% filter(is.na(SampleID) == T) %>% pull(SampleID) %>% length()
@@ -94,6 +96,33 @@ longdf <- longdf %>% mutate(SampleID = ifelse(is.na(TrackingID) == F, TrackingID
 # longdf %>% pull(TrackingID) %>% table(useNA = 'always') %>% View()
 # longdf %>% filter(grepl('.jpg', SampleID)) %>% pull(SampleID) %>% length()
 
+##### isolate those SampleIDs where there is a TrackingID #####
+# EX1907_D01_04B EX1907_IMG_20191101T194639Z_ROVHD.jpg
+# EX1907_D03_01B EX1907_IMG_20191103T183400Z_ROVHD.jpg
+
+longdf <- longdf %>% mutate(SampleID = ifelse(is.na(TrackingID) == T &
+                           SampleID == "EX1907_D01_04B" , 
+                         "EX1907_IMG_20191101T194639Z_ROVHD.jpg", 
+                         SampleID))
+
+longdf <- longdf %>% mutate(SampleID = ifelse(is.na(TrackingID) == T &
+                           SampleID == "EX1907_D03_01B" , 
+                         "EX1907_IMG_20191103T183400Z_ROVHD.jpg", 
+                         SampleID))
+
+##### checking #####
+# longdf %>% 
+#   filter(SampleID == "EX1907_IMG_20191101T194639Z_ROVHD.jpg") %>% 
+#            group_by(SampleID, TrackingID) %>% summarize(n=n()) %>% 
+#            View()
+# 
+# longdf %>% 
+#   filter(SampleID == "EX1907_IMG_20191103T183400Z_ROVHD.jpg") %>% 
+#            group_by(SampleID, TrackingID) %>% summarize(n=n()) %>% 
+#            View()
+# 
+# View(longdf$SampleID)
+
 ```
 
 # write to CSV
@@ -101,7 +130,7 @@ longdf <- longdf %>% mutate(SampleID = ifelse(is.na(TrackingID) == F, TrackingID
 ```{r}
 # write.csv(longdf, "c:/rworking/deepseatools/indata/20210107_test_file_RPMcGuinn.csv", row.names = F)
 
-write.xlsx(longdf, "c:/rworking/deepseatools/indata/20210107_test_file_RPMcGuinn.xlsx", row.names = F)
+write.xlsx(longdf, "c:/rworking/deepseatools/indata/20210107-1_test_file_RPMcGuinn.xlsx", row.names = F)
 
 ```
 
