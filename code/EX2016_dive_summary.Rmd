@@ -1,0 +1,103 @@
+---
+title: "EX2016 Dive summary"
+author: "Robert McGuinn"
+date: "2021-01-15"
+output: html_document
+---
+
+# options
+
+```{r setup, include=FALSE, echo=T, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load packages
+
+```{r packages, echo=F, warning=F, message=F}
+#install.packages(tidyverse)
+#install.packages('openxlsx')
+library(tidyverse)
+library(openxlsx)
+library(sf)
+library(rgdal)
+library(RColorBrewer)
+library(raster)
+library(marmap)
+library(leaflet)
+library(extrafont)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(maps)
+library(rgdal)
+library(raster)
+library(marmap)
+library(httr)
+library(jsonlite)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(openxlsx)
+library(rgeos)
+
+```
+
+# load NDB
+
+```{r load_NDB, eval=T, , cache=TRUE}
+##### input: latest version of NDB #####
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+rm(indata)
+
+```
+
+# calculate # of dives from EX 2016
+
+```{r}
+ 
+x <- filt %>% filter(DatasetID == 'NOAA_EX-16-06') %>% 
+  group_by(EventID) %>% summarize(Latitude=mean(Latitude), Longitude = mean(Longitude))
+  
+
+
+```
+
+# write it out 
+
+```{r}
+x %>% write.csv("yo.csv")
+```
+
+# export to GIS
+
+```{r}
+##### header #####
+# author: Robert P. McGuinn
+# date_started: 20191121
+# purpose: transform point fram to spdf and feature-class
+# input: x (dataframe) with coordinates
+# output: x_geo (spdf) | x_geo (feature-class)
+
+##### load packages #####
+
+library(arcgisbinding)
+arc.check_product()
+
+##### create spdf #####
+x_geo <- x
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo_20200115_0'), data=x_geo, overwrite = TRUE)
+
+```
+
+
+
+
