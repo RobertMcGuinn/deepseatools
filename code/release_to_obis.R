@@ -22,7 +22,7 @@ library(RColorBrewer)
 
 ##### load NDB #####
 setwd("C:/rworking/deepseatools/indata")
-indata<-read_csv("DSCRTP_NatDB_20200710-2.csv", na = c("-999", "NA"))
+indata<-read_csv("DSCRTP_NatDB_20201021-0.csv", na = c("-999", "NA"))
 
 ##### filter the NDB #####
 filt <- indata %>%
@@ -117,8 +117,16 @@ recode_list <- list('specimen' = 'PreservedSpecimen',
 # use RecordType to type crosswalk to apply type valid values:
 obis$basisOfRecord <- recode(obis$basisOfRecord, !!!recode_list)
 
+##### work on coordinateUncertaintyInMeters to take out non-numericals  #####
+
+obis$testUncert <- gsub("[^[:digit:]., ]", "", obis$coordinateUncertaintyInMeters)
+
+## check
+
+# obis %>% pull(testUncert) %>% table(useNA = 'always')
+
 ##### write out file for submission #####
-today <- '20200723-0'
+today <- '20210116-0'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
@@ -126,12 +134,13 @@ obis %>%
             row.names = FALSE)
 
 ##### checking #####
-library(dplyr)
-
-x <- filt %>%
-  group_by(CatalogNumber) %>%
-  filter(n()>1)
-
+# library(dplyr)
+#
+# x <- filt %>%
+#   group_by(CatalogNumber) %>%
+#   filter(n()>1)
+#
+# names(obis)
 
 ##### DarwinCore crosswalk for other fields we might use later on #####
 # recordNumber = "TrackingID",
