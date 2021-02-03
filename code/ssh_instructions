@@ -6,9 +6,10 @@ ssh-keygen
 
 ## place public key (*.pub) in GitHub (under settings ssh - add new)
 
-## run these every time you open a new terminal
+## run these every time you open a new terminal to authenticate.
+## only once per session is needed
 eval $(ssh-agent)
 ssh-add C:/rpm
 
-## run this
+## run this if you are going from a repo that was HTTPS and now you want SSH
 git remote set-url origin git@github.com:RobertMcGuinn/deepseatools.git
