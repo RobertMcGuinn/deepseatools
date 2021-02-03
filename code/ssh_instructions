@@ -1,0 +1,14 @@
+## move to root
+cd c:/
+
+## generate keys
+ssh-keygen
+
+## put public key in GitHub
+
+## run these
+eval 'ssh-agent -s'
+eval $(ssh-agent)
+ssh-add C:/rpm
+
+git remote set-url origin git@github.com:RobertMcGuinn/deepseatools.git
