@@ -97,7 +97,7 @@ obis <- obis %>%
   mutate(occurrenceID = paste("NOAA_DSCRTP:", occurrenceID, sep = "")) %>%
   mutate(scientificNameID = paste("urn:lsid:marinespecies.org:taxname:", scientificNameID, sep = ""))
 
-##### recode of DSC RecordType to 'basisOfRecord' #####
+##### recode of DSC RecordType to 'basisOfRecord' # #####
 
 recode_list <- list('specimen' = 'PreservedSpecimen',
                  'literature' = 'HumanObservation',
