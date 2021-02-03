@@ -13,3 +13,7 @@ ssh-add C:/rpm
 
 ## run this if you are going from a repo that was HTTPS and now you want SSH
 git remote set-url origin git@github.com:RobertMcGuinn/deepseatools.git
+
+## run these to set your name and email
+git config --global user.name "Robert McGuinn"
+git config --global user.email robert.mcguinn@noaa.gov
