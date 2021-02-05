@@ -94,11 +94,9 @@ View(x)
 x <- filt %>% 
   filter(grepl("NOAA_PC-11-05-L", DatasetID)
            ) %>% 
-  group_by(DatasetID, SurveyID, ObservationDate, Citation, WebSite) %>% 
+  group_by(DatasetID, SurveyID, EventID, ObservationDate, Citation, WebSite) %>% 
   summarize(n=n())
 View(x)
-
-
 
 ##### get all the DatasetIDs in SEDCI region #####
 ecogig <- c("NOAA_EX-12-02-L2",
