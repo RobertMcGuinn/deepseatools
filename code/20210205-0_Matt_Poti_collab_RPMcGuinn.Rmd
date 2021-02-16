@@ -98,6 +98,14 @@ x <- filt %>%
   summarize(n=n())
 View(x)
 
+x <- filt %>% 
+  filter(grepl("998933", CatalogNumber)
+           ) %>% 
+  group_by(ScientificName, ImageURL) %>% 
+  summarize(n=n())
+View(x)
+
+
 ##### get all the DatasetIDs in SEDCI region #####
 ecogig <- c("NOAA_EX-12-02-L2",
             "BOEM_Lophelia_II",
