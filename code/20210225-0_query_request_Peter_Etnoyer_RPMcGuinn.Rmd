@@ -1,0 +1,96 @@
+---
+title: "Analytical Task for Peter Etnoyer"
+output: html_notebook
+---
+
+# intro
+
+Original question posed by Peter Etnoyer on 2021-02-25:
+
+"I need to know the 'non-null' average temperature, st dev, and temperature ranges of Paramuricea observations in the depth range 1000-2000 m in the Gulf of Mexico.
+
+We assume based on past experience, that for our lab studies, the temperature range will be 5-10 C. This seemed like a good thing to check with DATA, and possible through our Nat DB. What do you think?"
+
+# load packages
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(rmarkdown)
+library(knitr)
+library(flextable)
+library(googlesheets4)
+library(googlesheets)
+library(googledrive)
+library(openxlsx)
+library(scales)
+library(extrafont)
+```
+
+# load data
+
+```{r}
+# load the national database
+setwd("C:/rworking/deepseatools/indata")
+indata<-read_csv("DSCRTP_NatDB_20201021-0.csv")
+filt <- indata %>%
+  filter(Flag == "0", is.na(Phylum) == F)
+rm(indata)
+
+# load the other global climatology files
+# https://www.ncei.noaa.gov/access/gulf-of-mexico-climate/bin/gomregcl.pl?parameter=t
+setwd("C:/rworking/deepseatools/indata")
+winter <-read.csv('gom_decav_t13mn01.csv', skip = 1)
+spring <-read.csv('gom_decav_t14mn01.csv', skip = 1 )
+summer <-read.csv('gom_decav_t15mn01.csv', skip = 1)
+fall <-read.csv('gom_decav_t16mn01.csv', skip = 1)
+
+
+round(mean(winter$X1000, na.rm = T), digits = 3)
+round(mean(spring$X1000, na.rm = T), digits = 3)
+round(mean(summer$X1000, na.rm = T), digits = 3)
+round(mean(fall$X1000, na.rm = T), digits = 3)
+
+round(mean(winter$X1500, na.rm = T), digits = 3)
+round(mean(spring$X1500, na.rm = T), digits = 3)
+round(mean(summer$X1500, na.rm = T), digits = 3)
+round(mean(fall$X1500, na.rm = T), digits = 3)
+
+round(mean(winter$X2000, na.rm = T), digits = 3)
+round(mean(spring$X2000, na.rm = T), digits = 3)
+round(mean(summer$X2000, na.rm = T), digits = 3)
+round(mean(fall$X2000, na.rm = T), digits = 3)
+
+
+
+
+
+
+```
+
+# create summary table and histogram
+
+```{r}
+x <- filt %>% filter(
+  Genus == "Paramuricea",
+  as.numeric(DepthInMeters) > 1000,
+  as.numeric(DepthInMeters) < 2000,
+  Temperature != "-999", 
+  FishCouncilRegion == "Gulf of Mexico"
+  ) %>% 
+  group_by(Genus) %>% 
+  summarize(n=n(), 
+            meanTemp = mean(Temperature), 
+            sdTemp = sd(Temperature),
+            minTemp = min(Temperature), 
+            maxTemp = max(Temperature)
+            ) %>% 
+  View()
+
+# create histogram
+# hist(as.numeric(x$Temperature), breaks = 40)
+qplot(x$Temperature)
+
+```
+
+

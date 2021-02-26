@@ -17,3 +17,7 @@ git remote set-url origin git@github.com:RobertMcGuinn/deepseatools.git
 ## run these to set your name and email
 git config --global user.name "Robert McGuinn"
 git config --global user.email robert.mcguinn@noaa.gov
+
+# in terminal find a file that contains a certain string.
+grep -lR string directory/*
+

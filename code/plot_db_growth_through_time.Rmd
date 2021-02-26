@@ -167,13 +167,34 @@ d4 <- merge(d2,d3, all.x = T)
 
 d5 <- d4 %>%  mutate(sum3 = ifelse(type == "totrecords", 
                                    merge - sum2, 
-                                   merge))%>% 
+                                   merge)) %>% 
   filter(fy != 2015) %>% 
   filter(fy != 2020)
 
 d5$type <- factor(d5$type)
 levels(d5$type)
+# rename levels
 levels(d5$type) <- c("Updated", "New", "Original")
+# reorder levels
+d5$type <- factor(d5$type, levels = c("New", "Updated", "Original"))
+
+## checking 
+
+x <- traj %>% group_by(fy) %>% summarize(tot=max(totrecords))
+x
+
+cor2019 <- d5 %>% filter(fy == '2019', type == 'corrected') %>% pull(sum3)
+orig2019 <- d5 %>% filter(fy == '2019', type == 'totrecords') %>% pull(sum3)
+new2019 <- d5 %>% filter(fy == '2019', type == 'newrecords') %>% pull(sum3)
+  
+cor2018 <- d5 %>% filter(fy == '2018', type == 'corrected') %>% pull(sum3)
+orig2018 <- d5 %>% filter(fy == '2018', type == 'totrecords') %>% pull(sum3)
+new2018 <- d5 %>% filter(fy == '2018', type == 'newrecords') %>% pull(sum3) 
+
+cor2018+orig2018+new2018
+cor2019+orig2019
+cor2019+orig2019+new2019
+
 
 ```
 
@@ -183,8 +204,10 @@ levels(d5$type) <- c("Updated", "New", "Original")
 
 cl <- colors(distinct = TRUE)
 set.seed(12) # to set random generator seed
+# mycols <- #sample(cl, 3)
+#   c("springgreen3","gray","darkgreen")
 mycols <- #sample(cl, 3)
-  c("springgreen3","gray","darkgreen")
+  c("gray","springgreen3","darkgreen")
 
 ggplot(d5, aes(fill=type, y=sum3, x=fy)) + 
     geom_bar(position="stack", stat="identity") +
@@ -212,7 +235,7 @@ scale_colour_manual(values = mycols,
 
 ```{r}
 
-ggsave(paste("c:/rworking/deepseatools/images/", "20200521-1_new_updated_RPMcGuinn", ".png", sep = ''), 
+ggsave(paste("c:/rworking/deepseatools/images/", "20200222-0_new_updated_RPMcGuinn", ".png", sep = ''), 
          width = 6.5, 
          height = 5.57, 
          units = "in")
