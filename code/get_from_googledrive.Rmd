@@ -14,25 +14,38 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(googledrive)
 library(openxlsx)
+library(usethis)
 ```
 
 # get XLS file from Google Drive
 
 ```{r}
-# set name of file
-yo <- '20200731_Shuler_NF1901'
-
-x <- drive_find(q = "name contains '20200731_Shuler_NF1901.xlsx'")
+# set name of the file
+filename <- '20200731_Shuler_NF1901'
+# find the file in google drive by name
+x <- drive_find(q = paste("name contains ", "'", filename, "'", sep = ''))
 # getting the id as a character string
 y <- x$id
-
 # this downloads the file to the specified path
 dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/sheet.xlsx", overwrite = TRUE)
-
 # read the file into R as a data frame
 sheet <- read.xlsx(dl$local_path, sheet = 4, startRow = 11)
-
-# strip of first 10 rows
 ```
 
+# get zip file from Google Drive and pull out specific CSV, load to R
+
+```{r}
+# set the file name (user supplied th file name root, without extension)
+filename <- '20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018'
+# find the file in google drive by name
+x <- drive_find(q = paste("name contains ", "'", filename, "'", sep = ''))
+# getting the id as a character string
+y <- x$id
+# download the zip file
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
+# extract just the file of interest from the zip file
+data <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
+## check
+# head(data)
+```
 
