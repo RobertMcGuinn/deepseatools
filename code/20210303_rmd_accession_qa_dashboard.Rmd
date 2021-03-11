@@ -62,7 +62,7 @@ filt <- indata %>%
 
 ```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE}
 # set the file name (user supplied th file name root, without extension)
-#filename <- '20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018'
+filename <- '20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018'
 # find the file in google drive by name
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
 # getting the id as a character string
