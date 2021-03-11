@@ -72,7 +72,6 @@ Now take a look at the first 5 field names using the 'head' function.
 
 head(info$variables)
 
-
 ```
 
 To list all variables in the NOAA, National Database for Deep Sea Corals and Sponges , then use the following: 
@@ -87,13 +86,13 @@ info$variables
 
 When you have the variables (fields) that you want to download in mind after reviewing the data dictionary, you can download them using the following 'tabledap' function from the 'rerddap' package. In the code below, you can see an example of setting specific geographic bounding box constraints and selecting a particular Vessel.  You can set any numeric or character-based constraint on your downloads using this basic syntax. If you set no contraints, you will download all data. *Warning*: If you add no constraints, the data download will take more time, so be patient. 
 
-You can also filter your data after downloading if you would prefer, rather than using constraints in the 'tabledap' function. This might be preferable if you want to intially download all of the data and all of the fields for exploration. The example below contains constraints.  *Note*: Character constraints must be enclosed in double quotes. So the syntax for a constraint is: 'Vessel="Okeanos Explorer R/V"'. Variables can be listed in any order desired.
+You can also filter your data after downloading if you would prefer, rather than using constraints in the 'tabledap' function. This might be preferable if you want to intially download all of the data and all of the fields for exploration. The example below contains constraints.  *Note*: Character constraints must be enclosed in double quotes. So the syntax for a constraint is: 'Vessel="Okeanos Explorer R/V"'. Variables can be listed in any order desired. Getting the full database may be preferable if you are using it regularly in your work.
 
 ```{r}
 library(rerddap)
 d <- tabledap("deep_sea_corals", 'longitude<50', 'latitude>20', 'latitude<30', 
               'Vessel="Okeanos Explorer R/V"',
-              fields=c('CatalogNumber', 'latitude', 'longitude', 'ScientificName', 'ImageURL', 
+              fields=c('DatabaseVersion', 'CatalogNumber', 'latitude', 'longitude', 'ScientificName', 'ImageURL', 
                        'Vessel', 'RecordType', 'DatasetID', 'SurveyID', 'SampleID', 'TrackingID',
                        'Station', 'Locality', 'ObservationYear', 'Genus', 'Phylum', 'TaxonRank',
                        'DepthInMeters'),
