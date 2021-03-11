@@ -171,31 +171,32 @@ d5 <- d4 %>%  mutate(sum3 = ifelse(type == "totrecords",
   filter(fy != 2015) %>% 
   filter(fy != 2020)
 
+#convert d5 
 d5$type <- factor(d5$type)
-levels(d5$type)
+## checking
+#levels(d5$type)
 # rename levels
 levels(d5$type) <- c("Updated", "New", "Original")
 # reorder levels
 d5$type <- factor(d5$type, levels = c("New", "Updated", "Original"))
 
 ## checking 
-
 x <- traj %>% group_by(fy) %>% summarize(tot=max(totrecords))
 x
 
-cor2019 <- d5 %>% filter(fy == '2019', type == 'corrected') %>% pull(sum3)
-orig2019 <- d5 %>% filter(fy == '2019', type == 'totrecords') %>% pull(sum3)
-new2019 <- d5 %>% filter(fy == '2019', type == 'newrecords') %>% pull(sum3)
-  
-cor2018 <- d5 %>% filter(fy == '2018', type == 'corrected') %>% pull(sum3)
-orig2018 <- d5 %>% filter(fy == '2018', type == 'totrecords') %>% pull(sum3)
-new2018 <- d5 %>% filter(fy == '2018', type == 'newrecords') %>% pull(sum3) 
+cor2019 <- d5 %>% filter(fy == '2019', type == 'Updated') %>% pull(sum3) 
+orig2019 <- d5 %>% filter(fy == '2019', type == 'Original') %>% pull(sum3)
+new2019 <- d5 %>% filter(fy == '2019', type == 'New') %>% pull(sum3)
+
+cor2018 <- d5 %>% filter(fy == '2018', type == 'Updated') %>% pull(sum3)
+orig2018 <- d5 %>% filter(fy == '2018', type == 'Original') %>% pull(sum3)
+new2018 <- d5 %>% filter(fy == '2018', type == 'New') %>% pull(sum3)
 
 cor2018+orig2018+new2018
 cor2019+orig2019
 cor2019+orig2019+new2019
 
-
+View(d5)
 ```
 
 # stacked bar chart

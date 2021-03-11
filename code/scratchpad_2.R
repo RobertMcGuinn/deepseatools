@@ -49,7 +49,6 @@ filt %>% filter(grepl("EX1903", SurveyID)) %>% pull(Reporter) %>% unique()
 filt %>% filter(grepl("EX", AccessionID)) %>% pull(AccessionID) %>% unique()
 filt %>% filter(grepl("EX1903", SurveyID)) %>% pull(Reporter) %>%  length()
 
-
 sub %>% filter(VernacularNameCategory == 'check with dataprovider') %>%
   pull(AphiaID)
 
@@ -67,7 +66,6 @@ x <- sub %>% filter(grepl('DIVE', SampleID)) %>%
   summarize(n=n()) %>%
   arrange(desc(SampleID))
 View(x)
-
 
 ##### accessionID Kaitlin Graff #####
 indata %>% filter(AccessionID == 'NOAA_CBNMS_Nautilus_Graiff_2017_2017') %>%
@@ -91,9 +89,7 @@ filt %>% filter(grepl("YPM", DatasetID)) %>%
   pull(WebSite) %>% length() %>%
   unique()
 
-
 ##### summary for Tom Hourigan on Southeast data #####
-
 z <- c("NOAA_SWFSC_Submersible", "NOAA_M2-10-06-L1-AUV", "NOAA_M2-10-06-L2-ROV", "NOAA_M2-10-06-L3-AUV", "NOAA_M2-10-06-L3-ROV", "NOAA_PU-11-08", "NOAA_PU-14-13")
 
 setdiff(z, unique(filt$DatasetID))
@@ -101,16 +97,17 @@ setdiff(z, unique(filt$DatasetID))
 summary <- filt %>% filter(DatasetID %in% z) %>%
   group_by(DatasetID) %>%
   summarize(number_eventID = length(unique(EventID)))
-
-
 ##### arvind #####
 filt %>% filter(AccessionID == "NMNH_1868_2011") %>%
   group_by(AccessionID, Station) %>% summarize(foo=n()) %>% View()
 
-
-
-
-
+##### QA #####
+unique(filt$DatabaseVersion)
+filt %>% filter(grepl("NOAA", DatasetID)) %>% pull(DatasetID) %>% unique()
+sub %>% pull(AccessionID) %>% unique()
+sub %>% pull(DataProvider) %>% unique()
+filt %>% filter(grepl("Cordell", DataProvider)) %>% pull(DatasetID) %>% unique()
+sub %>% group_by(ImageFilePath, SampleID) %>% summarize(n=n()) %>% head() %>% View()
 
 
 

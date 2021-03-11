@@ -21,7 +21,7 @@ library(usethis)
 
 ```{r}
 # set name of the file
-filename <- '20200731_Shuler_NF1901'
+# filename <- '20200731_Shuler_NF1901'
 # find the file in google drive by name
 x <- drive_find(q = paste("name contains ", "'", filename, "'", sep = ''))
 # getting the id as a character string
@@ -29,14 +29,15 @@ y <- x$id
 # this downloads the file to the specified path
 dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/sheet.xlsx", overwrite = TRUE)
 # read the file into R as a data frame
-sheet <- read.xlsx(dl$local_path, sheet = 4, startRow = 11)
+sheet <- read.xlsx(dl$local_path, sheet = 4, startRow = 13)
+head(sheet)
 ```
 
 # get zip file from Google Drive and pull out specific CSV, load to R
 
 ```{r}
 # set the file name (user supplied th file name root, without extension)
-filename <- '20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018'
+# filename <- '20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018'
 # find the file in google drive by name
 x <- drive_find(q = paste("name contains ", "'", filename, "'", sep = ''))
 # getting the id as a character string
