@@ -6,7 +6,8 @@
 # output: x_geo (spdf) | x_geo (feature-class)
 
 ##### load packages #####
-
+library(tidyverse)
+library(rgdal)
 library(arcgisbinding)
 arc.check_product()
 
@@ -23,7 +24,7 @@ x <- read.csv(paste(x,'.csv', sep = ''), header = T)
 ##### filter data #####
 
 # get rid of any missing Latitudes or Longitudes
-x <- sub %>% filter(Latitude != -999 | Longitude != -999)
+x <- x %>% filter(Latitude != -999 | Longitude != -999)
 # make copy to turn into spatial points data frame.
 x_geo <- x
 
