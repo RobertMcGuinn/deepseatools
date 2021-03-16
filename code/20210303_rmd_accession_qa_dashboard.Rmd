@@ -9,8 +9,6 @@ always_allow_html: yes
 ---
 
 ```{r load_packs, echo=F, message=FALSE, warning=F}
-
-
 library(rmarkdown)
 library(xfun)
 library(tidyverse)
@@ -160,7 +158,7 @@ sum_tbl
 
 # Citation Maker
 
-``` {r CitationMaker, echo = FALSE, eval = F}
+``` {r CitationMaker, echo = FALSE, eval = T}
 
 sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ', 
                          min(sub$ObservationYear[sub$ObservationYear != "-999"]),' to ',

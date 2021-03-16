@@ -9,17 +9,17 @@ library(googledrive)
 
 ##### render the QA dashboard #####
 # add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018"
+filename <- "20210105-2_NOAA_NCCOS_Nancy_Foster_NF-19-01_Carribean_2019_2019"
 
 rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
 
-###### manually inpect word document in folder, develop checklist, then PDF #####
+###### MANUAL inspection of QA report in Word, then save to PDF. Develop Redmine Checklist #####
 
 ##### Upload PDF report to specific folder on Google Drive #####
+folderurl <- "https://drive.google.com/drive/folders/1WUqpMZ2b8gtwrT0fjF9Ti_ajF1Oi3Pn9"
 setwd("C:/rworking/deepseatools/reports")
-folderurl <- "https://drive.google.com/drive/folders/153wK0nPTgQQgPZw1G-DOJoXHclbu8-_g"
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
              name = paste(filename,".PDF", sep=''),
@@ -28,6 +28,7 @@ drive_upload(paste(filename,".PDF", sep=''),
 ##### checking #####
 # filt %>% filter(grepl("Shimada", Vessel)) %>% pull(Vessel) %>% table()
 # filt %>% filter(grepl("Greater Farallones", DataProvider)) %>% pull(DataProvider) %>% table()
+# filt %>% filter(grepl("National Centers for Coastal Ocean Science", DataProvider)) %>% pull(DataProvider) %>% table()
 
 ##### ##export to GIS## #####
 ##### load packages #####

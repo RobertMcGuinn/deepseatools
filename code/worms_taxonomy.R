@@ -15,7 +15,7 @@ library(googledrive)
 
 ##### load taxonomy 1#####
 # manual change required: set version variable.
-version <- '20201001-0'
+version <- '20210314-0'
 taxtoflag <- paste(version,'_taxonomy_to_flag', sep = '')
 taxtochange <- paste(version,'_taxonomy_to_change', sep = '')
 taxonomyall <- paste(version,'_taxonomy_all', sep = '')
@@ -94,6 +94,9 @@ newtax_un <- newtax_un %>% filter(ScientificName %in% diff)
 
 ##### binding new taxonomy table with existing #####
 newtax <- rbind(tax, newtax_un)
+## clean SynomymAphiaID
+newtax$SynonymAphiaID <- as.character(newtax$SynonymAphiaID)
+
 ## checking
 #
 # length(tax$VernacularNameCategory)
@@ -101,9 +104,19 @@ newtax <- rbind(tax, newtax_un)
 # length(newtax$VernacularNameCategory)
 
 ##### write out new file #####
+newversion <- "20210316-0"
 setwd("C:/rworking/deepseatools/indata")
-newtax %>%
-  write.csv('newtax.csv', row.names = FALSE)
+newtaxch %>%
+  write.csv(paste(newversion, "_taxonomy_all.csv", sep = ''), row.names = FALSE)
+
+##### write to Google Drive to 'current folder' #####
+name <- paste(newversion, "_taxonomy_all", sep = '')
+folderurl <- "https://drive.google.com/drive/folders/0B9c2c_XdhpFBT29NQmxIeUQ4Tlk"
+setwd("C:/rworking/deepseatools/indata")
+drive_upload(paste(name,".csv", sep=''),
+             path = as_id(folderurl),
+             name = paste(name,".csv", sep=''),
+             overwrite = T)
 
 ##### checking #####
 # x <- tax %>% filter(grepl('Chromoplexaura', Genus)) %>% pull(VernacularNameCategory)
@@ -130,4 +143,15 @@ names(change_taxonomy)
 
 setwd("C:/rworking/deepseatools/indata")
 newtaxch %>%
-  write.csv('newtaxch.csv', row.names = FALSE)
+  write.csv(paste(newversion, "_taxonomy_to_change.csv", sep = ''), row.names = FALSE)
+
+## write to Google Drive to 'current folder'
+name <- paste(newversion, "_taxonomy_to_change", sep = '')
+folderurl <- "https://drive.google.com/drive/folders/0B9c2c_XdhpFBT29NQmxIeUQ4Tlk"
+setwd("C:/rworking/deepseatools/indata")
+drive_upload(paste(name,".csv", sep=''),
+             path = as_id(folderurl),
+             name = paste(name,".csv", sep=''),
+             overwrite = T)
+
+
