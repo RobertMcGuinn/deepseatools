@@ -20,6 +20,7 @@ library(googlesheets4)
 library(googledrive)
 library(leaflet)
 library(RColorBrewer)
+library(marmap)
 
 #font_import()
 # library(marmap)
@@ -61,15 +62,16 @@ filt <- indata %>%
 ```
 
 ```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE}
-# set the file name (user supplied th file name root, without extension)
-filename <- '20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018'
+## set the file name (user supplied th file name root, without extension). You can
+## do this action from the runner too.
+# filename <- '20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018'
 # find the file in google drive by name
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
-# getting the id as a character string
+## getting the id as a character string
 y <- x$id
-# download the zip file
+## download the zip file
 dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
-# extract just the file of interest from the zip file
+## extract just the file of interest from the zip file
 sub <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
 flagged <- sub %>%  filter(Flag == "1")
 ```
@@ -229,7 +231,7 @@ ft
 # #getting rid of  missing lat/long data
 #library(ggmap)
 sub2 <- sub %>%
-  filter(Latitude != '-999' , Longitude != '-999', Longitude != '-887.22488')
+  filter(Latitude != '-999' , Longitude != '-999')
 # 
 # # use this when not crossing dateline
 # xpos <- sub2$Longitude
@@ -271,55 +273,6 @@ z + geom_point(data=sub2,
                size = 2,
                aes(x=Longitude, y = Latitude), inherit.aes = FALSE)
 ```
-
-## Area of Interest Map
-
-```{r mapzoomed, echo=FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=FALSE, fig.align='center'}
-##### using marmap and ggplot2 to make a map #####
-
-# create a spatial points data frame
-spdf<-sub2
-coordinates(spdf) <- c("Longitude", "Latitude", "DepthInMeters")
-proj4string(spdf) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
-x<-bbox(spdf)
-# install.packages('marmap')
-# library(marmap)
-zoom <- 2 # as number gets bigger you achieve a wider extent to your download
-cont <- getNOAA.bathy(lon1 = x[1,1]-zoom, lon2 = x[1,2]+zoom,
-                      lat1 = x[2,1]-zoom, lat2 = x[2,2]+zoom, resolution = 2,
-                      keep = FALSE, antimeridian = FALSE)
-
-##### if you have linear stuff you want to map use this #####
-# begin.coord <- data.frame(lon=sub$StartLongitude, lat=sub$StartLatitude)
-# end.coord <- data.frame(lon=sub$EndLongitude, lat=sub$EndLatitude)
-#
-# l <- vector("list", nrow(begin.coord))
-# library(sp)
-# for (i in seq_along(l)) {
-#   l[[i]] <- Lines(list(Line(rbind(begin.coord[i, ], end.coord[i,]))), as.character(i))
-# }
-# lines<-SpatialLines(l)
-# class(lines)
-#
-# linesdf <- SpatialLinesDataFrame(lines, data = begin.coord)
-#
-# lines_fortify <- fortify(linesdf)
-
-##### make ggplot based map #####
-
-
-# topographical color scale, see ?scale_fill_etopo
-g <- autoplot(cont, geom=c("raster", "contour")) +
-  scale_fill_gradient2(low="dodgerblue4", mid="gainsboro", high="darkgreen") +
-  labs(x = 'Longitude') +
-  labs(y = 'Latitude')
-
-# add sampling locations
-
-g + geom_point(aes(x=Longitude, y=Latitude), data=sub2, alpha=0.5, color = 'red', size = 2)
-
-```
-
 ## 3D Bounding Box
 
 ```{r bounding box, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=TRUE, fig.align='center'}
