@@ -14,7 +14,7 @@ library(googlesheets4)
 library(googledrive)
 
 ##### load taxonomy 1#####
-# manual change required: set version variable.
+# MANUALchange required: set version variable.
 version <- '20210314-0'
 taxtoflag <- paste(version,'_taxonomy_to_flag', sep = '')
 taxtochange <- paste(version,'_taxonomy_to_change', sep = '')
@@ -106,8 +106,10 @@ newtax$SynonymAphiaID <- as.character(newtax$SynonymAphiaID)
 ##### write out new file #####
 newversion <- "20210316-0"
 setwd("C:/rworking/deepseatools/indata")
-newtaxch %>%
+newtax %>%
   write.csv(paste(newversion, "_taxonomy_all.csv", sep = ''), row.names = FALSE)
+
+##### MANUAL CHANGE: go fix the CSV as necessary and change #####
 
 ##### write to Google Drive to 'current folder' #####
 name <- paste(newversion, "_taxonomy_all", sep = '')

@@ -18,7 +18,8 @@ rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashb
 ###### MANUAL inspection of QA report in Word, then save to PDF. Develop Redmine Checklist #####
 
 ##### Upload PDF report to specific folder on Google Drive #####
-folderurl <- "https://drive.google.com/drive/folders/1WUqpMZ2b8gtwrT0fjF9Ti_ajF1Oi3Pn9"
+## MANUAL CHANGE folderurl
+folderurl <- "https://drive.google.com/drive/folders/1bdyMniDRsnhuHRZSrZ4jZAES1PxRBhQh"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
@@ -29,6 +30,10 @@ drive_upload(paste(filename,".PDF", sep=''),
 # filt %>% filter(grepl("Shimada", Vessel)) %>% pull(Vessel) %>% table()
 # filt %>% filter(grepl("Greater Farallones", DataProvider)) %>% pull(DataProvider) %>% table()
 # filt %>% filter(grepl("National Centers for Coastal Ocean Science", DataProvider)) %>% pull(DataProvider) %>% table()
+sub %>% filter(is.na(VernacularNameCategory) == T) %>% pull(ScientificName) %>% table()
+sub %>% filter(VernacularNameCategory == "check with dataprovider") %>% pull(ScientificName) %>% table()
+sub %>% filter(VernacularNameCategory == "sea fan") %>% pull(ScientificName) %>% table()
+s %>% filter(FieldName == 'VernacularNameCategory') %>% pull(ValidValues)
 
 ##### ##export to GIS## #####
 ##### load packages #####
