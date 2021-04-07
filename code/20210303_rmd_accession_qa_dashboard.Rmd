@@ -123,6 +123,18 @@ m
 sub$Family <- forcats::fct_explicit_na(sub$Family)
 ```
 
+```{r echo = F}
+# define ft width function 
+FitFlextableToPage <- function(ft, pgwidth = 6){
+
+  ft_out <- ft %>% autofit()
+
+  ft_out <- width(ft_out, width = dim(ft_out)$widths*pgwidth /(flextable_dim(ft_out)$widths))
+  return(ft_out)
+}
+```
+
+
 # File Version Used in this Report:
 *`r substring(filename, 1, 10)`*
 
@@ -364,12 +376,11 @@ ft <- flextable(sum_tbl) %>%
   colformat_num(j = 4, digits = 0, big.mark = ",", na_str = "NA") %>%
   colformat_num(j = 7, digits = 0, big.mark = ",", na_str = "NA") %>%
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  fontsize(size = 7, part = "all") %>%
-  autofit() %>% 
-  width(j = 2, 2)
+  fontsize(size = 7, part = "all")# %>%
+  #autofit() #%>% 
+  #width(j = 2, 2)
  
-
-ft
+FitFlextableToPage(ft, 7.5)
 ```
 
 # List of ScientificNames (Sponges) - Grouped by Family

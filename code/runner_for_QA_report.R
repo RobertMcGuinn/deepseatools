@@ -8,8 +8,8 @@ library(rmarkdown)
 library(googledrive)
 
 ##### render the QA dashboard #####
-# add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20210105-2_NOAA_NCCOS_Nancy_Foster_NF-19-01_Carribean_2019_2019"
+# MANUAL CHANGE add the 'AccessionID' of the data set you want to report on as 'x'
+filename <- "220210405-0_NOAA_NEFSC_HB1404_Nizinski_2014_2014"
 
 rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
@@ -18,8 +18,10 @@ rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashb
 ###### MANUAL inspection of QA report in Word, then save to PDF. Develop Redmine Checklist #####
 
 ##### Upload PDF report to specific folder on Google Drive #####
-## MANUAL CHANGE folderurl
-folderurl <- "https://drive.google.com/drive/folders/1bdyMniDRsnhuHRZSrZ4jZAES1PxRBhQh"
+
+## MANUAL CHANGE folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1KFjG1zEgkqf6ZG8v5n9KtEC-LmePq6Qw"
+
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
@@ -27,13 +29,32 @@ drive_upload(paste(filename,".PDF", sep=''),
              overwrite = T)
 
 ##### checking #####
-# filt %>% filter(grepl("Shimada", Vessel)) %>% pull(Vessel) %>% table()
+filt %>% filter(grepl("Okeanos", Vessel)) %>% pull(Citation) %>% table()
 # filt %>% filter(grepl("Greater Farallones", DataProvider)) %>% pull(DataProvider) %>% table()
 # filt %>% filter(grepl("National Centers for Coastal Ocean Science", DataProvider)) %>% pull(DataProvider) %>% table()
 sub %>% filter(is.na(VernacularNameCategory) == T) %>% pull(ScientificName) %>% table()
-sub %>% filter(VernacularNameCategory == "check with dataprovider") %>% pull(ScientificName) %>% table()
+sub %>% filter(SampleID == "EX1903L2_D01_01B_A11") %>% pull(TrackingID) %>% table()
 sub %>% filter(VernacularNameCategory == "sea fan") %>% pull(ScientificName) %>% table()
 s %>% filter(FieldName == 'VernacularNameCategory') %>% pull(ValidValues)
+sub %>% filter(FlagReason == "Insufficient taxonomic resolution") %>% pull(VernacularNameCategory) %>% table()
+
+filt %>%
+  filter(grepl("Pisces", Vessel)) %>%
+  pull(SurveyID) %>% table()
+
+sub %>%
+  pull(SurveyID) %>%
+  table()
+
+filt %>%
+  filter(grepl("", Repository)) %>%
+  pull(Repository) %>%
+  table()
+
+sub %>%
+  filter(VernacularNameCategory == 'check with dataprovider') %>%
+  pull(ScientificName) %>%
+  table()
 
 ##### ##export to GIS## #####
 ##### load packages #####

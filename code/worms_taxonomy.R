@@ -15,12 +15,12 @@ library(googledrive)
 
 ##### load taxonomy 1#####
 # MANUALchange required: set version variable.
-version <- '20210314-0'
+version <- '20210323-0'
 taxtoflag <- paste(version,'_taxonomy_to_flag', sep = '')
 taxtochange <- paste(version,'_taxonomy_to_change', sep = '')
 taxonomyall <- paste(version,'_taxonomy_all', sep = '')
 
-# find the file in google drive by name
+# find the file in google drive by name (NOTE: All must be Google Sheet to work (not csv))
 x <- drive_find(q = paste("name contains ", "'", taxtoflag, "'", sep = ''))
 y <- x$id
 taxfl <- read_sheet(y)
@@ -43,8 +43,14 @@ tax <- read_sheet(y)
 ## OR get from manual list
 # taxa <- c("Adelogorgia cf. phyllosclera", "Putamayo", "Adelogorgia", "Lophelia pertusa")
 
+## OPTIONAL filter out noncoral and sponge stuff
+# sub <- sub %>%
+
 ## OR check against current sub list
 taxa <- as.character(setdiff(unique(sub$ScientificName), tax$ScientificName))
+
+## filter out things caught in the flag list
+taxa <- setdiff(taxa, taxfl$ScientificName)
 
 ## OPTIONAL break up for worms API (optional for long lists)
 # taxa1 <- taxa[1:50]
@@ -69,7 +75,7 @@ z <- bind_rows(x, .id = "column_label")
 ##### merge back to get original submitted names #####
 match <- merge(taxa, z, by.x = "row.names", by.y = 'row.names')
 
-##### creating an empty taxonomy tableopulate (output: newtax_un) #####
+##### creating an empty taxonomy table to populate (output: newtax_un) #####
 newtax_un <- tax[0,]
 
 #adding enough empty rows
@@ -104,13 +110,12 @@ newtax$SynonymAphiaID <- as.character(newtax$SynonymAphiaID)
 # length(newtax$VernacularNameCategory)
 
 ##### write out new file #####
-newversion <- "20210316-0"
+newversion <- "20210324-0"
 setwd("C:/rworking/deepseatools/indata")
 newtax %>%
   write.csv(paste(newversion, "_taxonomy_all.csv", sep = ''), row.names = FALSE)
 
 ##### MANUAL CHANGE: go fix the CSV as necessary and change #####
-
 ##### write to Google Drive to 'current folder' #####
 name <- paste(newversion, "_taxonomy_all", sep = '')
 folderurl <- "https://drive.google.com/drive/folders/0B9c2c_XdhpFBT29NQmxIeUQ4Tlk"

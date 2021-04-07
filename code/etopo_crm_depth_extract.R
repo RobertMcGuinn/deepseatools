@@ -107,7 +107,7 @@ filtdata <- as.data.frame(filt)
 
 ##### plotting in ggplot #####
 
-p♦ <- ggplot(filtdata, aes(DepthInMeters, gisGEBCO2019))
+p <- ggplot(filtdata, aes(DepthInMeters, gisGEBCO2019))
 p <- p + geom_point(size = .7) +
   geom_vline(aes(xintercept = 50), col = 'pink') +
   geom_hline(aes(yintercept = 50), col = 'pink') +
