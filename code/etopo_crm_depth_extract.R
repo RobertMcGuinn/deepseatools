@@ -22,7 +22,6 @@ filt <- indata %>%
   dplyr::filter(Flag == "0")
 
 ##### load GEBCO 2019 bathymetry from local netcdf file #####
-
 # https://www.gebco.net/data_and_products/gridded_bathymetry_data/
 # code: https://www.benjaminbell.co.uk/2019/08/bathymetric-maps-in-r-getting-and.html
 
@@ -31,7 +30,6 @@ filt <- indata %>%
 gebco2019 <- raster("C:/data/BaseLayers/GEBCO2019/gebco_2019.nc")
 
 ##### setting bounding box coordinates#####
-
 # do it by hand -OR-
 minLon <- -85
 maxLon <- -82
@@ -39,7 +37,6 @@ minLat <- 23
 maxLat <- 26
 
 # -OR- set bounding box coordinates to match the GEBCO extraction that you have.
-
 x <- bbox(gebco2019)
 minLat <- x[2,1]
 maxLat <- x[2,2]
@@ -47,7 +44,6 @@ maxLon <- x[1,2]
 minLon <- x[1,1]
 
 ##### filtering the coral data to match elevation data extraction#####
-
 filt <- dplyr::filter(indata, as.numeric(Latitude) > minLat,
                as.numeric(Latitude) < maxLat,
                as.numeric(Longitude) < maxLon,
@@ -60,7 +56,6 @@ coordinates(filt) <- c("Longitude","Latitude")
 proj4string(filt) <- proj4string(gebco2019)
 
 ##### get ETOPO1 data from NCEI #####
-
 url <- paste("http://maps.ngdc.noaa.gov/mapviewer-support/wcs-proxy/",
              "wcs.groovy?filename=etopo1_bedrock.tif&",
              "request=getcoverage&version=1.0.0&service=wcs&",
@@ -72,7 +67,6 @@ download.file(url, fname, mode="wb", cacheOK="false")
 etopo <- raster(fname)
 
 ##### get CRM data from NCEI #####
-
 url.hi <- paste("http://maps.ngdc.noaa.gov/mapviewer-support/wcs-proxy/",
                 "wcs.groovy?filename=crm.tif&",
                 "request=getcoverage&version=1.0.0&service=wcs&",
@@ -91,13 +85,11 @@ crm <- raster::raster(fname.hi)
 ##### extract raster CRM and ETOPO data to points #####
 # note: point extent must match raster extent (see above section on
 # setting max and min lats and longs.
-
 filt$gisCRMDepth <- raster::extract(crm,filt)
 filt$gisEtopoDepth <- raster::extract(etopo,filt)
 filt$gisGEBCO2019 <- raster::extract(gebco2019, filt)
 
 ##### changing the sign of the depth values to match NDB formatting ####
-
 filt$gisCRMDepth <- filt$gisCRMDepth * -1
 filt$gisEtopoDepth <- filt$gisEtopoDepth * -1
 filt$gisGEBCO2019 <- filt$gisGEBCO2019 * -1
