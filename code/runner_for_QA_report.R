@@ -9,24 +9,13 @@ library(googledrive)
 
 ##### render the QA dashboard #####
 # MANUAL CHANGE add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "220210405-0_NOAA_NEFSC_HB1404_Nizinski_2014_2014"
+filename <- "20210405-0_NOAA_NEFSC_HB1404_Nizinski_2014_2014"
 
 rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
 
 ###### MANUAL inspection of QA report in Word, then save to PDF. Develop Redmine Checklist #####
-
-##### Upload PDF report to specific folder on Google Drive #####
-
-## MANUAL CHANGE folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1KFjG1zEgkqf6ZG8v5n9KtEC-LmePq6Qw"
-
-setwd("C:/rworking/deepseatools/reports")
-drive_upload(paste(filename,".PDF", sep=''),
-             path = as_id(folderurl),
-             name = paste(filename,".PDF", sep=''),
-             overwrite = T)
 
 ##### checking #####
 filt %>% filter(grepl("Okeanos", Vessel)) %>% pull(Citation) %>% table()
@@ -39,22 +28,55 @@ s %>% filter(FieldName == 'VernacularNameCategory') %>% pull(ValidValues)
 sub %>% filter(FlagReason == "Insufficient taxonomic resolution") %>% pull(VernacularNameCategory) %>% table()
 
 filt %>%
-  filter(grepl("Pisces", Vessel)) %>%
-  pull(SurveyID) %>% table()
+  filter(grepl("Bigelow", Vessel)) %>%
+  pull(Vessel) %>%
+  table()
 
 sub %>%
   pull(SurveyID) %>%
   table()
 
 filt %>%
-  filter(grepl("", Repository)) %>%
-  pull(Repository) %>%
+  filter(grepl("NOAA", DatasetID)) %>%
+  pull(DatasetID) %>%
   table()
 
 sub %>%
   filter(VernacularNameCategory == 'check with dataprovider') %>%
   pull(ScientificName) %>%
   table()
+
+x <- sub %>%
+  filter(DepthInMeters == 0) %>%
+  pull(CatalogNumber) %>%
+  length()
+
+sub %>%
+  filter(grepl("taxonomic", FlagReason)) %>%
+  group_by(Flag, FlagReason, ScientificName) %>%
+  summarize(n=n())
+
+sub %>%
+  filter(grepl("taxonomic", FlagReason)) %>%
+  pull(CatalogNumber) %>%
+  length()
+
+filt %>%
+  filter(ScientificName == "Bathyalcyon robustum") %>%
+  group_by(ScientificName) %>%
+  summarize(n=n())
+
+##### Upload PDF report to specific folder on Google Drive #####
+
+## MANUAL CHANGE folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1xWnfaSoEdrEIcC4-Is5oLooDmslzzy8I"
+
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".PDF", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".PDF", sep=''),
+             overwrite = T)
+
 
 ##### ##export to GIS## #####
 ##### load packages #####

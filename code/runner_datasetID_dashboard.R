@@ -54,12 +54,12 @@ options(lifecycle_disable_warnings = TRUE)
 
 ##### load database(old_and_new)#####
 setwd("C:/rworking/deepseatools/indata")
-indata_old<-read.csv("DSCRTP_NatDB_20200710-2.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+indata_old<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
 filt_old <- indata_old %>%
   filter(Flag == "0")
 
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+indata<-read.csv("DSCRTP_NatDB_20210414-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
 filt <- indata %>%
   filter(Flag == "0")
 
@@ -72,9 +72,9 @@ filt <- indata %>%
 version <- unique(indata$DatabaseVersion)
 version <- as.character(version)
 
-##### bringing in datasetID key from xls stored on drive #####
+##### ***OR*** bringing in datasetID key from xls stored on drive #####
 ## create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20201021-1_DatasetID_Key_DSCRTP'")
+x <- drive_find(q = "name contains '20210205-1_DatasetID_Key_DSCRTP'")
 
 ## browse to it
 # x %>% drive_browse()
@@ -93,6 +93,13 @@ key <- read.xlsx(dl$local_path)
 ## clean up
 # rm(y)
 # rm(x)
+##### ***OR*** bring in old datasetID key from local path #####
+key <- read.xlsx("C:/rworking/deepseatools/indata/20210414-0_DatasetID_Key_DSCRTP.xlsx")
+
+## checking
+oldkey <- key
+setdiff(oldkey$DatasetID, key$DatasetID)
+setdiff(key$DatasetID, oldkey$DatasetID)
 
 ##### checking #####
 setdiff(filt$DatasetID, key$DatasetID)
@@ -113,22 +120,21 @@ rm(x)
 setdiff(indata$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, indata$DatasetID)
 
-
 ##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
-## build a frequency table by DatasetID
+## build a frequency table by DatasetID from new file
 x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
 
-# strip n from fieds
+# strip 'n' from existing key
 names(key)
 y <- key[,1:8]
 names(y)
 
-## merge new numbers
+## merge new numbers to create old key + new counts
 z <- merge(y,x)
 names(z)
 
 ## write out result
-write.xlsx(z, "C:/rworking/deepseatools/indata/20201021-1_DatasetID_Key_DSCRTP.xlsx",
+write.xlsx(z, "C:/rworking/deepseatools/indata/20210414-0_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
 ##### ***OPTIONAL*** subsetting of indata to d (optional step for testing purposes) #####
@@ -164,31 +170,34 @@ rm(y)
 #             n=n())
 # View(yo)
 
-##### checking #####
-# x <- d %>%
-#   arrange(ObservationYear) %>%
-#   filter(DatasetID %in% setdiff(indata$DatasetID, filt$DatasetID)) %>%
-#   group_by(DatasetID) %>%
-#   summarize(
-#       RecordType_list = toString(unique(RecordType)),
-#       N_Records=n(),
-#       # DatasetID_list = toString(unique(DatasetID)),
-#       DataProvider_list = toString(unique(DataProvider)),
-#       Repository_list = toString(unique(Repository)),
-#       ObservationYear_list = toString(unique(ObservationYear)),
-#       Vessel_list = toString(unique(Vessel)),
-#       VehicleName_list = toString(unique(VehicleName)),
-#       WebSite_list = toString(unique(WebSite)),
-#       #ImageURL = toString(unique(ImageURL)),
-#       PI_list = toString(unique(PI)),
-#       PIAffiliation_list = toString(unique(PIAffiliation)),
-#       Citation_list = toString(unique(Citation)),
-#       DataContact_list = toString(unique(DataContact)),
-#       Reporter_list = toString(unique(Reporter)),
-#       SurveyID_list = toString(unique(SurveyID))
-#     )
-#
-# View(x)
+#### summary view of new datasets #####
+x <- d %>%
+  arrange(ObservationYear) %>%
+  filter(DatasetID %in% setdiff(d$DatasetID, key$DatasetID)) %>%
+  group_by(DatasetID) %>%
+  summarize(
+      ObservationYear_list = toString(unique(ObservationYear)),
+      ObservationDate_list = toString(unique(ObservationDate)),
+      Locality_list = toString(unique(Locality)),
+      RecordType_list = toString(unique(RecordType)),
+      N_Records=n(),
+      # DatasetID_list = toString(unique(DatasetID)),
+      DataProvider_list = toString(unique(DataProvider)),
+      Repository_list = toString(unique(Repository)),
+
+      Vessel_list = toString(unique(Vessel)),
+      VehicleName_list = toString(unique(VehicleName)),
+      WebSite_list = toString(unique(WebSite)),
+      #ImageURL = toString(unique(ImageURL)),
+      PI_list = toString(unique(PI)),
+      PIAffiliation_list = toString(unique(PIAffiliation)),
+      Citation_list = toString(unique(Citation)),
+      DataContact_list = toString(unique(DataContact)),
+      Reporter_list = toString(unique(Reporter)),
+      SurveyID_list = toString(unique(SurveyID))
+    )
+
+View(x)
 
 ##### ***OPTIONAL*** Fixing DatasetID Problems (optional) #####
 # d <- d %>% mutate(DatasetID =
@@ -208,8 +217,9 @@ rm(y)
 ##### checking #####
 setdiff(d$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, d$DatasetID)
-
-##### merge d (primary subset) with key  #####
+##### before doing merge step, you will need to manually edit the key #####
+##### load the manually edited key #####
+##### merge database with key  #####
 d <- merge(d, key, all.x = TRUE)
 
 ##### check #####

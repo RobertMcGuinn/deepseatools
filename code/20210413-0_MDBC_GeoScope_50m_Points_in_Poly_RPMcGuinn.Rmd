@@ -1,0 +1,139 @@
+---
+title: "HAPC_GOMEX"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# packages 
+```{r packages, echo=F, warning=F, message=F}
+#install.packages(tidyverse)
+#install.packages('openxlsx')
+#install.packages('here')
+library(here)
+library(tidyverse)
+library(openxlsx)
+library(sf)
+library(rgdal)
+library(RColorBrewer)
+library(raster)
+library(marmap)
+library(leaflet)
+library(extrafont)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(maps)
+library(rgdal)
+library(raster)
+library(marmap)
+library(httr)
+library(jsonlite)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(openxlsx)
+library(rgeos)
+
+```
+
+# load NDB
+```{r, cache=T, message=F, warning=F}
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+rm(indata)
+
+```
+
+# subset the data (create 'sub')
+```{r}
+sub <- filt
+ 
+```
+
+# load geodata
+```{r}
+##### set project crs #####
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+##### load from data subset #####
+geosub <- st_as_sf(x = sub,                         
+           coords = c("Longitude", "Latitude"),
+           crs = projcrs)
+
+##### load from shapefile ##### 
+poly <- sf::st_read("C:/data/geoindata/MDBC_GeoScope_50m/MDBC_GeoScope_50m.shp")
+
+```
+
+# align all geo files to project level crs
+```{r}
+##### set project crs #####
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+## check projections ## 
+# crs(hapc_c9nr)
+# crs(hapc_c9r)
+# crs(geosub)
+# crs(hapc_ewor)
+
+##### get everything into the same projection #####
+# mpas <- st_transform(mpas, crs = proj4string(x_geo))
+# oculina <- st_transform(oculina, crs = proj4string(x_geo))
+# oculinaexp <- st_transform(oculinaexp, crs = proj4string(x_geo))
+# hapc <- st_transform(hapc, crs = proj4string(x_geo))
+
+```
+
+# spatial join
+```{r}
+##### spatial joins with points#####
+geosub_poly <- st_join(geosub, poly)
+
+## checking 
+# names(geosub)
+
+```
+
+# create selections from spatial joins
+```{r}
+##### getting CatalogNumbers for intersecting records #####
+geosub_poly_cats <- geosub_poly %>% filter(is.na(Id) == F) %>% pull(CatalogNumber)
+
+##### filtering those out of main database #####
+filt_select <- filt %>% filter(CatalogNumber %in% geosub_poly_cats)
+
+```
+
+# export to CSV
+
+```{r}
+setwd("C:/rworking/deepseatools/indata")
+filt_select %>%  
+write_csv("20210413-0_MDBC_GeoScope_50m_intersect_deepsea_coral_RPMcGuinn.csv")
+
+```
+
+# export to GIS
+```{r gis_export, eval=F}
+##### load packages #####
+library(arcgisbinding)
+arc.check_product()
+
+#### filter out data without coordinates
+x <- filt_select %>% filter(Latitude != -999 | Longitude != -999)
+x_geo <- x
+
+##### create spdf #####
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+```
+
