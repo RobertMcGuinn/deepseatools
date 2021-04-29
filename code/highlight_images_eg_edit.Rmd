@@ -1,0 +1,57 @@
+---
+title: "highlight_images_eg_edit"
+author: "Robert McGuinn"
+date: "4/29/2021"
+output: html_document
+---
+
+```{r}
+##### load packages #####
+library(tidyverse)
+library(knitr)
+library(flextable)
+library(sp)
+library(rgdal)
+library(maps)
+library(extrafont)
+library(googlesheets4)
+library(leaflet)
+library(RColorBrewer)
+library(sf)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+The following imagery is linked to the National Database and was selected by Elizabeth Gugliotti in 2019. It represents the best imagery holdings from the region. 
+
+See the following Google Drive location for all images: 
+
+https://drive.google.com/drive/folders/1LoSALOTqH3OZM6Aml8Hc_2E11fCDqcBH?usp=sharing #####
+
+# Query Google Drive location to get the file list
+```{r}
+
+```
+# Strip off the CatalogNumber prefixes
+# Export the list of CatalogNumbers
+# Post to RedMine (manual)
+```{r}
+
+```
+# Tips and Tricks
+# View single image from NDB in a default browser
+This code will allow you to browse to a single image within the National Database.  
+
+```{r}
+##### best images thing ##### 
+## see E. Gugliotti work https://drive.google.com/drive/folders/1LoSALOTqH3OZM6Aml8Hc_2E11fCDqcBH?usp=sharing #####
+filt %>% filter(CatalogNumber == '530910') %>% pull(ImageURL) %>% browseURL()
+
+```
+
+
+# Print image to this page 
