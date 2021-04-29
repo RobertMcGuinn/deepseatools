@@ -3,7 +3,6 @@
 # Date Started: 20201001
 # Purpose: clean scratch work space for October of 2020. No sense can be made.
 #   You should not try.
-
 ##### load packages #####
 library(tidyverse)
 library(knitr)
@@ -15,12 +14,14 @@ library(extrafont)
 library(googlesheets4)
 library(leaflet)
 library(RColorBrewer)
+library(sf)
 
 ##### load database #####
 setwd("C:/rworking/deepseatools/indata")
-indata <- read_csv("DSCRTP_NatDB_20200710-2.csv")
+indata <- read_csv("DSCRTP_NatDB_20210414-0.csv")
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
+
 ##### load an individual dataset #####
 setwd("C:/rworking/deepseatools/indata")
 ## x is defined in the runner script
@@ -109,5 +110,11 @@ sub %>% pull(DataProvider) %>% unique()
 filt %>% filter(grepl("Cordell", DataProvider)) %>% pull(DatasetID) %>% unique()
 sub %>% group_by(ImageFilePath, SampleID) %>% summarize(n=n()) %>% head() %>% View()
 
+
+
+
+##### best images thing #####
+## see E. Gugliotti work https://drive.google.com/drive/folders/1LoSALOTqH3OZM6Aml8Hc_2E11fCDqcBH?usp=sharing #####
+filt %>% filter(CatalogNumber == '530910') %>% pull(ImageURL) %>% browseURL()
 
 

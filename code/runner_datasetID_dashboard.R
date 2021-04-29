@@ -63,6 +63,8 @@ indata<-read.csv("DSCRTP_NatDB_20210414-0.csv", header = T) #DSCRTP_NatDB_201810
 filt <- indata %>%
   filter(Flag == "0")
 
+rm(indata)
+
 # #change all 'missing' values in factors to explicit NA's
 # filt <- filt %>% mutate_if(is.factor,
 #                       fct_explicit_na,
@@ -131,7 +133,7 @@ names(y)
 
 ## merge new numbers to create old key + new counts
 z <- merge(y,x)
-names(z)
+names(z)=
 
 ## write out result
 write.xlsx(z, "C:/rworking/deepseatools/indata/20210414-0_DatasetID_Key_DSCRTP.xlsx",

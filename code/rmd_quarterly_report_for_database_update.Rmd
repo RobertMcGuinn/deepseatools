@@ -5,6 +5,13 @@ date: 'Robert.McGuinn@NOAA.gov; 843-460-9696. Report last ran: `r Sys.Date()`'
 output: word_document
 ---
 
+```{r manual_set_variables, echo=FALSE}
+quarter <- 'Q2, FY-2021'
+version <- 'DSCRTP_NatDB_20210414-0'
+releasedate <- '2021-04-30'
+corrections <- 34352
+```
+
 ```{r packages, echo=F, warning=F, message=F}
 library(openxlsx)
 library(sp)
@@ -50,12 +57,13 @@ library(prettydoc)
 ```{r load_both_db, echo=FALSE, cache=T}
 ##### bring 
 setwd("C:/rworking/deepseatools/indata")
-indata1<-read.csv("DSCRTP_NatDB_20200710-2.csv", header = T)
+indata1<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T)
+
 filt1 <- indata1 %>%
   filter(Flag == "0")
-
 setwd("C:/rworking/deepseatools/indata")
-indata2<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T)
+
+indata2 <- read.csv("DSCRTP_NatDB_20210414-0.csv", header = T)
 filt <- indata2 %>%
   filter(Flag == "0")
  
@@ -73,20 +81,13 @@ x <- filt %>%
          #   DatasetID != 'NMNH_IZ'
          )
 
-# check
-a <- length(setdiff(unique(x$DatasetID), unique(filt1$DatasetID)))
+# calc number of of new datasets added this round 
+a <- length(setdiff(unique(filt$DatasetID), unique(filt1$DatasetID)))
 
 ```
 
-```{r manual_set_variables, echo=FALSE}
-quarter <- 'Q4, FY-2020'
-version <- 'DSCRTP_NatDB_20201002-0'
-releasedate <- '2020-11-03'
-corrections <- 14075
-```
 
 ```{r load_functions, warning = FALSE, message=FALSE, echo=FALSE}
-
 ##### Define Key Functions #####
 Trim <- function(x){
     gsub("^\\s+|\\s+$", "", x)
@@ -101,7 +102,7 @@ TrimAll <- function(x){
 # Quarterly update for: `r quarter`
 ## Database Version: `r version`
 
-The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(a), big.mark = ',')`** new datasets were added with a total of **`r prettyNum(length(x$CatalogNumber), big.mark = ',')`** new records representing **`r prettyNum(sum(x$IndividualCount[x$IndividualCount != "-999"]), big.mark = ',')`** individual occurrences of corals and sponges. There is now a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
+The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(a, big.mark = ',')`** new datasets were added with a total of **`r prettyNum(length(x$CatalogNumber), big.mark = ',')`** new records representing **`r prettyNum(sum(x$IndividualCount[x$IndividualCount != "-999"]), big.mark = ',')`** individual occurrences of corals and sponges. There is now a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
 
 Go here to view and download custom data subsets of your choosing:
 https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm
