@@ -22,18 +22,16 @@ library(RColorBrewer)
 
 ##### load NDB #####
 setwd("C:/rworking/deepseatools/indata")
-indata<-read_csv("DSCRTP_NatDB_20201021-0.csv", na = c("-999", "NA"))
+indata<-read_csv("DSCRTP_NatDB_20210414-0.csv", na = c("-999", "NA"))
 
-##### filter the NDB #####
+##### filter the NDB (look closely at how this is done) #####
 filt <- indata %>%
-  filter(Flag == "0") %>%
-  filter(AccessionID != 'NMNH_Smithsonian_update_Q2-2020_THourigan' |
-           CatalogNumber != '878942') %>%
-  filter(AccessionID != 'NMNH_Smithsonian_update_Q2-2020_THourigan' |
-           CatalogNumber != '878945')
-
-##### removing records that do not have AphiaID #####
-filt <- filt %>% filter(is.na(filt$AphiaID) == F)
+  filter(Flag == "0") %>% # filter out flagged records
+  filter(is.na(AphiaID) == F) # filter out missing AphiaID
+  # filter(AccessionID != 'NMNH_Smithsonian_update_Q2-2020_THourigan' |
+  #          CatalogNumber != '878942') %>%
+  # filter(AccessionID != 'NMNH_Smithsonian_update_Q2-2020_THourigan' |
+  #          CatalogNumber != '878945')
 
 ##### creating errdap_link field #####
 filt$references <- paste('https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatasetID%2CCatalogNumber%2CSampleID%2CCitation%2CRepository%2CScientificName%2CVernacularNameCategory%2CTaxonRank%2CIdentificationQualifier%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CObservationDate%2CSurveyID%2CStation%2CEventID%2CSamplingEquipment%2CLocationAccuracy%2CRecordType%2CDataProvider&CatalogNumber=',
@@ -44,8 +42,8 @@ filt$MinimumDepthInMeters <- ifelse(test = is.na(filt$MinimumDepthInMeters) == T
 filt$MaximumDepthInMeters <- ifelse(test = is.na(filt$MaximumDepthInMeters) == T, yes = filt$DepthInMeters, no = filt$MaximumDepthInMeters)
 
 ##### fix species issues #####
-filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932164', yes = "Narella", no = filt$ScientificName)
-filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932389', yes = "Narella", no = filt$ScientificName)
+# filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932164', yes = "Narella", no = filt$ScientificName)
+# filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932389', yes = "Narella", no = filt$ScientificName)
 
 ##### get rid of records with missing ObservationDate #####
 filt <- filt %>% filter(is.na(ObservationDate) == F)
@@ -98,7 +96,6 @@ obis <- obis %>%
   mutate(scientificNameID = paste("urn:lsid:marinespecies.org:taxname:", scientificNameID, sep = ""))
 
 ##### recode of DSC RecordType to 'basisOfRecord' # #####
-
 recode_list <- list('specimen' = 'PreservedSpecimen',
                  'literature' = 'HumanObservation',
                  'still image' = 'MachineObservation',
@@ -118,15 +115,14 @@ recode_list <- list('specimen' = 'PreservedSpecimen',
 obis$basisOfRecord <- recode(obis$basisOfRecord, !!!recode_list)
 
 ##### work on coordinateUncertaintyInMeters to take out non-numericals  #####
-
-obis$testUncert <- gsub("[^[:digit:]., ]", "", obis$coordinateUncertaintyInMeters)
+obis$coordinateUncertaintyInMeters <- gsub("[^[:digit:]., ]", "", obis$coordinateUncertaintyInMeters)
 
 ## check
 
-# obis %>% pull(testUncert) %>% table(useNA = 'always')
+obis %>% pull(coordinateUncertaintyInMeters) %>% table(useNA = 'always')
 
 ##### write out file for submission #####
-today <- '20210116-0'
+today <- '20210429-0'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
@@ -134,13 +130,14 @@ obis %>%
             row.names = FALSE)
 
 ##### checking #####
-# library(dplyr)
-#
-# x <- filt %>%
-#   group_by(CatalogNumber) %>%
-#   filter(n()>1)
-#
-# names(obis)
+library(dplyr)
+
+x <- filt %>%
+  group_by(CatalogNumber) %>%
+  filter(n()>1) %>%
+  View()
+
+names(obis)
 
 ##### DarwinCore crosswalk for other fields we might use later on #####
 # recordNumber = "TrackingID",

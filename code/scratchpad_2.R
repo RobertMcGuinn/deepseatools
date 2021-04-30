@@ -32,15 +32,12 @@ flagged <- sub %>%  filter(Flag == "1")
 
 ##### load schema #####
 ## download Google Sheet version of schema for use in R  documents
-
 ## Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
-
 ## checking
 s %>% filter(FieldName == 'RecordType') %>% pull(ValidValues)
 s %>% filter(FieldName == 'LocationComments') %>% pull(FieldDescription)
 s %>% filter(FieldName == 'IdentificationComments') %>% pull(FieldDescription)
-
 ##### checking some key filters #####
 filt %>% filter(grepl("Nautilus", Vessel)) %>% pull(SurveyID) %>% unique()
 filt %>% filter(grepl("Manta", Vessel)) %>% pull(SurveyID) %>% unique()
