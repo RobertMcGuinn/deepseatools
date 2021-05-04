@@ -22,7 +22,10 @@ library(RColorBrewer)
 
 ##### load NDB #####
 setwd("C:/rworking/deepseatools/indata")
-indata<-read_csv("DSCRTP_NatDB_20210414-0.csv", na = c("-999", "NA"))
+indata<-read_csv("DSCRTP_NatDB_20210414-0.csv",
+                 col_types = cols(.default = "c"),
+                 locale = locale(encoding = 'ISO-8859-1'),
+                 na = c("-999", "NA"))
 
 ##### filter the NDB (look closely at how this is done) #####
 filt <- indata %>%
