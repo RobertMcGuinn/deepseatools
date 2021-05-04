@@ -41,7 +41,7 @@ library(rgeos)
 # load NDB
 ```{r, cache=T, message=F, warning=F}
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T)
+indata<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T) # 
 filt <- indata %>%
   filter(Flag == "0")
 

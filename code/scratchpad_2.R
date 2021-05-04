@@ -22,6 +22,11 @@ indata <- read_csv("DSCRTP_NatDB_20210414-0.csv")
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
+setwd("C:/rworking/deepseatools/indata")
+indata <- read_csv("DSCRTP_NatDB_20201021-0.csv")
+filt <- indata %>%
+  filter(Flag == "0", is.na(Phylum) == F)
+
 ##### load an individual dataset #####
 setwd("C:/rworking/deepseatools/indata")
 ## x is defined in the runner script

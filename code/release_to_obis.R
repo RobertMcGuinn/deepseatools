@@ -109,7 +109,8 @@ recode_list <- list('specimen' = 'PreservedSpecimen',
                  'literature | specimen' = 'PreservedSpecimen',
                  'still image | video observation' = 'MachineObservation',
                  'still image | specimen' = 'PreservedSpecimen',
-                 'specimen | video observation' = 'PreservedSpecimen')
+                 'specimen | video observation' = 'PreservedSpecimen',
+                 'video observation | specimen' = 'MachineObservation')
 
 # use RecordType to type crosswalk to apply type valid values:
 obis$basisOfRecord <- recode(obis$basisOfRecord, !!!recode_list)
@@ -130,14 +131,49 @@ obis %>%
             row.names = FALSE)
 
 ##### checking #####
-library(dplyr)
+# library(dplyr)
+#
+# x <- filt %>%
+#   group_by(CatalogNumber) %>%
+#   filter(n()>1) %>%
+#   View()
+#
+# names(obis)
+#
+# x <- filt %>% pull(CatalogNumber) %>% length()
+# y <- obis %>% pull(occurrenceID) %>% length()
+# x-y
+#
+#
+# obis %>% pull(DatabaseVersion) %>% table(useNA = 'always')
+# obis %>% pull(datasetID) %>% table(useNA = 'always')
+# obis %>%
+#   filter(is.na(scientificName) == T) %>%
+#   pull(scientificName) %>%
+#   table(useNA = 'always')
+# obis %>% pull(individualCount) %>% table(useNA = 'always')
+# head(obis$individualCount)
+# plot(obis$individualCount)
+# filt %>%
+#   filter(IndividualCount == '21895') %>%
+#   pull(ScientificName)
+# obis %>%
+#   filter(is.na(scientificNameID) == F) %>%
+#   pull(scientificNameID) %>%
+#   table(useNA = 'always')
+# head(obis$scientificName)
+# head(obis$occurrenceID)
+# head(obis$eventDate)
+# head(obis$minimumDepthInMeters)
+# head(obis$maximumDepthInMeters)
+# table(obis$basisOfRecord)
+# obis %>%
+#   filter(is.na(associatedMedia) == T) %>%
+#   pull(associatedMedia) %>%
+#   table(useNA = 'always')
+# head(obis$references)
+# table(obis$occurrenceStatus)
 
-x <- filt %>%
-  group_by(CatalogNumber) %>%
-  filter(n()>1) %>%
-  View()
-
-names(obis)
 
 ##### DarwinCore crosswalk for other fields we might use later on #####
 # recordNumber = "TrackingID",
