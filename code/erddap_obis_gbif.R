@@ -2,78 +2,28 @@
 # Author: Robert McGuinn, rpm@alumni.duke.edu, robert.mcguinn@noaa.gov, 843-762-8640
 # Start date: 20170222
 
-##### installation/Loading of Packages ##### 
-#install.packages("beanplot")
-library(beanplot)
-#install.packages("stringr")
+##### installation/Loading of Packages #####
 library(stringr)
-#install.packages("knitr")
 library(knitr)
-#install.packages("tidyr")
 library(tidyr)
-#install.packages("maptools")
-library(maptools)
-#install.packages("maps")
-library(maps)
-#install.packages("reshape")
-#library(reshape)
-#install.packages("reshape2")
 library(reshape2)
-#install.packages("psych")
-library(psych)
-#install.packages("ggplot2")
-library(ggplot2)
-#install.packages("data.table")
-library(data.table)
-#install.packages("dplyr")
-library(dplyr)
-#install.packages("car")
-library(car)
-#install.packages("gdata")
-library(gdata)
-#install.packages("digest")
-library(digest)
-#install.packages("rgdal")
-library(rgdal)
-#install.packages("ggmap")
-library(ggmap)
-#install.packages("rerddap")
 library(rerddap)
 library(sp)
+library(sf)
 library(raster)
-# install.packages("rworldxtra")
-library(rworldxtra)
+# install.packages("robis")
 library(robis)
 library(leaflet)
+# install.packages("rgbif")
 library(rgbif)
 
-##### setting working directories to intake ##### 
+##### setting working directories to intake #####
 #setwd("C:/rworking/deep-sea-workbench/InData/IntakePipe")
 setwd("C:/rworking/digs/indata")
 
 ##### bringing in National Database from a local copy #####
 #from csv
 indata<-read.csv("DSCRTP_NatDB_20170215-0.csv", header = T)
-
-##### accessing National Database data via ERDDAP ##### 
-install.packages("digest")
-install.packages("data.table")
-install.packages("DBI")
-install.packages("assertthat")
-install.packages("Rcpp")
-install.packages("rerddap")
-install.packages("magrittr")
-install.packages("curl")
-
-library(magrittr)
-library(Rcpp)
-library(assertthat)
-library(DBI)
-library(devtools)
-library(data.table)
-library(digest)
-library(rerddap)
-library(curl)
 
 # list all datasets on server
 x <- head(ed_datasets('table', url = "https://ecowatch.ncddc.noaa.gov/erddap/"))
@@ -85,7 +35,7 @@ fix(x)
 # Get info on a datasetid, then get data given information learned
 info('deep_sea_corals', url = "https://ecowatch.ncddc.noaa.gov/erddap/")$variables
 
-x <- tabledap('deep_sea_corals', 
+x <- tabledap('deep_sea_corals',
               fields=c('latitude','longitude','ScientificName', "ImageURL"),
               url = "https://ecowatch.ncddc.noaa.gov/erddap/")
 
@@ -99,7 +49,7 @@ spec <- "Lophelia pertusa"
 
 #get data from OBIS
 obis <- occurrence(spec)
-obis <- obis %>% 
+obis <- obis %>%
   filter(grepl(spec, scientificName))#,collectionCode != "NOAA_DSC_RTP") #collectionCode != "NOAA_DSC_RTP
 obis <- obis[, c('scientificName', 'decimalLongitude', 'decimalLatitude', 'datasetName')]
 names(obis)[2:3] <- c('longitude', 'latitude')
@@ -107,9 +57,9 @@ View(obis)
 
 # get the occurrences from the national database
 #filter ndb
-ndb <- indata %>% 
+ndb <- indata %>%
   filter(grepl(spec, ScientificName), Flag == "0")
-ndb <- ndb %>% 
+ndb <- ndb %>%
   filter(grepl(spec, ScientificName))
 ndb <- ndb[, c('ScientificName', 'Longitude', 'Latitude', 'ImageURL')]
 names(ndb)[2:3] <- c('longitude','latitude')
@@ -120,7 +70,7 @@ View(ndb)
 key <- name_backbone(name=spec)$speciesKey
 dat <- occ_search(taxonKey=key, return='data')
 dat <- data.frame(dat)
-dat <- dat %>% 
+dat <- dat %>%
   filter(grepl(spec, name))#, ownerInstitutionCode != "DSC_RTP")
 gbif <- dat[, c('name', 'decimalLongitude', 'decimalLatitude', "ownerInstitutionCode")]
 names(gbif)[2:3] <- c('longitude', 'latitude')
@@ -129,24 +79,24 @@ View(gbif)
 ##### create an interactive map using leaflet #####
 m <- leaflet()
 m <- addProviderTiles(m, "CartoDB.DarkMatter") #Esri.OceanBasemap, "CartoDB.DarkMatter"
-m <- addCircleMarkers(m, data=obis, 
-                      radius=8, 
-                      weight=0, 
-                      fillColor= "green", 
+m <- addCircleMarkers(m, data=obis,
+                      radius=8,
+                      weight=0,
+                      fillColor= "green",
                       fillOpacity=1,
                       popup = obis$datasetName
 )
-m <- addCircleMarkers(m, data=ndb, 
-                      radius=6, 
-                      weight=0, 
-                      fillColor= "black", 
+m <- addCircleMarkers(m, data=ndb,
+                      radius=6,
+                      weight=0,
+                      fillColor= "black",
                       fillOpacity=1
                       #popup = zz$ScientificName
 )
-m <- addCircleMarkers(m, data=gbif, 
-                      radius=5, 
-                      weight=0, 
-                      fillColor= "red", 
+m <- addCircleMarkers(m, data=gbif,
+                      radius=5,
+                      weight=0,
+                      fillColor= "red",
                       fillOpacity=1,
                       popup = gbif$ownerInstitutionCode
 )
@@ -156,7 +106,7 @@ m
 
 
 ##### _____ Working with the Coastal Relief Model and ETOPO####
-##### setting bounding box coordinates ##### 
+##### setting bounding box coordinates #####
 minLon <- -87
 maxLon <- -83
 minLat <- 26
@@ -185,11 +135,11 @@ download.file(url.hi, fname.hi, mode="wb", cacheOK="false")
 
 crm <- raster(fname.hi)
 
-##### filtering the coral data to match elevation data extraction ##### 
-filt <- filter(indata, as.numeric(Latitude) > minLat, 
-               as.numeric(Latitude) < maxLat, 
+##### filtering the coral data to match elevation data extraction #####
+filt <- filter(indata, as.numeric(Latitude) > minLat,
+               as.numeric(Latitude) < maxLat,
                as.numeric(Longitude) < maxLon,
-               as.numeric(Longitude) > minLon,  
+               as.numeric(Longitude) > minLon,
                Flag == "0")
 #View(filt)
 coordinates(filt) <- c("Longitude","Latitude")
@@ -223,7 +173,7 @@ bplt <- spplot(etopo, col.regions=topo.colors(64),
                xlim = c(minLon, maxLon), ylim=c(minLat, maxLat),
                sp.layout=list(
                  # add contours:
-                 list("sp.lines", rasterToContour(etopo, 
+                 list("sp.lines", rasterToContour(etopo,
                                                   levels=c(-1000, -100, -50, 0, 1000))),
                  list("sp.polygons", countriesHigh, lwd=2, fill="grey"),
                  # add trawl locations coded by cruise & gear:
@@ -240,7 +190,7 @@ bplt <- spplot(crm, col.regions=NA, colorkey=FALSE,
                xlim = c(minLon, maxLon), ylim=c(minLat, maxLat),
                sp.layout=list(
                  # add contours:
-                 list("sp.lines", 
+                 list("sp.lines",
                       rasterToContour(crm, levels=c(-1000, -100, -50, 0, 1000))),
                  list("sp.polygons", countriesHigh, lwd=2, fill="grey"),
                  # add trawl locations coded by cruise & gear:

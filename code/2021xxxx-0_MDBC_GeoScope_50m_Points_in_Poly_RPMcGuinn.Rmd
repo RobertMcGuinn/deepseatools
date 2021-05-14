@@ -1,5 +1,5 @@
 ---
-title: "HAPC_GOMEX"
+title: "MDBC Export of National Database Version 20210414-0"
 output: html_document
 ---
 
@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # packages 
+
 ```{r packages, echo=F, warning=F, message=F}
 #install.packages(tidyverse)
 #install.packages('openxlsx')
@@ -39,9 +40,14 @@ library(rgeos)
 ```
 
 # load NDB
+
 ```{r, cache=T, message=F, warning=F}
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T) # 
+indata<-read_csv("DSCRTP_NatDB_20210414-0.csv",
+                 col_types = cols(.default = "c"),
+                 locale = locale(encoding = 'ISO-8859-1'),
+                 na = c("-999", "NA"))
+
 filt <- indata %>%
   filter(Flag == "0")
 
@@ -72,25 +78,6 @@ poly <- sf::st_read("C:/data/geoindata/MDBC_GeoScope_50m/MDBC_GeoScope_50m.shp")
 
 ```
 
-# align all geo files to project level crs
-
-```{r}
-##### set project crs #####
-projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-## check projections ## 
-# crs(hapc_c9nr)
-# crs(hapc_c9r)
-# crs(geosub)
-# crs(hapc_ewor)
-
-##### get everything into the same projection #####
-# mpas <- st_transform(mpas, crs = proj4string(x_geo))
-# oculina <- st_transform(oculina, crs = proj4string(x_geo))
-# oculinaexp <- st_transform(oculinaexp, crs = proj4string(x_geo))
-# hapc <- st_transform(hapc, crs = proj4string(x_geo))
-
-```
 
 # spatial join
 
@@ -119,7 +106,7 @@ filt_select <- filt %>% filter(CatalogNumber %in% geosub_poly_cats)
 ```{r}
 setwd("C:/rworking/deepseatools/indata")
 filt_select %>%  
-write_csv("20210413-0_MDBC_GeoScope_50m_intersect_deepsea_coral_RPMcGuinn.csv")
+write_csv("20210414-0_MDBC_GeoScope_50m_intersect_deepsea_coral_RPMcGuinn.csv")
 
 ```
 
@@ -140,6 +127,6 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 ##### create feature-class #####
 fgdb_path <- 'C:/rworking/sf/sf.gdb'
-arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE) 
 ```
 
