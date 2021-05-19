@@ -1,8 +1,8 @@
 ##### Header #####
-# Author: Robert P. McGuinn
-# Date Started: 20201001
-# Purpose: clean scratch work space for October of 2020. No sense can be made.
-#   You should not try.
+## Author: Robert P. McGuinn
+## Date Started: 20201001
+## Purpose: clean scratch work space for October of 2020. No sense can be made.
+##    You should not try.
 ##### load packages #####
 library(tidyverse)
 library(knitr)
@@ -16,16 +16,22 @@ library(leaflet)
 library(RColorBrewer)
 library(sf)
 
-##### load database #####
+##### load NDB #####
+## method using 'read_csv' setting all columns to charactr and using specific encoding
 setwd("C:/rworking/deepseatools/indata")
-indata <- read_csv("DSCRTP_NatDB_20210414-0.csv")
-filt <- indata %>%
-  filter(Flag == "0", is.na(Phylum) == F)
+indata<-read_csv("DSCRTP_NatDB_20210414-0.csv",
+                 col_types = cols(.default = "c"),
+                 locale = locale(encoding = 'ISO-8859-1'),
+                 na = c("-999", "NA"))
 
-setwd("C:/rworking/deepseatools/indata")
-indata <- read_csv("DSCRTP_NatDB_20201021-0.csv")
 filt <- indata %>%
-  filter(Flag == "0", is.na(Phylum) == F)
+  filter(Flag == "0")
+
+## clean
+rm(indata)
+
+##### checking #####
+str(filt)
 
 ##### load an individual dataset #####
 setwd("C:/rworking/deepseatools/indata")
