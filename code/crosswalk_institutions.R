@@ -15,6 +15,7 @@ library(RColorBrewer)
 library(sf)
 
 ##### build url to query to Google sheet (DOES NOT WORK) #####
+## see: https://webapps.stackexchange.com/questions/87729/dynamic-filter-view-by-uri-in-a-google-sheet
 ## need to work out oauth issues
 word <- "Frost"
 sheetid <- "1C1z3pMmMfWpxHH-nuRc9dv4r2WrAH-EWGzG4rSf_LYQ/edit#gid=1234896357"
@@ -22,7 +23,9 @@ sheetid <- "1C1z3pMmMfWpxHH-nuRc9dv4r2WrAH-EWGzG4rSf_LYQ/edit#gid=1234896357"
 paste("https://docs.google.com/spreadsheets/d/",
              sheetid,"/gviz/tq?tq=SELECT%20*%20where%20B%20contains%20%22",
              word,"%22", sep = '') %>% browseURL()
-# example: https://docs.google.com/spreadsheets/d/1yapaaaFn0mtJF0CMiIil4Y1uYCqS97jIWL4iBZMPAKo/gviz/tq?tq=SELECT%20*%20where%20B%20contains%20%22ettoday%22
+
+
+## example: https://docs.google.com/spreadsheets/d/1yapaaaFn0mtJF0CMiIil4Y1uYCqS97jIWL4iBZMPAKo/gviz/tq?tq=SELECT%20*%20where%20B%20contains%20%22ettoday%22
 
 ##### merging with names #####
 master <- read.csv("./indata/institutional_crosswalk_master_names.csv", header = T)
