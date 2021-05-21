@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ##### installation/Loading of Packages #####
 library(stringr)
 library(knitr)
-library(tidyr)
+library(tidyverse)
 library(reshape2)
 library(rerddap)
 library(sp)
@@ -31,6 +31,41 @@ library(rgbif)
 # load data
 
 ```{r}
+##### load NDB ##### 
+indata<- read_csv("indata/DSCRTP_NatDB_20210414-0.csv",
+                 col_types = cols(.default = "c"),
+                 locale = locale(encoding = 'ISO-8859-1'),
+                 na = c("-999", "NA"))
+
+filt <- indata %>%
+  filter(Flag == "0")
+
+## check
+# str(filt)
+
+## clean
+rm(indata)
+
+##### load AUV data #####
+## also at Google Drive: 
+auv <- read_csv("./indata/20200903-0_NWFSC_AUV_d20170820_2_example_CWaters.csv",
+                 col_types = cols(.default = "c"),
+                 locale = locale(encoding = 'ISO-8859-1'),
+                 na = c("-999", "NA"))
+
+##### load ROV data from Access file ##### 
+rov <- 
+
+##### Load OceanAdapt data #####
+oa <- read_csv("./indata/20210414_all-regions-trimmed.csv_MKarp/data_clean/all-regions-trimmed.csv",
+                 col_types = cols(.default = "c"),
+                 locale = locale(encoding = 'ISO-8859-1'),
+                 na = c("-999", "NA"))
+
+
+
+
+
 
 
 ```
