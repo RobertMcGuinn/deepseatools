@@ -15,6 +15,7 @@ library(googlesheets4)
 library(leaflet)
 library(RColorBrewer)
 library(sf)
+library(openxlsx)
 
 ##### load NDB #####
 ## method using 'read_csv' setting all columns to charactr and using specific encoding
@@ -124,5 +125,12 @@ sub %>% group_by(ImageFilePath, SampleID) %>% summarize(n=n()) %>% head() %>% Vi
 ##### best images thing #####
 ## see E. Gugliotti work https://drive.google.com/drive/folders/1LoSALOTqH3OZM6Aml8Hc_2E11fCDqcBH?usp=sharing #####
 filt %>% filter(CatalogNumber == '530910') %>% pull(ImageURL) %>% browseURL()
+##### NMNH dup export for Tom Hourigan #####
+sub <- filt %>%
+  filter(DatasetID == "NMNH_IZ") %>%
+  group_by(SampleID) %>%
+  filter(n()>1) %>%
+  arrange(SampleID)
 
-
+View(sub)
+write.xlsx(sub, "20210521-0_NMNH_duplicates_RPMcGuinn.xlsx")

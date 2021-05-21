@@ -56,11 +56,16 @@ auv <- read_csv("./indata/20200903-0_NWFSC_AUV_d20170820_2_example_CWaters.csv",
 ##### load ROV data from Access file ##### 
 rov <- 
 
-##### Load OceanAdapt data #####
+##### load OceanAdapt data #####
 oa <- read_csv("./indata/20210414_all-regions-trimmed.csv_MKarp/data_clean/all-regions-trimmed.csv",
                  col_types = cols(.default = "c"),
                  locale = locale(encoding = 'ISO-8859-1'),
                  na = c("-999", "NA"))
+
+## check names oa
+names(oa)
+str(oa)
+
 
 
 
