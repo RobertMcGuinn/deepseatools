@@ -24,6 +24,45 @@ paste("https://docs.google.com/spreadsheets/d/",
              sheetid,"/gviz/tq?tq=SELECT%20*%20where%20B%20contains%20%22",
              word,"%22", sep = '') %>% browseURL()
 
+# /copy
+# /export
+# /edit
+# /preview
+# /create
+# /pub?
+#   /fm?id=
+#   /tq?tqx=out:html
+# &key=[ID]
+# &gid=[#]
+#   &single=[true|false]
+#   &range=[CellAddress|CellAddress1:CellAddress2]
+#   &embedded=[true|false]
+#   &widget=[true|false]
+#   &output=[html|txt|csv|pdf]
+#   &gridlines=[false]
+#   &rm=[minimal|embedded|full|demo|?]
+#   &ui=2 (interface version)
+#   &chrome=[false] (full screen mode)
+#   &width=[width]
+#   &height=[height]
+#   &frameborder=[size of border]
+#   &q=[Search Query]
+#   &viewer?
+#     &start=
+#     &channel=
+#     &ibd=
+#     &client=
+#     &fmcmd=12
+#   &size=0
+#   &fzr=[true]
+#   &portrait=[false]
+#   &fitw=[true]
+#   &printtitle=[true]
+#   &sheetnames=[true]
+#   &pagenum=[CENTER]
+#   &attachment=[true]
+#   &alt=[rss]
+#   &tq=[query params here]
 
 ## example: https://docs.google.com/spreadsheets/d/1yapaaaFn0mtJF0CMiIil4Y1uYCqS97jIWL4iBZMPAKo/gviz/tq?tq=SELECT%20*%20where%20B%20contains%20%22ettoday%22
 
