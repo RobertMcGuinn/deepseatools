@@ -167,7 +167,7 @@ x <- x %>% filter(Latitude != -999 | Longitude != -999)
 # make copy to turn into spatial points data frame.
 x_geo <- x
 
-##create spatial points data from x #####
+##create spatial points data from x
 coordinates(x_geo) <- c("Longitude", "Latitude")
 proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 

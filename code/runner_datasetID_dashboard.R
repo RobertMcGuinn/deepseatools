@@ -48,7 +48,6 @@ library(devtools)
 library(httr)
 library(jsonlite)
 
-
 ##### set an option #####
 options(lifecycle_disable_warnings = TRUE)
 

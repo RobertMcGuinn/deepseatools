@@ -7,9 +7,13 @@ editor_options:
   chunk_output_type: console
 ---
 
+# setup
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# load packages
 
 ```{r}
 ##### installation/Loading of Packages #####
@@ -31,6 +35,14 @@ library(rgbif)
 # load data
 
 ```{r}
+##### load NDB Schema #####
+## download Google Sheet version of schema for use in R  documents
+## Register and download Google Sheet using googlesheets4::read_sheet
+s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+## checking
+s %>% filter(FieldName == 'RecordType') %>% pull(ValidValues)
+s %>% filter(FieldName == 'LocationComments') %>% pull(FieldDescription)
+s %>% filter(FieldName == 'IdentificationComments') %>% pull(FieldDescription)
 ##### load NDB ##### 
 indata<- read_csv("indata/DSCRTP_NatDB_20210414-0.csv",
                  col_types = cols(.default = "c"),
@@ -46,33 +58,250 @@ filt <- indata %>%
 ## clean
 rm(indata)
 
-##### load AUV data #####
-## also at Google Drive: 
-auv <- read_csv("./indata/20200903-0_NWFSC_AUV_d20170820_2_example_CWaters.csv",
-                 col_types = cols(.default = "c"),
-                 locale = locale(encoding = 'ISO-8859-1'),
-                 na = c("-999", "NA"))
-
-##### load ROV data from Access file ##### 
-rov <- 
-
 ##### load OceanAdapt data #####
+## Google Drive Location:  
 oa <- read_csv("./indata/20210414_all-regions-trimmed.csv_MKarp/data_clean/all-regions-trimmed.csv",
                  col_types = cols(.default = "c"),
                  locale = locale(encoding = 'ISO-8859-1'),
                  na = c("-999", "NA"))
 
-## check names oa
-names(oa)
-str(oa)
+##### load AUV data #####
+## Google Drive:
+auv <- read_csv("./indata/20200903-0_NWFSC_AUV_d20170820_2_example_CWaters.csv",
+                 col_types = cols(.default = "c"),
+                 locale = locale(encoding = 'ISO-8859-1'),
+                 na = c("-999", "NA"))
 
+##### load SWFSC ROV data from Access file ##### 
+## Google Drive Location 
+## MANUAL STEP: export table directly from Access to Excel, save as CSV (comma delimited)
+## load saved file to R as data frame
 
+mydir = "./indata/swfsc"
+myfiles = list.files(path=mydir, pattern="*.csv", full.names=FALSE)
+myfiles
 
+habitat_lookup_table <- read_csv(paste("./indata/swfsc/", myfiles[1], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+names_color <- read_csv(paste("./indata/swfsc/", myfiles[2], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+names_fishcodes <- read_csv(paste("./indata/swfsc/", myfiles[3], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+names_invertcodes <- read_csv(paste("./indata/swfsc/", myfiles[4], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+names_locations <- read_csv(paste("./indata/swfsc/", myfiles[5], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+names_purpose <- read_csv(paste("./indata/swfsc/", myfiles[6], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+names_sites <- read_csv(paste("./indata/swfsc/", myfiles[7], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+tbl_CTD <- read_csv(paste("./indata/swfsc/", myfiles[8], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+tbl_DIVE <- read_csv(paste("./indata/swfsc/", myfiles[9], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+tbl_divetxs_2012 <- read_csv(paste("./indata/swfsc/", myfiles[10], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+tbl_FISH <- read_csv(paste("./indata/swfsc/", myfiles[11], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+tbl_HABITAT <- read_csv(paste("./indata/swfsc/", myfiles[12], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+tbl_LARGE_INVERTEBRATES <- read_csv(paste("./indata/swfsc/", myfiles[13], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+tbl_NAV <- read_csv(paste("./indata/swfsc/", myfiles[14], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+tbl_TRANSECT <- read_csv(paste("./indata/swfsc/", myfiles[15], sep = ""),
+         col_types = cols(.default = "c"),
+         locale = locale(encoding = 'ISO-8859-1'),
+         na = c("-999", "NA"))
+```
 
+# check variables
 
+```{r}
+##### checking AUV data from NWFSC ##### 
+x <- auv
+str(x)
+names(x)
+table(x$ScientificName)
+table(x$SurveyID)
+filt %>% filter(grepl("Nautilus", Vessel), ObservationYear == '2017') %>% 
+  group_by(SurveyID, EventID, ObservationYear) %>% 
+  summarize(n=n())
 
+## Potential DSCRTP Fields: Already matched.         
+## Notes: In ScientificName we have 'VernacularName' in many cases.
+##  Mismatched SurveyID "NA086-California" vs. "NA086"
+##  Has "Density" values populated which is very good! 
 
+x <- habitat_lookup_table
+str(x)
+names(x)
+table(x$bottom_type)
+table(x$description)
+
+## DSCRTP Variables: [Habitat, Substrate, CMECSGeoForm, CMECSSubstrate, CMECSBiotic]
+## Notes: Most likely 'Habitat' is the best match. We prefer the information to be 
+##  long form rather than abbreviated form, like what hs.  Habitat methods will typically be
+##  study specific.
+
+x <- names_color
+str(x)
+names(x)
+table(x$Color)
+
+## DSCRTP Variables: [OccurrenceComments, IdentificationComments, VernacularName, Morphospecies, VerbatimScientificName]
+## Notes: Currently not sure where this ends up
+
+x <- names_fishcodes
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables: [Scientific_Name:ScientificName, Common_Name:VernacularName, Family:Family]
+## 
+
+x <- names_invertcodes
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables: 
+## 
+
+x <- names_locations
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
+
+x <- names_purpose
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
+
+x <- names_sites
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables: [Locality]
+## 
+
+x <- tbl_CTD
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
+
+x <- tbl_DIVE
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
+
+x <- tbl_divetxs_2012
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
+
+x <- tbl_FISH
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
+
+x <- tbl_HABITAT
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
+
+x <- tbl_LARGE_INVERTEBRATES
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
+
+x <- tbl_LARGE_INVERTEBRATES
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
+
+x <- tbl_NAV
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
+
+x <- tbl_TRANSECT
+str(x)
+names(x)
+table(x)
+
+## DSCRTP Variables:
+## 
 
 ```
+
+
+
+
+
+
+
+
+
+
 
 
