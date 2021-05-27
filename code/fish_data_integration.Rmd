@@ -30,6 +30,7 @@ library(robis)
 library(leaflet)
 # install.packages("rgbif")
 library(rgbif)
+library(googlesheets4)
 ```
 
 # load data
