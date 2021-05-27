@@ -134,3 +134,45 @@ sub <- filt %>%
 
 View(sub)
 write.xlsx(sub, "20210521-0_NMNH_duplicates_RPMcGuinn.xlsx")
+
+##### Dave_Packer_2014 #####
+## 2014_NECSI_P3_GulfofMaine_ROV_Connecticut_Packer
+filt %>% filter(grepl('Connecticut', Vessel)) %>%
+  group_by(Vessel, SurveyID, PI, ObservationYear, Reporter, AccessionID) %>%
+  summarize(n=n()) %>% View()
+
+##### Query for Rachel Bassett #####
+x <- filt %>% filter(
+                Phylum == "Porifera",
+                as.numeric(DepthInMeters) >= 50,
+                as.numeric(DepthInMeters) <= 6500,
+                ObservationDate >= 2000,
+                ObservationDate <= 2021,
+                LargeMarineEcosystem == "Gulf of Mexico"
+                )
+
+
+
+##### export to GIS #####
+## load packages
+library(arcgisbinding)
+arc.check_product()
+
+## make sure lat and log are numeric
+x$Latitude <- as.numeric(x$Latitude)
+x$Longitude <- as.numeric(x$Longitude)
+
+## get rid of any missing Latitudes or Longitudes
+x <- x %>% filter(Latitude != -999 | Longitude != -999)
+# make copy to turn into spatial points data frame.
+x_geo <- x
+
+##create spatial points data from x #####
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+## create feature-class
+
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+
