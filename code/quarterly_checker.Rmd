@@ -1,7 +1,7 @@
 ---
-title: "Get XLS from Google Drive"
+title: "Quarterly Checker"
 author: "Robert McGuinn"
-date: "12/10/2020"
+date: "2021-06-11"
 output: html_document
 ---
 
@@ -15,6 +15,13 @@ knitr::opts_chunk$set(echo = TRUE)
 library(googledrive)
 library(openxlsx)
 library(usethis)
+library(tidyverse)
+library(sf)
+library(sp)
+library(rgdal)
+library(arcgisbinding)
+arc.check_product()
+
 ```
 
 # get XLS file from Google Drive
@@ -49,4 +56,27 @@ sub <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
 
 ```
 
+# gis export
+
+```{r}
+##### create x from sub #####
+x <- sub
+
+##### filter data #####
+
+# get rid of any missing Latitudes or Longitudes
+x <- x %>% filter(Latitude != -999 | Longitude != -999)
+# make copy to turn into spatial points data frame.
+x_geo <- x
+
+##### create spatial points data fram #####
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+
+```
 

@@ -78,7 +78,7 @@ drive_upload(paste(filename,".PDF", sep=''),
              overwrite = T)
 
 
-##### ##export to GIS## #####
+##### export to GIS #####
 ##### load packages #####
 library(tidyverse)
 library(rgdal)
