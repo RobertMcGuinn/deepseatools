@@ -172,7 +172,116 @@ coordinates(x_geo) <- c("Longitude", "Latitude")
 proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 ## create feature-class
-
 fgdb_path <- 'C:/rworking/sf/sf.gdb'
 arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+
+##### Chris Rooper Data #####
+filt %>% filter(ObservationYear == "2013") %>%
+  group_by(DatasetID, SurveyID, ObservationYear, PI, Reporter) %>%
+  summarize(n=n()) %>% View()
+
+filt %>% filter(grepl("1507", SurveyID)) %>%
+  group_by(DatasetID, SurveyID, ObservationYear, PI, Reporter) %>%
+  summarize(n=n()) %>% View()
+
+filt %>% filter(grepl("HAPC_", EventID)) %>%
+  group_by(DatasetID, SurveyID, ObservationYear, PI, Reporter) %>%
+  summarize(n=n()) %>% View()
+
+filt %>% filter(grepl("Goddard", IdentifiedBy) |
+                  grepl("Wilborn", IdentifiedBy) |
+                  grepl("Rooper", IdentifiedBy) |
+                  grepl("Goddard", Reporter) |
+                  grepl("Wilborn", Reporter) |
+                  grepl("Rooper", Reporter) |
+                  grepl("Stone", PI) |
+                  grepl("Rooper", PI)) %>%
+  group_by(DatasetID, SurveyID, ObservationYear, PI, Reporter, IdentifiedBy) %>%
+  summarize(n=n()) %>% View()
+
+
+##### arvind #####
+s1 <- 1
+s2a <- 1
+s2b <- 1
+s2c <- 1
+s3 <- 1
+s4 <- 1
+s5 <- 1
+s6 <- 1
+
+predictlist <- c(s1, s2a, s2b, s2c, s3, s4, s5, s6)
+predictlist_with_list <- list(s1, s2a, s2b, s2c, s3, s4, s5, s6)
+class(predictlist)
+
+for (i in 1:length(predictlist)){
+
+  sd_list <- raster::calc(clusterstacklist[[i]], sd) #stand deviation compuatation
+
+  SEM_list <- sd_list[[i]]/sqrt(nlayers(clusterstacklist[[i]])) #Standard error of the mean computation
+
+  SEMplus <- overlay(predictlist[[i]], SEM_list[[i]], fun=sum) #plus SEM
+
+  SEMminus <- overlay(predictlist[[i]], SEM_list[[i]], fun=function(r1,r2){return(r1-r2)}) #minus SEM
+
+}
+
+
+primes_list <- list(2, 3, 5, 7, 11, 13)
+class(primes_list)
+
+# loop version 2
+for (i in 1:length(primes_list)) {
+  print(primes_list[[i]])
+}
+
+
+# loop version 1
+for (p in primes_list) {
+  print(p)
+}
+
+
+##### 2 #####
+###Stack SDMs from clusters###
+
+st1 <- subset(rs1, c(39, 15, 17, 26,5, 3))
+st2a <- subset(rs1, c(35, 8, 25, 9, 20, 7, 32, 28, 33, 11, 37, 19, 21))
+st2b <- subset(rs1, c(23,12,1))
+st2c <- subset(rs1, c(29,2,34,22))
+st3 <- subset(rs1, c(13,10))
+st4 <- subset(rs1, c(38,6,18))
+st5 <- subset(rs1, c(16,4,31,30,27))
+st6 <- subset(rs1, c(36,14,24))
+
+
+#create list of cluster stacks
+clusterstacklist <- c(st1, st2a, st2b, st2c, st3, st4, st5, st6)
+
+##Average over probabilities in Stacked SDMs
+
+s1 <- mean(subset(rs1, c(39, 15, 17, 26,5, 3)))
+s2a <- mean(subset(rs1, c(35, 8, 25, 9, 20, 7, 32, 28, 33, 11, 37, 19, 21)))
+s2b <- mean(subset(rs1, c(23,12,1)))
+s2c <- mean(subset(rs1, c(29,2,34,22)))
+s3 <- mean(subset(rs1, c(13,10)))
+s4 <- mean(subset(rs1, c(38,6,18)))
+s5 <- mean(subset(rs1, c(16,4,31,30,27)))
+s6 <- mean(subset(rs1, c(36,14,24)))
+
+#create list of
+
+predictlist <- c(s1, s2a, s2b, s2c, s3, s4, s5, s6)
+
+for (i in 1:length(predictlist)){
+
+  sd_list <- raster::calc(clusterstacklist[[1]], sd) #stand deviation compuatation
+
+  SEM_list <- sd_list[[i]]/sqrt(nlayers(clusterstacklist[[i]])) #Standard error of the mean computation
+
+  SEMplus <- overlay(predictlist[[i]], SEM_list[[i]], fun=sum) #plus SEM
+
+  SEMminus <- overlay(predictlist[[i]], SEM_list[[i]], fun=function(r1,r2){return(r1-r2)}) #minus SEM
+
+}
 

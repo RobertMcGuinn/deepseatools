@@ -58,11 +58,15 @@ filt_old <- indata_old %>%
   filter(Flag == "0")
 
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("DSCRTP_NatDB_20210414-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
+indata2<-read.csv("DSCRTP_NatDB_20210414-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
 filt <- indata %>%
   filter(Flag == "0")
 
 rm(indata)
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("deep_sea_corals_bb13_e594_5c3c.csv", header = T)
+
+
 
 # #change all 'missing' values in factors to explicit NA's
 # filt <- filt %>% mutate_if(is.factor,

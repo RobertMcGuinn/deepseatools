@@ -315,7 +315,35 @@ names(oa)
 
 
 
-# map stuff
+
+# export OA data to GIS for mapping
+```{r}
+##### export to GIS #####
+## load packages
+library(arcgisbinding)
+arc.check_product()
+
+## subset
+oa_samp <- sample_n(oa, 6000)
+
+## make sure lat and log are numeric
+oa_samp$lat <- as.numeric(oa_samp$lat)
+oa_samp$lon <- as.numeric(oa_samp$lon)
+
+## get rid of any missing Latitudes or Longitudes
+oa_samp <- oa_samp %>% filter(lat != -999 | lon != -999)
+# make copy to turn into spatial points data frame.
+oa_samp_geo <- oa_samp
+
+##create spatial points data from x
+coordinates(oa_samp_geo) <- c("lon", "lat")
+proj4string(oa_samp_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+## create feature-class
+
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+```
 # create crosswalk
 # pull data from tables into DSCRTP
 # write example dataset
