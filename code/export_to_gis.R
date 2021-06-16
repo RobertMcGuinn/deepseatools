@@ -19,7 +19,15 @@ x <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
 ##### __OR__ create x from sub #####
 
-# x <- sub
+x <- sub
+
+
+##### modify Lats/Longs in some way #####
+
+x <- x %>%  mutate(Latitude = Latitude-1.169330553,
+            Longitude = Longitude+2.110869447
+
+)
 
 ##### filter data #####
 
