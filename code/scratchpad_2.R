@@ -244,7 +244,6 @@ for (p in primes_list) {
 
 ##### 2 #####
 ###Stack SDMs from clusters###
-
 st1 <- subset(rs1, c(39, 15, 17, 26,5, 3))
 st2a <- subset(rs1, c(35, 8, 25, 9, 20, 7, 32, 28, 33, 11, 37, 19, 21))
 st2b <- subset(rs1, c(23,12,1))
