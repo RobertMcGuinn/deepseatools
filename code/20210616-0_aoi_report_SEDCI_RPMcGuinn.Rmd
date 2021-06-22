@@ -30,6 +30,8 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(openxlsx)
 library(rgeos)
+library(arcgisbinding)
+arc.check_product()
 
 ```
 
@@ -133,6 +135,31 @@ x$sedci2 <- factor(x$sedci2, levels = c('Post SEDCI', 'Pre SEDCI'))
 x <- x %>% filter(is.na(Phylum) == F)
 
 ```
+
+
+```{r export_to_gis}
+
+
+##### filter data #####
+
+# get rid of any missing Latitudes or Longitudes
+x <- x %>% filter(Latitude != -999 | Longitude != -999)
+# make copy to turn into spatial points data frame.
+x_geo <- x
+
+##### create spatial points data fram #####
+
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+
+```
+
+
 
 ```{r bbox_from_query, echo=F, warning=F, message=F, eval=T}
 ## set bounding box variables with query results.
