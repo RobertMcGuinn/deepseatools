@@ -141,17 +141,39 @@ hapc_ewr <- st_transform(hapc_ewr, crs = projcrs)
 
 ```
 
-# write all shapefiles to folder
+# write all shapefiles to folder (does not need to run every time)
+
 ```{r}
 
-fgdb_path <- 'C:/rworking/sf/sf.gdb'
-arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+fgdb_path <- 'C:/data/aprx/protected_layers_2021/protected_layers_2021.gdb'
+
+## caribbean
+arc.write(file.path(fgdb_path, 'grammanik'), data=grammanik, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'hind'), data=hind, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'mutton'), data=mutton, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'redhind'), data=redhind, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'navassa'), data=navassa, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'bajodesico'), data=bajodesico, overwrite = TRUE)
+
+## southeast
+arc.write(file.path(fgdb_path, 'stetson_miami'), data=stetson_miami, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'oculinabankoeca'), data=oculinabankoeca, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'mpaIMS'), data=mpaIMS, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'oculinabankold'), data=oculinabankold, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'oculinabank'), data=oculinabank, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'pourtales_minus_crab'), data=pourtales_minus_crab, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'capefear'), data=capefear, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'capelookout'), data=capelookout, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'capelookout_dissolve'), data=capelookout_dissolve, overwrite = TRUE)
+
+## hapc (GOMEX)
+arc.write(file.path(fgdb_path, 'hapc_c9nr'), data=hapc_c9nr, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'hapc_c9r'), data=hapc_c9r, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'hapc_ewor'), data=hapc_ewor, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'hapc_ewr'), data=hapc_ewr, overwrite = TRUE)
 
 
 ```
-
-
-
 
 # do all interesections
 
@@ -281,6 +303,25 @@ sub$sedci <-
 #table(sub$sedci, useNA = 'always')
 ```
 
+# write points to geodatabase  
+
+```{r}
+
+sub2 <- sub %>% dplyr::select(Longitude, Latitude, sedci, ScientificName)
+
+fgdb_path <- 'C:/data/aprx/protected_layers_2021/protected_layers_2021.gdb'
+
+##  set project crs
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+geosub <- st_as_sf(x = sub2,                         
+           coords = c("Longitude", "Latitude"),
+           crs = projcrs)
+
+arc.write(file.path(fgdb_path, 'geosub'), data=geosub, overwrite = TRUE)
+
+```
+
 # summary stats for SEDCI final report
 
 ```{r}
@@ -294,6 +335,10 @@ table(x$sedci, useNA = 'always')
 table(sub$sedci, useNA = 'always')
 
 ```
+
+
+
+
 # Expedition Details
 
 ``` {r exped_details, echo=FALSE}
