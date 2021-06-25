@@ -6,6 +6,8 @@ output:
   word_document:
      reference_docx: template.docx
 always_allow_html: yes
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r load_packs, echo=F, message=FALSE, warning=F}
@@ -95,5 +97,16 @@ length(sub2)
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 ## checking 
 # s %>% filter(FieldName == 'VernacularNameCategory') %>% pull(ValidValues)
+```
+
+
+# producing a diff of list of names (current vs. archived)  
+
+```{r}
+s_names <- s %>% pull(FieldName) 
+early_names <- sub %>% names()
+current_names <- sub2 %>% names()
+setdiff(current_names, early_names)
+setdiff(early_names, current_names)
 ```
 
