@@ -83,7 +83,7 @@ y <- x$id
 ## download the zip file
 dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
 ## extract just the file of interest from the zip file
-filename <- substr(filename,1,nchar(filename)-4)
+filename <- substr(filename,1,nchar(filename)-4) # getting rid of "_CSV"
 sub2 <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
 # flagged <- sub %>%  filter(Flag == "1")
 length(sub2)
