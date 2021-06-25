@@ -1,0 +1,99 @@
+---
+title: "Report on Archive Update"
+author: "NOAA-NFMS-OHC-DSCRTP: Robert.McGuinn@NOAA.gov; 843-460-9696"
+date: "Date of report: `r Sys.Date()`"
+output: 
+  word_document:
+     reference_docx: template.docx
+always_allow_html: yes
+---
+
+```{r load_packs, echo=F, message=FALSE, warning=F}
+library(rmarkdown)
+library(xfun)
+library(tidyverse)
+library(knitr)
+library(flextable)
+library(sp)
+library(rgdal)
+library(maps)
+library(extrafont)
+library(googlesheets4)
+library(googledrive)
+library(leaflet)
+library(RColorBrewer)
+library(marmap)
+
+#font_import()
+# library(marmap)
+# library(googlesheets)
+# library(googledrive)
+# library(openxlsx)
+# library(scales)
+# library(extrafont)
+# library(RColorBrewer)
+# library(rgdal)
+# library(sp)
+# library(marmap)
+# library(worrms)
+# library(worms)
+```
+
+```{r setup, include=FALSE}
+opts_chunk$set(fig.width=7, 
+               fig.height=3.5, 
+               dpi = 300, 
+               fig.align = 'left',
+               message=FALSE, 
+               warning=FALSE)
+```
+
+# load first archived NDB from Google Drive 
+
+```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE}
+## set the file name (user supplied th file name root, without extension). You can
+## do this action from the runner too.
+filename <- "DSCRTP_NatDB_20171214-0"
+# filename <- '20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018'
+# find the file in google drive by name
+x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
+## getting the id as a character string
+y <- x$id
+## download the zip file
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
+## extract just the file of interest from the zip file
+sub <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
+# flagged <- sub %>%  filter(Flag == "1")
+
+```
+
+# load current NDB from Google Drive 
+
+```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE}
+## set the file name (user supplied th file name root, without extension). You can
+## do this action from the runner too.
+filename <- "DSCRTP_NatDB_20210414-0_CSV"
+# filename <- '20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018'
+# find the file in google drive by name
+x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
+## getting the id as a character string
+y <- x$id
+## download the zip file
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
+## extract just the file of interest from the zip file
+filename <- substr(filename,1,nchar(filename)-4)
+sub2 <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
+# flagged <- sub %>%  filter(Flag == "1")
+length(sub2)
+```
+
+# load schema
+
+``` {r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
+##### download Google Sheet version of schema for use in R  documents ##### 
+# Register and download Google Sheet using googlesheets4::read_sheet
+s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+## checking 
+# s %>% filter(FieldName == 'VernacularNameCategory') %>% pull(ValidValues)
+```
+
