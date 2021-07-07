@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # load packages 
 
 ```{r}
+library(openxlsx)
 library(tidyverse)
 library(rgdal)
 library(arcgisbinding)
@@ -21,12 +22,11 @@ arc.check_product()
 
 ```
 
-
 # load data from xlsx sheets
 
 ```{r}
 
-path <- "../indata/20210701-0_GOM 2014 national database for DSCRTP, revised Dives 2-11_DPacker.xlsx"
+path <- "indata/20210707-0_GOM 2014 national database for DSCRTP, revised Dives 2-15_DPacker.xlsx"
 
 dive2 <- read.xlsx(path, 
                 sheet = 5, 
@@ -176,17 +176,81 @@ header <- c(
 
 names(dive11) <- header
 
+## 
+
+dive12 <- read.xlsx(path, 
+                sheet = 15, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive12) <- header
+
+## 
+
+dive13 <- read.xlsx(path, 
+                sheet = 16, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive13) <- header
+
+## 
+
+dive14 <- read.xlsx(path, 
+                sheet = 17, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive14) <- header
+
+
+## 
+
+dive15 <- read.xlsx(path, 
+                sheet = 18, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive15) <- header
+
+
 ```
 
 # rbind all of the sheets together 
 
 ```{r}
-sub <- do.call("rbind", list(dive2, dive3, dive4, dive5, dive6, dive7, dive8, dive9, dive10, dive11))
+sub <- do.call("rbind", list(
+  #dive2, dive3, dive4, dive5, dive6, dive7, dive8, dive9, dive10, dive11, 
+  dive12, dive13, dive14, dive15))
 
 ```
 
 
-# export to GIS
+# export points to GIS
 
 ```{r}
 ##### __OR__ create x from sub #####
@@ -218,7 +282,7 @@ arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
 
 ```
 
-# create dive points 
+# export dive centroids to GIS
 
 ```{r}
 x <- sub %>% group_by(EventID) %>% 
