@@ -1,0 +1,246 @@
+---
+title: "20210701-0_Packer_Data_Assessment_RPMcGuinn"
+author: "Robert McGuinn"
+date: "7/1/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load packages 
+
+```{r}
+library(tidyverse)
+library(rgdal)
+library(arcgisbinding)
+arc.check_product()
+
+```
+
+
+# load data from xlsx sheets
+
+```{r}
+
+path <- "../indata/20210701-0_GOM 2014 national database for DSCRTP, revised Dives 2-11_DPacker.xlsx"
+
+dive2 <- read.xlsx(path, 
+                sheet = 5, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive2) <- header
+
+##
+
+dive3 <- read.xlsx(path, 
+                sheet = 6, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive3) <- header
+
+##
+
+dive4 <- read.xlsx(path, 
+                sheet = 7, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive4) <- header
+
+##
+
+dive5 <- read.xlsx(path, 
+                sheet = 8, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive5) <- header
+
+##
+
+dive6 <- read.xlsx(path, 
+                sheet = 9, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive6) <- header
+
+##
+
+dive7 <- read.xlsx(path, 
+                sheet = 10, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive7) <- header
+
+##
+
+dive8 <- read.xlsx(path, 
+                sheet = 11, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive8) <- header
+
+##
+
+dive9 <- read.xlsx(path, 
+                sheet = 12, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive9) <- header
+
+## 
+
+dive10 <- read.xlsx(path, 
+                sheet = 13, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive10) <- header
+
+## 
+
+dive11 <- read.xlsx(path, 
+                sheet = 14, 
+                startRow = 3,
+                colNames = F, 
+                skipEmptyCols = F
+                )
+
+header <- c(
+"ImageFilePath",	"ScientificName",	"AphiaID",	"IdentificationQualifier",	"IdentifiedBy",	"IdentificationComments",	"ObservationTime",	"ObservationDate",	"DepthInMeters",	"DepthMethod",	"Latitude",	"Longitude", "LocationAccuracy",	"NavType", "Locality", "Station", "LocationComments",	"Condition",	"IndividualCount",	"CategoricalAbundance",	"WeightInKg",	"AssociatedTaxa",	"Habitat",	"Salinity",	"Substrate",	"Temperature",	"OccurrenceComments",	"RecordType",	"SampleID",	"Citation",	"DataContact",	"DataProvider",	"Modified",	"PI",	"PIAffiliation",	"SurveyID",	"VehicleName","Vessel",	"EventID",	"SamplingEquipment",	"CruiseComments",	"Reporter",	"ReporterEmail")
+
+
+names(dive11) <- header
+
+```
+
+# rbind all of the sheets together 
+
+```{r}
+sub <- do.call("rbind", list(dive2, dive3, dive4, dive5, dive6, dive7, dive8, dive9, dive10, dive11))
+
+```
+
+
+# export to GIS
+
+```{r}
+##### __OR__ create x from sub #####
+x <- sub
+
+##### modify Lats/Longs in some way (OPTIONAL) #####
+
+# x <- x %>%  mutate(Latitude = Latitude-1.169330553,
+#             Longitude = Longitude+2.110869447
+# 
+# )
+
+##### filter data #####
+
+# get rid of any missing Latitudes or Longitudes
+x <- x %>% filter(Latitude != -999 | Longitude != -999)
+# make copy to turn into spatial points data frame.
+x_geo <- x
+
+##### create spatial points data fram #####
+
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+
+```
+
+# create dive points 
+
+```{r}
+x <- sub %>% group_by(EventID) %>% 
+  summarise(Latitude = mean(Latitude),
+            Longitude = mean(Longitude)
+            )
+
+# get rid of any missing Latitudes or Longitudes
+x <- x %>% filter(Latitude != -999 | Longitude != -999)
+# make copy to turn into spatial points data frame.
+x_geo <- x
+
+##### create spatial points data fram #####
+
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo_dives'), data=x_geo, overwrite = TRUE)
+
+```
+
+

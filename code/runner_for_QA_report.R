@@ -3,13 +3,14 @@
 ##### Started: 20200921
 
 ##### packages #####
+library(tidyverse)
 library(curl)
 library(rmarkdown)
 library(googledrive)
 
 ##### render the QA dashboard #####
 # MANUAL CHANGE add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20210622-3_NOAA_NEFSC_TowCam_Nizinski_2015_2015"
+filename <- "20200921-2_NOAA_NEFSC_PC1704_Nizinski_2017_2017"
 
 rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
@@ -18,58 +19,24 @@ rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashb
 ###### MANUAL inspection of QA report in Word, then save to PDF. Develop Redmine Checklist #####
 
 ##### checking #####
-filt %>% filter(grepl("Okeanos", Vessel)) %>% pull(Citation) %>% table()
-# filt %>% filter(grepl("Greater Farallones", DataProvider)) %>% pull(DataProvider) %>% table()
-# filt %>% filter(grepl("National Centers for Coastal Ocean Science", DataProvider)) %>% pull(DataProvider) %>% table()
-sub %>% filter(is.na(VernacularNameCategory) == T) %>% pull(ScientificName) %>% table()
-sub %>% filter(SampleID == "EX1903L2_D01_01B_A11") %>% pull(TrackingID) %>% table()
-sub %>% filter(VernacularNameCategory == "sea fan") %>% pull(ScientificName) %>% table()
-s %>% filter(FieldName == 'VernacularNameCategory') %>% pull(ValidValues)
-sub %>% filter(FlagReason == "Insufficient taxonomic resolution") %>% pull(VernacularNameCategory) %>% table()
+x <- sub %>%
+  filter(Flag == '1') %>%
+  group_by(ScientificName, FlagReason) %>%
+  summarize(n=n())
+View(x)
 
-filt %>%
-  filter(grepl("Bigelow", Vessel)) %>%
-  pull(Vessel) %>%
-  table()
-
-sub %>%
-  pull(SurveyID) %>%
-  table()
-
-filt %>%
-  filter(grepl("NOAA", DataProvider)) %>%
-  pull(DataProvider) %>%
-  table()
-
-sub %>%
-  filter(VernacularNameCategory == 'check with dataprovider') %>%
-  pull(ScientificName) %>%
-  table()
+x <- filt %>%
+  filter(grepl("15-02", SurveyID)) %>%
+  group_by(SurveyID, DataContact) %>%
+  summarize(n=n())
+View(x)
 
 x <- sub %>%
-  filter(DepthInMeters == 0) %>%
-  pull(CatalogNumber) %>%
-  length()
-
-sub %>%
-  filter(grepl("taxonomic", FlagReason)) %>%
-  group_by(Flag, FlagReason, ScientificName) %>%
+  #filter(grepl("", SurveyID)) %>%
+  group_by(FlagReason) %>%
   summarize(n=n())
+View(x)
 
-sub %>%
-  filter(grepl("taxonomic", FlagReason)) %>%
-  pull(CatalogNumber) %>%
-  length()
-
-filt %>%
-  filter(ScientificName == "Bathyalcyon robustum") %>%
-  group_by(ScientificName) %>%
-  summarize(n=n())
-
-sub %>%
-  filter(VernacularNameCategory == 'check with dataprovider') %>%
-  group_by(ScientificName) %>%
-  summarize(n=n())
 
 ##### Upload PDF report to specific folder on Google Drive #####
 
@@ -82,6 +49,11 @@ drive_upload(paste(filename,".PDF", sep=''),
              name = paste(filename,".PDF", sep=''),
              overwrite = T)
 
+## checking
+x <- sub %>% filter(FlagReason == "Insufficient taxonomic resolution") %>%
+  group_by(ScientificName) %>%
+  summarize(n=n())
+View(x)
 
 ##### export to GIS #####
 ## load packages

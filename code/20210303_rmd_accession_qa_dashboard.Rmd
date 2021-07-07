@@ -51,7 +51,7 @@ opts_chunk$set(fig.width=7,
 ```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
 ##### input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
-indata <- read_csv("DSCRTP_NatDB_20201021-0.csv")
+indata <- read_csv("DSCRTP_NatDB_20210414-0.csv")
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 ```
@@ -150,8 +150,8 @@ SurveyComments: `r unique(factor(sub$SurveyComments))`
 
 * Number of records: *`r length(sub$CatalogNumber)`*
 * Number of records flagged: *`r length(flagged$CatalogNumber)`*
-* Minimum depth: *`r min(sub[sub$DepthInMeters != "-999",]$DepthInMeters)`*
-* Maximum depth: *`r max(sub[sub$DepthInMeters != "-999",]$DepthInMeters)`*
+* Minimum depth (unflagged): *`r min(sub[sub$DepthInMeters != "-999" & sub$Flag == "0",]$DepthInMeters)`*
+* Maximum depth (unflagged): *`r max(sub[sub$DepthInMeters != "-999" & sub$Flag == "0",]$DepthInMeters)`*
 * Number of dives or tows recorded: *`r length(unique(sub[sub$EventID != "NA" | is.na(sub$EventID) == F,]$EventID))`* 
 * Time frame: *`r min(as.numeric(min(sub$ObservationYear)))` to `r min(as.numeric(max(sub$ObservationYear)))`*
 * Number of ImageURL populated: `r sub %>% filter(is.na(ImageURL) == F) %>% pull(ImageURL) %>% length()`
@@ -192,8 +192,8 @@ sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ',
 unique(sub$CitationMaker)
 ```
 
-
 # Web site
+
 ``` {r Website, echo=FALSE}
 sum_tbl <-
   sub %>%
@@ -204,6 +204,7 @@ sum_tbl
 ```
 
 # Data Origin
+
 ``` {r SourceSummary, echo=FALSE, warnings = F}
 sum_tbl <-
   sub %>%
@@ -587,9 +588,9 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ### IndividualCount
 `r options(digits = 3)`
-* min: `r min(sub2$IndividualCount, digits = 3)`
-* median: `r median(sub2$IndividualCount, digits = 3)`
-* max: `r max(sub2$IndividualCount)`
+* min: `r min(sub$IndividualCount, digits = 3)`
+* median: `r median(sub$IndividualCount, digits = 3)`
+* max: `r max(sub$IndividualCount)`
 
 `r options(digits = 5)`
 
