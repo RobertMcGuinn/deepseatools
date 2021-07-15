@@ -51,7 +51,7 @@ opts_chunk$set(fig.width=7,
 ```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
 ##### input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
-indata <- read_csv("DSCRTP_NatDB_20210414-0.csv")
+indata <- read.csv("DSCRTP_NatDB_20210414-0.csv", header = TRUE)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 ```
