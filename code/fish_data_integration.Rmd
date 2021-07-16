@@ -37,13 +37,14 @@ library(googlesheets4)
 
 ```{r}
 ##### load NDB Schema #####
-## download Google Sheet version of schema for use in R  documents
+## download Google Sheet version of schema for use in R documents
 ## Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 ## checking
 s %>% filter(FieldName == 'CMECSGeoForm') %>% pull(FieldDescription)
 s %>% filter(FieldName == 'LocationComments') %>% pull(FieldDescription)
 s %>% filter(FieldName == 'IdentificationComments') %>% pull(FieldDescription)
+
 ##### load NDB ##### 
 indata<- read_csv("indata/DSCRTP_NatDB_20210414-0.csv",
                  col_types = cols(.default = "c"),
@@ -75,7 +76,7 @@ auv <- read_csv("./indata/20200903-0_NWFSC_AUV_d20170820_2_example_CWaters.csv",
 
 ##### load SWFSC ROV data from Access file ##### 
 ## Google Drive Location 
-## MANUAL STEP: export table directly from Access to Excel, save as CSV (comma delimited)
+## MANUAL STEP: export tables directly from Access to Excel, save as CSV (comma delimited)
 ## load saved file to R as data frame
 
 mydir = "./indata/swfsc"
@@ -153,9 +154,21 @@ str(x)
 names(x)
 table(x$ScientificName)
 table(x$SurveyID)
-filt %>% filter(grepl("Nautilus", Vessel), ObservationYear == '2017') %>% 
-  group_by(SurveyID, EventID, ObservationYear) %>% 
-  summarize(n=n())
+
+x <- filt %>% filter(grepl("Northwest Fisheries Science Center", DataProvider)) %>% 
+  group_by(DataProvider, SurveyID, ObservationYear) %>% 
+  summarize(n=n()) 
+
+filt %>% filter(grepl("Nautilus", Vessel)) %>% 
+  group_by(DataProvider, SurveyID, EventID, ObservationYear) %>% 
+  summarize(n=n()) %>% View()
+
+
+x$SurveyID
+
+
+
+
 
 ## Potential DSCRTP Fields: Already matched.         
 ## Notes: In ScientificName we have 'VernacularName' in many cases.
@@ -199,6 +212,11 @@ str(x)
 names(x)
 table(x)
 
+
+names_invertcodes %>% 
+  group_by(Code, Scientific_name, Common_name, Comments) %>% 
+  summarize(n=n()) %>% arrange(Code) %>% View()
+
 ## DSCRTP Variables: 
 ## We don't have a "Code"
 
@@ -223,6 +241,10 @@ str(x)
 names(x)
 table(x)
 
+names(filt) %>% 
+  data.frame() 
+  filter(grepl("tude", .))
+
 ## DSCRTP Variables: [Site:Locality]
 ## 
 
@@ -234,10 +256,7 @@ table(x)
 ## DSCRTP Variables:
 ## 
 
-x <- tbl_DIVE
-str(x)
-names(x)
-table(x)
+L
 
 ## DSCRTP Variables:
 ## 
@@ -303,19 +322,6 @@ str(oa)
 names(oa)
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 # export OA data to GIS for mapping
 ```{r}
 ##### export to GIS #####
@@ -332,6 +338,7 @@ oa_samp$lon <- as.numeric(oa_samp$lon)
 
 ## get rid of any missing Latitudes or Longitudes
 oa_samp <- oa_samp %>% filter(lat != -999 | lon != -999)
+
 # make copy to turn into spatial points data frame.
 oa_samp_geo <- oa_samp
 
@@ -340,9 +347,9 @@ coordinates(oa_samp_geo) <- c("lon", "lat")
 proj4string(oa_samp_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 ## create feature-class
-
 fgdb_path <- 'C:/rworking/sf/sf.gdb'
-arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'x_geo'), data=oa_samp_geo, overwrite = TRUE)
+
 ```
 # create crosswalk
 # pull data from tables into DSCRTP

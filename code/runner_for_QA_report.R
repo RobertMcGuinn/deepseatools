@@ -1,6 +1,6 @@
 ##### Header #####
-##### Author: Robert McGuinn #####
-##### Started: 20200921
+## Author: Robert McGuinn
+## Started: 20200921
 
 ##### packages #####
 library(tidyverse)
@@ -16,7 +16,7 @@ rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashb
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
 
-###### MANUAL inspection of QA report in Word, #####
+##### MANUAL inspection of QA report in Word, #####
 ## then SAVE to PDF. Develop Redmine Checklist
 
 ##### checking #####
