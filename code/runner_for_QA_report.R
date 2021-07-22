@@ -10,7 +10,7 @@ library(googledrive)
 
 ##### render the QA dashboard #####
 # MANUAL CHANGE add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20200921-2_NOAA_NEFSC_PC1605_Nizinski_2016_2016"
+filename <- "20210721-0_NOAA_NEFSC_PC1605_Nizinski_2016_2016"
 
 rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
