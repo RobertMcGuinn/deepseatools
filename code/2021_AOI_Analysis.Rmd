@@ -1,13 +1,12 @@
 ---
-title: "Area of Interest Report"
+title: "Area of Interest Report - SFAA"
 author: "Robert P. McGuinn"
-date: "August 3, 2021"
+date: "August 5, 2021"
 output: word_document
 ---
 
-# load packages
-
-```{r packages, eval=T, echo=T, message=FALSE, warning=FALSE, cache=FALSE}
+```{r packages, eval=T, echo=F, message=FALSE, warning=FALSE, cache=FALSE}
+## load packages
 #install.packages(tidyverse)
 #install.packages('openxlsx')
 library(tidyverse)
@@ -39,17 +38,14 @@ arc.check_product()
 
 ```
 
-# create needed variables
-
-``` {r}
+``` {r, echo=F}
+## create needed variables
 db_version <- "20210414-0"
-fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
 
 ```
 
-# load NDB
-
-```{r load_NDB, eval=T, echo=T, message=FALSE, warning=FALSE, cache=TRUE}
+```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
+## load NDB
 ##### input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
 indata<-read.csv("DSCRTP_NatDB_20210414-0.csv", header = T)
@@ -61,9 +57,7 @@ rm(indata)
 
 ```
 
-# filter coral and sponge occurences by box and/or query
-
-```{r filter_geo_OR_query, echo=T, warning=F, message=F, eval=F}
+```{r filter_geo_OR_query, echo=F, warning=F, message=F, eval=T}
 ##### filter occurrences by query or box or both ##### 
 
 ## set bounding box variables
@@ -86,9 +80,8 @@ x <- subset(filt, as.numeric(Latitude) > minlat &
 
 ```
 
-# create spatial points data frame from a subset of points
-
 ```{r export_GIS, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
+## create spatial points data frame from a subset of points
 x_geo <- x
 
 ## create spdf
@@ -101,9 +94,8 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 ```
 
-# transform coral and sponge occurrence points to 'sf' objects
-
-```{r}
+```{r echo=F}
+## transform coral and sponge occurrence points to 'sf' objects
 ##### transform coral and sponge points to sf #####
 points <- st_as_sf(x_geo, wkt = "geom")
 
@@ -113,9 +105,7 @@ points <- st_as_sf(x_geo, wkt = "geom")
 
 ```
 
-# bring in AOI polygon(s)
-
-```{r echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
+```{r echo=FALSE, echo = F, message = FALSE, warning=FALSE, eval=T}
 ##### bring in polygon for AOI from ESRI shapefile ##### 
 ## read polygon shapefile
 setwd("C:/data/geoindata/safmc_2021") # will also work with GeoDatabase layers use "setwd("C:/data/geoindata.gdb/"
@@ -133,9 +123,8 @@ arc.write(file.path(fgdb_path, 'sfaa_sf'), data=sfaa_sf, overwrite = TRUE)
 
 ```
 
-# buffer operations
-
-```{r}
+```{r echo=F}
+## buffer operations
 # create 5000 meter buffer
 sfaa_sf_buf_5000 <- st_buffer(sfaa_sf, dist=5000) # map units are in meters
 
@@ -143,18 +132,17 @@ sfaa_sf_buf_5000 <- st_buffer(sfaa_sf, dist=5000) # map units are in meters
 sfaa_sf_buf_20000 <- st_buffer(sfaa_sf, dist=20000) # map units are in meters
 
 ## OPTIONAL: write out featureclass to geodatabase from sf object (5000 meter buffer)
-# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
-# arc.write(file.path(fgdb_path, 'sfaa_sf_buf_5000'), data=sfaa_sf_buf_5000, overwrite = TRUE)
+fgdb_path <- "C:/data/aprx/aoi/shapefiles"
+arc.write(file.path(fgdb_path, 'sfaa_sf_buf_5000.shp'), data=sfaa_sf_buf_5000, overwrite = TRUE)
 
 ## OPTIONAL: write out featureclass to geodatabase from sf object (20000 meter buffer)
-# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
-# arc.write(file.path(fgdb_path, 'sfaa_sf_buf_20000'), data=sfaa_sf_buf_20000, overwrite = TRUE)
+fgdb_path <- "C:/data/aprx/aoi/shapefiles"
+arc.write(file.path(fgdb_path, 'sfaa_sf_buf_20000.shp'), data=sfaa_sf_buf_20000, overwrite = TRUE)
 
 ```
 
-# intersect operations
-
-```{r}
+```{r echo=F}
+## intersection operations
 ## transform CRS for coral and sponge points projection to match polygons
 points_transform <- st_transform(points, crs = st_crs(sfaa_sf))
 
@@ -192,9 +180,8 @@ points_in_20000_select <- points_in_20000 %>% filter(is.na(Shape_Area) == F)
 
 ```
 
-# load any images to a local folder 
-
-```{r}
+```{r, eval=F, echo=F}
+## load any images to a local folder 
 #### WARNING: This chunk takes a long time.  Go get a coffee #####
 ###### download all images and put them in a folder #####
 z <- points_in_5000_select %>% filter(is.na(ImageURL) == F)
@@ -216,10 +203,12 @@ fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
 arc.write(file.path(fgdb_path, 'imageset_5000'), data=z, overwrite = TRUE)
 ```
 
-# load the images to a Google Drive folder
 
-```{r}
-#### WARNING: This chunk takes a long time.  Go get a coffee #####
+```{r eval=F, echo=F}
+# load the images to a Google Drive folder
+## WARNING: This chunk could take a longish time. Go get a coffee
+
+##### Loading files from a local folder to Google Drive ##### 
 ## MANUAL CHANGE "folderurl" to the desired drive folder ID
 folderurl <- "https://drive.google.com/drive/folders/1oOiCVRWJUc4fQQ1dec9q3APYfk1Ea4nj"
 
@@ -235,18 +224,12 @@ drive_upload(i,
 
 ```
 
-# export data files to local folder 
-
-```{r}
-##### export Excel file of data records to folder #####
-setwd("C:/rworking/deepseatools/indata")
-write.xlsx(z,'filename.xlsx', row.names = FALSE)
-
+```{r, echo=F}
+z <- points_in_5000_select %>% filter(is.na(ImageURL) == F)
 ```
 
-# get OBIS data 
-
-```{r}
+```{r cache=T, echo=F}
+## get OBIS data 
 ## first get the original projection back (this is what OBIS and GBIF expect)
 sfaa_sf_transform <- st_transform(sfaa_sf, crs = st_crs(x_geo))
 
@@ -259,9 +242,32 @@ obis <- as.data.frame(out$obis$data)
 
 ```
 
-# create spatial points data frame from a subset of obis points
+```{r, echo=F}
+## first get the original projection back (this is what OBIS and GBIF expect)
+sfaa_sf_buf_5000_transform <- st_transform(sfaa_sf_buf_5000, crs = st_crs(x_geo))
 
-```{r export_GIS, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
+##### getting OBIS data #####
+# using bounding box variables defined above
+library(spocc)
+bounds <- c(minlon, minlat, maxlon, maxlat)
+out <- occ(geometry = sfaa_sf_buf_5000_transform, from = 'obis', limit = 10000)
+obisbuffer5000 <- as.data.frame(out$obis$data)
+
+```
+
+```{r eval=F, echo=F}
+# export data files to local folder
+##### export Excel file of data records to folder #####
+setwd("C:/rworking/deepseatools/indata")
+write.csv(as.data.frame(points_in_0_select),'DSCRTP_AOI_no_buffer.csv')
+write.csv(as.data.frame(points_in_5000_select),'DSCRTP_AOI_5000m_buffer.csv')
+write.xlsx(as.data.frame(obis),'OBIS_AOI_no_buffer.xlsx')
+write.xlsx(as.data.frame(obisbuffer5000),'OBIS_AOI_5000m_buffer.xlsx')
+
+```
+
+```{r export_GIS_2, echo=F, message = FALSE, warning=FALSE, eval=F}
+## create spatial points data frame from a subset of obis points
 x_geo <- obis
 
 ## create spdf
@@ -274,9 +280,7 @@ arc.write(file.path(fgdb_path, 'obis'), data=x_geo, overwrite = TRUE)
 
 ```
 
-# get GBIF data 
-
-```{r}
+```{r cache=T, eval=F, echo=F}
 ##### pinging GBIF for data #####
 library(spocc)
 bounds <- c(minlon, minlat, maxlon, maxlat)
@@ -285,9 +289,8 @@ gbif <- as.data.frame(out$gbif$data)
 
 ```
 
+```{r export_GIS_3, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=F}
 # create spatial points data frame from a subset of GBIF points
-
-```{r export_GIS, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
 x_geo <- gbif
 
 ## create spdf
@@ -300,21 +303,259 @@ arc.write(file.path(fgdb_path, 'gbif'), data=x_geo, overwrite = TRUE)
 
 ```
 
+# Purpose of Report
+
+To create summaries of occurrence data to support fishery resource access decision making.  
+
+# Online Resources
+
+NOAA GeoPlatform interactive map: [LINK](https://noaa.maps.arcgis.com/home/webmap/viewer.html?webmap=4a558d07290542f68bca89ccfad38f1b&extent=-81.6837,27.7539,-77.4979,29.3078)
+
+The main project folder for this analysis on Google Drive: [LINK](https://drive.google.com/drive/folders/1cRlhREcCdBFLlR0nzRaEB3GvrfoCZ4Pf?usp=sharing)
+
+A Word version of this report is linked here: [LINK](https://drive.google.com/file/d/1PWa0v4rJm7yEOs1PtCHMS6lkvp7_x-WV/view?usp=sharing)
+
+The source RMarkdown code used to generate this report is linked here on GitHub: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/2021_AOI_Analysis.Rmd)
+
+# Methods
+
+Coral and sponge occurrences from DSCRTP and other occurrences from OBIS and GBIF are summarized.  Buffer and intersect operations were performed to summarize the occurrence points within two zones.
+
+* AOI 
+* AOI+5km buffer
+
 # Input datasets for this analysis
 
-* National Database for Deep-sea Corals and Sponges version: `r db_version`: LINK
+## DSCRTP National Database for Deep Sea Corals and Sponges
+
+* National Database for Deep-sea Corals and Sponges version: `r db_version`: [LINK](https://drive.google.com/file/d/1JlHKVr2e_UX-N3XhtKnon5cRc_pnb4b_/view?usp=sharing)
+
+* *Data dictionary*: [LINK](https://docs.google.com/spreadsheets/d/1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI/edit?usp=sharing)
 
 ## Area of Interest Polygons
 
 The original SFAA polygons used in this analysis were acquired from Heather Coleman on 2021-08-02.  
 
-AOI (SFAA_2014): LINK
-AOI+5km buffer (SFAA_2014_buf_5km): LINK
-AOI+20km buffer (SFAA_2014_buf_20km): LINK
+### Original AOI
 
-# Output datasets for this analysis
+* AOI (SFAA_2014): [LINK](https://drive.google.com/file/d/1x6PJgjRfktyVB4cmCPRT0rAzQQjdTzL1/view?usp=sharing)
 
-See geodatabase: LINK
+### Buffers of Original AOI
+
+* AOI+5km buffer (SFAA_2014_buf_5000): [LINK](https://drive.google.com/file/d/1X5ZupVA0UFrELQhY0AHvJUZduWZ67rRX/view?usp=sharing)
+
+## OBIS and GBIF Web Services 
+
+Ocean Biogeographic Informaton System (OBIS) data accessed on 2021-08-05.
+
+OBIS: [LINK](https://obis.org/)
+
+# Tabualar output for the analysis
+
+* DSCRTP records within AOI: [LINK](https://drive.google.com/file/d/1m-SmF6V-LUCM77r-N0-ynIZb-m0sUgw2/view?usp=sharing)
+* DSCRTP records within AOI + 5km buffer: [LINK](https://drive.google.com/file/d/1qX-9EwMRPOc5qzX60hqAmpbZNQZEQ0zT/view?usp=sharing)
+* OBIS records within AOI: [LINK](https://drive.google.com/file/d/1PDK5SQVM5JgVBXk5fJFQt8aZuYYfG9X3/view?usp=sharing)
+* OBIS records within AOI + 5km buffer: [LINK](https://drive.google.com/file/d/1ftF8D3TnSPqhP3rYk1yN37uGn_lr6bC3/view?usp=sharing)
+
+# Preliminary results
+
+## Images
+
+Some, but not all, of the DSCRTP occurrences have associated images. Within the AOI+5km buffer we found `r length(z$CatalogNumber)` records with images within the database. These images are available within this Google Drive folder: [LINK](https://drive.google.com/drive/folders/1oOiCVRWJUc4fQQ1dec9q3APYfk1Ea4nj?usp=sharing)
+
+*Note:* Useful information is embedded in the file name for these images. The naming convention used is as follows: 
+
+"DSCRTP_CatalogNumber_Scientific Name_DepthInMeters_ImageID.jpg"
+
+No occurrences with images were found directly intersecting the AOI. Also, no additional occurrences with images were found directly intersecting the AOI+20km buffer.  
+
+OBIS images were not obtained for this analysis to date.
+
+## Taxa within the AOI (DSCRTP National Database)
+
+Number of occurrences within the AOI: `r length(points_in_0_select$CatalogNumber)`
+
+### List of Coral Taxa Grouped by 'VernacularNameCategory' (from National Database)
+
+``` {r CoralByVernacularNameCategoryTarget, echo=FALSE }
+target <- as.data.frame(points_in_0_select)
+
+sum_tbl <-
+  target %>%
+  filter(Phylum == "Cnidaria") %>% 
+  group_by(VernacularNameCategory) %>%
+  summarize(
+    Taxa = toString(unique(ScientificName)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+
+```
+
+### List of Sponge Taxa Grouped by 'VernacularNameCategory' (from National Database)
+
+``` {r SpongeByVernacularNameCategoryTarget, echo=FALSE }
+target <- as.data.frame(points_in_0_select)
+
+sum_tbl <-
+  target %>%
+  filter(Phylum == "Porifera") %>% 
+  group_by(VernacularNameCategory) %>%
+  summarize(
+    Taxa = toString(unique(ScientificName)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+
+```
+
+### Expedition Details (DSCRTP)
+
+``` {r Expedition_details_no_buf, echo=FALSE }
+
+target <- as.data.frame(points_in_0_select)
+
+sum_tbl <-
+  target %>%
+  group_by(DatasetID) %>%
+  summarize(
+    SurveyIDs = toString(unique(SurveyID)),
+    PIs = toString(unique(PI)),
+    Observation_Year = toString(unique(ObservationYear)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+
+```
+
+## Taxa within the AOI (OBIS)
+
+Number of occurrences within the AOI: `r length(obis$datasetName)`
+
+### OBIS: List of Taxa Grouped by Order
+
+``` {r TaxaByOrderTargetOBIS, echo=FALSE }
+
+sum_tbl <-
+  obis %>%
+  group_by(order) %>%
+  summarize(
+    Taxa = toString(unique(name)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+
+```
+
+### Expedition Details (obis)
+
+``` {r Expedition_details_obis, echo=FALSE }
+sum_tbl <-
+  obis %>%
+  group_by(dataset_id) %>%
+  summarize(
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+
+```
+
+## Taxa within the AOI plus 5000m buffer zone (DSCRTP National Database)
+
+Number of occurrences within the AOI+5000 meter buffer: `r length(points_in_5000_select$CatalogNumber)`
+
+### List of Coral Taxa Grouped by 'VernacularNameCategory' (From National Database)
+
+``` {r CoralByVernacularNameCategoryBuffer, echo=FALSE }
+buffer <- as.data.frame(points_in_5000_select)
+sum_tbl <-
+  buffer %>%
+  filter(Phylum == "Cnidaria") %>% 
+  group_by(VernacularNameCategory) %>%
+  summarize(
+    Taxa = toString(unique(ScientificName)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+```
+
+### List of Sponge Taxa Grouped by 'VernacularNameCategory' (From National Database)
+
+``` {r SpongeByVernacularNameCategoryBuffer, echo=FALSE }
+sum_tbl <- 
+  buffer %>%
+  filter(Phylum == "Porifera") %>% 
+  group_by(VernacularNameCategory) %>%
+  summarize(
+    Taxa = toString(unique(ScientificName)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+```
+
+
+### Expedition Details (DSCRTP)
+
+``` {r Expedition_details_buf_5000, echo=FALSE }
+sum_tbl <-
+  buffer %>%
+  group_by(DatasetID) %>%
+  summarize(
+    SurveyIDs = toString(unique(SurveyID)),
+    PIs = toString(unique(PI)),
+    Observation_Year = toString(unique(ObservationYear)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+
+```
+
+## Taxa within the AOI plus 5000m buffer zone (OBIS)
+
+Number of occurrences within the AOI: `r length(obisbuffer5000$datasetName)`
+
+### OBIS: List of Taxa Grouped by Order
+
+``` {r TaxaByOrderBufferOBIS, echo=FALSE }
+
+sum_tbl <-
+  obisbuffer5000 %>%
+  group_by(order) %>%
+  summarize(
+    Taxa = toString(unique(name)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2, align = )
+sum_tbl
+
+```
+
+
+### Expedition Details (obis)
+
+``` {r Expedition_details_obis_buffer, echo=FALSE }
+sum_tbl <-
+  obisbuffer5000 %>%
+  group_by(dataset_id) %>%
+  summarize(
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+
+```
+
+
+
+
 
 
 
