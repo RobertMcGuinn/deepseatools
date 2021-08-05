@@ -463,7 +463,7 @@ sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
 sum_tbl
 ```
 
-## List of Coral Taxa Grouped by 'VernacularNameCategory' (from National Database)
+## List of Sponge Taxa Grouped by 'VernacularNameCategory' (from National Database)
 
 ``` {r SpongeByVernacularNameCategoryTarget, echo=FALSE }
 target <- as.data.frame(target)
@@ -479,7 +479,7 @@ sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
 sum_tbl
 ```
 
-## List of Taxa Grouped by Order (From OBIS)
+## OBIS List of Taxa Grouped by Order
 
 ``` {r TaxaByOrderTargetOBIS, echo=FALSE }
 sum_tbl <-
