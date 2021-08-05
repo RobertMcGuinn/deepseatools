@@ -1,0 +1,329 @@
+---
+title: "Area of Interest Report"
+author: "Robert P. McGuinn"
+date: "August 3, 2021"
+output: word_document
+---
+
+# load packages
+
+```{r packages, eval=T, echo=T, message=FALSE, warning=FALSE, cache=FALSE}
+#install.packages(tidyverse)
+#install.packages('openxlsx')
+library(tidyverse)
+library(openxlsx)
+library(sf)
+library(rgdal)
+library(RColorBrewer)
+library(raster)
+library(marmap)
+library(leaflet)
+library(extrafont)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(maps)
+library(rgdal)
+library(raster)
+library(marmap)
+library(httr)
+library(jsonlite)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(openxlsx)
+library(rgeos)
+library(googledrive)
+library(arcgisbinding)
+library(spocc)
+arc.check_product()
+
+```
+
+# create needed variables
+
+``` {r}
+db_version <- "20210414-0"
+fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+
+```
+
+# load NDB
+
+```{r load_NDB, eval=T, echo=T, message=FALSE, warning=FALSE, cache=TRUE}
+##### input: latest version of NDB #####
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20210414-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+## cleanup
+rm(indata)
+
+```
+
+# filter coral and sponge occurences by box and/or query
+
+```{r filter_geo_OR_query, echo=T, warning=F, message=F, eval=F}
+##### filter occurrences by query or box or both ##### 
+
+## set bounding box variables
+minlat <- 25
+maxlat <- 35
+minlon <- -82
+maxlon <- -71
+
+## subset data by coordinates
+x <- subset(filt, as.numeric(Latitude) > minlat &
+                   as.numeric(Latitude) < maxlat &
+                   as.numeric(Longitude) > minlon &
+                   as.numeric(Longitude) < maxlon)
+                
+## also subset data by other variables by other criteria
+# x <- x %>% filter(ScientificName == "")
+
+## checking
+# dim(x)
+
+```
+
+# create spatial points data frame from a subset of points
+
+```{r export_GIS, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
+x_geo <- x
+
+## create spdf
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+## OPTIONAL: write out featureclass to geodatabase from sp object 
+# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+# arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+
+```
+
+# transform coral and sponge occurrence points to 'sf' objects
+
+```{r}
+##### transform coral and sponge points to sf #####
+points <- st_as_sf(x_geo, wkt = "geom")
+
+## OPTIONAL: write out featureclass from sf object
+# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+# arc.write(file.path(fgdb_path, 'points'), data=points, overwrite = TRUE)
+
+```
+
+# bring in AOI polygon(s)
+
+```{r echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
+##### bring in polygon for AOI from ESRI shapefile ##### 
+## read polygon shapefile
+setwd("C:/data/geoindata/safmc_2021") # will also work with GeoDatabase layers use "setwd("C:/data/geoindata.gdb/"
+sfaa <- readOGR(".", "SFAA_2014")
+
+## tranform AOI polygon to sf 
+sfaa_sf <- st_as_sf(sfaa, wkt = "geom")
+
+## cleanup 
+rm(sfaa)
+
+## OPTIONAL: write out featureclass to geodatabase from sf object
+fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+arc.write(file.path(fgdb_path, 'sfaa_sf'), data=sfaa_sf, overwrite = TRUE)
+
+```
+
+# buffer operations
+
+```{r}
+# create 5000 meter buffer
+sfaa_sf_buf_5000 <- st_buffer(sfaa_sf, dist=5000) # map units are in meters
+
+# create 20000 meter buffer
+sfaa_sf_buf_20000 <- st_buffer(sfaa_sf, dist=20000) # map units are in meters
+
+## OPTIONAL: write out featureclass to geodatabase from sf object (5000 meter buffer)
+# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+# arc.write(file.path(fgdb_path, 'sfaa_sf_buf_5000'), data=sfaa_sf_buf_5000, overwrite = TRUE)
+
+## OPTIONAL: write out featureclass to geodatabase from sf object (20000 meter buffer)
+# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+# arc.write(file.path(fgdb_path, 'sfaa_sf_buf_20000'), data=sfaa_sf_buf_20000, overwrite = TRUE)
+
+```
+
+# intersect operations
+
+```{r}
+## transform CRS for coral and sponge points projection to match polygons
+points_transform <- st_transform(points, crs = st_crs(sfaa_sf))
+
+## checking
+# st_crs(points_transform)
+
+## plot to see how they relate
+# ggplot() +
+#   geom_sf(data = sfaa_sf_buf_20000) +
+#   geom_sf(data = points_tranform) +
+#   theme_minimal()
+
+## find points within the polygons
+points_in_0 <- st_join(points_transform, sfaa_sf, join = st_within) # no buffer
+points_in_5000 <- st_join(points_transform, sfaa_sf_buf_5000, join = st_within) # 5000 meter buffer
+points_in_20000 <- st_join(points_transform, sfaa_sf_buf_20000, join = st_within) # 20000 meter buffer
+
+## checking
+# dim(points_in_0)
+# dim(points_in_5000)
+# dim(points_in_20000)
+# table(points_in_0$Shape_Area, useNA = 'always')
+# table(points_in_5000$Shape_Area, useNA = 'always')
+# table(points_in_20000$Shape_Area, useNA = 'always')
+
+## select intersecting points only and create separte data frames
+points_in_0_select <- points_in_0 %>% filter(is.na(Shape_Area) == F)
+points_in_5000_select <- points_in_5000 %>% filter(is.na(Shape_Area) == F)
+points_in_20000_select <- points_in_20000 %>% filter(is.na(Shape_Area) == F)
+
+## checking 
+# dim(points_in_0_select)
+# dim(points_in_5000_select)
+# dim(points_in_20000_select)
+
+```
+
+# load any images to a local folder 
+
+```{r}
+#### WARNING: This chunk takes a long time.  Go get a coffee #####
+###### download all images and put them in a folder #####
+z <- points_in_5000_select %>% filter(is.na(ImageURL) == F)
+
+setwd("C:/rworking/deepseatools/indata/imageset_5000")
+for(i in 1:length(z$CatalogNumber)){
+  download.file(as.character(z$ImageURL[i]),
+                destfile = paste("DSCRTP",
+                                 z$CatalogNumber[i],
+                                 z$ScientificName[i],
+                                 z$DepthInMeters[i],
+                                 basename(as.character(z$ImageURL[i])),
+                                 sep = '_'),
+                mode = "wb")
+}
+
+## OPTIONAL: write out featureclass to geodatabase from sf object
+fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+arc.write(file.path(fgdb_path, 'imageset_5000'), data=z, overwrite = TRUE)
+```
+
+# load the images to a Google Drive folder
+
+```{r}
+#### WARNING: This chunk takes a long time.  Go get a coffee #####
+## MANUAL CHANGE "folderurl" to the desired drive folder ID
+folderurl <- "https://drive.google.com/drive/folders/1oOiCVRWJUc4fQQ1dec9q3APYfk1Ea4nj"
+
+## get the list of files from the local folder
+files <- list.files(path="C:/rworking/deepseatools/indata/imageset_5000", full.names=TRUE, recursive=FALSE)
+
+## loop upload images to Google Drive
+for(i in files){
+drive_upload(i,
+             path = as_id(folderurl),
+             overwrite = T)
+}
+
+```
+
+# export data files to local folder 
+
+```{r}
+##### export Excel file of data records to folder #####
+setwd("C:/rworking/deepseatools/indata")
+write.xlsx(z,'filename.xlsx', row.names = FALSE)
+
+```
+
+# get OBIS data 
+
+```{r}
+## first get the original projection back (this is what OBIS and GBIF expect)
+sfaa_sf_transform <- st_transform(sfaa_sf, crs = st_crs(x_geo))
+
+##### getting OBIS data #####
+# using bounding box variables defined above
+library(spocc)
+bounds <- c(minlon, minlat, maxlon, maxlat)
+out <- occ(geometry = sfaa_sf_transform, from = 'obis', limit = 10000)
+obis <- as.data.frame(out$obis$data)
+
+```
+
+# create spatial points data frame from a subset of obis points
+
+```{r export_GIS, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
+x_geo <- obis
+
+## create spdf
+coordinates(x_geo) <- c("longitude", "latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+## OPTIONAL: write out featureclass to geodatabase from sp object 
+fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+arc.write(file.path(fgdb_path, 'obis'), data=x_geo, overwrite = TRUE)
+
+```
+
+# get GBIF data 
+
+```{r}
+##### pinging GBIF for data #####
+library(spocc)
+bounds <- c(minlon, minlat, maxlon, maxlat)
+out <- occ(geometry = sfaa_sf_transform, from = 'gbif')
+gbif <- as.data.frame(out$gbif$data)
+
+```
+
+# create spatial points data frame from a subset of GBIF points
+
+```{r export_GIS, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
+x_geo <- gbif
+
+## create spdf
+coordinates(x_geo) <- c("longitude", "latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+## OPTIONAL: write out featureclass to geodatabase from sp object 
+fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+arc.write(file.path(fgdb_path, 'gbif'), data=x_geo, overwrite = TRUE)
+
+```
+
+# Input datasets for this analysis
+
+* National Database for Deep-sea Corals and Sponges version: `r db_version`: LINK
+
+## Area of Interest Polygons
+
+The original SFAA polygons used in this analysis were acquired from Heather Coleman on 2021-08-02.  
+
+AOI (SFAA_2014): LINK
+AOI+5km buffer (SFAA_2014_buf_5km): LINK
+AOI+20km buffer (SFAA_2014_buf_20km): LINK
+
+# Output datasets for this analysis
+
+See geodatabase: LINK
+
+
+
+
+
+
+
+
+
+
+
+
