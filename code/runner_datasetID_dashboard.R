@@ -64,8 +64,7 @@ filt <- indata %>%
 
 rm(indata)
 setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("deep_sea_corals_bb13_e594_5c3c.csv", header = T)
-
+indata<-read.csv("20210414-0", header = T)
 
 
 # #change all 'missing' values in factors to explicit NA's

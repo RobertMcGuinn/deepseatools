@@ -94,7 +94,7 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 ```
 
-```{r echo=F}
+```{r create_sf_from_points, echo=F}
 ## transform coral and sponge occurrence points to 'sf' objects
 ##### transform coral and sponge points to sf #####
 points <- st_as_sf(x_geo, wkt = "geom")
@@ -105,11 +105,27 @@ points <- st_as_sf(x_geo, wkt = "geom")
 
 ```
 
-```{r echo=FALSE, echo = F, message = FALSE, warning=FALSE, eval=T}
+```{r import_aoi, echo=FALSE, echo = F, message = FALSE, warning=FALSE, eval=T}
 ##### bring in polygon for AOI from ESRI shapefile ##### 
 ## read polygon shapefile
-setwd("C:/data/geoindata/safmc_2021") # will also work with GeoDatabase layers use "setwd("C:/data/geoindata.gdb/"
-sfaa <- readOGR(".", "SFAA_2014")
+# setwd("C:/data/geoindata/safmc_2021") # will also work with GeoDatabase layers use "setwd("C:/data/geoindata.gdb/"
+# sfaa <- readOGR(".", "SFAA_2014")
+# 
+# ## tranform AOI polygon to sf 
+# sfaa_sf <- st_as_sf(sfaa, wkt = "geom")
+# 
+# ## cleanup 
+# rm(sfaa)
+# 
+# ## OPTIONAL: write out featureclass to geodatabase from sf object
+# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+# arc.write(file.path(fgdb_path, 'sfaa_sf'), data=sfaa_sf, overwrite = TRUE)
+
+
+#### do the whole thing with a different AOI layer ##### 
+##### bring in polygon for AOI from ESRI shapefile #####
+setwd("C:/data/aprx/protected_layers_2021/protected_layers_2021.gdb") # will also work with GeoDatabase layers use "setwd("C:/data/geoindata.gdb/"
+sfaa <- readOGR(".", "oculinabank")
 
 ## tranform AOI polygon to sf 
 sfaa_sf <- st_as_sf(sfaa, wkt = "geom")
@@ -120,6 +136,25 @@ rm(sfaa)
 ## OPTIONAL: write out featureclass to geodatabase from sf object
 fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
 arc.write(file.path(fgdb_path, 'sfaa_sf'), data=sfaa_sf, overwrite = TRUE)
+
+
+```
+
+```{r import_aoi_2, echo=FALSE, echo = F, message = FALSE, warning=FALSE, eval=F}
+##### bring in polygon for AOI from ESRI shapefile ##### 
+## read polygon shapefile
+setwd("C:/data/aprx/protected_layers_2021/protected_layers_2021.gdb") # will also work with GeoDatabase layers use "setwd("C:/data/geoindata.gdb/"
+oculina <- readOGR(".", "oculinabank")
+
+## tranform AOI polygon to sf 
+oculina_sf <- st_as_sf(oculina, wkt = "geom")
+
+## cleanup 
+rm(oculina)
+
+## OPTIONAL: write out featureclass to geodatabase from sf object
+fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+arc.write(file.path(fgdb_path, 'oculina_sf'), data=oculina_sf, overwrite = TRUE)
 
 ```
 
@@ -203,7 +238,6 @@ fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
 arc.write(file.path(fgdb_path, 'imageset_5000'), data=z, overwrite = TRUE)
 ```
 
-
 ```{r eval=F, echo=F}
 # load the images to a Google Drive folder
 ## WARNING: This chunk could take a longish time. Go get a coffee
@@ -243,7 +277,7 @@ obis <- as.data.frame(out$obis$data)
 ```
 
 ```{r, echo=F}
-## first get the original projection back (this is what OBIS and GBIF expect)
+##### first transform back to the the original projection back (this is what OBIS and GBIF expect) #####
 sfaa_sf_buf_5000_transform <- st_transform(sfaa_sf_buf_5000, crs = st_crs(x_geo))
 
 ##### getting OBIS data #####
