@@ -71,5 +71,30 @@ code/20210616-0_aoi_report_SEDCI_RPMcGuinn_files/
 code/2021_AOI_Analysis_cache/
 code/OBIS_AOI_5000m_buffer.xlsx
 code/OBIS_AOI_no_buffer.xlsx
+_book/libs/*.*
+_bookdown_files
+_book/libs/gitbook-2.6.7/css/*.*
+_book/libs/jquery-2.2.3/*.*
+_book/_main_files/
+_book/
+_book/libs/jquery-2.2.3/*.*
+_book/libs/gitbook-2.6.7/css/plugin-bookdown.css
+_book/libs/gitbook-2.6.7/css/plugin-fontsettings.css
+_book/libs/gitbook-2.6.7/css/plugin-highlight.css
+_book/libs/gitbook-2.6.7/css/plugin-search.css
+_book/libs/gitbook-2.6.7/css/plugin-table.css
+_book/libs/gitbook-2.6.7/css/style.css
+_book/libs/gitbook-2.6.7/js/app.min.js
+_book/libs/gitbook-2.6.7/js/jquery.highlight.js
+_book/libs/gitbook-2.6.7/js/lunr.js
+_book/libs/gitbook-2.6.7/js/plugin-bookdown.js
+_book/libs/gitbook-2.6.7/js/plugin-fontsettings.js
+_book/libs/gitbook-2.6.7/js/plugin-search.js
+_book/libs/gitbook-2.6.7/js/plugin-sharing.js
+_book/libs/jquery-2.2.3/jquery.min.js
+
+
+
+
 
 
