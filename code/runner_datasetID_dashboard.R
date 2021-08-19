@@ -51,34 +51,43 @@ library(jsonlite)
 ##### set an option #####
 options(lifecycle_disable_warnings = TRUE)
 
-##### load database(old_and_new)#####
-setwd("C:/rworking/deepseatools/indata")
-indata_old<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
-filt_old <- indata_old %>%
-  filter(Flag == "0")
-
-setwd("C:/rworking/deepseatools/indata")
-indata2<-read.csv("DSCRTP_NatDB_20210414-0.csv", header = T) #DSCRTP_NatDB_20181005-0.csv # DSCRTP_NatDB_20181211-2.csv
-filt <- indata %>%
-  filter(Flag == "0")
-
-rm(indata)
-setwd("C:/rworking/deepseatools/indata")
-indata<-read.csv("20210414-0", header = T)
-
-
-# #change all 'missing' values in factors to explicit NA's
+##### load current database(from Google Drive)#####
+## set the file name (user supplied th file name root, without extension).
+filename <- 'DSCRTP_NatDB_20210803-0_CSV'
+# find the file in google drive by name
+x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
+## getting the id as a character string
+y <- x$id
+## download the zip file
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
+## extract just the file of interest from the zip file
+sub <- read.csv(unz(dl$local_path, paste(substr(filename, 1, 23), ".csv", sep = '')))
+flagged <- sub %>%  filter(Flag == "1")
+## change all 'missing' values in factors to explicit NA's
 # filt <- filt %>% mutate_if(is.factor,
 #                       fct_explicit_na,
 #                       na_level = "to_impute")
 
+## cleanup
+rm(dl)
+rm(x)
+rm(y)
+
+##### change name of 'sub' to 'indata' and create 'filt' #####
+indata <- sub
+filt <- indata %>% filter(Flag == 0)
+
+## cleanup
+rm(sub)
+
 ##### define database version (this variable called in RMD files) #####
-version <- unique(indata$DatabaseVersion)
+version <- unique(filt$DatabaseVersion)
 version <- as.character(version)
 
-##### ***OR*** bringing in datasetID key from xls stored on drive #####
+##### ***OR*** bringing in datasetID key from xls stored on drive ####
+
 ## create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20210205-1_DatasetID_Key_DSCRTP'")
+x <- drive_find(q = "name contains '20210414-1_DatasetID_Key_DSCRTP'")
 
 ## browse to it
 # x %>% drive_browse()
@@ -88,7 +97,7 @@ y <- x$id
 
 # this downloads the file to the specified path
 dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/20200710-2_DatasetID_Key_DSCRTP.xlsx",
+                     path = "C:/rworking/deepseatools/indata/20210414-1_DatasetID_Key_DSCRTP.xlsx",
                      overwrite = TRUE)
 
 ## read the file into R as a data frame
@@ -124,6 +133,26 @@ rm(x)
 setdiff(indata$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, indata$DatasetID)
 
+##### MANUAL STEP: go update the DatasetID key with the new values #####
+
+setdiff(filt$DatasetID, key$DatasetID)
+
+x <- filt %>%
+  filter(DatasetID == "NOAA_PC-16-05") %>%
+  group_by(Vessel, VehicleName, WebSite) %>%
+  summarize(n=n())
+
+x
+
+x <- filt %>%
+  filter(DatasetID == "NOAA_PC-16-05") %>% pull(Citation) %>% unique()
+
+x
+
+
+##### bring in new MANUALLY UPDATED datasetID key from local path #####
+key <- read.xlsx("C:/rworking/deepseatools/indata/20210811-0_DatasetID_Key_DSCRTP.xlsx")
+
 ##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
 ## build a frequency table by DatasetID from new file
 x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
@@ -135,12 +164,13 @@ names(y)
 
 ## merge new numbers to create old key + new counts
 z <- merge(y,x)
-names(z)=
+
 
 ## write out result
-write.xlsx(z, "C:/rworking/deepseatools/indata/20210414-0_DatasetID_Key_DSCRTP.xlsx",
+write.xlsx(z, "C:/rworking/deepseatools/indata/20210811-0_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
+##### upload new key to Google Drive #####
 ##### ***OPTIONAL*** subsetting of indata to d (optional step for testing purposes) #####
 d <- indata %>%
   filter(
@@ -150,7 +180,7 @@ d <- indata %>%
     # DatasetID == 'NOAA_AFSC_Longline_Survey' #Program
   )
 
-##### ***OR*** full run set indata to d #####
+##### ***OR*** full run set 'filt' to d #####
 d <- filt
 
 ##### cleanup #####
@@ -221,8 +251,6 @@ View(x)
 ##### checking #####
 setdiff(d$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, d$DatasetID)
-##### before doing merge step, you will need to manually edit the key #####
-##### load the manually edited key #####
 ##### merge database with key  #####
 d <- merge(d, key, all.x = TRUE)
 
