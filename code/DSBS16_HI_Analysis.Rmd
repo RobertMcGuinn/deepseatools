@@ -1,0 +1,66 @@
+---
+title: "DSBS16_HI_Analysis"
+author: "Robert McGuinn"
+date: "`r Sys.Date()`"
+output: 
+  word_document:
+     reference_docx: template.docx
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, 
+                      eval = T)
+```
+
+```{r packages}
+library(tidyr)
+library(openxlsx)
+library(googlesheets4)
+library(googledrive)
+
+```
+
+# Main Project Folder
+
+## Yo
+
+The main project folder for this analysis is on Google Drive: [LINK](https://drive.google.com/drive/folders/1ToTK_v7NF7ZPdwXQwD1hzCwuVZCZRH_d)
+
+## Input data sets
+
+Datasets used in this analysis were acquired on 2021-08-18 from Tom Hourigan. The coral and sponge species occurrence records are from a subset of dives in the Hawaiian region (including Johnston Atoll and the Musician Seamounts). This original dataset is shared on Google Drive here: [LINK]()
+
+
+```{r data_intake}
+##### bringing in dataframe from xlsx stored on drive ####
+
+## file path [MANUAL]
+filename <- "20210817_Hawaii-HiDensity1500-2500m"
+
+## create a list of files (or single file) that meets title query [MANUAL]
+x <- drive_find(q = "name contains '20210817_Hawaii-HiDensity1500-2500m'")
+
+## browse to it
+# x %>% drive_browse()
+
+# getting the id as a character string
+y <- x$id
+
+# this downloads the file to the specified path
+dl <- drive_download(as_id(y),
+                     path = paste("C:/rworking/deepseatools/indata/",
+                                  filename,
+                                  ".xlsx", 
+                                  sep = ""),
+                     overwrite = TRUE)
+
+## extract just the file of interest from the zip file to a dataframe called 'sub'
+sub <- read.xlsx(dl$local_path)
+
+## names 
+names(sub)
+```
+
+## Summary 
+
