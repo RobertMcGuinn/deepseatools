@@ -6,11 +6,15 @@ output:
   word_document:
      reference_docx: template.docx
 always_allow_html: yes
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, 
-                      eval = T)
+                      eval = T, 
+                      warning = F,
+                      message = F)
 ```
 
 ```{r packages}
@@ -18,21 +22,23 @@ library(tidyr)
 library(openxlsx)
 library(googlesheets4)
 library(googledrive)
-
+library(flextable)
+library(dplyr)
+library(flextable)
 ```
 
-# Main Project Folder
-
-## Yo
+## Main Project Folder
 
 The main project folder for this analysis is on Google Drive: [LINK](https://drive.google.com/drive/folders/1ToTK_v7NF7ZPdwXQwD1hzCwuVZCZRH_d)
 
+https://drive.google.com/drive/folders/1ToTK_v7NF7ZPdwXQwD1hzCwuVZCZRH_d
+
 ## Input data sets
 
-Datasets used in this analysis were acquired on 2021-08-18 from Tom Hourigan. The coral and sponge species occurrence records are from a subset of dives in the Hawaiian region (including Johnston Atoll and the Musician Seamounts). This original dataset is shared on Google Drive here: [LINK]()
+Datasets used in this analysis were acquired on 2021-08-18 from Tom Hourigan via XLS. The coral and sponge species occurrence records are from a subset of dives in the Hawaiian region (including Johnston Atoll and the Musician Seamounts). This original dataset is shared on Google Drive here: [LINK](https://docs.google.com/spreadsheets/d/16izQ_vWsSDgMupbNAEUsVTvMISzmrLaC/edit?usp=sharing&ouid=109414727136135095326&rtpof=true&sd=true)
 
 
-```{r data_intake}
+```{r data_intake, cache=T}
 ##### bringing in dataframe from xlsx stored on drive ####
 
 ## file path [MANUAL]
@@ -59,8 +65,126 @@ dl <- drive_download(as_id(y),
 sub <- read.xlsx(dl$local_path)
 
 ## names 
-names(sub)
+# names(sub)
 ```
 
+```{r data_scrub}
+
+sub <- sub %>% rename(n_km = `#/km`,
+                    m_divetrack = `Dive.Track.(m)`,
+                    kennedy_class = Kennedy.Class)
+```
+
+
 ## Summary 
+
+```{r variables}
+n_records <- length(sub$CatalogNumber)
+n_images <- sub
+txt_names <- names(sub)
+n_names <- length(names(sub))
+n_eventid <- length(unique(sub$EventID))
+n_na_eventid <- sub %>% 
+  filter(is.na(EventID) == T) %>% 
+  pull(EventID) %>% 
+  length()
+n_densitycat <- length(unique(sub$DensityCategory))
+```
+
+The input dataset contains `r n_records` coral and sponge occurrences observed within `r n_eventid` dives ('EventID'). 
+
+### Dives ('EventID')
+
+Caption: This table gives each 'EventID' with the number of records within each.The table is sorted in descending order by the number of records recorded within each dive.  
+
+```{r eventID_table}
+## create table
+x <- sub %>% group_by(EventID,m_divetrack) %>% 
+  summarize(n=n()) %>% 
+  arrange(desc(m_divetrack))
+
+length(x$EventID)
+
+## create flextable
+myft <- flextable(x)
+
+## modify flextable
+myft <- theme_vanilla(myft)
+myft<- fontsize(myft, size = 8, part = "body")
+myft <- align(myft, align = "left", part = "header")
+myft <- align(myft, align = "left", part = "body")
+
+myft <- set_table_properties(myft, width = .5, layout = "autofit")
+myft
+
+# myft <- italic(myft, j = 3)
+# myft <- color(myft, ~ drat > 3.5, ~ drat, color = "red")
+# myft <- bold(myft, ~ drat > 3.5, ~ drat, bold = TRUE)
+
+
+```
+
+### Observed occurrence density categories for each dive
+
+Each occurrence is put into one of `r n_densitycat` density categories. See the table below for the distribution of density categories across all dives.
+
+```{r density_category_table}
+## create table
+x <- sub %>% group_by(EventID, DensityCategory) %>% 
+  summarize(n=n()) %>% 
+  arrange(desc(n))
+
+## create flextable
+myft <- flextable(x)
+
+## modify flextable
+myft <- theme_vanilla(myft)
+myft<- fontsize(myft, size = 8, part = "body")
+myft <- align(myft, align = "left", part = "header")
+myft <- align(myft, align = "left", part = "body")
+
+myft <- set_table_properties(myft, width = .5, layout = "autofit")
+myft
+
+# myft <- italic(myft, j = 3)
+# myft <- color(myft, ~ drat > 3.5, ~ drat, color = "red")
+# myft <- bold(myft, ~ drat > 3.5, ~ drat, bold = TRUE)
+
+```
+
+### Effort
+```{r effort_table}
+## create table
+x <- sub %>% group_by(EventID, m_divetrack) %>% 
+  summarize(n=n(), sum_count = sum(IndividualCount)) %>% 
+  arrange(desc(m_divetrack))
+
+## create flextable
+myft <- flextable(x)
+
+## modify flextable
+myft <- theme_vanilla(myft)
+myft<- fontsize(myft, size = 8, part = "body")
+myft <- align(myft, align = "left", part = "header")
+myft <- align(myft, align = "left", part = "body")
+
+myft <- set_table_properties(myft, width = .5, layout = "autofit")
+myft
+
+# myft <- italic(myft, j = 3)
+# myft <- color(myft, ~ drat > 3.5, ~ drat, color = "red")
+# myft <- bold(myft, ~ drat > 3.5, ~ drat, bold = TRUE)
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
