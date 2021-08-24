@@ -9,12 +9,18 @@ always_allow_html: yes
 editor_options: 
   chunk_output_type: console
 ---
+## ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, 
                       eval = T, 
                       warning = F,
-                      message = F)
+                      message = F,
+                      fig.height = 10, 
+                      fig.width = 10, 
+                      dpi = 300)
+
+
 ```
 
 ```{r packages}
@@ -25,17 +31,23 @@ library(googledrive)
 library(flextable)
 library(dplyr)
 library(flextable)
+library(vegan)
+library(ggplot2)
+library(reshape2)
+library(extrafont)
+library(leaflet)
+
 ```
 
-## Main Project Folder
+## Resources for this analysis
 
 The main project folder for this analysis is on Google Drive: [LINK](https://drive.google.com/drive/folders/1ToTK_v7NF7ZPdwXQwD1hzCwuVZCZRH_d)
 
-https://drive.google.com/drive/folders/1ToTK_v7NF7ZPdwXQwD1hzCwuVZCZRH_d
+The RMarkdown code used to generate this report is available here: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/DSBS16_HI_Analysis.Rmd)
 
 ## Input data sets
 
-Datasets used in this analysis were acquired on 2021-08-18 from Tom Hourigan via XLS. The coral and sponge species occurrence records are from a subset of dives in the Hawaiian region (including Johnston Atoll and the Musician Seamounts). This original dataset is shared on Google Drive here: [LINK](https://docs.google.com/spreadsheets/d/16izQ_vWsSDgMupbNAEUsVTvMISzmrLaC/edit?usp=sharing&ouid=109414727136135095326&rtpof=true&sd=true)
+Datasets used in this analysis were acquired on 2021-08-18 from Tom Hourigan via Excel file. The coral and sponge species occurrence records are from a subset of dives in the Hawaiian region (including Johnston Atoll and the Musician Seamounts). This original dataset is shared on Google Drive here: [LINK](https://docs.google.com/spreadsheets/d/16izQ_vWsSDgMupbNAEUsVTvMISzmrLaC/edit?usp=sharing&ouid=109414727136135095326&rtpof=true&sd=true)
 
 
 ```{r data_intake, cache=T}
@@ -75,35 +87,48 @@ sub <- sub %>% rename(n_km = `#/km`,
                     kennedy_class = Kennedy.Class)
 ```
 
-
-## Summary 
-
+## Summary
 ```{r variables}
 n_records <- length(sub$CatalogNumber)
-n_images <- sub
+
+list_imageurls <- sub %>%  filter(is.na(ImageURL)==F) %>% 
+  pull(ImageURL)
+
+n_images <- length(unique(list_imageurls))
+
 txt_names <- names(sub)
+
 n_names <- length(names(sub))
+
 n_eventid <- length(unique(sub$EventID))
+
 n_na_eventid <- sub %>% 
   filter(is.na(EventID) == T) %>% 
   pull(EventID) %>% 
   length()
+
 n_densitycat <- length(unique(sub$DensityCategory))
+
 ```
 
-The input dataset contains `r n_records` coral and sponge occurrences observed within `r n_eventid` dives ('EventID'). 
+The input dataset contains `r n_records` of coral and sponge occurrences observed within `r n_eventid` dives ('EventID'). 
 
-### Dives ('EventID')
-
-Caption: This table gives each 'EventID' with the number of records within each.The table is sorted in descending order by the number of records recorded within each dive.  
+### Table: Dives organized by Density Category
+* *EventID*: Table is grouped by 'EventID'
+* *count_per_km*: IndividualCount per linear distance surveyed (km). This field is used for sorting this table in descending order. 
+* *DensityCategory*: One of 4 assigned density categories
 
 ```{r eventID_table}
 ## create table
-x <- sub %>% group_by(EventID,m_divetrack) %>% 
-  summarize(n=n()) %>% 
-  arrange(desc(m_divetrack))
+x <- sub %>% 
+  group_by(EventID) %>% 
+  arrange(EventID) %>% 
+  summarize(count_per_km = unique(n_km),
+            DensityCategory = unique(DensityCategory)) %>% 
+  arrange(desc(count_per_km))
 
-length(x$EventID)
+## checking
+# length(x$EventID)
 
 ## create flextable
 myft <- flextable(x)
@@ -111,6 +136,7 @@ myft <- flextable(x)
 ## modify flextable
 myft <- theme_vanilla(myft)
 myft<- fontsize(myft, size = 8, part = "body")
+myft<- fontsize(myft, size = 8, part = "header")
 myft <- align(myft, align = "left", part = "header")
 myft <- align(myft, align = "left", part = "body")
 
@@ -120,19 +146,30 @@ myft
 # myft <- italic(myft, j = 3)
 # myft <- color(myft, ~ drat > 3.5, ~ drat, color = "red")
 # myft <- bold(myft, ~ drat > 3.5, ~ drat, bold = TRUE)
-
-
 ```
 
-### Observed occurrence density categories for each dive
+### Table: Taxonomic lists (All)
+* *EventID*: This table is grouped by dive (EventID)
+* *count_per_km*: IndividualCount per linear distance surveyed (km). This field is used for sorting this table in descending order. 
+* *number_genera*: The number of genera observed the dive.
+* *number_species*: The number of species observed on the dive.
+* *genus_list*: List of genera observed on the dive.
+* *species_list*: List of species observed on the dive.
 
-Each occurrence is put into one of `r n_densitycat` density categories. See the table below for the distribution of density categories across all dives.
-
-```{r density_category_table}
+```{r taxa_list_table}
 ## create table
-x <- sub %>% group_by(EventID, DensityCategory) %>% 
-  summarize(n=n()) %>% 
-  arrange(desc(n))
+x <- sub %>% arrange(ScientificName) %>% 
+  group_by(EventID) %>% 
+  summarize(count_per_km = unique(n_km),
+            number_species = length(unique(ScientificName)),
+            number_genera = length(unique(Genus)),
+            genus_list = toString(unique(Genus)),
+            species_list = toString(unique(ScientificName))
+            ) %>% 
+  arrange(desc(count_per_km))
+      
+## checking
+# length(x$EventID)
 
 ## create flextable
 myft <- flextable(x)
@@ -140,6 +177,7 @@ myft <- flextable(x)
 ## modify flextable
 myft <- theme_vanilla(myft)
 myft<- fontsize(myft, size = 8, part = "body")
+myft<- fontsize(myft, size = 8, part = "header")
 myft <- align(myft, align = "left", part = "header")
 myft <- align(myft, align = "left", part = "body")
 
@@ -150,14 +188,26 @@ myft
 # myft <- color(myft, ~ drat > 3.5, ~ drat, color = "red")
 # myft <- bold(myft, ~ drat > 3.5, ~ drat, bold = TRUE)
 
+## write it out 
+setwd("C:/rworking/deepseatools/indata/")
+write.xlsx(x, "20210820-0_species_lists_per_EventID.xlsx")
+
 ```
 
-### Effort
-```{r effort_table}
+### Table: Images 
+There are `r n_images` unique images within the dataset.  Here is how they break down by each of the `r n_eventid`
+
+```{r images_table}
 ## create table
-x <- sub %>% group_by(EventID, m_divetrack) %>% 
-  summarize(n=n(), sum_count = sum(IndividualCount)) %>% 
-  arrange(desc(m_divetrack))
+x <- sub %>% filter(is.na(ImageURL) == F) %>% 
+  group_by(EventID) %>% 
+  summarize(n_images = length(unique(ImageURL))
+            ) %>% 
+  arrange(desc(n_images))
+
+## checking
+# length(x$EventID)
+sum(x$n_images)
 
 ## create flextable
 myft <- flextable(x)
@@ -165,6 +215,7 @@ myft <- flextable(x)
 ## modify flextable
 myft <- theme_vanilla(myft)
 myft<- fontsize(myft, size = 8, part = "body")
+myft<- fontsize(myft, size = 8, part = "header")
 myft <- align(myft, align = "left", part = "header")
 myft <- align(myft, align = "left", part = "body")
 
@@ -177,14 +228,489 @@ myft
 
 ```
 
+## Exports
+### Images to local folder
+
+```{r images_from_url, eval=F}
+## load any images to a local folder 
+## WARNING: This chunk takes a long time.  Go get a coffee
+###### download all images and put them in a folder #####
+z <- sub %>% filter(is.na(ImageURL) == F)
+
+## [MANUAL]: go create folder and point to it 
+setwd("C:/rworking/deepseatools/images/dsbs6/")
+for(i in 1:length(z$CatalogNumber)){
+  download.file(as.character(z$ImageURL[i]),
+                destfile = paste("DSCRTP",
+                                 z$CatalogNumber[i],
+                                 z$EventID[i],
+                                 z$ScientificName[i],
+                                 z$DepthInMeters[i],
+                                 basename(as.character(z$ImageURL[i])),
+                                 sep = '_'),
+                mode = "wb")
+}
+
+## OPTIONAL: write out featureclass to geodatabase from sf object
+fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+arc.write(file.path(fgdb_path, 'imageset_5000'), data=z, overwrite = TRUE)
+
+```
+
+### Images from local folder to Google Drive
+```{r local_images_to_Drive_folder, eval=F}
+## load the images to a Google Drive folder
+## WARNING: This chunk could take a longish time. Go get a coffee
+##### Loading files from a local folder to Google Drive ##### 
+## MANUAL CHANGE "folderurl" to the desired drive folder ID
+folderurl <- "https://drive.google.com/drive/folders/1oOiCVRWJUc4fQQ1dec9q3APYfk1Ea4nj"
+
+## get the list of files from the local folder
+files <- list.files(path="C:/rworking/deepseatools/indata/imageset_5000", full.names=TRUE, recursive=FALSE)
+
+## loop upload images to Google Drive
+for(i in files){
+drive_upload(i,
+             path = as_id(folderurl),
+             overwrite = T)
+}
+
+```
+
+### Table: All taxa summary by individual taxa grouped within EventID.
+
+This file is loaded as an Excel file to Google Drive at the following location: [LINK](https://docs.google.com/spreadsheets/d/1KHBkC3JkJE4rpTiI_buXAiN9ZLcj82S1/edit?usp=sharing&ouid=109414727136135095326&rtpof=true&sd=true) 
+
+This table is handy for looking at the taxa present in one dive in order of abundance.  The table is huge and is much better digested in spreadsheet form. 
+
+```{r table_coral_and_sponge_summary_by_EventID, echo=FALSE} 
+x <- sub %>%
+  filter(
+    TaxonRank == 'genus' |
+      TaxonRank == 'species' |
+      TaxonRank == 'subspecies',
+    #Phylum == 'Cnidaria'
+  ) %>%
+  arrange(ScientificName) %>%
+  group_by(EventID, ScientificName) %>%
+  summarize(
+    IndividualCount_sum = sum(IndividualCount),
+    TaxonRank = paste(unique(TaxonRank), collapse= ' | '),
+    Phylum = paste(unique(Phylum), collapse= ' | '),
+    #Taxa = paste(unique(ScientificName), collapse= ' | '),
+    #Densities = paste(unique(Density), collapse = ' | '),
+    #Richness = length(unique(ScientificName)),
+    Locality = paste(unique(Locality), collapse= ' | '),
+    MinimumDepth = min(DepthInMeters),
+    MaximumDepth = max(DepthInMeters), 
+    NumberRecords = n(),
+    ImageURL = paste(unique(ImageURL), collapse= ' | ')
+     )
+
+x <- x %>% arrange(EventID, desc(IndividualCount_sum))
+
+## create flextable
+# myft <- flextable(x)
+
+## modify flextable
+# myft <- theme_vanilla(myft)
+# myft<- fontsize(myft, size = 8, part = "body")
+# myft <- align(myft, align = "left", part = "header")
+# myft <- align(myft, align = "left", part = "body")
+# 
+# myft <- set_table_properties(myft, width = .5, layout = "autofit")
+# myft
+
+# myft <- italic(myft, j = 3)
+# myft <- color(myft, ~ drat > 3.5, ~ drat, color = "red")
+# myft <- bold(myft, ~ drat > 3.5, ~ drat, bold = TRUE)
+
+## write it to excel 
+filename = "20210823-2_Summary_of_all_corals_and_sponges_by_ScientificName_with_groups_Scientific_EventID.xlsx"
+setwd("C:/rworking/deepseatools/indata/")
+write.xlsx(x, filename)
+```
+
+## Setting up bins 
+## NMDS
+### Filter to only species appearing in the top ten list  
+
+```{r filter_to_top_ten, echo=F, eval=T, warning=F, message=F}
+##### filter d down to just the species appearing in the top ten ##### 
+topten <- sub %>%
+ group_by(EventID, ScientificName)%>%
+ summarize(individual_count_sum = sum(IndividualCount))%>%
+ top_n(10, individual_count_sum) %>% arrange(EventID, desc(individual_count_sum))
+
+z <- sub %>% filter(
+  ScientificName %in% topten$ScientificName
+# EventID %in% c("NA101-H1715","NA101-H1720", "D2-EX1504L2-17")
+  )
+```
+
+### Setting up depth, temp, and location categories
+
+```{r setdepthclass, echo=FALSE, cache = FALSE} 
+
+##### setting depth categories ##### 
+z$DepthCat[as.numeric(z$DepthInMeters) <= 2000] <- "shallow"
+z$DepthCat[as.numeric(z$DepthInMeters) > 2000] <- "deep"
+z$DepthCat <- factor(z$DepthCat, levels = c("shallow", "deep"))
+
+##### setting location categories ##### 
+z$loc[as.numeric(z$Latitude) > 25] <- "north"
+z$loc[as.numeric(z$Latitude) < 25] <- "south"
+
+##### setting temperature categories #####
+z$temp_cat[as.numeric(z$Temperature) > 2.2] <- "warmer"
+z$temp_cat[as.numeric(z$Temperature) >= 1.9 & as.numeric(z$Temperature) <= 2.2] <- "cold"
+z$temp_cat[as.numeric(z$Temperature) < 1.9] <- "colder"
+z$temp_cat <- factor(z$temp_cat, levels = c("warmer", "cold", "colder"))
+
+##### setting oxygen categories #####
+# qplot(as.numeric(z$Oxygen))
+z$ox_cat[as.numeric(z$Oxygen) >= 2.6] <- "rich"
+z$ox_cat[as.numeric(z$Oxygen) < 2.6] <- "poor"
+
+##### longitude cat #####
+z$longloc[as.numeric(z$Longitude) > -168] <- "east"
+z$longloc[as.numeric(z$Longitude) < -168] <- "west"
+
+```
+
+### Making the matrix
+
+First we adjust the abundances by the length of the drive track. This creates a normalized value for 'IndividualCount'. It is calculated as 'IndividualCount' per meter. This value is then entered into the site by species matrix which is used in the NMDS and clustering algorithms.  
+
+``` {r NMDS, echo=FALSE, cache = FALSE, dpi=300, warning=FALSE, message=FALSE, results='hide', cache=T}
+## filter if necessary
+x <- z %>% 
+  filter(
+    #DepthCat == 'deep',
+    #EventID != "D2-EX1605L1-13"
+    #Phylum == "Porifera"
+  )
+
+## checking 
+# length(table(sub$n_km, useNA = 'always'))
+
+## adjust the IndividualCount values 
+x$IndividualCount_z <- x$IndividualCount/x$m_divetrack
+
+## create site X species matrix 
+library(vegan)
+site.sp <- reshape2::dcast(x, EventID ~ ScientificName, value.var = "IndividualCount_z", fun.aggregate = sum)
+
+## set all NA to 0 because...
+site.sp[is.na(site.sp)] = 0
+
+## checking resulting table
+# View(site.sp)
+
+## export to check
+# setwd("C:/rworking/deepseatools/indata")
+# write.csv(site.sp, 'site.sp.csv')
+
+# creating a site variable
+site.sp$site <- site.sp$EventID
+
+# getting rid of non-needed variables
+site.sp <- site.sp %>%
+  dplyr::select(-EventID)
+
+# # moving the site variable to the beginning
+# col_idx <- grep("site", names(site.sp))
+# site.sp <- site.sp[, c(col_idx, (1:ncol(site.sp))[-col_idx])]
+# # names(site.sp)
+
+# set the site as the row.names
+row.names(site.sp) <- site.sp$site
+
+# remove the site variable
+site.sp <- site.sp %>%
+  dplyr::select(-site)
+
+# making it a matrix
+site.sp <- as.matrix(site.sp)
+
+## checking 
+# NMDS
+
+``` 
+
+### NMDS Run
+
+Here are the statistical results from the NMDS run:   
+
+```{r NMDS_run}
+##### running NMDS starting with site X species matrix #####
+#install.packages("vegan")
+library(vegan)
+NMDS <- metaMDS(site.sp, distance = "jaccard", binary = T, k=3, trymax = 30)
+
+##### extracting the site and species scores for use with ggplot2 ##### 
+#Using the scores function from vegan to extract the site scoresand convert to a data.frame
+site.scores <- as.data.frame(scores(NMDS))  
+site.scores$site <- rownames(site.scores)  # create a column of site names, from the rownames of data.scores
+
+# head(site.scores)  #look at the data
+# merge information from d (to get categories)
+site.scores <- merge(site.scores, x, by.x = 'site', by.y = 'EventID')
+site.scores <- site.scores %>% group_by(site) %>% summarise(NMDS1 = NMDS1[1],
+                                                            NMDS2 = NMDS2[1],
+                                                            DepthCat = DepthCat[1],
+                                                            temp_cat = temp_cat[1],
+                                                            loc = loc[1])
+
+# extracting species scores
+species.scores <- as.data.frame(scores(NMDS, "species"))  #Using the scores function from vegan to extract the species scores and convert to a data.frame
+species.scores$species <- rownames(species.scores)  # create a column of species, from the rownames of species.scores
+# head(species.scores)  #look at the data
+species.scores$spec_code <- 1:(length(species.scores$species))
+
+NMDS
+
+```
+
+### Plot of NMDS with group colors as from depth bin
+
+```{r plotting_NMDS_depth}
+##### plotting NMDS ##### 
+ggplot() +
+  geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=DepthCat), size=5) + # add the point markers
+  geom_text(data=site.scores,aes(x=NMDS2,y=NMDS1, label = site), size=4, position = position_nudge(y = .0001)) + # add the text
+  #geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3, size=4) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+```
+
+### Plot of NMDS with group colors from temperature
+
+```{r plotting_NMDS_temp}
+
+ggplot() +
+  geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=temp_cat), size=5) + # add the point markers
+  geom_text(data=site.scores,aes(x=NMDS2,y=NMDS1, label = site), size=4, position = position_nudge(y = .0001)) + # add the text
+  #geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3, size=4) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+```
+
+### Plot of NMDS with group colors from location 
+
+Location based on latitude break at X.  
+
+```{r}
+
+ggplot() +
+  geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=loc), size=5) + # add the point markers
+  geom_text(data=site.scores,aes(x=NMDS2,y=NMDS1, label = site), size=4, position = position_nudge(y = .0001)) + # add the text
+  #geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3, size=4) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+```
+
+### Plot of NMDS species scores
+
+Labels are are species code (by number). See table below for species code.   
+
+```{r}
+
+ggplot() +
+  #geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=loc), size=5) + # add the point markers
+  geom_text(data=species.scores,aes(x=NMDS2,y=NMDS1, label = spec_code), size=4, position = position_nudge(y = .0001)) + # add the text
+  geom_point(data=species.scores,aes(x=NMDS2,y=NMDS1), shape = 3, size=4) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+```
+
+## Table of species codes (key to the lables in the species score NMDS plot above)
+
+```{r spec_codes}
+
+x <- species.scores %>% dplyr::select(spec_code)
+
+## convert row names to column
+x <- tibble::rownames_to_column(x, "ScientificName")
+## create flextable
+myft <- flextable(x)
+
+## modify flextable
+myft <- theme_vanilla(myft)
+myft<- fontsize(myft, size = 8, part = "body")
+myft<- fontsize(myft, size = 8, part = "header")
+myft <- align(myft, align = "left", part = "header")
+myft <- align(myft, align = "left", part = "body")
+
+myft <- set_table_properties(myft, width = .5, layout = "autofit")
+myft
+
+```
+
+### Looking at clusters 
+
+```{r}
+##### create different distance matrices ##### 
+## Bray-Curtis as binary (presence/absence) of species per equation above
+# sp_bray_binary = vegdist(site.sp, method='bray', binary=T)
+
+## Bray-Curtis as amount (density) of species
+# sp_bray = vegdist(site.sp, method='bray')
+
+## transformed Bray-Curtis as amount (density) of species
+sp_bray_transformed = vegdist(wisconsin(sqrt(site.sp)), method='bray')
+
+##### create different clusters ######
+
+fit <- hclust(sp_bray_transformed)
+plot(fit, main = "", sub = "", xlab="Sites", axes = T, ylab = "Ecological Distance (Bray-Curtis - Wisconsin Transformed)", hang = -1) # display dendogram
+groups <- cutree(fit, k=6) # cut tree into 5 clusters
+# draw dendogram with red borders around the 5 clusters
+rect.hclust(fit, k=6, border="red")
+
+# fit <- hclust(sp_bray_binary)
+# plot(fit, main = "", sub = "", xlab="Sites", axes = T, ylab = "Ecological Distance (Sorensen)", hang = -1) # display dendogram
+# groups <- cutree(fit, k=5) # cut tree into 5 clusters
+# # draw dendogram with red borders around the 5 clusters
+# rect.hclust(fit, k=5, border="red")
+# 
+# fit <- hclust(sp_bray)
+# plot(fit, main = "", sub = "", xlab="Sites", axes = T, ylab = "Ecological Distance (Bray-Curtis)", hang = -1) # display dendogram
+# groups <- cutree(fit, k=5) # cut tree into 5 clusters
+# # draw dendogram with red borders around the 5 clusters
+# rect.hclust(fit, k=5, border="red")
+
+```
+
+## Diversity estimates.
+
+##### Table: Shannon diversity per EventID
+All taxa (both coral and sponges at all taxonomic ranks included in estimates): [LINK](https://drive.google.com/open?id=1PWfh5Tc6Fk8mM4jHeNe31XesLXDzW1np)
+
+```{r diversity, echo=F}
+
+shannon_diversity <- diversity(site.sp, index = "shannon") #makes an object
+#that the diversity values #are written to.
+# summary(plots) #gives summary statistics for the plots
+# median(plots) #gives the median
+# mean(plots) #gives the mean
+# class(plots)
+# max(plots[1:30])
+# # View(plots)
+
+# creating plots
+plots_df <- data.frame(shannon_diversity)
+# View(plots_df)
+plots_df$EventID <- row.names(plots_df)
+# names(d)
+d <- merge(sub, plots_df, all.x = T)
+# length(d$EventID)
+# length(unique(d$EventID))
+x <- d %>% group_by(EventID, shannon_diversity) %>% summarize(n=n()) %>% #, 
+                                                 # Latitude = paste(mean(as.numeric(Latitude)), collapse = ' | '), 
+                                                 # Longitude = paste(mean(as.numeric(Longitude)), collapse = ' | ')) %>% 
+  arrange(desc(shannon_diversity))
+
+## create flextable
+myft <- flextable(x)
+
+## modify flextable
+myft <- theme_vanilla(myft)
+myft<- fontsize(myft, size = 8, part = "body")
+myft<- fontsize(myft, size = 8, part = "header")
+myft <- align(myft, align = "left", part = "header")
+myft <- align(myft, align = "left", part = "body")
+
+myft <- set_table_properties(myft, width = .5, layout = "autofit")
+myft
+
+
+#View(x)
+
+setwd("C:/rworking/deepseatools/indata")
+write.xlsx(x, '20210823-0_Summary_of_Corals_and_Sponges_Diversity_by_EventID.xlsx') 
 
 
 
 
+## Calculating various Diversity Indices
+
+# H <- diversity(site.sp)
+# simp <- diversity(site.sp, "simpson")
+# invsimp <- diversity(site.sp, "inv")
+# ## Unbiased Simpson (Hurlbert 1971, eq. 5) with rarefy:
+# unbias.simp <- rarefy(site.sp, 2) - 1
+# ## Fisher alpha
+# alpha <- fisher.alpha(site.sp)
+# ## Plot all
+# pairs(cbind(H, simp, invsimp, unbias.simp, alpha, J), pch="+", col="blue")
+# ## Species richness (S) and Pielou's evenness (J):
+# S <- specnumber(site.sp) ## rowSums(site.sp > 0) does the same...
+# J <- H/log(S)
+
+```
+
+```{r mapping_diversity , echo=FALSE, eval=F}
+
+x$Latitude <- as.numeric(x$Latitude)
+x$Longitude <- as.numeric(x$Longitude)
+
+pal <- colorNumeric(
+  palette = "Reds",
+  domain = x$plots)
 
 
+m <- leaflet()
+m <- addProviderTiles(m, "Esri.OceanBasemap") #Esri.OceanBasemap, "CartoDB.DarkMatter"
+m <- addCircleMarkers(m, data=x,
+                      radius=5,
+                      weight=0,
+                      #fillColor= "green",
+                      color = ~pal(plots),
+                      fillOpacity=1,
+                      popup = paste("EventID:", x$EventID, "<br>"))
+                                   
+m
 
-
-
-
+```
 

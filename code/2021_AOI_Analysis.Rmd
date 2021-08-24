@@ -384,7 +384,7 @@ Ocean Biogeographic Informaton System (OBIS) data accessed on 2021-08-05.
 
 OBIS: [LINK](https://obis.org/)
 
-# Tabualar output for the analysis
+# Tabular output for the analysis
 
 * DSCRTP records within AOI: [LINK](https://drive.google.com/file/d/1m-SmF6V-LUCM77r-N0-ynIZb-m0sUgw2/view?usp=sharing)
 * DSCRTP records within AOI + 5km buffer: [LINK](https://drive.google.com/file/d/1qX-9EwMRPOc5qzX60hqAmpbZNQZEQ0zT/view?usp=sharing)

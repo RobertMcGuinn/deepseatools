@@ -7,7 +7,6 @@ output:
      reference_docx: template.docx
 always_allow_html: yes
 ---
-
 ```{r load_packs, echo=F, message=FALSE, warning=F}
 library(rmarkdown)
 library(xfun)

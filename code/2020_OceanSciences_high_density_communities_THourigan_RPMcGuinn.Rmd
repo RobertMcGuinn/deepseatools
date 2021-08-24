@@ -604,7 +604,6 @@ Table of species codes (key to the lables in the species score NMDS plot above)
 
 ```{r spec_codes, echo=F}
 x <- species.scores %>%  dplyr::select(spec_code)
-
 kable(x)
 
 ```
