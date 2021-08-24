@@ -446,7 +446,7 @@ Here are the statistical results from the NMDS run:
 ##### running NMDS starting with site X species matrix #####
 #install.packages("vegan")
 library(vegan)
-NMDS <- metaMDS(site.sp, distance = "jaccard", binary = T, k=3, trymax = 30)
+NMDS <- metaMDS(site.sp, distance = "bray", binary = F, k=3, trymax = 30)
 
 ##### extracting the site and species scores for use with ggplot2 ##### 
 #Using the scores function from vegan to extract the site scoresand convert to a data.frame
