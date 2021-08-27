@@ -1,0 +1,309 @@
+---
+title: "SERO_Jax_Spain_Cable_analysis"
+author: "Robert McGuinn"
+date: "8/27/2021"
+output: word_document
+---
+# ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, 
+                      eval = T, 
+                      warning = F,
+                      message = F,
+                      fig.height = 10, 
+                      fig.width = 10, 
+                      dpi = 300)
+
+```
+
+```{r packages}
+library(tidyr)
+library(openxlsx)
+library(googlesheets4)
+library(googledrive)
+library(flextable)
+library(dplyr)
+library(flextable)
+library(vegan)
+library(ggplot2)
+library(reshape2)
+library(extrafont)
+library(leaflet)
+library(sf)
+library(sp)
+library(arcgisbinding)
+arc.check_product()
+library(rgdal)
+
+
+```
+
+# Analysis objective quoted from Jocelyn Karazsia, Fishery Biologist, NOAA National Marine Fisheries Service
+
+"Separate from this, we have been asked to provide early feedback on a fiber optic cable route planned from Jacksonville, Florida to Spain. The current proposed route looks to be at least ~35 km south of the shallow water (200 m) Lophelia pertusa reefs discovered back in 2010... [wondering if you could] do a quick check to see if there are any additional records within ~5 km of this route? I attached a kmz folder with the route and the information I have on the shallow Lp reef."
+
+## POC for Analysis
+
+Jocelyn Karazsia
+Fishery Biologist
+NOAA National Marine Fisheries Service
+Southeast Region, Habitat Conservation Division
+West Palm Beach Office
+
+# Input datasets
+
+All data (the two boundary files listed below) were acquired by Robert McGuinn from Heather Coleman via email on August 23, 2021.  These data were given to Heather by Jocelyn Karazsia on August 23, 2021.
+
+* KMZ file of AOI: "ShallowLP_ROV_2010.kmz"   
+* KML file of AOI: "REVIEW COPY S1.1(Spain - Jacksonville)_Issue-1.0_20210707 (1).kml"
+
+# Code
+
+The full RMarkdown code for generating this report is available here: [LINK]()
+
+```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
+## load NDB
+##### input: latest version of NDB #####
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20210803-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+## cleanup
+rm(indata)
+
+```
+
+```{r filter_geo_OR_query, echo=F, warning=F, message=F, eval=T}
+##### filter occurrences by query or box or both ##### 
+
+## set bounding box variables
+minlat <- 28
+maxlat <- 32
+minlon <- -82
+maxlon <- -71
+
+## subset data by coordinates
+x <- subset(filt, as.numeric(Latitude) > minlat &
+                   as.numeric(Latitude) < maxlat &
+                   as.numeric(Longitude) > minlon &
+                   as.numeric(Longitude) < maxlon)
+                
+## also subset data by other variables by other criteria
+# x <- x %>% filter(ScientificName == "")
+
+## checking
+# dim(x)
+
+```
+
+```{r export_GIS, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
+## create spatial points data frame from a subset of points
+x_geo <- x
+
+## create spdf
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+## OPTIONAL: write out featureclass to geodatabase from sp object 
+# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+# arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+
+```
+
+
+```{r create_sf_from_points, echo=F}
+## transform coral and sponge occurrence points to 'sf' objects
+##### transform coral and sponge points to sf #####
+points <- st_as_sf(x_geo, wkt = "geom")
+
+## OPTIONAL: write out featureclass from sf object
+# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+# arc.write(file.path(fgdb_path, 'points'), data=points, overwrite = TRUE)
+
+```
+
+```{r data_intake_aoi, cache=T}
+
+# filepath <- "C:/data/geoindata/SERO_spain/path.shp"
+# aoi <- st_read(filepath)
+# 
+# 
+# filepath <- "C:/rworking/deepseatools/indata/REVIEW COPY S1.1(Spain - Jacksonville)_Issue-1.0_20210707 (1).kml"
+# aoi2 <- st_read(filepath)
+
+filepath <- "C:/data/geoindata/SERO_spain/South Atlantic.shp"
+aoi <- st_read(filepath)
+
+## OPTIONAL: write out featureclass to geodatabase from sf object
+# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+# arc.write(file.path(fgdb_path, 'sfaa_sf'), data=sfaa_sf, overwrite = TRUE)
+
+```
+
+```{r adjusting_crs_to_common}
+# st_crs(aoi)
+# st_crs(points)
+
+aoi <- st_transform(aoi, 3513)
+points <- st_transform(points, 3513)
+
+```
+
+```{r buffer, echo=F}
+## buffer operations
+# create 5000 meter buffer
+aoi_5000 <- st_buffer(aoi, dist=5000) # map units are in meters
+
+## OPTIONAL: write out featureclass to geodatabase from sf object (20000 meter buffer)
+# fgdb_path <- "C:/data/geoindata/SERO_spain"
+# arc.write(file.path(fgdb_path, 'aoi_5000.shp'), data=aoi_5000, overwrite = TRUE)
+
+```
+
+# Simple regional map for context
+
+* 5km buffer area of interst with all coral and sponge points within the region as black dots
+
+```{r simple_map_regional}
+
+## find points within the polygons
+points_in_5000 <- st_join(points, aoi_5000, join = st_within) # 5000 meter buffer
+
+# dissolve inner boundaries
+aoi_5000_display <- st_union(aoi_5000)
+
+## plot to see how they relate
+ggplot() +
+  geom_sf(data = aoi_5000_display) +
+  geom_sf(data = points) +
+  theme_minimal()
+
+## find points within the polygons
+points_in_5000 <- st_join(points, aoi_5000, join = st_within) # 5000 meter buffer
+
+## checking
+# dim(points_in_0)
+# dim(points_in_5000)
+# dim(points_in_20000)
+# table(points_in_0$Shape_Area, useNA = 'always')
+# table(points_in_5000$Shape_Area, useNA = 'always')
+# table(points_in_20000$Shape_Area, useNA = 'always')
+
+## select intersecting points only and create separte data frames
+points_in_5000_select <- points_in_5000 %>% filter(is.na(Name) == F)
+
+## checking 
+# dim(points_in_0_select)
+# dim(points_in_5000_select)
+# dim(points_in_20000_select)
+
+```
+
+# Map focused on 5km buffer
+
+Black dots are coral and sponge points that intersect the 5 km buffer.  
+
+```{r simple_map_intersecting}
+## plot to see how they relate
+ggplot() +
+  geom_sf(data = aoi_5000_display) +
+  geom_sf(data = points_in_5000_select) +
+  theme_minimal()
+
+```
+
+## Taxa within the AOI (DSCRTP National Database)
+
+Number of occurrences within the AOI: `r length(points_in_5000_select$CatalogNumber)`
+
+### List of Coral Taxa Grouped by 'VernacularNameCategory' (from National Database)
+
+``` {r CoralByVernacularNameCategoryTarget, echo=FALSE }
+target <- as.data.frame(points_in_5000_select)
+
+x <-
+  target %>%
+  filter(Phylum == "Cnidaria") %>% 
+  group_by(VernacularNameCategory) %>%
+  summarize(
+    Taxa = toString(unique(ScientificName)),
+    Records = n()) %>%
+  arrange(desc(Records))
+
+## create flextable
+myft <- flextable(x)
+
+## modify flextable
+myft <- theme_vanilla(myft)
+myft<- fontsize(myft, size = 8, part = "body")
+myft<- fontsize(myft, size = 8, part = "header")
+myft <- align(myft, align = "left", part = "header")
+myft <- align(myft, align = "left", part = "body")
+
+myft <- set_table_properties(myft, width = .5, layout = "autofit")
+myft
+
+```
+
+### List of Sponge Taxa Grouped by 'VernacularNameCategory' (from National Database)
+
+``` {r SpongeByVernacularNameCategoryTarget, echo=FALSE }
+target <- as.data.frame(points_in_5000_select)
+
+x <-
+  target %>%
+  filter(Phylum == "Porifera") %>% 
+  group_by(VernacularNameCategory) %>%
+  summarize(
+    Taxa = toString(unique(ScientificName)),
+    Records = n()) %>%
+  arrange(desc(Records))
+
+## create flextable
+myft <- flextable(x)
+
+## modify flextable
+myft <- theme_vanilla(myft)
+myft<- fontsize(myft, size = 8, part = "body")
+myft<- fontsize(myft, size = 8, part = "header")
+myft <- align(myft, align = "left", part = "header")
+myft <- align(myft, align = "left", part = "body")
+
+myft <- set_table_properties(myft, width = .5, layout = "autofit")
+myft
+
+
+```
+
+### Expedition Details (DSCRTP)
+
+``` {r Expedition_details_no_buf, echo=FALSE }
+
+target <- as.data.frame(points_in_5000_select)
+
+x <-
+  target %>%
+  group_by(DatasetID) %>%
+  summarize(
+    SurveyIDs = toString(unique(SurveyID)),
+    PIs = toString(unique(PI)),
+    Observation_Year = toString(unique(ObservationYear)),
+    Records = n()) %>%
+  arrange(desc(Records))
+
+## create flextable
+myft <- flextable(x)
+
+## modify flextable
+myft <- theme_vanilla(myft)
+myft<- fontsize(myft, size = 8, part = "body")
+myft<- fontsize(myft, size = 8, part = "header")
+myft <- align(myft, align = "left", part = "header")
+myft <- align(myft, align = "left", part = "body")
+
+myft <- set_table_properties(myft, width = .5, layout = "autofit")
+myft
+
+```
