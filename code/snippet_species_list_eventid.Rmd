@@ -1,0 +1,56 @@
+---
+title: "Untitled"
+author: "Robert McGuinn"
+date: "8/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Table: Taxonomic lists (All)
+* *EventID*: This table is grouped by dive (EventID)
+* *count_per_km*: IndividualCount per linear distance surveyed (km). This field is used for sorting this table in descending order. 
+* *number_genera*: The number of genera observed the dive.
+* *number_species*: The number of species observed on the dive.
+* *genus_list*: List of genera observed on the dive.
+* *species_list*: List of species observed on the dive.
+
+```{r taxa_list_table}
+## create table
+x <- sub %>% arrange(ScientificName) %>% 
+  group_by(EventID) %>% 
+  summarize(count_per_km = unique(n_km),
+            number_species = length(unique(ScientificName)),
+            number_genera = length(unique(Genus)),
+            genus_list = toString(unique(Genus)),
+            species_list = toString(unique(ScientificName))
+            ) %>% 
+  arrange(desc(count_per_km))
+      
+## checking
+# length(x$EventID)
+
+## create flextable
+myft <- flextable(x)
+
+## modify flextable
+myft <- theme_vanilla(myft)
+myft<- fontsize(myft, size = 8, part = "body")
+myft<- fontsize(myft, size = 8, part = "header")
+myft <- align(myft, align = "left", part = "header")
+myft <- align(myft, align = "left", part = "body")
+
+myft <- set_table_properties(myft, width = .5, layout = "autofit")
+myft
+
+# myft <- italic(myft, j = 3)
+# myft <- color(myft, ~ drat > 3.5, ~ drat, color = "red")
+# myft <- bold(myft, ~ drat > 3.5, ~ drat, bold = TRUE)
+
+## write it out 
+setwd("C:/rworking/deepseatools/indata/")
+write.xlsx(x, "20210826-0_species_lists_per_EventID.xlsx")
+
+```
