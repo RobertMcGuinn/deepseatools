@@ -352,7 +352,7 @@ write.xlsx(x, filename)
 
 
 ### Table: Images 
-There are `r n_images` unique images within the dataset.  Here is how they break down by each of the `r n_eventid`
+There are `r n_images` unique images within the dataset.  Here is how they break down by each of the `r n_eventid` EventIDs.
 
 ```{r images_table}
 ## create table
