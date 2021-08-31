@@ -53,14 +53,15 @@ West Palm Beach Office
 
 # Input datasets
 
-All data (the two boundary files listed below) were acquired by Robert McGuinn from Heather Coleman via email on August 23, 2021.  These data were given to Heather by Jocelyn Karazsia on August 23, 2021.
+Data on the proposed cable location were acquired by Robert McGuinn from Heather Coleman via email on August 23, 2021. These data were given to Heather by Jocelyn Karazsia on August 23, 2021. The following data inputs were used in this analysis.
 
-* KMZ file of AOI: "ShallowLP_ROV_2010.kmz"   
-* KML file of AOI: "REVIEW COPY S1.1(Spain - Jacksonville)_Issue-1.0_20210707 (1).kml"
+* NOAA's National Database for Deep Sea Corals and Sponges (version: 20210803-0)
+
+* KML file of AOI: "REVIEW COPY S1.1(Spain - Jacksonville)_Issue-1.0_20210707 (1).kml"  
 
 # Code
 
-The full RMarkdown code for generating this report is available here: [LINK]()
+The full RMarkdown code for generating this report is available here: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/20210827-0_SERO_Jax_Spain_Cable.Rmd)
 
 ```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
 ## load NDB
@@ -111,7 +112,6 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 # arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
 
 ```
-
 
 ```{r create_sf_from_points, echo=F}
 ## transform coral and sponge occurrence points to 'sf' objects
@@ -168,16 +168,46 @@ aoi_5000 <- st_buffer(aoi, dist=5000) # map units are in meters
 
 ```{r simple_map_regional}
 
+minlat <- 28
+maxlat <- 32
+minlon <- -82
+maxlon <- -75
+
+library("rnaturalearth")
+library("rnaturalearthdata")
+library("ggspatial")
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+class(world)
+
 ## find points within the polygons
 points_in_5000 <- st_join(points, aoi_5000, join = st_within) # 5000 meter buffer
 
 # dissolve inner boundaries
 aoi_5000_display <- st_union(aoi_5000)
 
+## adjust crs again for mapping
+aoi_5000_display_map <- st_transform(aoi_5000_display, 4326)
+points_map <- st_transform(points, 4326)
+
 ## plot to see how they relate
 ggplot() +
-  geom_sf(data = aoi_5000_display) +
-  geom_sf(data = points) +
+  geom_sf(data=world) +
+  geom_sf(data = aoi_5000_display_map,
+          fill = alpha("yellow", 0.2),
+          color = "darkred") +
+  geom_sf(data = points_map) +
+  annotation_scale(location = "br", 
+                   pad_y = unit(0.3, "in"), 
+                   width_hint = 0.5) +
+  annotation_north_arrow(location = "br", 
+                         which_north = "true", 
+                         pad_x = unit(0.75, "in"), 
+                         pad_y = unit(0.5, "in"),
+                         style = north_arrow_fancy_orienteering) +
+  coord_sf(xlim = c(minlon,maxlon), 
+           ylim = c(minlat,maxlat), 
+           expand = FALSE) +
   theme_minimal()
 
 ## find points within the polygons
@@ -201,19 +231,6 @@ points_in_5000_select <- points_in_5000 %>% filter(is.na(Name) == F)
 
 ```
 
-# Map focused on 5km buffer
-
-Black dots are coral and sponge points that intersect the 5 km buffer.  
-
-```{r simple_map_intersecting}
-## plot to see how they relate
-ggplot() +
-  geom_sf(data = aoi_5000_display) +
-  geom_sf(data = points_in_5000_select) +
-  theme_minimal()
-
-```
-
 ## Taxa within the AOI (DSCRTP National Database)
 
 Number of occurrences within the AOI: `r length(points_in_5000_select$CatalogNumber)`
@@ -228,7 +245,7 @@ x <-
   filter(Phylum == "Cnidaria") %>% 
   group_by(VernacularNameCategory) %>%
   summarize(
-    Taxa = toString(unique(ScientificName)),
+    Taxa = paste(unique(ScientificName), collapse = ' | '),
     Records = n()) %>%
   arrange(desc(Records))
 
@@ -257,7 +274,8 @@ x <-
   filter(Phylum == "Porifera") %>% 
   group_by(VernacularNameCategory) %>%
   summarize(
-    Taxa = toString(unique(ScientificName)),
+    Taxa = paste(unique(ScientificName), collapse = ' | '),
+    Images = paste(unique(ImageURL), collapse = ' | '),
     Records = n()) %>%
   arrange(desc(Records))
 
@@ -287,9 +305,9 @@ x <-
   target %>%
   group_by(DatasetID) %>%
   summarize(
-    SurveyIDs = toString(unique(SurveyID)),
-    PIs = toString(unique(PI)),
-    Observation_Year = toString(unique(ObservationYear)),
+    SurveyIDs = paste (unique(SurveyID), collapse = ' | '),
+    PIs = paste(unique(PI), collapse = ' | '),
+    Observation_Year = paste(unique(ObservationYear), collapse = ' | '),
     Records = n()) %>%
   arrange(desc(Records))
 
