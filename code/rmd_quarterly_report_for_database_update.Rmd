@@ -3,13 +3,18 @@ title: "NOAA National Database for Deep-sea Corals and Sponges: Quarterly Data U
 author: "NOAA-NFMS-OHC-DSCRTP"
 date: 'Robert.McGuinn@NOAA.gov; 843-460-9696. Report last ran: `r Sys.Date()`'
 output: word_document
+editor_options: 
+  chunk_output_type: console
 ---
+# ---
 
 ```{r manual_set_variables, echo=FALSE}
-quarter <- 'Q2, FY-2021'
-version <- 'DSCRTP_NatDB_20210414-0'
-releasedate <- '2021-04-30'
-corrections <- 34352
+## [Manual]
+quarter <- 'Q3, FY-2021'
+version <- 'DSCRTP_NatDB_20210803-0'
+releasedate <- '2021-08-17'
+corrections <- 18962
+new_records <- 27552
 ```
 
 ```{r packages, echo=F, warning=F, message=F}
@@ -55,35 +60,36 @@ library(prettydoc)
 ```
 
 ```{r load_both_db, echo=FALSE, cache=T}
-##### bring 
+##### [Manual] bring last two databases (old one first)
 setwd("C:/rworking/deepseatools/indata")
-indata1<-read.csv("DSCRTP_NatDB_20201021-0.csv", header = T)
+indata1<-read.csv("DSCRTP_NatDB_20210414-0.csv", header = T)
 
 filt1 <- indata1 %>%
   filter(Flag == "0")
 setwd("C:/rworking/deepseatools/indata")
 
-indata2 <- read.csv("DSCRTP_NatDB_20210414-0.csv", header = T)
+indata2 <- read.csv("DSCRTP_NatDB_20210803-0.csv", header = T) #DSCRTP_NatDB_20210803-0
 filt <- indata2 %>%
   filter(Flag == "0")
  
 # rm(indata1)
 # rm(indata2)
 
+# find the maximum new CatalogNumber
 z <- max(as.numeric(filt1$CatalogNumber))
 # y <- max(as.numeric(filt2$CatalogNumber))
-
-##### make a subset of just those new CatalogNumber(s)
-x <- filt %>% 
-  filter(as.numeric(CatalogNumber) > z 
-         # DatasetID != 'HURL' , 
-         #   DatasetID != 'MCZ_IZ' , 
-         #   DatasetID != 'NMNH_IZ'
-         )
 
 # calc number of of new datasets added this round 
 a <- length(setdiff(unique(filt$DatasetID), unique(filt1$DatasetID)))
 
+# find new datasetIDs
+newdatasetIDs <- setdiff(unique(filt$DatasetID), unique(filt1$DatasetID))
+
+##### make a subset of just those new CatalogNumber(s)
+x <- filt %>% 
+  filter(DatasetID %in% newdatasetIDs)
+
+# length(x$CatalogNumber)
 ```
 
 ```{r load_functions, warning = FALSE, message=FALSE, echo=FALSE}
@@ -101,7 +107,7 @@ TrimAll <- function(x){
 # Quarterly update for: `r quarter`
 ## Database Version: `r version`
 
-The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(a, big.mark = ',')`** new datasets were added with a total of **`r prettyNum(length(x$CatalogNumber), big.mark = ',')`** new records representing **`r prettyNum(sum(x$IndividualCount[x$IndividualCount != "-999"]), big.mark = ',')`** individual occurrences of corals and sponges. There is now a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
+The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(a, big.mark = ',')`** new datasets were added with a total of **`r prettyNum(new_records, big.mark = ',')`** new records. There is now a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
 
 Go here to view and download custom data subsets of your choosing:
 https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm
@@ -114,7 +120,7 @@ Please see the following tables and figures for additional detail regarding this
 
 * Total number of records now in database: **`r  prettyNum(length(filt$CatalogNumber), big.mark=",")`**
 
-* Number of new database records added this quarter: **`r prettyNum(length(unique(x$CatalogNumber)), big.mark = ',')`**
+* Number of new database records added this quarter: **`r  prettyNum(new_records, big.mark=",")`**
 
 * Individual coral and sponge observations added: **`r prettyNum(sum(x$IndividualCount[x$IndividualCount != "-999"]), big.mark = ',')`**
 

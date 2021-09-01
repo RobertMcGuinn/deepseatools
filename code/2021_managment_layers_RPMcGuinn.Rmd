@@ -1,0 +1,79 @@
+---
+title: "2021_management_layers"
+author: "Robert P. McGuinn"
+date: "September 1 2021"
+output: word_document
+#html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, 
+                      eval = T, 
+                      warning = F,
+                      message = F,
+                      fig.height = 10, 
+                      fig.width = 10, 
+                      dpi = 300)
+
+```
+
+```{r packages}
+library(tidyr)
+library(openxlsx)
+library(googlesheets4)
+library(googledrive)
+library(flextable)
+library(dplyr)
+library(flextable)
+library(vegan)
+library(ggplot2)
+library(reshape2)
+library(extrafont)
+library(leaflet)
+library(sf)
+library(sp)
+library(arcgisbinding)
+arc.check_product()
+library(rgdal)
+
+```
+
+``` {r input_gis_data_to_sf, echo=FALSE}
+##### alaska #####
+## reading all features within a geodatabase sf object 
+## first read all of the Alaska polygons
+fgdb_path <- "C:/data/geoindata/2021_management_layers/DSC_SeaTrawl_Alaska.gdb"
+layer_list = st_layers(fgdb_path)
+
+layers_sf = list()
+for(i in 1:length(layer_list$name)) {
+  layers_sf[[layer_list$name[i]]] = read_sf(dsn = fgdb_path, layer = layer_list$name[i])
+}
+
+## checking: a plot of the first sf object to test the list object `layers_sf`:
+# plot(layers_sf[[1]])
+
+## extracting object
+alaska <- layers_sf[[1]]
+st_crs(alaska)
+
+##### other #####
+## reading all features within a geodatabase as an sf object 
+## now read polygons from other regions
+fgdb_path <- "C:/data/geoindata/2021_management_layers/DSC_SeaTrawl_OtherRegions.gdb"
+
+layer_list = st_layers(fgdb_path)
+
+layers_sf = list()
+for(i in 1:length(layer_list$name)) {
+  layers_sf[[layer_list$name[i]]] = read_sf(dsn = fgdb_path, layer = layer_list$name[i])
+}
+
+## checking: a plot of the first sf object to test the list object `layers_sf`:
+# plot(layers_sf[[1]])
+
+## extracting object
+other <- layers_sf[[1]]
+st_crs(other)
+
+```

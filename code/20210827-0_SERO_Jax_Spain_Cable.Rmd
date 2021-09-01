@@ -3,6 +3,8 @@ title: "SERO_Jax_Spain_Cable_analysis"
 author: "Robert McGuinn"
 date: "8/27/2021"
 output: word_document
+editor_options: 
+  chunk_output_type: console
 ---
 # ---
 
@@ -275,7 +277,7 @@ x <-
   group_by(VernacularNameCategory) %>%
   summarize(
     Taxa = paste(unique(ScientificName), collapse = ' | '),
-    Images = paste(unique(ImageURL), collapse = ' | '),
+    # Images = paste(unique(ImageURL), collapse = ' | '),
     Records = n()) %>%
   arrange(desc(Records))
 
