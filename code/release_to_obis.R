@@ -21,13 +21,16 @@ library(extrafont)
 library(RColorBrewer)
 
 ##### load NDB #####
+# [manual]
 setwd("C:/rworking/deepseatools/indata")
-indata<-read_csv("DSCRTP_NatDB_20210414-0.csv",
+filename <- "DSCRTP_NatDB_20210803-0.csv"
+indata<-read_csv(filename,
                  col_types = cols(.default = "c"),
                  locale = locale(encoding = 'ISO-8859-1'),
                  na = c("-999", "NA"))
 
-##### filter the NDB (look closely at how this is done) #####
+##### filter the NDB (look closely at how this is done. #####
+# this deserves inspection)
 filt <- indata %>%
   filter(Flag == "0") %>% # filter out flagged records
   filter(is.na(AphiaID) == F) # filter out missing AphiaID
@@ -35,6 +38,9 @@ filt <- indata %>%
   #          CatalogNumber != '878942') %>%
   # filter(AccessionID != 'NMNH_Smithsonian_update_Q2-2020_THourigan' |
   #          CatalogNumber != '878945')
+
+## cleanup
+rm(indata)
 
 ##### creating errdap_link field #####
 filt$references <- paste('https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatasetID%2CCatalogNumber%2CSampleID%2CCitation%2CRepository%2CScientificName%2CVernacularNameCategory%2CTaxonRank%2CIdentificationQualifier%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CObservationDate%2CSurveyID%2CStation%2CEventID%2CSamplingEquipment%2CLocationAccuracy%2CRecordType%2CDataProvider&CatalogNumber=',
@@ -126,7 +132,7 @@ obis$coordinateUncertaintyInMeters <- gsub("[^[:digit:]., ]", "", obis$coordinat
 obis %>% pull(coordinateUncertaintyInMeters) %>% table(useNA = 'always')
 
 ##### write out file for submission #####
-today <- '20210429-0'
+today <- '20210902-0'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
@@ -134,13 +140,19 @@ obis %>%
             row.names = FALSE)
 
 ##### checking #####
-# library(dplyr)
-#
-# x <- filt %>%
-#   group_by(CatalogNumber) %>%
-#   filter(n()>1) %>%
-#   View()
-#
+library(dplyr)
+
+# this checks for records with duplicate CatalogNumbers.
+# There should be none. If you find any, alert the entire team immediately.
+
+x <- filt %>%
+  group_by(CatalogNumber) %>%
+  filter(n()>1) %>%
+  View()
+
+
+
+
 # names(obis)
 #
 # x <- filt %>% pull(CatalogNumber) %>% length()
