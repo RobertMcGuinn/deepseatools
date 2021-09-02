@@ -21,7 +21,7 @@ library(extrafont)
 library(RColorBrewer)
 
 ##### load NDB #####
-# [manual]
+## [manual]
 setwd("C:/rworking/deepseatools/indata")
 filename <- "DSCRTP_NatDB_20210803-0.csv"
 indata<-read_csv(filename,
@@ -30,7 +30,7 @@ indata<-read_csv(filename,
                  na = c("-999", "NA"))
 
 ##### filter the NDB (look closely at how this is done. #####
-# this deserves inspection)
+## this deserves inspection.
 filt <- indata %>%
   filter(Flag == "0") %>% # filter out flagged records
   filter(is.na(AphiaID) == F) # filter out missing AphiaID
@@ -40,7 +40,7 @@ filt <- indata %>%
   #          CatalogNumber != '878945')
 
 ## cleanup
-rm(indata)
+# rm(indata)
 
 ##### creating errdap_link field #####
 filt$references <- paste('https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatasetID%2CCatalogNumber%2CSampleID%2CCitation%2CRepository%2CScientificName%2CVernacularNameCategory%2CTaxonRank%2CIdentificationQualifier%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CObservationDate%2CSurveyID%2CStation%2CEventID%2CSamplingEquipment%2CLocationAccuracy%2CRecordType%2CDataProvider&CatalogNumber=',
@@ -145,13 +145,11 @@ library(dplyr)
 # this checks for records with duplicate CatalogNumbers.
 # There should be none. If you find any, alert the entire team immediately.
 
-x <- filt %>%
+x <- indata %>%
   group_by(CatalogNumber) %>%
-  filter(n()>1) %>%
-  View()
+  filter(n()>1) %>% pull(CatalogNumber) %>% length()
 
-
-
+write.csv(x, "c:/rworking/deepseatools/indata/dups.csv")
 
 # names(obis)
 #
