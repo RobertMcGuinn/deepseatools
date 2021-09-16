@@ -1,0 +1,56 @@
+---
+title: "Images"
+author: "Robert McGuinn"
+date: "9/15/2021"
+output: html_document
+---
+
+## Images
+### Images to local folder
+
+```{r images_from_url, eval=F}
+## load any images to a local folder 
+## WARNING: This chunk takes a long time.  Go get a coffee
+###### download all images and put them in a folder #####
+z <- sub %>% filter(is.na(ImageURL) == F)
+
+## [MANUAL]: go create folder and point to it 
+setwd("C:/rworking/deepseatools/images/dsbs6/")
+for(i in 1:length(z$CatalogNumber)){
+  download.file(as.character(z$ImageURL[i]),
+                destfile = paste("DSCRTP",
+                                 z$CatalogNumber[i],
+                                 z$EventID[i],
+                                 z$ScientificName[i],
+                                 z$DepthInMeters[i],
+                                 basename(as.character(z$ImageURL[i])),
+                                 sep = '_'),
+                mode = "wb")
+}
+
+
+## OPTIONAL: write out featureclass to geodatabase from sf object
+fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+arc.write(file.path(fgdb_path, 'imageset_5000'), data=z, overwrite = TRUE)
+
+```
+
+### Images from local folder to Google Drive
+```{r local_images_to_Drive_folder, eval=F}
+## load the images to a Google Drive folder
+## WARNING: This chunk could take a longish time. Go get a coffee
+##### Loading files from a local folder to Google Drive ##### 
+## MANUAL CHANGE "folderurl" to the desired drive folder ID
+folderurl <- "https://drive.google.com/drive/folders/1oOiCVRWJUc4fQQ1dec9q3APYfk1Ea4nj"
+
+## get the list of files from the local folder
+files <- list.files(path="C:/rworking/deepseatools/indata/imageset_5000", full.names=TRUE, recursive=FALSE)
+
+## loop upload images to Google Drive
+for(i in files){
+drive_upload(i,
+             path = as_id(folderurl),
+             overwrite = T)
+}
+
+```

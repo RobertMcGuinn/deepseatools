@@ -3,21 +3,23 @@ title: "DSBS16_HI_Analysis"
 author: "Robert McGuinn"
 date: "`r Sys.Date()`"
 output: 
-  word_document:
-     reference_docx: template.docx
-always_allow_html: yes
-editor_options: 
-  chunk_output_type: console
+  html_document:
+    toc: true # table of content true
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    toc_float: true
+    number_sections: true  ## if you want number sections at each table header
+    theme: lumen  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+   #  css: my.css   # you can add your custom css, should be in same folder
 ---
-## ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, 
                       eval = T, 
                       warning = F,
                       message = F,
-                      fig.height = 10, 
-                      fig.width = 10, 
+                      fig.height = 8, 
+                      fig.width = 11, 
                       dpi = 300)
 
 
@@ -39,16 +41,21 @@ library(leaflet)
 
 ```
 
-## Resources for this analysis
+## Purpose of Analysis
+
+To visualize and understand the community structure of high density coral and sponge communities within the Hawaiian Islands.  
+
+## Resources
 
 The main project folder for this analysis is on Google Drive: [LINK](https://drive.google.com/drive/folders/1ToTK_v7NF7ZPdwXQwD1hzCwuVZCZRH_d)
 
-The RMarkdown code used to generate this report is available here: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/DSBS16_HI_Analysis.Rmd)
+The R Markdown code used to generate this report is available here: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/DSBS16_HI_Analysis.Rmd)  Comments and code within R Markdown document further elucidate the procedures being used. Having this code available will facilitate the reanalysis of these data. 
 
-## Input data sets
+## Input Data
 
-Datasets used in this analysis were acquired on 2021-08-18 from Tom Hourigan via Excel file. The coral and sponge species occurrence records are from a subset of dives in the Hawaiian region (including Johnston Atoll and the Musician Seamounts). This original dataset is shared on Google Drive here: [LINK](https://docs.google.com/spreadsheets/d/16izQ_vWsSDgMupbNAEUsVTvMISzmrLaC/edit?usp=sharing&ouid=109414727136135095326&rtpof=true&sd=true)
+Datasets used in this analysis were acquired on 2021-08-18 from Tom Hourigan via Excel file. The coral and sponge species occurrence records are from a subset of dives in the Hawaiian region (including Johnston Atoll and the Musician Seamounts). This original dataset is shared on Google Drive here: [LINK](http://docs.google.com/spreadsheets/d/16izQ_vWsSDgMupbNAEUsVTvMISzmrLaC/edit?usp=sharing&ouid=109414727136135095326&rtpof=true&sd=true)
 
+Tom Hourigan issued some corrections, via Excel file, to the above dataset on 2021-08-26: [LINK](https://docs.google.com/spreadsheets/d/1Rg4fUrvO_0VT2TVNNANPKGbMyxg-jh2p/edit?usp=sharing&ouid=109414727136135095326&rtpof=true&sd=true) and those changes were incorporated prior to this analysis.  
 
 ```{r data_intake, cache=T}
 ##### bringing in dataframe from xlsx stored on drive ####
@@ -188,7 +195,8 @@ rm(test2)
 
 ```
 
-## Summary
+## Tabular Summaries
+
 ```{r variables}
 n_records <- length(sub$CatalogNumber)
 
@@ -212,24 +220,25 @@ n_densitycat <- length(unique(sub$DensityCategory))
 
 ```
 
-The input dataset contains `r n_records` of coral and sponge occurrences observed within `r n_eventid` dives ('EventID'). 
+The input dataset contains `r n_records` coral and sponge occurrences observed within `r n_eventid` dives ('EventID'). Below are a few summary tables describing the data more fully.    
 
-### Table: Dives organized by richness
+### Table: Dives organized richness
+This table has each dive arranged in descending order by richness.  
 
 ```{r richness_per_dive}
 ### Table: Richness per dive sorted in descending order by richness values.  
 
 x <- sub %>% group_by(EventID) %>% 
-  summarize(richness = length(unique(ScientificName)))#  %>% 
-  # arrange(desc(richness))
+  summarize(richness = length(unique(ScientificName))) %>% 
+  arrange(desc(richness))
 
 ## create flextable
 myft <- flextable(x)
 
 ## modify flextable
 myft <- theme_vanilla(myft)
-myft<- fontsize(myft, size = 8, part = "body")
-myft<- fontsize(myft, size = 8, part = "header")
+myft<- fontsize(myft, size = 10, part = "body")
+myft<- fontsize(myft, size = 10, part = "header")
 myft <- align(myft, align = "left", part = "header")
 myft <- align(myft, align = "left", part = "body")
 
@@ -274,11 +283,11 @@ myft
 # myft <- bold(myft, ~ drat > 3.5, ~ drat, bold = TRUE)
 ```
 
-### Table: All taxa summary by individual taxa grouped within EventID.
+### Table (Export): All taxa summary by individual taxa grouped by EventID.
 
 This file is loaded as an Excel file to Google Drive at the following location: [LINK](https://docs.google.com/spreadsheets/d/1KHBkC3JkJE4rpTiI_buXAiN9ZLcj82S1/edit?usp=sharing&ouid=109414727136135095326&rtpof=true&sd=true) 
 
-This table is handy for looking at the taxa present in one dive in order of abundance.  The table is huge and is much better digested in spreadsheet form. 
+This table is handy for looking at the taxa present in one dive in order of abundance. The table is huge and is much better digested in spreadsheet form. 
 
 ```{r table_coral_and_sponge_summary_by_EventID, echo=FALSE} 
 x <- sub %>%
@@ -413,7 +422,6 @@ drive_upload(i,
 
 ```
 
-
 ## NMDS (full set)
 
 ### Filter to only species appearing in the top ten list  
@@ -423,7 +431,7 @@ drive_upload(i,
 topten <- sub %>%
  group_by(EventID, ScientificName)%>%
  summarize(individual_count_sum = sum(IndividualCount))%>%
- top_n(20, individual_count_sum) %>% 
+ top_n(10, individual_count_sum) %>% 
   arrange(EventID, desc(individual_count_sum))
 
 z <- sub %>% filter(
@@ -475,10 +483,11 @@ First we adjust the abundances by the length of the drive track. This creates a 
 ## filter if necessary
 x <- z %>% 
   filter(
-    #DepthCat == 'deep',
+    #DepthCat == 'shallower',
     #EventID != "D2-EX1605L1-13"
     #Phylum == "Cnidaria"
-    #DensityCategory == "high and higest"
+    # DensityCategory == ">10000/km" |  
+    #   DensityCategory == "3000-9999/km"
   )
 
 ## checking 
@@ -568,7 +577,125 @@ NMDS
 
 ```
 
+### Creating clusters
+
+```{r}
+
+sp_bray = vegdist(site.sp, method='bray', binary=T)
+fit <- hclust(sp_bray)
+plot(fit, 
+     main = "", 
+     sub = "", 
+     xlab="Sites", 
+     axes = T, 
+     ylab = "Ecological Distance", 
+     hang = -1) # display dendogram
+groups <- cutree(fit, k=4) # cut tree into 5 clusters
+rect.hclust(fit, k=4, border="red", cluster = groups)
+
+
+df <- data.frame(groups)
+df <- tibble::rownames_to_column(df, "site")
+names(df)
+class(site.scores)
+names(site.scores)
+test <- merge(site.scores, df)
+site.scores <- test
+site.scores$groups <- as.factor(site.scores$groups)
+# yo <- c(fit$labels)
+# what <- c(fit$order)
+# df <- data.frame(yo, what)
+
+```
+
+### Plot of NMDS with clusters on top
+
+```{r}
+plot(NMDS, disp="sites", type="n")
+ordispider(NMDS, site.scores$groups, col= "black", label = TRUE)
+#ordihull(NMDS, site.scores$groups, col=1:4, lwd=3, label = TRUE)
+#ordiellipse(NMDS, groups, col=1:4, kind = "ehull", lwd=3)
+ordiellipse(NMDS, groups, col=c("blue", "green", "red", "black"), draw="polygon")
+
+points(NMDS, disp="sites", pch=21, col="red", bg="yellow", cex=1.3)
+#points(NMDS, disp="species", pch=21, col="red", bg="red", cex=1.3)
+
+NMDS$data
+
+```
+
+
+### Interactive map of clusters
+
+```{r fig.width=5, fig.height=4}
+
+df <- sub %>% group_by(EventID) %>% 
+  summarise(Latitude = mean(as.numeric(Latitude)), 
+            Longitude = mean(as.numeric(Longitude)))
+
+
+## check
+# names(df)
+# length(df$EventID)
+# table(is.na(df$Latitude))
+
+test <- merge(site.scores, df, by.x = "site", by.y = "EventID")
+site.scores_map <- test
+
+## checking
+
+site.scores_map$Latitude <- as.numeric(site.scores_map$Latitude)
+site.scores_map$Longitude <- as.numeric(site.scores_map$Longitude)
+
+pal <- colorFactor(
+  palette = c("blue", "green", "red", "black"),
+  domain = site.scores_map$groups
+)
+
+
+
+m <- leaflet(width = "100%")
+m <- addProviderTiles(m, "Esri.OceanBasemap") #Esri.OceanBasemap, "CartoDB.DarkMatter"
+m <- addCircleMarkers(m, data=site.scores_map,
+                      radius=5,
+                      weight=0,
+                      fill = groups,
+                      color = ~pal(groups),
+                      fillOpacity=1, 
+                      popup = paste0( "EventID: ", 
+                                      site.scores_map$site,
+                                      "<br>",
+                                      "Cluster: ", 
+                                      site.scores_map$groups,
+                                      "<br>"), 
+                      label = site.scores_map$site
+                      )
+                                   
+m
+```
+
 ### Plot of NMDS with group colors as from depth bin
+
+```{r plotting_NMDS_cluster_groups}
+##### plotting NMDS ##### 
+ggplot() +
+  geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=groups), size=5) + # add the point markers
+  geom_text(data=site.scores,aes(x=NMDS2,y=NMDS1, label = site), size=4, position = position_nudge(y = .0001)) + # add the text
+  #geom_point(data=species.scores,aes(x=NMDS1,y=NMDS2), shape = 3, size=4) + 
+  coord_equal() +
+  theme_bw(base_size = 15, base_family = "Cambria") +
+  theme(axis.text.x = element_blank(),  # remove x-axis text
+        axis.text.y = element_blank(), # remove y-axis text
+        axis.ticks = element_blank(),  # remove axis ticks
+        axis.title.x = element_text(size=18), # remove x-axis labels
+        axis.title.y = element_text(size=18), # remove y-axis labels
+        panel.background = element_blank(), 
+        panel.grid.major = element_blank(),  #remove major-grid labels
+        panel.grid.minor = element_blank(),  #remove minor-grid labels
+        plot.background = element_blank())
+
+```
+
 
 ```{r plotting_NMDS_depth_2}
 ##### plotting NMDS ##### 
@@ -659,7 +786,6 @@ ggplot() +
 
 ```
 
-
 ### Plot of NMDS species scores
 
 Labels are are species code (by number). See table below for species code.   
@@ -707,6 +833,7 @@ myft
 
 ```
 
+
 ## Clustering 
 
 ```{r}
@@ -725,6 +852,7 @@ sp_bray_binary = vegdist(site.sp, method='bray', binary=T)
 fit <- hclust(sp_bray_binary)
 plot(fit, main = "", sub = "", xlab="Sites", axes = T, ylab = "Ecological Distance (Sorensen)", hang = -1) # display dendogram
 groups <- cutree(fit, k=4) # cut tree into 5 clusters
+
 # draw dendogram with red borders around the 5 clusters
 rect.hclust(fit, k=4, border="red")
 
@@ -1229,6 +1357,8 @@ write.xlsx(x, '20210824-0_Summary_of_Corals_and_Sponges_Diversity_by_EventID.xls
 
 ```
 
+## map of diversity
+
 ```{r mapping_diversity_2 , echo=FALSE, eval=F}
 
 x$Latitude <- as.numeric(x$Latitude)
@@ -1250,5 +1380,57 @@ m <- addCircleMarkers(m, data=x,
                       popup = paste("EventID:", x$EventID, "<br>"))
                                    
 m
+
+```
+
+
+
+
+## Images
+### Images to local folder
+
+```{r images_from_url, eval=F}
+## load any images to a local folder 
+## WARNING: This chunk takes a long time.  Go get a coffee
+###### download all images and put them in a folder #####
+z <- sub %>% filter(is.na(ImageURL) == F)
+
+## [MANUAL]: go create folder and point to it 
+setwd("C:/rworking/deepseatools/images/dsbs6/")
+for(i in 1:length(z$CatalogNumber)){
+  download.file(as.character(z$ImageURL[i]),
+                destfile = paste("DSCRTP",
+                                 z$CatalogNumber[i],
+                                 z$EventID[i],
+                                 z$ScientificName[i],
+                                 z$DepthInMeters[i],
+                                 basename(as.character(z$ImageURL[i])),
+                                 sep = '_'),
+                mode = "wb")
+}
+
+## OPTIONAL: write out featureclass to geodatabase from sf object
+fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
+arc.write(file.path(fgdb_path, 'imageset_5000'), data=z, overwrite = TRUE)
+
+```
+
+### Images from local folder to Google Drive
+```{r local_images_to_Drive_folder, eval=F}
+## load the images to a Google Drive folder
+## WARNING: This chunk could take a longish time. Go get a coffee
+##### Loading files from a local folder to Google Drive ##### 
+## MANUAL CHANGE "folderurl" to the desired drive folder ID
+folderurl <- "https://drive.google.com/drive/folders/1oOiCVRWJUc4fQQ1dec9q3APYfk1Ea4nj"
+
+## get the list of files from the local folder
+files <- list.files(path="C:/rworking/deepseatools/indata/imageset_5000", full.names=TRUE, recursive=FALSE)
+
+## loop upload images to Google Drive
+for(i in files){
+drive_upload(i,
+             path = as_id(folderurl),
+             overwrite = T)
+}
 
 ```
