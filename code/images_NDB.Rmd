@@ -54,3 +54,40 @@ drive_upload(i,
 }
 
 ```
+
+### Table: Images 
+There are `r n_images` unique images within the dataset.  Here is how they break down by each of the `r n_eventid` EventIDs.
+
+```{r images_table}
+## create table
+x <- sub %>% filter(is.na(ImageURL) == F) %>% 
+  group_by(EventID) %>% 
+  summarize(n_images = length(unique(ImageURL))
+            ) %>% 
+  arrange(desc(n_images))
+
+## checking
+# length(x$EventID)
+sum(x$n_images)
+
+## create flextable
+myft <- flextable(x)
+
+## modify flextable
+myft <- theme_vanilla(myft)
+myft<- fontsize(myft, size = 8, part = "body")
+myft<- fontsize(myft, size = 8, part = "header")
+myft <- align(myft, align = "left", part = "header")
+myft <- align(myft, align = "left", part = "body")
+
+myft <- set_table_properties(myft, width = .5, layout = "autofit")
+myft
+
+# myft <- italic(myft, j = 3)
+# myft <- color(myft, ~ drat > 3.5, ~ drat, color = "red")
+# myft <- bold(myft, ~ drat > 3.5, ~ drat, bold = TRUE)
+
+```
+
+
+
