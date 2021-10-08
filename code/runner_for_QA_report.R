@@ -10,14 +10,15 @@ library(googledrive)
 
 ##### render the QA dashboard #####
 # MANUAL CHANGE add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20210721-0_NOAA_NEFSC_PC1605_Nizinski_2016_2016"
+filename <- "20210916-4_NOAA_NEFSC_Connecticut_Kraken_2_ROV_Dives_2_to_15_Packer_2014_2014"
 
 rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
 
 ##### MANUAL inspection of QA report in Word, #####
-## then SAVE to PDF. Develop Redmine Checklist
+## then SAVE to PDF.
+## then Develop Redmine Checklist
 
 ##### checking #####
 x <- sub %>%

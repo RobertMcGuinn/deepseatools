@@ -44,7 +44,7 @@ head(sheet)
 
 ```{r}
 # set the file name (user supplied th file name root, without extension)
-filename <- '20210527-2_NOAA_NEFSC_Connecticut_Kraken_2_ROV_Dives_2_to_13_Packer_2014_2014'
+filename <- '20210916-4_NOAA_NEFSC_Connecticut_Kraken_2_ROV_Dives_2_to_15_Packer_2014_2014'
 # find the file in google drive by name
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
 # getting the id as a character string

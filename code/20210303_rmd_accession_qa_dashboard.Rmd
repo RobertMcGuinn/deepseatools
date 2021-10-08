@@ -7,6 +7,7 @@ output:
      reference_docx: template.docx
 always_allow_html: yes
 ---
+# -
 ```{r load_packs, echo=F, message=FALSE, warning=F}
 library(rmarkdown)
 library(xfun)
@@ -48,7 +49,7 @@ opts_chunk$set(fig.width=7,
 ```
 
 ```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
-##### input: latest version of NDB #####
+##### manual input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
 indata <- read.csv("DSCRTP_NatDB_20210414-0.csv", header = TRUE)
 filt <- indata %>%
@@ -82,7 +83,8 @@ flagged <- sub %>%  filter(Flag == "1")
 # Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 ## checking 
-# s %>% filter(FieldName == 'LocationAccuracy') %>% pull(ValidValues)
+s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(FieldDescription)
+s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(ValidValues)
 ```
 
 ```{r mapit, include = F, eval=F}
