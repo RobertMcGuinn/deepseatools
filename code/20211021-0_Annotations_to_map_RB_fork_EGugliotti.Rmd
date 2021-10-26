@@ -1,0 +1,85 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Load libraries and data
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# For you this will be replaced with "C:\\rworking\\CINMS\\data\\NEW_nav_transects.csv"
+annotations<- read.csv("C:\\rworking\\CINMS\\data\\NEW_nav_transects.csv", header = TRUE)
+
+```
+
+Reshape annotation data for maps
+```{r}
+# For some reason lat & long cut off after a certain number of digits, and we need more for mapping purposes.
+annotations$Lat<-format(as.numeric(annotations$Lat), digits=12)
+annotations$Long<-format(as.numeric(annotations$Long), digits=13)
+# Also, we need to convert Dive into a factor rather than a number
+annotations$Dive<-as.factor(annotations$Dive)
+
+# Now we just want to select the columns that annotations are in and in the format we want them (i.e. numbers), also we need to replace NAs as 0s 
+annotations<-annotations %>%
+  select(-Geodia, -Staurocalyptus, -OtherComments) %>%
+# you should hopefully not have to do these steps because you did this in AssigningTransects.Rmd but I had to because I did not assign transects like that (even though I should have) so I would just run:
+# annotations<- annotations %>% select(-taxa.you.dont.want, -more.taxa, -maybe.the.comments.too)
+  replace_na(list(Adel. = 0, Eugorgia = 0, Lepto. = 0, Lophelia = 0, Acanthogorgia = 0, Muricea = 0, Swiftia = 0, Antipathes = 0, Paragorgia = 0, Plumarella = 0, Heterop = 0, Placogorgia = 0, Stylaster = 0, Flabellum = 0, UnknownOctocoral = 0, Desmophyllum = 0, Funiculina_Halipteris = 0, Acanthoptilum = 0, Pennatula = 0, Pennatulacea = 0, Ptilosarcus = 0, UnknownSponge = 0, Hexactinellida = 0, Demospongiae = 0, Farrea = 0, Rhizaxinella = 0, A.ZoanthidInjury = 0, E.ZoanthidInjury = 0, Debris = 0)) %>%
+annotations<-annotations %>%  
+  mutate(DateTime = mdy_hms(paste(Date, TC, sep=" ")))
+
+# You have to make your data into a long format because thats the way R likes it and honestly thats the way GIS will undersand it best too. Make sure the colon separates your first and last taxon columns.
+long.annotations<-annotations %>%
+  gather(Species, Count, Adelogorgia.phyllosclera:UI.Virgularia.sp) %>% 
+  filter(Count > 0)
+
+# Write both data frames because one we will use for geology and we DONT want each annotation as its own row for that and one we will use for the annotations. I'm writing mine to both places I keep data but you should JUST write yours to one place you are keeping data.
+write.csv(long.annotations, "C:\\rworking\\CINMS\\data\\LongAnnotations.csv")
+write.csv(annotations, "C:\\rworking\\CINMS\\data\\Geology.csv")
+
+# We also want to create a .csv file with higher taxonomic levels because its easier to see on a map so we are recoding each species to that.
+long.highertaxon<-long.annotations %>%
+mutate(HigherTaxon = case_when(Species == "Adelogorgia.phyllosclera" ~ "gorgonian",Species == "Anthomastus.ritteri" ~ "soft coral",Species == "Craniella.arb" ~ "demosponge",Species == "Dromalia.alexandri" ~ "hydrozoan",Species == "Eugorgia.rubens" ~ "gorgonian",Species == "Halipteris.californica" ~ "sea pen",Species == "Leptogorgia.chilensis" ~ "gorgonian",Species == "Lophelia.pertusa.or.prolifera" ~ "Lophelia",Species == "Paragorgia.sp" ~ "gorgonian",Species == "Parazoanthus.lucificum._<50%.cover_" ~ "zoanthid",Species == "Parazoanthus.lucificum._>50%.cover_" ~ "zoanthid",Species == "Pennatula.phosphorea" ~ "sea pen",Species == "Ptilosarcus.gurneyi" ~ "sea pen",Species =="Ptilosarcus.gurneyi" ~ "sea pen",Species == "Stylissa.stipitata" ~ "demosponge",Species == "Stylatula.elongata" ~ "sea pen",Species == "Tethya.aurantia" ~ "demosponge",Species == "UI.Acanthogorgia.sp" ~ "gorgonian",Species == "UI.Antipathes.sp" ~ "black coral",Species == "UI.dead.Gorgonacea" ~ "dead gorgonian",Species == "UI.Gorgonacea" ~ "gorgonian",Species == "UI.Plumarella.sp" ~ "gorgonian",Species == "UI.Porifera" ~ "sponge",Species == "UI.Porifera._boot_" ~ "sponge",Species == "UI.Porifera._orange.branched_" ~ "sponge",Species == "UI.Porifera._white.branched_" ~ "sponge",Species == "UI.Porifera._yellow.branched_" ~ "sponge",Species == "UI.Porifera._hairy.boot_" ~ "sponge",Species == "UI.Porifera._laced_" ~ "sponge",Species == "UI.Porifera._lobed_" ~ "sponge",Species == "UI.Porifera._orange.lobed_" ~ "sponge",Species == "UI.Porifera._white.lobed_" ~ "sponge",Species == "UI.Porifera._yellow.lobed_" ~ "sponge",Species == "UI.Porifera._nipple_" ~ "sponge",Species == "UI.Porifera._orange.vase_" ~ "sponge",Species == "UI.Porifera._white.vase_" ~ "sponge",Species == "UI.Porifera._yellow.vase_" ~ "sponge",Species == "UI.Porifera.or.Bryozoa._lobed_" ~ "sponge",Species == "Spheciospongia.confoederata" ~ "sponge",Species == "UI.Swiftia.sp" ~ "gorgonian",Species == "UI.Virgularia.sp" ~ "sea pen"))
+
+
+# Again, i'm writing this .csv to two places because one is where I should have been keeping all my data from the start (but didn't), and one is where GIS is connected to. For you this should be the same place.
+
+write.csv(long.highertaxon,"C:\\rworking\\CINMS\\data\\HigherTaxonAnnotations.csv")
+```
+
+Depth profiles for maps
+```{r}
+# Create function to print out plots
+depth.graph <- function(df, na.rm = TRUE){
+
+
+  for (i in seq_along(unique(df$Dive))){ #for each dive, make a plot with TC (time) on the x axis and Depth(with reversed axis) on the y-axis
+    df2<-df %>%
+      filter(df$Dive == i)
+    
+plot<-ggplot(data = df2, aes(x=DateTime,y=Depth, group = 1))+ 
+      geom_line()+
+      scale_y_reverse()+
+      ylab("Depth (m)")+
+      xlab("Time")+
+      theme_bw()+
+      ggtitle(paste('Dive',i,'Depth Profile'))+
+      theme(axis.title = element_text(face = "bold", size = (15)),
+            axis.text = element_text(face = "bold", size = (15)),
+            plot.title = element_text(face = "bold", size = (15)))
+
+    tiff(paste0("C:\\rworking\\CINMS\\output\\Dive",i,".tiff"), width = 480, height = 400)
+    print(plot)
+    dev.off()
+  }
+}
+
+depth.graph(long.highertaxon)
+
+```
+
+```
+

@@ -51,12 +51,12 @@ opts_chunk$set(fig.width=7,
 ```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
 ##### manual input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
-indata <- read.csv("DSCRTP_NatDB_20210414-0.csv", header = TRUE)
+indata <- read.csv("DSCRTP_NatDB_20210803-0.csv", header = TRUE)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 ```
 
-```{r data_and_subset, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
+```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
 # setwd("C:/rworking/deepseatools/indata")
 # #filename <- ""
 # sub <- read.csv(paste(filename,'.csv', sep = ''), header = T) 
@@ -83,8 +83,8 @@ flagged <- sub %>%  filter(Flag == "1")
 # Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 ## checking 
-s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(FieldDescription)
-s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(ValidValues)
+# s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(FieldDescription)
+# s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(ValidValues)
 ```
 
 ```{r mapit, include = F, eval=F}

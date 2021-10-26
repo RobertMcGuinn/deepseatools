@@ -1,0 +1,106 @@
+---
+title: "Quarterly Checker"
+author: "Robert McGuinn"
+date: "2021-06-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load packages
+
+```{r}
+library(googledrive)
+library(openxlsx)
+library(usethis)
+library(tidyverse)
+library(sf)
+library(sp)
+library(rgdal)
+library(arcgisbinding)
+arc.check_product()
+
+```
+
+# get CSV file from local disk
+
+```{r}
+# set name of the file
+path <- "C:/rworking/deepseatools/indata/HigherTaxonAnnotations.csv"
+
+#getOption("digits")
+options("digits" = 9)
+sheet <- read.csv(path, header = T)
+
+```
+
+# get zip file from Google Drive and pull out specific CSV, load to R
+
+```{r}
+# set the file name (user supplied th file name root, without extension)
+filename <- '20210917-3_NOAA_CINMS_Shearwater_SW-18_Etnoyer_2018_2018'
+# find the file in google drive by name
+x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
+# getting the id as a character string
+y <- x$id
+# download the zip file
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
+# extract just the file of interest from the zip file
+options("digits" = 15)
+sub <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
+
+```
+
+# checking
+
+```{r}
+sheet %>% pull(Dive) %>% unique() %>% length()
+sheet %>% pull(Line) %>% unique() %>% length()
+sheet %>% pull(sec) %>% unique() %>% length()
+sheet %>% pull(TC) %>% unique() %>% length()
+sheet %>% group_by(Long, Lat) %>% summarise(n=n()) %>% pull(Long) %>%  length()
+sheet %>% group_by(Line) %>% summarise(n=n()) %>% pull(Line) %>% length()
+sheet %>% group_by(Dive, Lat, Long) %>% summarise(n=n()) %>% pull(Dive) %>% length()
+sheet %>% group_by(Dive, Species, Location) %>% summarise(n=n()) %>% pull(Dive) %>% length()
+sheet %>% group_by(Dive, Lat, Long) %>% summarise(n=n()) %>% View()
+sheet %>% group_by(Dive, Line) %>% summarise(n=n()) %>% View()
+
+sub %>% pull(EventID) %>% unique() %>% length()
+sub %>% pull(CatalogNumber) %>% unique() %>% length()
+sub %>% group_by(EventID, SampleID) %>% summarise(n=n()) %>% pull(EventID) %>% length()
+sub %>% group_by(EventID, SampleID, ScientificName) %>% summarise(n=n()) %>% pull(EventID) %>% length()
+sub %>% group_by(Latitude, Longitude) %>% summarise(n=n()) %>% pull(Latitude) %>% length()
+sub %>% group_by(EventID, SampleID, ScientificName, Locality) %>% pull(EventID) %>% length()
+sub %>% group_by(EventID, ScientificName) %>% summarise(n=n()) %>% View()
+sub %>% group_by(EventID, SampleID, Latitude, Longitude) %>% summarise(n=n()) %>% View()
+
+
+```
+
+
+# gis export
+
+```{r}
+##### create x from sub #####
+x <- sub
+
+##### filter data #####
+
+# get rid of any missing Latitudes or Longitudes
+x <- x %>% filter(Latitude != -999 | Longitude != -999)
+# make copy to turn into spatial points data frame.
+x_geo <- x
+
+##### create spatial points data fram #####
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+
+```
+
