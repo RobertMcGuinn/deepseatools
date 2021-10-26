@@ -359,3 +359,13 @@ ggplot(subx,aes(x=as.Date(EntryDate), color=Phylum)) +
 
 
 
+
+  # Data in Queue
+
+Note: These datasets are in the pipeline and can be analyzed/mapped but we have not completed our full quality control procedures.  
+
+#. NOAA_NEFSC_HB1704 _ROPOS_2017_2017 (Nizinski)[LINK](https://drive.google.com/drive/folders/1TirvxDtLlQly54VSWNiI2Sxh__wK2-KJ?usp=sharing)
+#. NOAA_NEFSC_HB1402_ROPOS_2014_2014 (Nizinski)[LINK](https://drive.google.com/drive/folders/1kaSRNp9BFdpzNCVenR3GRJC0ETENMTs9?usp=sharing)
+#. NOAA_NEFSC_Connecticut_Kraken_2_ROV_2014_2014 (Packer)
+** [LINK Part 1](https://drive.google.com/drive/folders/1vdQmoSbP8B31DNkStYqcfg_vKguqqV8H?usp=sharing)  
+** [LINK Part 2](https://drive.google.com/drive/folders/1nk0c4IXtsTQ1gHj-yTBHsonJYzFX9hLY?usp=sharing)
