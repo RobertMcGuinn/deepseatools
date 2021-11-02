@@ -1,7 +1,7 @@
 ---
-title: "Quarterly Checker"
+title: "QA on dataset"
 author: "Robert McGuinn"
-date: "2021-06-11"
+date: "2021-10-26"
 output: html_document
 ---
 
@@ -20,19 +20,8 @@ library(sf)
 library(sp)
 library(rgdal)
 library(arcgisbinding)
+library(lubridate)
 arc.check_product()
-
-```
-
-# get CSV file from local disk
-
-```{r}
-# set name of the file
-path <- "C:/rworking/deepseatools/indata/HigherTaxonAnnotations.csv"
-
-#getOption("digits")
-options("digits" = 9)
-sheet <- read.csv(path, header = T)
 
 ```
 
@@ -53,38 +42,116 @@ sub <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
 
 ```
 
-# checking
+# load file holding the corrected lats and longs
 
 ```{r}
-sheet %>% pull(Dive) %>% unique() %>% length()
-sheet %>% pull(Line) %>% unique() %>% length()
-sheet %>% pull(sec) %>% unique() %>% length()
-sheet %>% pull(TC) %>% unique() %>% length()
-sheet %>% group_by(Long, Lat) %>% summarise(n=n()) %>% pull(Long) %>%  length()
-sheet %>% group_by(Line) %>% summarise(n=n()) %>% pull(Line) %>% length()
-sheet %>% group_by(Dive, Lat, Long) %>% summarise(n=n()) %>% pull(Dive) %>% length()
-sheet %>% group_by(Dive, Species, Location) %>% summarise(n=n()) %>% pull(Dive) %>% length()
-sheet %>% group_by(Dive, Lat, Long) %>% summarise(n=n()) %>% View()
-sheet %>% group_by(Dive, Line) %>% summarise(n=n()) %>% View()
+#### Read in your .csv file ####
+## C:/rworking/deepseatools/indata/HigherTaxonAnnotations.csv
+## c:/rworking/deepseatools/indata/NEW_nav_transects.csv
+## c:/rworking/deepseatools/indata/nav_transects.csv
+## c:/rworking/deepseatools/indata/LongAnnotations.csv
+annotations<- read.csv("c:/rworking/deepseatools/indata/HigherTaxonAnnotations.csv", header = TRUE) 
 
-sub %>% pull(EventID) %>% unique() %>% length()
-sub %>% pull(CatalogNumber) %>% unique() %>% length()
-sub %>% group_by(EventID, SampleID) %>% summarise(n=n()) %>% pull(EventID) %>% length()
-sub %>% group_by(EventID, SampleID, ScientificName) %>% summarise(n=n()) %>% pull(EventID) %>% length()
-sub %>% group_by(Latitude, Longitude) %>% summarise(n=n()) %>% pull(Latitude) %>% length()
-sub %>% group_by(EventID, SampleID, ScientificName, Locality) %>% pull(EventID) %>% length()
-sub %>% group_by(EventID, ScientificName) %>% summarise(n=n()) %>% View()
-sub %>% group_by(EventID, SampleID, Latitude, Longitude) %>% summarise(n=n()) %>% View()
+# This is just making sure that we have more than 4 digits in our lat and long
+annotations$Lat<-format(as.numeric(annotations$Lat), digits=8)
+annotations$Lon<-format(as.numeric(annotations$Lon), digits=8)
 
+#### Dealing with times, filtering, selecting, and replace NA ####
+# Like before, we need to make that date and time into a format we can work with, then we are filtering by usable video, selecting to not have columns we dont want or know that we don't have any annotations in, and then replacing NA with zeros. This time you need to include the XYWarea_midscreen in that too. After that, you are going to recode the different geology annotations for the coarser categories of hard, mixed, and soft.
+annotations<- annotations %>%
+  mutate(DateTime = mdy_hms(paste(Date, TC, sep=" "))) 
 
 ```
 
+# assigning transects (forked from E Gugliotti) 
+These transects are going to be restricted to a single substrate, preferably 100m^2. However there will be many transects that are smaller. We are keeping only transects that are >=30m^3 because this covers 85% of the observations but isn't to small to not make sense. To see how this is determined, go below to the heading: Determining the minimum transect length that you should use
+
+```{r}
+# So for this part, like with the rolling densities, we need to calculate the time difference row by row. This makes it so we can group it by dive, and look for jumps of greater than 30 seconds so that we can parse out transects later. When there is a time jump of > 30 seconds, we want it to be replaced with a 0, because that will be time 0 for a new transect.
+substrate_annotations<- annotations %>%
+  group_by(Dive) %>%
+  mutate(same = ifelse(Habitat == lag(Habitat), 1, 0)) %>%
+  mutate(TimeDiff=DateTime - lag(DateTime, default = first(DateTime))) %>%
+  mutate(TimeDiff = replace(TimeDiff, TimeDiff > 30, 0)) %>%
+  mutate(TimeDiff = replace(same, is.na(same),0)) %>%
+  select(1:15, TimeDiff, everything())
+
+# Now we need to filter only for when the area per second is greater than 0 otherwise we get an error for some reason. We group by dive, habitat, and grp (transect), get a cumulative sum for the area per second that MARE gives us, and then we use the modulus operator to basically start over every time the cumulative area gets close to 100m^2 without going over. We need to make a lag for that modulus so that we can create transect segments when transects go over 100m^2, select() is going to allow us to order the columns in the way we want it, and then filter for when transect/segments are >=30m^2.
+seg.sub30<-substrate_annotations %>%
+  filter(XYWarea_Midscreen>0) %>%
+  group_by(Dive, grp = 1+cumsum(TimeDiff==0)) %>% #removed Habitat from grouping
+  mutate(cumsum = cumsum(XYWarea_Midscreen)) %>%
+  mutate(modulus = cumsum %% 100) %>%
+  filter(max(modulus)>=30) %>%
+  mutate(SumDiff= modulus - lag(modulus, default = first(modulus)))%>%
+  mutate(SumDiff = replace(SumDiff, SumDiff < 0, 0)) %>%
+  filter(max(modulus)>=30) %>%
+  group_by(Dive, grp, Habitat, seg = cumsum(SumDiff==0)) %>% #removed Habitat from grouping
+  select(1:3, DateTime, Habitat, grp, seg, modulus, everything()) %>%
+  filter(max(modulus)>=30)
+```
+
+## counts and densities
+```{r}
+#### Counts ####
+# We are going to get counts for each transect segment for every taxa observed along with the date, start time, and other information that we will need for the DSCRTP submission For start values you will be getting values that belong to the start DateTime which is the minimum DateTime for each transect segment, end values are the maximum time for each transect segment. At the end of this we are going to assign transect numbers to each of the segments for each dive (i.e. Dive 1, Transect 1, ...., Dive 2, Transect 1,....)
+
+options(digits=10)
+
+## note that the variable 'Transect' is introduced here
+sum_substrate<- seg.sub30  %>%
+  group_by(Dive, grp, Habitat, seg) %>% 
+  as.data.frame() %>%
+  group_by(Dive) %>%
+  mutate(Transect = 1:length(seg))
+
+```
+
+# merging the corrected lats and longs back to the original submission file 
+
+Creates corrected file with 135 variables.  
+
+```{r}
+## making the proper merge key
+sub$mergekey <- as.factor(paste(sub$EventID, sub$SampleID, sep = "_"))
+sum_substrate$mergekey <- as.factor(paste(sum_substrate$Dive, sum_substrate$Transect, sep = "_"))
+
+corrected <- left_join(sub, sum_substrate, by="mergekey")
+corrected$Latitude <- as.numeric(corrected$Lat)
+corrected$Longitude <- as.numeric(corrected$Long)
+corrected2 <- corrected %>% select(1:135)
+
+## checking 
+# setdiff(sub$mergekey, sum_substrate$mergekey)
+# setdiff(sum_substrate$mergekey, sub$mergekey)
+# sub %>%
+#   filter(grepl("4_18", mergekey)) %>%
+#   group_by(mergekey, Locality) %>%
+#   summarize(n=n()) %>% View()
+# 
+# yo <- sum_substrate %>% filter(grepl("6_", mergekey)) %>%
+#   group_by(mergekey, Location, Lat, Long) %>%
+#   summarize(n=n())
+# View(yo)
+# 
+# yo2 <- corrected2 %>% filter(is.na(Latitude) == T) %>%
+#   group_by(mergekey, Locality, Latitude, Longitude, ScientificName) %>%
+#   summarize(n=n())
+# View(yo2)
+# 
+# yo2 <- corrected2 %>% filter(grepl("", mergekey)) %>%
+#   group_by(mergekey, Locality) %>%
+#   summarize(n=n())
+# View(yo2)
+```
 
 # gis export
 
+For the data formatted for the national database
+
 ```{r}
 ##### create x from sub #####
-x <- sub
+x <- corrected2
 
 ##### filter data #####
 
@@ -103,4 +170,45 @@ fgdb_path <- 'C:/rworking/sf/sf.gdb'
 arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
 
 ```
+
+For the orignal annotations file.  
+
+```{r}
+sum_substrate$Lat <- as.numeric(sum_substrate$Lat)
+sum_substrate$Long <- as.numeric(sum_substrate$Long)
+annotations$Lat <- as.numeric(annotations$Lat)
+annotations$Long <- as.numeric(annotations$Long)
+
+##### create x from sub #####
+x <- annotations
+
+##### filter data #####
+
+# get rid of any missing Latitudes or Longitudes
+#x <- x %>% filter(Latitude != -999 | Longitude != -999)
+# make copy to turn into spatial points data frame.
+x_geo <- x
+
+
+##### create spatial points data fram #####
+coordinates(x_geo) <- c("Long", "Lat")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+##### create feature-class #####
+fgdb_path <- 'C:/rworking/sf/sf.gdb'
+arc.write(file.path(fgdb_path, 'y_geo'), data=x_geo, overwrite = TRUE)
+
+```
+
+# export corrected to CSV
+
+```{r}
+filename <- 'c:/rworking/deepseatools/indata/20211101-0_NOAA_CINMS_Shearwater_SW-18_Etnoyer_2018_2018_RPMcGuinn.csv'
+
+write.csv(corrected2, filename, row.names = F)
+
+```
+
+
+
 

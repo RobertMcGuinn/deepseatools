@@ -44,7 +44,7 @@ head(sheet)
 
 ```{r}
 # set the file name (user supplied th file name root, without extension)
-filename <- '20210916-4_NOAA_NEFSC_Connecticut_Kraken_2_ROV_Dives_2_to_15_Packer_2014_2014'
+filename <- '20211008-0_NOAA_NEFSC_Connecticut_Kraken_2_ROV_Dives_2_to_15_Packer_2014_2014'
 # find the file in google drive by name
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
 # getting the id as a character string
@@ -76,7 +76,7 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 ##### create feature-class #####
 
 fgdb_path <- 'C:/rworking/sf/sf.gdb'
-arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'x_geo3'), data=x_geo, overwrite = TRUE)
 
 ```
 

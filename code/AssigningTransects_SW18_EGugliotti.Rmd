@@ -1,0 +1,127 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+We are going to need to load some packages. If just hitting run gives you an error, its because you need to install the packages. So, copy this code into the chuck before the library() command and then run it:
+install.packages("dplyr")
+install.packages("lubridate")
+install.packages("tidyverse")
+
+```{r load packages}
+library(dplyr)
+library(lubridate)
+library(tidyverse)
+```
+
+Lets grab our data!
+```{r}
+# We are importing our .csv files and storing them under a different name, called nav for navigation, and T_StartStop for the transect start and stop file. I find the shorter the name in R, the less angry at myself I am for having to type out a long data frame name EVERY TIME. 
+nav<- read.csv("C:\\Users\\janessy.frometa\\Documents\\CINMS\\2018 Shearwater\\Data\\nav.csv", header = TRUE)
+T_StartStop<- read.csv("C:\\Users\\janessy.frometa\\Documents\\CINMS\\2018 Shearwater\\Data\\nav.csv", header = TRUE)
+
+
+# I needed to do this extra step because I had some rows in my csv that didn't have anything in them but R thought there was. This code is basically saying, just grab rows 1:69, everything else doesn't matter.
+T_StartStop<-T_StartStop[1:69,]
+```
+
+Its hammer time!
+
+Now you will learn that dates/date-times are THE WORST in R. You are going to repeatedly have to tell R that you want dates/date-times to be dates/date-times. And you thought you just had to tell people the same thing over and over again to get them to do it, haha.
+```{r}
+# This is saying: take the nav data frame, then (%>%) mutate it by adding a new column called DateTime from the pasted together Date and TC columns separated by a space, which we want to be a date time class which is currently in the format mdy(month,day,year)_(space)hms(hours,minutes,seconds). 
+nav<- nav %>%
+  mutate(DateTime = mdy_hms(paste(Date, TC, sep=" ")))
+
+# Samesies here. We need to do it to both the start time and stop time columns. This is one of the FEW instances where making this data into a long format wouldn't be helpful so we are just going to keep the data frame in its current format.
+T_StartStop<- T_StartStop %>%
+  mutate(Start = mdy_hms(paste(Date, Start.time..UTC., sep=" ")),
+         Stop = mdy_hms(paste(Date, End.time..UTC., sep=" ")))
+```
+
+Here is the first instance that you are going to see a loop. There will be MANY of these to come so learn to love them, or at least the rationale behind them! To be honest, there might be a less complicated way to do this but I couldn't think of it, so by all means feel free to ask around to see if someone has a better way. 
+
+Basically we are trying to assign the transect numbers in the T_StartStop data frame to all the times in the nav data frame based on the Start and Stop times in T_StartStop.
+```{r}
+# We have to make ourselves and empty data frame for the data to go to once it goes through the loop
+df <- data.frame(Transect = numeric(),
+                 DateTime = mdy_hms(),
+                 stringsAsFactors=FALSE)
+
+# Now we have the loop that say for i (some integer, here its basically a row number because we are going by row) in a sequence of intergers made of rows from T_StartStop
+for (i in seq_along(T_StartStop)){
+  # we want to filter our nav data to only values between the start and stop time of i
+  x<- nav %>% filter(T_StartStop$Start[i]<=DateTime & DateTime<=T_StartStop$Stop[i])
+  # now, we want to add a column called transect that assigns that transect number to all of those times
+  x<- x %>% mutate(Transect = rep(T_StartStop$Transect[i], times= length(x$DateTime)))
+  # now we put that into a new data frame
+  d <- data.frame(Transect = x$Transect,
+                  DateTime = x$DateTime,
+                  stringsAsFactors=FALSE)
+  # and we bind it to the data frame we made before and name it that same thing, this is what allows the loop to run through all of the transects and add that onto the data frame each time.
+  df <- rbind(df, d)
+}
+
+# Lets view if just for funsies. Anytime that we make a new data frame or vector and you want to see it, in the console write View(whateverDataframe), if you just want the column names and maybe a couple values, you can write head(whateverDataframe)
+View(df)
+head(df) #see the difference?
+
+# Now we want to join those transect names to the nav data by DateTime, this will also automatically fill in NA values for when there was no match which is exactly what we want, yay for us!
+new_nav<- left_join(nav, df, by ="DateTime")
+```
+
+
+So, before we export it might be beneficial to us to create the column names for the taxa that we plan to enter in. This allows you to go ahead and fill the columns with the null values so that it just makes bringing the data and dealing with it in R THAT MUCH EASIER in the future. When I was doing this for SW19, I did not do this and I wish that I had. YOU DON'T HAVE TO DO THIS, you can always just open up the .csv file and add column names there. It's up to you.
+
+*Make sure when you are creating column names that they NEVER have a space. Put . or _ instead.*
+```{r}
+# These are just a few examples. You will need to complete the list with any other expected species. Again, you don't HAVE to do it but I highly recommend it. I also think that it is easier to put more columns of taxa than you think that you will need and fill it with 0s even if you end up changing the name of the column or removing it all together later. There are a couple of columns that I am filling with NA rather than 0 and this is because they are character vectors rather than numeric vectors.
+
+new_nav$UsefulVideo<-NA  #I'm adding this one so that I can denote places where additional "transect segments" could be found (i.e. on bottom an moving at a relatively good speed in a kinda straight line). I have the dive nav up on GIS so that I can see when this is happening as I annotate.
+new_nav$Geology<-NA
+new_nav$Adelogorgia<-0
+new_nav$A.Injury<-0
+new_nav$Eugorgia<-0
+new_nav$E.Injury<-0
+new_nav$Leptogorgia<-0
+new_nav$Muricea<-0
+new_nav$Lophelia<-0
+new_nav$UnknownOctocoral<-0
+new_nav$UnknownSponge<-0
+new_nav$Hexactinellida<-0
+new_nav$Debris<-0
+new_nav$Comments<-NA
+
+
+
+# Now you are going to write/export your .csv file with its new name, whatever your whimsy dictates to the file path that you are storing all your stuff in. I like to keep the data separate from other things, especially as new versions of the data arise as we manipulate it in every way.
+
+# you don't need to write it to this file path, this is just also where I am keeping files because thats where my GIS is connected to and im too lazy to connect it to another file folder.
+write.csv(new_nav, "C:\\Users\\elizabeth.gugliotti\\Desktop\\California\\CINMS 2019\\nav_transects.csv")
+
+# Just write it to this path
+write.csv(new_nav, "C:\\rworking\\CINMS\\data\\nav_transects.csv")
+```
+
+You now have created the spreadsheet that you are going to use to make your annotations. Return back to the workflow document for further instructions on how to proceeed.
+
+
+#### Old fashioned way of defining transect segments
+This works the same way if you want to define transect segments the old fashioned way. All you need is the start and end times of those transect segments and then
+
+df <- data.frame(Transect = numeric(),
+                 DateTime = mdy_hms(),
+                 stringsAsFactors=FALSE)
+
+for (i in seq_along(T_StartStop)){
+  x<- nav %>% filter(T_StartStop$Start[i]<=DateTime & DateTime<=T_StartStop$Stop[i])
+  x<- x %>% mutate(Transect = rep(T_StartStop$Transect[i], times = length(x$DateTime)),
+                   Segment = rep(T_StartStop$Segment[i], times = length(x$DateTime)))
+  d <- data.frame(Transect = x$Transect,
+                  Segment = x$Segment,
+                  DateTime = x$DateTime,
+                  stringsAsFactors=FALSE)
+  df <- rbind(df, d)
+}
+
+View(df)
