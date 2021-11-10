@@ -10,7 +10,7 @@ library(googledrive)
 
 ##### render the QA dashboard #####
 # MANUAL CHANGE add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20211015-0_NOAA_NEFSC_Connecticut_Kraken2_ROV_Dives_16_to_19_Packer_2014_2014"
+filename <- "20211011-0_NOAA_NEFSC_ROPOS_2014_2014"
 rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
@@ -20,9 +20,27 @@ rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashb
 ## then Develop Redmine Checklist
 
 ##### checking #####
+unique(sub$DatasetID)
+unique(sub$SurveyID)
+unique(sub$Citation)
+unique(sub$Repository)
+
+x <- sub %>%
+  filter(IndividualCount == '-999') %>%
+  group_by(IndividualCount, CategoricalAbundance) %>%
+  summarize(n=n())
+View(x)
+
+
 x <- sub %>%
   filter(FlagReason == 'Insufficient taxonomic resolution') %>%
   group_by(ScientificName, FlagReason) %>%
+  summarize(n=n())
+View(x)
+
+x <- sub %>%
+  filter(CategoricalAbundance == 'minimum count') %>%
+  group_by(ScientificName, FlagReason, IndividualCount) %>%
   summarize(n=n())
 View(x)
 
@@ -50,7 +68,7 @@ View(x)
 ##### Upload PDF report to specific folder on Google Drive #####
 
 ## MANUAL CHANGE folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1nk0c4IXtsTQ1gHj-yTBHsonJYzFX9hLY"
+folderurl <- "https://drive.google.com/drive/folders/1kaSRNp9BFdpzNCVenR3GRJC0ETENMTs9"
 
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
