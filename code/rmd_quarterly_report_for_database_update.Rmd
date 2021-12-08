@@ -10,11 +10,11 @@ editor_options:
 
 ```{r manual_set_variables, echo=FALSE}
 ## [Manual]
-quarter <- 'Q3, FY-2021'
-version <- 'DSCRTP_NatDB_20210803-0'
-releasedate <- '2021-08-17'
-corrections <- 18962
-new_records <- 27552
+quarter <- 'Q4, FY-2021'
+version <- 'DSCRTP_NatDB_20211110-0'
+releasedate <- '2021-11-30'
+corrections <- 54534
+new_records <- 11763
 ```
 
 ```{r packages, echo=F, warning=F, message=F}
@@ -62,13 +62,13 @@ library(prettydoc)
 ```{r load_both_db, echo=FALSE, cache=T}
 ##### [Manual] bring last two databases (old one first)
 setwd("C:/rworking/deepseatools/indata")
-indata1<-read.csv("DSCRTP_NatDB_20210414-0.csv", header = T)
+indata1<-read.csv("DSCRTP_NatDB_20210803-0.csv", header = T)
 
 filt1 <- indata1 %>%
   filter(Flag == "0")
 setwd("C:/rworking/deepseatools/indata")
 
-indata2 <- read.csv("DSCRTP_NatDB_20210803-0.csv", header = T) #DSCRTP_NatDB_20210803-0
+indata2 <- read.csv("DSCRTP_NatDB_20211110-0.csv", header = T) #DSCRTP_NatDB_20210803-0
 filt <- indata2 %>%
   filter(Flag == "0")
  

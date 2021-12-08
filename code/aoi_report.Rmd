@@ -37,7 +37,7 @@ library(rgeos)
 
 ```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
 ##### Manual set variables #####
-version <- "DSCRTP_NatDB_20210803-0.csv"
+version <- "DSCRTP_NatDB_20211110-0.csv"
 
 ##### input: latest version of NDB: Manual change #####
 setwd("C:/rworking/deepseatools/indata")

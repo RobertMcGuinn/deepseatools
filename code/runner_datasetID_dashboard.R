@@ -53,7 +53,7 @@ options(lifecycle_disable_warnings = TRUE)
 
 ##### load current database(from Google Drive)#####
 ## set the file name (user supplied th file name root, without extension).
-filename <- 'DSCRTP_NatDB_20210803-0_CSV'
+filename <- 'DSCRTP_NatDB_20211110-0_CSV'
 # find the file in google drive by name
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
 ## getting the id as a character string
@@ -84,10 +84,10 @@ rm(sub)
 version <- unique(filt$DatabaseVersion)
 version <- as.character(version)
 
-##### ***OR*** bringing in datasetID key from xls stored on drive ####
+##### ***OR*** bringing in datasetID key from xls stored on Google Drive ####
 
-## create a list of files (or single file) that meets title query
-x <- drive_find(q = "name contains '20210414-1_DatasetID_Key_DSCRTP'")
+## create a list of files (or single file) that meets title query (Manual change)
+x <- drive_find(q = "name contains '20210811-0_DatasetID_Key_DSCRTP'")
 
 ## browse to it
 # x %>% drive_browse()
@@ -95,17 +95,17 @@ x <- drive_find(q = "name contains '20210414-1_DatasetID_Key_DSCRTP'")
 # getting the id as a character string
 y <- x$id
 
-# this downloads the file to the specified path
+# this downloads the file to the specified path (manual change required)
 dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/20210414-1_DatasetID_Key_DSCRTP.xlsx",
+                     path = "C:/rworking/deepseatools/indata/20210811-0_DatasetID_Key_DSCRTP.xlsx",
                      overwrite = TRUE)
 
 ## read the file into R as a data frame
 key <- read.xlsx(dl$local_path)
 
 ## clean up
-# rm(y)
-# rm(x)
+rm(y)
+rm(x)
 ##### ***OR*** bring in old datasetID key from local path #####
 key <- read.xlsx("C:/rworking/deepseatools/indata/20210414-0_DatasetID_Key_DSCRTP.xlsx")
 
@@ -124,6 +124,12 @@ x <- filt %>% filter(DatasetID %in% x) %>%
   summarize(n=n())
 View(x)
 
+x <- setdiff(filt$DatasetID, key$DatasetID)
+x <- filt %>% filter(DatasetID %in% x) %>%
+  group_by(DatasetID) %>%
+  summarize(n=n())
+View(x)
+
 x <- "NOAA_CINMS_SW-19-06"
 x <- filt %>% filter(DatasetID == x) %>% pull(Locality) %>% unique()
 View(x)
@@ -134,9 +140,9 @@ setdiff(indata$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, indata$DatasetID)
 
 ##### MANUAL STEP: go update the DatasetID key with the new values #####
-
 setdiff(filt$DatasetID, key$DatasetID)
 
+##### checking #####
 x <- filt %>%
   filter(DatasetID == "NOAA_PC-16-05") %>%
   group_by(Vessel, VehicleName, WebSite) %>%
@@ -149,9 +155,31 @@ x <- filt %>%
 
 x
 
+##### Manual step: write the abstract #####
+
+filt$CitationMaker <- paste(filt$DataProvider,'. ',
+                               filt$minObservationYear,' to ',
+                               filt$maxObservationYear,'. ',
+                               'Coral or sponge occurrence observations submitted to the NOAA National Database for Deep Sea Corals (www.deepseacoraldata.noaa.gov)', '. ',
+                               'DSCRTP Dataset ID: ', filt$DatasetID, '. ',
+                               'DSCRTP Accession ID: ',filt$AccessionID, '. ',
+                               'Record type: ', filt$RecordType, '. ',
+                               'Vessel(s): ', filt$Vessel,'. ',
+                               'Sampling vehicle: ', filt$VehicleName,'. ',
+                               'Survey ID: ', filt$SurveyID,'. ',
+                               'Principle investigator: ', filt$PI,'. ',
+                               'Data contact: ', filt$DataContact,'. ',
+                               'Reporter: ', filt$Reporter,'. ',
+                               'Repository: ', filt$Repository,'. ',
+                               'Web site [last accessed on YYYY-MM-DD]: ', filt$WebSite,'.',
+                               sep = '')
+##### looking at the Citation #####
+filt %>% filter(DatasetID == "NOAA_CT-14-07") %>%
+  pull(CitationMaker) %>%
+  unique()
 
 ##### bring in new MANUALLY UPDATED datasetID key from local path #####
-key <- read.xlsx("C:/rworking/deepseatools/indata/20210811-0_DatasetID_Key_DSCRTP.xlsx")
+key <- read.xlsx("C:/rworking/deepseatools/indata/20211207-0_DatasetID_Key_DSCRTP.xlsx")
 
 ##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
 ## build a frequency table by DatasetID from new file
@@ -167,10 +195,10 @@ z <- merge(y,x)
 
 
 ## write out result
-write.xlsx(z, "C:/rworking/deepseatools/indata/20210811-0_DatasetID_Key_DSCRTP.xlsx",
+write.xlsx(z, "C:/rworking/deepseatools/indata/20211207-0_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
-##### upload new key to Google Drive #####
+##### manual upload new key to Google Drive #####
 ##### ***OPTIONAL*** subsetting of indata to d (optional step for testing purposes) #####
 d <- indata %>%
   filter(
