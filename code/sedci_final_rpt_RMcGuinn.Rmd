@@ -1,9 +1,11 @@
 ---
 title: "NOAA National Database for Deep-sea Corals and Sponges: Area of Interest / Query Summary"
-author: "NOAA-NFMS-OHC-DSCRTP"
+author: "NOAA-NFMS-OHC-DSCRTP_RPMcGuinn"
 date: 'Robert.McGuinn@NOAA.gov; 843-460-9696. Report last ran: `r Sys.Date()`'
 output: word_document
 ---
+
+# --
 
 ```{r packages, echo=F, warning=F, message=F}
 #install.packages(tidyverse)
@@ -11,25 +13,21 @@ output: word_document
 library(tidyverse)
 library(openxlsx)
 library(sf)
-library(rgdal)
+library(sp)
+library(rgdal) # install.packages("rgdal")
 library(RColorBrewer)
-library(raster)
-library(marmap)
-library(leaflet)
+library(leaflet)# install.packages("leaflet")
 library(extrafont)
 library(RColorBrewer)
 library(rmarkdown)
 library(knitr)
-library(maps)
 library(rgdal)
-library(raster)
-library(marmap)
 library(httr)
 library(jsonlite)
-library(rnaturalearth)
-library(rnaturalearthdata)
+library(rnaturalearth)# install.packages("rnaturalearth")
+library(rnaturalearthdata)# install.packages("rnaturalearthdata")
 library(openxlsx)
-library(rgeos)
+library(terra) # install.packages("terra")
 
 ```
 
@@ -701,7 +699,7 @@ ggplot(subx, aes(x=as.Date(EntryDate), color=Phylum)) +
 
 ## save the plot
 ggsave(paste("c:/rworking/deepseatools/images/", 
-             "20201019-3_SouthAtlantic_subset", 
+             "20220130-1_SouthAtlantic_subset", 
              "NatDB_", 
              unique(x$DatabaseVersion), 
              ".png", 
