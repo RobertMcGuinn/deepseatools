@@ -1,0 +1,177 @@
+---
+title: "Figure on RecordType"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, echo=F, warning=F, message=F}
+#install.packages(tidyverse)
+#install.packages('openxlsx')
+library(tidyverse)
+library(openxlsx)
+library(sf)
+library(sp)
+library(rgdal) # install.packages("rgdal")
+library(RColorBrewer)
+library(leaflet)# install.packages("leaflet")
+library(extrafont)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(rgdal)
+library(httr)
+library(jsonlite)
+library(rnaturalearth)# install.packages("rnaturalearth")
+library(rnaturalearthdata)# install.packages("rnaturalearthdata")
+library(openxlsx)
+library(terra) # install.packages("terra")
+
+# install.packages('devtools',dependencies = T)
+library(devtools)
+
+```
+
+# Load NDB
+
+```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
+##### input: latest version of NDB #####
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20211110-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+rm(indata)
+```
+
+# Growth of Database Through Time within this Selection
+
+``` {r GrowthThroughTime_charts, echo=FALSE, dpi=300, eval = T}
+
+x <- filt
+
+## set options to remove scientific notation
+options(scipen=10000, digits = 0)
+
+subx <- x %>% filter (Phylum == "Cnidaria") %>%
+  mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
+  mutate(EntryDate = as.factor(EntryDate)) %>% 
+  mutate(as.Date(EntryDate))
+
+suby <- x %>% filter (Phylum == "Porifera") %>%
+  mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
+  mutate(EntryDate = as.factor(EntryDate)) %>% 
+  mutate(as.Date(EntryDate))
+ 
+ggplot(subx, aes(x=as.Date(EntryDate), color=Phylum)) +
+  stat_bin(data = subx,
+           aes(y=cumsum(..count..) / 1000), 
+           geom="line", 
+           binwidth = 2, 
+           size = 1) +
+  stat_bin(data = suby,
+           aes(y=cumsum(..count..) / 1000),
+           geom= "line",
+           binwidth = 2,
+           size = 1) +
+  ylab("Number of Records (thousands)") + 
+  xlab("Year Record Added") + 
+  xlim(as.Date('2009-01-01'), as.Date('2021-10-19')) +
+  theme(axis.text.x=element_text(hjust= .2)) +
+  guides(fill=TRUE) + 
+  theme_bw() +
+  theme(text=element_text(size=15,  family="Cambria")) +
+  #theme(axis.text.x = element_text(angle = 90)) +
+  theme(legend.title = element_blank()) +
+  theme(axis.title.x = element_text(vjust=-2.5)) +
+  theme(axis.title.y = element_text(vjust= 5)) +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"))+
+  scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)]) +
+  scale_y_continuous(label=scales::comma) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 1))+
+  # scale_x_continuous(n.breaks = 5) +
+  geom_vline(xintercept = as.Date("2010-01-01"), color = 'blue')# +
+## ggtitle(paste("Database Version:", unique(filt$DatabaseVersion)))
+
+## save the plot
+ggsave(paste("c:/rworking/deepseatools/images/",
+             "20220204-0_Database_growth_through_time_",
+             "NatDB_",
+             unique(x$DatabaseVersion),
+             "_RPMcGuinn",
+             ".png",
+             sep = ''),
+       width = 8,
+       height = 5.57,
+       units = "in")
+
+
+## Checking: 
+# summary(as.Date(filt$EntryDate))
+# hist(as.Date(filt$EntryDate), breaks = 10)
+
+```
+
+# RecordType
+
+``` {r recordtype, echo = FALSE}
+valid <- filt$RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'video transect','notation', 'catch record')
+
+# number of records with valid values
+x <- length(valid[valid == T])
+
+# number of records where the specified value is non-null 
+y <- filter(filt, is.na(filt$RecordType) == FALSE)
+y <- length(y$RecordType)
+
+# number of records where the specified value is null
+z <- filter(filt, is.na(filt$RecordType) == TRUE)
+z <- length(z$RecordType)
+
+# total number of unflagged records
+t <- length(filt$RecordType)
+
+```
+
+```{r RecordTypePlotSouth, echo=FALSE, cache = FALSE, dpi = 300}
+yo <- filt %>% 
+  filter(RecordType %in% c('literature',  'specimen',  'still image', 'video observation', 'notation', 'catch record'))
+
+yo <- within(yo, 
+             RecordType <- factor(RecordType, 
+                                  levels=names(sort(table(RecordType), decreasing=TRUE))))
+
+options(scipen=10000)
+yo <- yo %>% filter(
+  # FishCouncilRegion == 'South Atlantic'| 
+  #   FishCouncilRegion == 'Gulf of Mexico'
+  )
+#table(yo$FishCouncilRegion)
+
+g <- ggplot(yo, aes(RecordType, fill = Phylum)) +
+    geom_bar() + 
+  coord_flip() + 
+  # facet_wrap(~FishCouncilRegion) + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15, base_family = "Cambria") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+#display.brewer.all(colorblindFriendly=TRUE)
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
+
+## save the plot
+ggsave(paste("c:/rworking/deepseatools/images/",
+             "20220204-0_Summary_by_RecordType_",
+             "NatDB_",
+             unique(filt$DatabaseVersion),
+             "_RPMcGuinn",
+             ".png",
+             sep = ''),
+       width = 8,
+       height = 5.57,
+       units = "in")
+
+```
+

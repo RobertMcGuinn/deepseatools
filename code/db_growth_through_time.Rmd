@@ -1,0 +1,101 @@
+---
+title: "Figure on RecordType"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, echo=F, warning=F, message=F}
+#install.packages(tidyverse)
+#install.packages('openxlsx')
+library(tidyverse)
+library(openxlsx)
+library(sf)
+library(sp)
+library(rgdal) # install.packages("rgdal")
+library(RColorBrewer)
+library(leaflet)# install.packages("leaflet")
+library(extrafont)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(rgdal)
+library(httr)
+library(jsonlite)
+library(rnaturalearth)# install.packages("rnaturalearth")
+library(rnaturalearthdata)# install.packages("rnaturalearthdata")
+library(openxlsx)
+library(terra) # install.packages("terra")
+
+# install.packages('devtools',dependencies = T)
+library(devtools)
+
+```
+
+# Load NDB
+
+```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
+##### input: latest version of NDB #####
+setwd("C:/rworking/deepseatools/indata")
+indata<-read.csv("DSCRTP_NatDB_20211110-0.csv", header = T)
+filt <- indata %>%
+  filter(Flag == "0")
+
+```
+
+
+# Growth of Database Through Time within this Selection
+
+``` {r GrowthThroughTime_charts, echo=FALSE, dpi=300, eval = T}
+
+x <- filt
+
+## set options to remove scientific notation
+options(scipen=10000, digits = 0)
+
+
+subx <- x %>% filter (Phylum == "Cnidaria") %>%
+  mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
+  mutate(EntryDate = as.factor(EntryDate)) %>% 
+  mutate(as.Date(EntryDate))
+
+suby <- x %>% filter (Phylum == "Porifera") %>%
+  mutate(EntryDate = replace_na(as.character(EntryDate), '2019-12-18')) %>% 
+  mutate(EntryDate = as.factor(EntryDate)) %>% 
+  mutate(as.Date(EntryDate))
+ 
+ggplot(subx, aes(x=as.Date(EntryDate), color=Phylum)) +
+  stat_bin(data = subx,
+           aes(y=cumsum(..count..) / 1000), 
+           geom="line", 
+           binwidth = 2, 
+           size = 1) +
+  stat_bin(data = suby,
+           aes(y=cumsum(..count..) / 1000),
+           geom="line", 
+           binwidth = 2, 
+           size = 1) +
+  ylab("Number of Records (thousands)") + 
+  xlab("Year Record Added") + 
+  xlim(as.Date('2012-01-01'), as.Date('2020-10-19')) +
+  theme(axis.text.x=element_text(hjust= .2)) +
+  guides(fill=FALSE) + 
+  theme_bw() +
+  theme(text=element_text(size=20,  family="Cambria")) +
+  #theme(axis.text.x = element_text(angle = 90)) +
+  theme(legend.title = element_blank()) +
+  theme(axis.title.x = element_text(vjust=-2.5)) +
+  theme(axis.title.y = element_text(vjust= 5)) +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"))+
+  scale_color_manual(values = brewer.pal(12, "Paired")[c(10,9)]) +
+  scale_y_continuous(label=scales::comma) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 1))+
+  geom_vline(xintercept = as.Date("2016-01-01"), color = 'blue')# +
+## ggtitle(paste("Database Version:", unique(filt$DatabaseVersion)))
+
+## save the plot
+# ggsave(paste("c:/rworking/deepseatools/images/", 
+#              "20220130-1_SouthAtlantic_subset", 
+#              "NatDB_", 
