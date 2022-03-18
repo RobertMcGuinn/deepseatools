@@ -9,9 +9,12 @@ library(rmarkdown)
 library(googledrive)
 
 ##### render the QA dashboard #####
-# MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-# manual change: make sure your target RMD in the render function step is correct.
-filename <- "20220310-1_NOAA_NEFSC_HB1704_ROPOS_2017_2017"
+## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
+## manual change: make sure your target RMD in the render function step is correct.
+filename <- "20220316-1_NOAA_CBNMS_GFNMS_NA077_Graiff_2016_2016"
+
+
+## render
 rmarkdown::render("C:/rworking/deepseatools/code/20220309_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
@@ -20,6 +23,15 @@ rmarkdown::render("C:/rworking/deepseatools/code/20220309_rmd_accession_qa_dashb
 ## manual: then SAVE to PDF.
 ## manual: then Develop Redmine Checklist
 
+##### Upload PDF report to specific folder on Google Drive #####
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1b2a5cGDRGTf9oir03zDPAlXW140yhB6I"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".PDF", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".PDF", sep=''),
+             overwrite = T)
+
 ##### checking #####
 unique(sub$DatasetID)
 unique(sub$SurveyID)
@@ -27,8 +39,7 @@ unique(sub$Citation)
 unique(sub$Repository)
 
 x <- sub %>%
-  filter(IndividualCount == '-999') %>%
-  group_by(IndividualCount, CategoricalAbundance) %>%
+  group_by(Purpose, EventID, Locality) %>%
   summarize(n=n())
 View(x)
 
@@ -74,17 +85,8 @@ View(x)
 
 s %>% filter(FieldName == "IdentificationVerificationStatus") %>% pull(ValidValues)
 s %>% filter(FieldName == "IdentificationVerificationStatus") %>% pull(FieldDescription)
+s %>% filter(FieldName == "TaxonRank") %>% pull(ValidValues)
 
-
-##### Upload PDF report to specific folder on Google Drive #####
-## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1TirvxDtLlQly54VSWNiI2Sxh__wK2-KJ"
-
-setwd("C:/rworking/deepseatools/reports")
-drive_upload(paste(filename,".PDF", sep=''),
-             path = as_id(folderurl),
-             name = paste(filename,".PDF", sep=''),
-             overwrite = T)
 
 ##### checking #####
 sub %>%

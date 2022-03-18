@@ -66,9 +66,17 @@ x <- sub
 # get rid of any missing Latitudes or Longitudes
 x <- x %>% filter(Latitude != -999 | 
                     Longitude != -999, 
-                    FlagReason== "Horizontal position or depth is questionable", 
-                  
+                   # FlagReason== "Horizontal position or depth is questionable", 
+                   # EventID == 'H1568'
                     )
+
+## checking 
+
+yo <- x %>% 
+  group_by(CatalogNumber, Latitude, Longitude, Flag, FlagReason) %>% 
+  summarize(n=n()) %>% View()
+
+
 # make copy to turn into spatial points data frame.
 x_geo <- x
 
@@ -79,7 +87,7 @@ x_geo_sf <- st_as_sf(x = x_geo,
            crs = projcrs)
 
 ##### thin down the variables #####
-x_geo_export <- x_geo_sf %>% dplyr::select(CatalogNumber, Phylum, ScientificName, SampleID, DepthInMeters, SurveyID, EventID, Flag)
+x_geo_export <- x_geo_sf %>% dplyr::select(CatalogNumber, Phylum, ScientificName, SampleID, DepthInMeters, SurveyID, EventID, Flag, ImageURL)
 
 ##### make a leaflet map #####
 library(leaflet)
@@ -105,6 +113,10 @@ m
 
 ##### Optional: export data it will guess the driver automatically based on the .shp extension #####
 # st_write(x_geo_export, "C:/Users/Robert.Mcguinn/Documents/ArcGIS/Projects/fromr/shapefiles/x_geo_export.shp", delete_dsn = T)
+
+## checking 
+
+
 
 ```
 
