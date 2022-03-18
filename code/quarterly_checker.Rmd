@@ -3,6 +3,8 @@ title: "Quarterly Checker"
 author: "Robert McGuinn"
 date: "2021-06-11"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -17,11 +19,7 @@ library(openxlsx)
 library(usethis)
 library(tidyverse)
 library(sf)
-library(sp)
-library(rgdal)
-library(arcgisbinding)
-arc.check_product()
-
+library(leaflet)
 ```
 
 # get XLS file from Google Drive
@@ -56,27 +54,57 @@ sub <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
 
 ```
 
-# gis export
+# gis inspection and export
 
 ```{r}
+
 ##### create x from sub #####
 x <- sub
 
 ##### filter data #####
 
 # get rid of any missing Latitudes or Longitudes
-x <- x %>% filter(Latitude != -999 | Longitude != -999)
+x <- x %>% filter(Latitude != -999 | 
+                    Longitude != -999, 
+                    FlagReason== "Horizontal position or depth is questionable", 
+                  
+                    )
 # make copy to turn into spatial points data frame.
 x_geo <- x
 
-##### create spatial points data fram #####
-coordinates(x_geo) <- c("Longitude", "Latitude")
-proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+##### create simple features object data frame #####
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+x_geo_sf <- st_as_sf(x = x_geo,                         
+           coords = c("Longitude", "Latitude"),
+           crs = projcrs)
 
-##### create feature-class #####
+##### thin down the variables #####
+x_geo_export <- x_geo_sf %>% dplyr::select(CatalogNumber, Phylum, ScientificName, SampleID, DepthInMeters, SurveyID, EventID, Flag)
 
-fgdb_path <- 'C:/rworking/sf/sf.gdb'
-arc.write(file.path(fgdb_path, 'x_geo3'), data=x_geo, overwrite = TRUE)
+##### make a leaflet map #####
+library(leaflet)
+m <- leaflet() %>% setView(lng = 5,lat = 38, zoom = 1)
+m <- addProviderTiles(m, "Esri.OceanBasemap",  options = providerTileOptions(noWrap = TRUE))
+m <- addCircleMarkers(m, data=x_geo_export, 
+                        radius=5, 
+                        weight=0, 
+                        fillColor= "blue", 
+                        fillOpacity=1,
+                        popup = paste(
+                          "<b><em>","Catalog Number:","</b></em>", x_geo_export$CatalogNumber, "<br>",
+                          "<b><em>","Sample ID:","</b></em>", x_geo_export$SampleID, "<br>",
+                          "<b><em>","Scientific Name:","</b></em>", x_geo_export$ScientificName, "<br>",
+                          "<b><em>","Depth (meters):","</b></em>", x_geo_export$DepthInMeters, "<br>",
+                          "<b><em>","Survey ID:","</b></em>", x_geo_export$SurveyID, "<br>",
+                          "<b><em>","Event ID:","</b></em>", x_geo_export$EventID, "<br>",
+                          "<b><em>","Flag:","</b></em>", x_geo_export$Flag, "<br>",
+                          "<b><em>","Image:","</b></em>", x_geo_export$ImageURL)
+                                  
+  )
+m
+
+##### Optional: export data it will guess the driver automatically based on the .shp extension #####
+# st_write(x_geo_export, "C:/Users/Robert.Mcguinn/Documents/ArcGIS/Projects/fromr/shapefiles/x_geo_export.shp", delete_dsn = T)
 
 ```
 

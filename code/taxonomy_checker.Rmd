@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(googledrive)
 library(googlesheets4)
+# install.packages("worrms")
 library(worrms)
 library(rmarkdown)
 library(knitr)
@@ -30,9 +31,9 @@ library(openxlsx)
 ##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 
-taxfl <- read_sheet('11xq5N-13lPdadmoYmNG8kXm_7r4ZdmmlDWNafUQ79I8')
-taxch <- read_sheet('1Io9Xv7Uh1AU0S2NMBwhtz-3MT1Q6L0VvXEqay1F15Ig')
-tax <- read_sheet('1NNeCqkPmrXZ9hDkEpRTlbZGulOR8fXToAL-K3wALm2Y')
+taxfl <- read_sheet('1btgRwV2v79UDnnI8MEXWUT1aZeR4HxU6tF5UHc9o6AE')
+taxch <- read_sheet('1vi89OMGB8ICZllhKm8QxSLC1UWJSvhARFVyAIaPqcO4')
+tax <- read_sheet('1z5v14lw6gHNxdJyfsp5r5SomYy6OtowtxjwXdQlLJdg')
 
 ```
 
@@ -54,19 +55,22 @@ sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
 ```{r}
 ##### create a character vector of non-matching taxa #####
-taxa <- as.character(
-  setdiff(unique(sub$ScientificName),
-          tax$ScientificName)
-  )
+# taxa <- as.character(
+#   setdiff(unique(sub$ScientificName),
+#           tax$ScientificName)
+#   )
+
 ## checking
 # taxa
 # length(taxa)
 
 ##### -OR- just bring in a list of mismatches from csv #####
 
-# setwd("C:/rworking/deepseatools/indata")
-# taxa <- read.csv('taxa.csv', header = F)
-# taxa$V1 <- gsub("'", '', taxa$V1)
+setwd("C:/rworking/deepseatools/indata")
+taxa <- read.csv('taxa.csv', header = F)
+taxa$V1 <- gsub("'", '', taxa$V1)
+taxa <- taxa$V1
+
 
 ##### -OR- bring in a single taxa #####
 
@@ -183,6 +187,18 @@ newtax$Genus <- z$genus
 newtax$TaxonRank <- tolower(z$rank)
 newtax$SynonymAphiaID <- "-999"
 newtax$HigherTaxonNameAuthorship <- NA
+
+## checking
+# length(newtax$VernacularNameCategory)
+
+## OPTIONAL: getting just the ones that aren't in the flag list 
+x <- setdiff(newtax$ScientificName,taxfl$ScientificName)
+newtax <- newtax %>% filter(ScientificName %in% x)
+
+## checking
+# View(newtax)
+
+
 ```
 
 # joining new records with current taxonomy table 
@@ -196,6 +212,9 @@ length(newtax$VernacularNameCategory)
 
 ## creating just data.frame
 newtax <- as.data.frame(newtax)
+
+## checking
+# View(newtax)
 ```
 
 # write updated taxonomy table to file

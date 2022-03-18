@@ -9,15 +9,16 @@ library(rmarkdown)
 library(googledrive)
 
 ##### render the QA dashboard #####
-# MANUAL CHANGE add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20211011-0_NOAA_NEFSC_ROPOS_2014_2014"
-rmarkdown::render("C:/rworking/deepseatools/code/20210303_rmd_accession_qa_dashboard.rmd",
+# MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
+# manual change: make sure your target RMD in the render function step is correct.
+filename <- "20220310-1_NOAA_NEFSC_HB1704_ROPOS_2017_2017"
+rmarkdown::render("C:/rworking/deepseatools/code/20220309_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
 
 ##### MANUAL inspection of QA report in Word, #####
-## then SAVE to PDF.
-## then Develop Redmine Checklist
+## manual: then SAVE to PDF.
+## manual: then Develop Redmine Checklist
 
 ##### checking #####
 unique(sub$DatasetID)
@@ -51,9 +52,15 @@ x <- sub %>%
 View(x)
 
 filt %>%
-  filter(grepl("Pisces", Vessel)) %>%
-  group_by(DatasetID, AccessionID, SurveyID, EventID, Vessel, ObservationYear) %>%
+  filter(grepl("Deep Sea Coral", Repository)) %>%
+  group_by(Repository, DatasetID) %>%
   summarize(n=n()) %>% View()
+
+filt %>%
+  filter(grepl("", DataProvider)) %>%
+  group_by(DataProvider, DatasetID) %>%
+  summarize(n=n()) %>% View()
+
 
 x <- sub %>%
   group_by(ScientificName, FlagReason) %>%
@@ -65,10 +72,13 @@ x <- sub %>%
   summarize(n=n())
 View(x)
 
-##### Upload PDF report to specific folder on Google Drive #####
+s %>% filter(FieldName == "IdentificationVerificationStatus") %>% pull(ValidValues)
+s %>% filter(FieldName == "IdentificationVerificationStatus") %>% pull(FieldDescription)
 
-## MANUAL CHANGE folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1kaSRNp9BFdpzNCVenR3GRJC0ETENMTs9"
+
+##### Upload PDF report to specific folder on Google Drive #####
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1TirvxDtLlQly54VSWNiI2Sxh__wK2-KJ"
 
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
@@ -76,7 +86,7 @@ drive_upload(paste(filename,".PDF", sep=''),
              name = paste(filename,".PDF", sep=''),
              overwrite = T)
 
-###### checking #####
+##### checking #####
 sub %>%
   # filter(FlagReason == "Insufficient taxonomic resolution") %>%
   group_by(IndividualCount, CategoricalAbundance) %>%
