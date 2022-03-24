@@ -30,10 +30,13 @@ library(openxlsx)
 ```{r}
 ##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
+## manual: make sure the IDs below are pointing at the correct sheets
 
-taxfl <- read_sheet('1btgRwV2v79UDnnI8MEXWUT1aZeR4HxU6tF5UHc9o6AE')
-taxch <- read_sheet('1vi89OMGB8ICZllhKm8QxSLC1UWJSvhARFVyAIaPqcO4')
-tax <- read_sheet('1z5v14lw6gHNxdJyfsp5r5SomYy6OtowtxjwXdQlLJdg')
+
+tax <- read_sheet('12PofxQbhE0nwxX4tFznuI17wPhSugRMST32YM_3N4D0')
+taxfl <- read_sheet('1bGee86NQTHGfMMWt83nA1zCHnuNrzBOSkJJy5q29FbI')
+taxch <- read_sheet('1S4e_RKgeMl5YoRDgDz9UU0HpnD3NgVpTGBysqt03SFw')
+
 
 ```
 
