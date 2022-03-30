@@ -115,6 +115,7 @@ taxa <- str_sort(taxa)
 ```{r}
 length(taxa)
 length(setdiff(sub$AphiaID, tax$AphiaID))
+setdiff(sub$ScientificName, tax$ScientificName)
 ```
 
 # match taxa (nonmatching taxa will not show)
@@ -195,8 +196,8 @@ newtax$HigherTaxonNameAuthorship <- NA
 # length(newtax$VernacularNameCategory)
 
 ## OPTIONAL: getting just the ones that aren't in the flag list 
-x <- setdiff(newtax$ScientificName,taxfl$ScientificName)
-newtax <- newtax %>% filter(ScientificName %in% x)
+# x <- setdiff(newtax$ScientificName,taxfl$ScientificName)
+# newtax <- newtax %>% filter(ScientificName %in% x)
 
 ## checking
 # View(newtax)

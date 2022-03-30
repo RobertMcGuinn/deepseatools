@@ -53,7 +53,7 @@ opts_chunk$set(
 
 ```
 
-```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
+```{r load_NDB, eval=F, echo=F, message=FALSE, warning=FALSE, cache=FALSE}
 ##### manual input: latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
 indata <- read.csv("DSCRTP_NatDB_20211110-0.csv", header = TRUE)
@@ -83,7 +83,7 @@ sub <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
 flagged <- sub %>%  filter(Flag == "1")
 ```
 
-```{r, echo=F, eval=F}
+```{r view_map, echo=F, eval=F}
 ##### gis inspection and export #####
 
 ##### create x from sub #####
@@ -134,8 +134,7 @@ m
 
 ```
 
-
-``` {r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
+```{r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
 ##### download Google Sheet version of schema for use in R  documents ##### 
 # Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
@@ -1268,7 +1267,7 @@ n = n()
 
 ### Number of ObservationTime values recorded: `r sum(x$n)`
 
-View of some of the first 10 ObservationTime values: 
+View of the first 10 ObservationTime values: 
 
 ```{r, echo=F}
 x <- sub %>%

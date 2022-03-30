@@ -11,8 +11,7 @@ library(googledrive)
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
 ## manual change: make sure your target RMD in the render function step is correct.
-filename <- "20220316-1_NOAA_CBNMS_GFNMS_NA077_Graiff_2016_2016"
-
+filename <- "20220328-1_NOAA_CBNMS_GFNMS_NA116_Graiff_2019_2019"
 
 ## render
 rmarkdown::render("C:/rworking/deepseatools/code/20220309_rmd_accession_qa_dashboard.rmd",
@@ -25,7 +24,7 @@ rmarkdown::render("C:/rworking/deepseatools/code/20220309_rmd_accession_qa_dashb
 
 ##### Upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1b2a5cGDRGTf9oir03zDPAlXW140yhB6I"
+folderurl <- "https://drive.google.com/drive/folders/1_1iXhFqdAn5EjA9EH14uBSfpe7H6upjh"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
