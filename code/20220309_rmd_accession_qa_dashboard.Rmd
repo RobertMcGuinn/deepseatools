@@ -24,6 +24,7 @@ library(googledrive)
 library(leaflet)
 library(RColorBrewer)
 library(terra)
+library(sf)
 
 #font_import()
 # library(marmap)
