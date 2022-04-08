@@ -11,7 +11,7 @@ library(googledrive)
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
 ## manual change: make sure your target RMD in the render function step is correct.
-filename <- "20220318-0_NOAA_SWFSC_SH1812_2018"
+filename <- "20211019-3_NOAA_AFSC_Aleutian_DropCam_Rooper_Stellar_Sea_Lion_2016_2017"
 
 ## render
 rmarkdown::render("C:/rworking/deepseatools/code/20220309_rmd_accession_qa_dashboard.rmd",
@@ -24,7 +24,7 @@ rmarkdown::render("C:/rworking/deepseatools/code/20220309_rmd_accession_qa_dashb
 
 ##### Upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1Zl31mfvbcH_pXgvOmW4fumnCAp6ZapoH"
+folderurl <- "https://drive.google.com/drive/folders/1WcL_fMRU7SXpsc_60OWd5XzRQBvyCJOz"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
@@ -103,6 +103,12 @@ sub %>%
 sub %>%
   # filter(FlagReason == "Insufficient taxonomic resolution") %>%
   group_by(ObservationDate) %>%
+  summarize(n=n()) %>%
+  View()
+
+filt %>%
+  filter(grepl("140", SurveyID)) %>%
+  group_by(Vessel, SurveyID, AccessionID, DatasetID, DataProvider, SamplingEquipment ) %>%
   summarize(n=n()) %>%
   View()
 
