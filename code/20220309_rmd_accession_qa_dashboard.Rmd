@@ -60,6 +60,20 @@ setwd("C:/rworking/deepseatools/indata")
 indata <- read.csv("DSCRTP_NatDB_20211110-0.csv", header = TRUE)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
+
+
+##### checking #####
+
+# setwd("C:/rworking/deepseatools/indata")
+# indata <- read.csv("deep_sea_corals_6cb7_510e_0a83.csv", header = TRUE)
+# filt <- indata %>%
+#   filter(Flag == "0", is.na(Phylum) == F)
+# 
+# 
+# setwd("C:/rworking/deepseatools/indata")
+# indata <- read.csv("deep_sea_corals_full.csv", header = TRUE)
+# filt <- indata %>%
+#   filter(Flag == "0", is.na(Phylum) == F)
 ```
 
 ```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}

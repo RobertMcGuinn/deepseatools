@@ -11,7 +11,7 @@ library(googledrive)
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
 ## manual change: make sure your target RMD in the render function step is correct.
-filename <- "20211019-3_NOAA_AFSC_Aleutian_DropCam_Rooper_Stellar_Sea_Lion_2016_2017"
+filename <- "20220414-1_NOAA_SWFSC_RL1905_2019"
 
 ## render
 rmarkdown::render("C:/rworking/deepseatools/code/20220309_rmd_accession_qa_dashboard.rmd",
@@ -24,7 +24,9 @@ rmarkdown::render("C:/rworking/deepseatools/code/20220309_rmd_accession_qa_dashb
 
 ##### Upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1WcL_fMRU7SXpsc_60OWd5XzRQBvyCJOz"
+folderurl <- "https://drive.google.com/drive/folders/1nsHRBtj1UUBZtticYJEjx5CBst6x8IDb"
+
+
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
@@ -37,15 +39,28 @@ unique(sub$SurveyID)
 unique(sub$Citation)
 unique(sub$Repository)
 
-x <- sub %>%
-  group_by(Purpose, EventID, Locality) %>%
+x <- filt %>%
+  filter(FishCouncilRegion == "Caribbean" |
+           FishCouncilRegion == "South Atlantic" |
+           FishCouncilRegion == "Caribbean") %>%
+  group_by(FishCouncilRegion, Vessel, EntryDate, ObservationYear) %>%
   summarize(n=n())
 View(x)
 
 
-x <- sub %>%
-  filter(FlagReason == 'Insufficient taxonomic resolution') %>%
-  group_by(ScientificName, FlagReason) %>%
+x <- filt %>%
+  filter(FishCouncilRegion == "Caribbean" |
+           FishCouncilRegion == "South Atlantic" |
+           FishCouncilRegion == "Gulf of Mexico",
+         as.Date(EntryDate) > "2019-10-01") %>%
+  group_by(FishCouncilRegion, Vessel, VehicleName, EntryDate, ObservationYear) %>%
+  summarize(n=n())
+View(x)
+length(x$CatalogNumber)
+
+x <- filt %>%
+  filter(grepl("NA", DatasetID)) %>%
+  group_by(Vessel, DatasetID, DataProvider) %>%
   summarize(n=n())
 View(x)
 
@@ -66,14 +81,16 @@ filt %>%
   group_by(Repository, DatasetID) %>%
   summarize(n=n()) %>% View()
 
+
 filt %>%
-  filter(grepl("", DataProvider)) %>%
-  group_by(DataProvider, DatasetID) %>%
+  filter(grepl("YOGI", VehicleName)) %>%
+  group_by(DataProvider, VehicleName) %>%
   summarize(n=n()) %>% View()
 
 
 x <- sub %>%
-  group_by(ScientificName, FlagReason) %>%
+  filter(DepthInMeters < 50) %>%
+  group_by(ScientificName, FlagReason, DepthInMeters, DepthMethod, ShallowFlag) %>%
   summarize(n=n())
 View(x)
 
@@ -81,6 +98,14 @@ x <- sub %>%
   group_by(CategoricalAbundance, IndividualCount) %>%
   summarize(n=n())
 View(x)
+
+
+x <- sub %>%
+  filter(VernacularNameCategory == "nipple foliose sponge (yellow)") %>%
+  group_by(Flag, FlagReason, ScientificName) %>%
+  summarize(n=n())
+View(x)
+
 
 s %>% filter(FieldName == "IdentificationVerificationStatus") %>% pull(ValidValues)
 s %>% filter(FieldName == "IdentificationVerificationStatus") %>% pull(FieldDescription)
