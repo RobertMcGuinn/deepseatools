@@ -40,12 +40,31 @@ unique(sub$Citation)
 unique(sub$Repository)
 
 x <- filt %>%
+  filter(DatasetID == 'MBARI') %>%
+  group_by(DataContact, DataProvider, ImageURL) %>%
+  summarize(n=n())
+View(x)
+
+x <- filt %>%
   filter(FishCouncilRegion == "Caribbean" |
            FishCouncilRegion == "South Atlantic" |
            FishCouncilRegion == "Caribbean") %>%
   group_by(FishCouncilRegion, Vessel, EntryDate, ObservationYear) %>%
   summarize(n=n())
 View(x)
+
+x <- filt %>%
+  filter(grepl("Monterey", DataProvider)) %>%
+  group_by(ImageURL) %>%
+  summarize(n=n())
+View(x)
+
+setwd("C:/rworking/deepseatools/indata")
+sub <- read.csv("dsc_natdb.csv", header = TRUE)
+filt <- indata %>%
+  filter(Flag == "0", is.na(Phylum) == F)
+
+
 
 
 x <- filt %>%
