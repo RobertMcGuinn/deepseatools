@@ -473,3 +473,19 @@ names(z)
 write.xlsx(z, "C:/rworking/deepseatools/indata/20191217-0_DatasetID_Key_DSCRTP.xlsx",
 overwrite = TRUE)
 
+
+##### write a subset of the NDB for testing purposes
+## filter
+export <- sub %>% filter(Flag == "0",
+                         FishCouncilRegion == "New England")
+## write
+setwd("C:/rworking/deepseatools/indata")
+export %>%
+  write.csv(paste("yo",".csv", sep = ''), row.names = FALSE)
+
+
+
+
+
+
+
