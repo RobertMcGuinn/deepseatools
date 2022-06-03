@@ -78,6 +78,8 @@ x <- subset(filt, as.numeric(Latitude) > minlat &
 ## checking
 # dim(x)
 
+## cleaning 
+rm(filt)
 ```
 
 ```{r create_sf_from_points, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
@@ -92,10 +94,12 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 ##### transform coral and sponge points to sf #####
 points <- st_as_sf(x_geo, wkt = "geom")
 
+points <- st_transform(points, crs = 3086)
+
 ## filter and export the points for use in ArcGIS
 points_vis <- points %>% dplyr::select(CatalogNumber, ScientificName)
   
-## write out file for visuaization purposes
+## write out file for visualization purposes
 st_write(points_vis, "c:/data/gis/TCFS_RPL_20220131/points_vis.shp")
 
 ## cleanup 
@@ -112,13 +116,19 @@ aoi <- st_transform(aoi, crs = st_crs(points))
 
 ```
 
-```{r create_buffers, echo=F}
+```{r create_aoi_buffers, echo=F}
 ## buffer operations
 # create 5000 meter buffer
 aoi_buf_5000 <- st_buffer(aoi, dist=5000) # map units are in meters
 
 # create 20000 meter buffer
 aoi_buf_20000 <- st_buffer(aoi, dist=20000) # map units are in meters
+
+
+## write out file for visualization purposes
+st_write(aoi_buf_5000, "c:/data/gis/TCFS_RPL_20220131/aoi_buf2_5000.shp", append = F)
+st_write(aoi_buf_20000, "c:/data/gis/TCFS_RPL_20220131/aoi_buf2_20000.shp", append = F)
+
 
 ```
 
@@ -210,8 +220,7 @@ obis <- as.data.frame(out$obis$data)
 
 ```
 
-```{r, get_obis_data__in_buffer, echo=F}
-
+```{r get_obis_data_in_buffer, echo=F}
 ##### getting OBIS data #####
 # using bounding box variables defined above
 library(spocc)
@@ -221,7 +230,7 @@ obisbuffer5000 <- as.data.frame(out$obis$data)
 
 ```
 
-```{r eval=F, echo=F}
+```{r write_points_to_excel, eval=F, echo=F}
 # export data files to local folder
 ##### export Excel file of data records to folder #####
 setwd("C:/rworking/deepseatools/indata")
@@ -232,56 +241,19 @@ write.xlsx(as.data.frame(obisbuffer5000),'OBIS_AOI_5000m_buffer.xlsx')
 
 ```
 
-```{r export_GIS_2, echo=F, message = FALSE, warning=FALSE, eval=F}
-## create spatial points data frame from a subset of obis points
-x_geo <- obis
-
-## create spdf
-coordinates(x_geo) <- c("longitude", "latitude")
-proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
-
-## OPTIONAL: write out featureclass to geodatabase from sp object 
-fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
-arc.write(file.path(fgdb_path, 'obis'), data=x_geo, overwrite = TRUE)
-
-```
-
-```{r cache=T, eval=F, echo=F}
-##### pinging GBIF for data #####
-library(spocc)
-bounds <- c(minlon, minlat, maxlon, maxlat)
-out <- occ(geometry = aoi_transform, from = 'gbif')
-gbif <- as.data.frame(out$gbif$data)
-
-```
-
-```{r export_GIS_3, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=F}
-# create spatial points data frame from a subset of GBIF points
-x_geo <- gbif
-
-## create spdf
-coordinates(x_geo) <- c("longitude", "latitude")
-proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
-
-## OPTIONAL: write out featureclass to geodatabase from sp object 
-fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
-arc.write(file.path(fgdb_path, 'gbif'), data=x_geo, overwrite = TRUE)
-
-```
-
 # Purpose of Report
 
-To create summaries of occurrence data to support fishery resource access decision making.  
+To create summaries of coral and sponge occurrence data to support natural resource assessment processes.   
 
 # Online Resources
 
-NOAA GeoPlatform interactive map: [LINK](https://noaa.maps.arcgis.com/home/webmap/viewer.html?webmap=4a558d07290542f68bca89ccfad38f1b&extent=-81.6837,27.7539,-77.4979,29.3078)
+NOAA GeoPlatform interactive map: [LINK](https://noaa.maps.arcgis.com/apps/mapviewer/index.html?webmap=9fe32ac7c38c466d870123c719217376)
 
-The main project folder for this analysis on Google Drive: [LINK](https://drive.google.com/drive/folders/1cRlhREcCdBFLlR0nzRaEB3GvrfoCZ4Pf?usp=sharing)
+The main project folder for this analysis on Google Drive: [LINK](https://drive.google.com/drive/folders/1vaJzB3S7TfPcaKnTxZ4mpIp3LCv3w9b0?usp=sharing)
 
 A Word version of this report is linked here: [LINK](https://drive.google.com/file/d/1PWa0v4rJm7yEOs1PtCHMS6lkvp7_x-WV/view?usp=sharing)
 
-The source RMarkdown code used to generate this report is linked here on GitHub: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/2021_AOI_Analysis.Rmd)
+The source RMarkdown code used to generate this report is linked here on GitHub: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/20220527_AOI_Analysis_deep_sea_corals_sponges_Trans_Caribbean_Fiber_Project.Rmd)
 
 # Methods
 

@@ -139,6 +139,21 @@ x <- "NOAA_CINMS_SW-19-06"
 x <- filt %>% filter(DatasetID == x) %>% pull(Locality) %>% unique()
 View(x)
 
+x <- "Nancy Foster"
+x <- filt %>% filter(grepl(x,Vessel)) %>%
+  group_by(Vessel, SurveyID, ObservationYear, DatasetID) %>%
+  summarize(n=n())
+View(x)
+
+id <- "BOEM_Mid-Atlantic_Canyons"
+x <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Summaries/", id, ".html", sep = '')
+browseURL(x)
+
+
+
+View(x)
+
+
 rm(x)
 
 setdiff(indata$DatasetID, key$DatasetID)
