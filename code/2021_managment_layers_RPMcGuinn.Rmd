@@ -32,9 +32,9 @@ library(extrafont)
 library(leaflet)
 library(sf)
 library(sp)
-library(arcgisbinding)
-arc.check_product()
-library(rgdal)
+# library(arcgisbinding)
+# arc.check_product()
+# library(rgdal)
 
 ```
 
