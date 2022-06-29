@@ -2,28 +2,32 @@
 title: "Accession QA Report"
 author: "NOAA-NFMS-OHC-DSCRTP: Robert.McGuinn@NOAA.gov"
 date: "Date of report: `r Sys.Date()`"
-output: word_document
-  #prettydoc::html_pretty:
-   # theme: hpstr
-    #highlight: github
+output: 
+  word_document:
+     reference_docx: template.docx
 always_allow_html: yes
+editor_options: 
+  chunk_output_type: console
 ---
-
+# -
 ```{r load_packs, echo=F, message=FALSE, warning=F}
-
+library(rmarkdown)
+library(xfun)
 library(tidyverse)
 library(knitr)
 library(flextable)
 library(sp)
 library(rgdal)
-library(maps)
 library(extrafont)
 library(googlesheets4)
+library(googledrive)
 library(leaflet)
 library(RColorBrewer)
+library(terra)
+library(sf)
+library(maps)
 
-#font_import()
-
+font_import()
 # library(marmap)
 # library(googlesheets)
 # library(googledrive)
@@ -39,44 +43,120 @@ library(RColorBrewer)
 ```
 
 ```{r setup, include=FALSE}
-opts_chunk$set(fig.width=7, 
-               fig.height=3.5, 
-               dpi = 300, 
-               fig.align = 'left',
-               message=FALSE, 
-               warning=FALSE)
+opts_chunk$set(
+  fig.width=7, 
+  fig.height=3.5, 
+  dpi = 300, 
+  fig.align = 'left',
+  message=FALSE, 
+  warning=FALSE,
+  cache.lazy = FALSE
+)
+
 ```
 
-```{r load_NDB, eval=T, echo=F, message=FALSE, warning=FALSE, cache=TRUE}
-##### input: latest version of NDB #####
+```{r load_NDB, eval=F, echo=F, message=FALSE, warning=FALSE, cache=FALSE}
+##### manual input: latest version of NDB #####
+## the data must be in the folder below
+## get the latest from google drive 
 setwd("C:/rworking/deepseatools/indata")
-indata <- read_csv("DSCRTP_NatDB_20200710-2.csv")
+indata <- read.csv("DSCRTP_NatDB_20220426-0.csv", header = TRUE)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
+
 ```
 
-```{r data_and_subset, echo=FALSE, message=FALSE, warning=FALSE}
-setwd("C:/rworking/deepseatools/indata")
+```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
+# setwd("C:/rworking/deepseatools/indata")
+# #filename <- ""
+# sub <- read.csv(paste(filename,'.csv', sep = ''), header = T) 
+# flagged <- sub %>%  filter(Flag == "1")
+```
 
-## x is defined in the runner script 
-# or you could define it here like this
-# x <- "20200701-0_NOAA_NEFSC_Connecticut_ISIS2_Towcam_Packer_2015_2015"
+```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE}
 
-sub <- read.csv(paste(x,'.csv', sep = ''), header = T) 
+## google drive authorization
+## drive_auth()
+
+## set the file name (user supplied th file name root, without extension). You can
+## do this action from the runner too.
+# filename <- '20210105-1_NOAA_GFNMS_CBNMS_SH-18-09_Graiff_2018_2018'
+# find the file in google drive by name
+x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
+## getting the id as a character string
+y <- x$id
+## download the zip file
+dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
+## extract just the file of interest from the zip file
+sub <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
 flagged <- sub %>%  filter(Flag == "1")
 ```
 
-``` {r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
+```{r view_map, echo=F, eval=F}
+##### gis inspection and export #####
+
+##### create x from sub #####
+x <- sub
+
+##### filter data #####
+
+# get rid of any missing Latitudes or Longitudes
+x <- x %>% filter(Latitude != -999 | Longitude != -999)
+# make copy to turn into spatial points data frame.
+x_geo <- x
+
+##### create simple features object data frame #####
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+x_geo_sf <- st_as_sf(x = x_geo,                         
+           coords = c("Longitude", "Latitude"),
+           crs = projcrs)
+
+##### thin down the variables #####
+x_geo_export <- x_geo_sf %>% dplyr::select(CatalogNumber, Phylum, ScientificName, SampleID, DepthInMeters, SurveyID, EventID)
+
+
+
+##### make a leaflet map #####
+library(leaflet)
+m <- leaflet() %>% setView(lng = 5,lat = 38, zoom = 1)
+m <- addProviderTiles(m, "Esri.OceanBasemap",  options = providerTileOptions(noWrap = TRUE))
+m <- addCircleMarkers(m, data=x_geo_export, 
+                        radius=5, 
+                        weight=0, 
+                        fillColor= "blue", 
+                        fillOpacity=1,
+                        popup = paste(
+                          "<b><em>","Catalog Number:","</b></em>", sub$CatalogNumber, "<br>",
+                          "<b><em>","Sample ID:","</b></em>", sub$SampleID, "<br>",
+                          "<b><em>","Scientific Name:","</b></em>", sub$ScientificName, "<br>",
+                          "<b><em>","Depth (meters):","</b></em>", sub$DepthInMeters, "<br>",
+                          "<b><em>","Survey ID:","</b></em>", sub$SurveyID, "<br>",
+                          "<b><em>","Event ID:","</b></em>", sub$EventID, "<br>",
+                          "<b><em>","Image:","</b></em>",sub$ImageURL)
+                                  
+  )
+m
+
+
+##### Optional: export data it will guess the driver automatically based on the .shp extension #####
+# st_write(x_geo_export, "C:/Users/Robert.Mcguinn/Documents/ArcGIS/Projects/fromr/shapefiles/x_geo_export.shp", delete_dsn = T)
+
+```
+
+```{r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
 ##### download Google Sheet version of schema for use in R  documents ##### 
+## run this command once per session to authorize googlesheets4 to your account
+## gs4_auth()
+
 # Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 
 ## checking 
-# s %>% filter(FieldName == 'VernacularNameCategory') %>% pull(ValidValues)
+# s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(FieldDescription)
+# s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(ValidValues)
 ```
 
 ```{r mapit, include = F, eval=F}
-
 # sub <- sub %>% filter(grepl('horizontal', FlagReason))
 
 m <- leaflet()
@@ -108,27 +188,29 @@ m
 
 ```
 
-
 ```{r echo = F}
 ##### fix implicit NA #####
 sub$Family <- forcats::fct_explicit_na(sub$Family)
-
 ```
 
+```{r echo = F}
+# define ft width function 
+FitFlextableToPage <- function(ft, pgwidth = 6){
 
-```{r echo = F, cache=T, eval=T}
+  ft_out <- ft %>% autofit()
 
-##### load NDB #####
-# setwd("C:/rworking/deepseatools/indata")
-# indata<-read.csv("DSCRTP_NatDB_20200408-1.csv", header = T)
-# filt <- indata %>%
-#   filter(Flag == "0")
-# rm(indata)
-
+  ft_out <- width(ft_out, width = dim(ft_out)$widths*pgwidth /(flextable_dim(ft_out)$widths))
+  return(ft_out)
+}
 ```
 
-# AccessionID: 
-*`r x`* 
+# File Version Used in this Report:
+*`r substring(filename, 1, 10)`*
+
+# Target AccessionID: 
+*`r substring(filename,12)`*
+
+AccessionID is currently: `r unique(sub$AccessionID)`
 
 # DatasetID: *`r unique(factor(sub$DatasetID))`*
 
@@ -138,8 +220,8 @@ SurveyComments: `r unique(factor(sub$SurveyComments))`
 
 * Number of records: *`r length(sub$CatalogNumber)`*
 * Number of records flagged: *`r length(flagged$CatalogNumber)`*
-* Minimum depth: *`r min(sub[sub$DepthInMeters != "-999",]$DepthInMeters)`*
-* Maximum depth: *`r max(sub[sub$DepthInMeters != "-999",]$DepthInMeters)`*
+* Minimum depth (unflagged): *`r min(sub[sub$DepthInMeters != "-999" & sub$Flag == "0",]$DepthInMeters)`*
+* Maximum depth (unflagged): *`r max(sub[sub$DepthInMeters != "-999" & sub$Flag == "0",]$DepthInMeters)`*
 * Number of dives or tows recorded: *`r length(unique(sub[sub$EventID != "NA" | is.na(sub$EventID) == F,]$EventID))`* 
 * Time frame: *`r min(as.numeric(min(sub$ObservationYear)))` to `r min(as.numeric(max(sub$ObservationYear)))`*
 * Number of ImageURL populated: `r sub %>% filter(is.na(ImageURL) == F) %>% pull(ImageURL) %>% length()`
@@ -157,7 +239,7 @@ sum_tbl
 
 # Citation Maker
 
-``` {r CitationMaker, echo = FALSE, eval = F}
+``` {r CitationMaker, echo = FALSE, eval = T}
 
 sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ', 
                          min(sub$ObservationYear[sub$ObservationYear != "-999"]),' to ',
@@ -180,8 +262,8 @@ sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ',
 unique(sub$CitationMaker)
 ```
 
-
 # Web site
+
 ``` {r Website, echo=FALSE}
 sum_tbl <-
   sub %>%
@@ -192,36 +274,64 @@ sum_tbl
 ```
 
 # Data Origin
+
 ``` {r SourceSummary, echo=FALSE, warnings = F}
 sum_tbl <-
   sub %>%
   group_by(DatasetID) %>%
   dplyr::summarize(
-            DataProvider = paste(unique(DataProvider), collapse=" | "),
-            PI = paste(unique(PI), collapse=" | "),
-            Reporter = paste(unique(Reporter), collapse=" | "),
-            ReporterEmail = paste(unique(ReporterEmail), collapse=" | "),
-            DataContact = paste(unique(DataContact), collapse=" | "),
-            Records = n()
-            )
+    DataProvider = paste(unique(DataProvider), collapse=" | "),
+    PI = paste(unique(PI), collapse=" | "),
+    Reporter = paste(unique(Reporter), collapse=" | "),
+    ReporterEmail = paste(unique(ReporterEmail), collapse=" | "),
+    DataContact = paste(unique(DataContact), collapse=" | "),
+    Records = n()
+  )
 
 
 ft <- flextable(sum_tbl) %>% 
-  theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, vader
-  #set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
+  theme_zebra() %>% 
   colformat_num(j = 7, 
                 digits = 0, 
                 big.mark = ",", 
                 na_str = "NA") %>% 
-  font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  fontsize(size = 7, part = "all") %>%
-  align(j = 1:6, align = 'left', part = 'all') %>% 
-  align(j = 7, align = 'right', part = 'all')# %>% 
-  #autofit() 
-  
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all") # %>%
+# align(j = 1:6, align = 'left', part = 'all')
+ 
 ft
 
 ```
+
+# Dive Table 
+
+```{r, echo=F}
+
+sum_tbl <-
+  sub %>%
+  group_by(SurveyID,EventID) %>%
+  dplyr::summarize(
+    Station = paste(unique(Station), collapse=" | "),
+    Locality = paste(unique(Locality), collapse=" | "),
+    Records = n()
+  )
+
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all") # %>%
+# align(j = 1:6, align = 'left', part = 'all')
+
+ft
+
+```
+
 
 # Static Maps
 ## Locator Map
@@ -232,7 +342,7 @@ ft
 # #getting rid of  missing lat/long data
 #library(ggmap)
 sub2 <- sub %>%
-  filter(Latitude != '-999' , Longitude != '-999', Longitude != '-887.22488')
+  filter(Latitude != '-999' , Longitude != '-999')
 # 
 # # use this when not crossing dateline
 # xpos <- sub2$Longitude
@@ -274,55 +384,6 @@ z + geom_point(data=sub2,
                size = 2,
                aes(x=Longitude, y = Latitude), inherit.aes = FALSE)
 ```
-
-## Area of Interest Map
-
-```{r mapzoomed, echo=FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=FALSE, fig.align='center'}
-##### using marmap and ggplot2 to make a map #####
-
-# create a spatial points data frame
-spdf<-sub2
-coordinates(spdf) <- c("Longitude", "Latitude", "DepthInMeters")
-proj4string(spdf) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
-x<-bbox(spdf)
-# install.packages('marmap')
-# library(marmap)
-zoom <- 2 # as number gets bigger you achieve a wider extent to your download
-cont <- getNOAA.bathy(lon1 = x[1,1]-zoom, lon2 = x[1,2]+zoom,
-                      lat1 = x[2,1]-zoom, lat2 = x[2,2]+zoom, resolution = 2,
-                      keep = FALSE, antimeridian = FALSE)
-
-##### if you have linear stuff you want to map use this #####
-# begin.coord <- data.frame(lon=sub$StartLongitude, lat=sub$StartLatitude)
-# end.coord <- data.frame(lon=sub$EndLongitude, lat=sub$EndLatitude)
-#
-# l <- vector("list", nrow(begin.coord))
-# library(sp)
-# for (i in seq_along(l)) {
-#   l[[i]] <- Lines(list(Line(rbind(begin.coord[i, ], end.coord[i,]))), as.character(i))
-# }
-# lines<-SpatialLines(l)
-# class(lines)
-#
-# linesdf <- SpatialLinesDataFrame(lines, data = begin.coord)
-#
-# lines_fortify <- fortify(linesdf)
-
-##### make ggplot based map #####
-
-
-# topographical color scale, see ?scale_fill_etopo
-g <- autoplot(cont, geom=c("raster", "contour")) +
-  scale_fill_gradient2(low="dodgerblue4", mid="gainsboro", high="darkgreen") +
-  labs(x = 'Longitude') +
-  labs(y = 'Latitude')
-
-# add sampling locations
-
-g + geom_point(aes(x=Longitude, y=Latitude), data=sub2, alpha=0.5, color = 'red', size = 2)
-
-```
-
 ## 3D Bounding Box
 
 ```{r bounding box, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=TRUE, fig.align='center'}
@@ -349,16 +410,16 @@ sum_tbl <-
             Records = n()
             )
 
+
 colkeys <- c("Records")
 ft <- flextable(sum_tbl) %>% 
   theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, vader
   #set_header_labels(Genus_n = "# of Genera", n = "# of Records") %>% 
   colformat_num(j = 8, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  fontsize(size = 7, part = "all") %>%
-  #autofit()  %>% 
-  width(j = 6, 1.5) %>% 
-  width(j = 7, 1.5)
+  fontsize(size = 7, part = "all") #%>%
+  # width(j = 6, 1.5) %>% 
+  # width(j = 7, 1.5)
  
 
 ft
@@ -373,9 +434,10 @@ sum_tbl <-
   # filter(RecordType == 'specimen') %>% 
   group_by(IdentifiedBy, RecordType) %>%
   dplyr::summarize(
-            IdentificationQualifier = paste(unique(IdentificationQualifier), collapse=" | "),
-            #Identification_Date = toString(unique(IdentificationDate)),
-            Records = n()) %>%
+    IdentificationQualifier = paste(unique(IdentificationQualifier), collapse=" | "),
+    IdentificationVerificationStatus = paste(unique(IdentificationVerificationStatus), collapse=" | "),
+    #Identification_Date = toString(unique(IdentificationDate)),
+    Records = n()) %>%
   arrange(desc(Records))
 
 ft <- flextable(sum_tbl) %>% 
@@ -384,12 +446,39 @@ ft <- flextable(sum_tbl) %>%
   colformat_num(j=4, digits = 0, big.mark = ",", na_str = "NA") %>% 
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 7, part = "all")
-  
-  
- 
 
 ft
 ```
+
+# List of Flagged Taxa
+``` {r FlaggedScientificName, echo=FALSE }
+sum_tbl <-
+  sub %>% 
+  arrange(ScientificName) %>% 
+  filter(is.na(Phylum == T) | 
+           Flag == "1") %>% 
+  group_by(FlagReason) %>%
+  dplyr::summarize(
+    ScientificName = paste(unique(ScientificName), collapse=" | "),
+    TaxonRank = paste(unique(TaxonRank), collapse=" | "),
+    UnFlagged = length(Flag[Flag == "0"]), 
+    Flagged = length(Flag[Flag == "1"]),
+    FlagReason = paste(unique(FlagReason), collapse=" | "),
+    Records = n())
+
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, vader
+  colformat_num(digits = 0, big.mark = ",", na_str = "NA") %>%
+  colformat_num(digits = 0, big.mark = ",", na_str = "NA") %>%
+  font(fontname = "Cambria", part = "all")  %>% #header, body, all
+  fontsize(size = 7, part = "all")# %>%
+  #autofit() #%>% 
+  #width(j = 2, 2)
+ 
+ft
+```
+
 
 # List of ScientificNames (Coral) - Grouped by Family
 ``` {r ByScientificName, echo=FALSE }
@@ -412,11 +501,10 @@ ft <- flextable(sum_tbl) %>%
   colformat_num(j = 4, digits = 0, big.mark = ",", na_str = "NA") %>%
   colformat_num(j = 7, digits = 0, big.mark = ",", na_str = "NA") %>%
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
-  fontsize(size = 7, part = "all") %>%
-  autofit() %>% 
-  width(j = 2, 2)
+  fontsize(size = 7, part = "all")# %>%
+  #autofit() #%>% 
+  #width(j = 2, 2)
  
-
 ft
 ```
 
@@ -442,8 +530,8 @@ ft <- flextable(sum_tbl) %>%
   colformat_num(j = 7, digits = 0, big.mark = ",", na_str = "NA") %>%
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 7, part = "all") %>%
-  autofit() %>% 
-  width(j = 2, 2)
+  autofit() # %>% 
+  #width(j = 2, 2)
  
 
 ft
@@ -466,8 +554,21 @@ sum_tbl <-
     EventID = paste(unique(EventID), collapse=" | "),
     n = n()) %>%
   arrange(desc(n))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
+
+
 ```
 
 ## NavType
@@ -483,8 +584,19 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(n))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 ## LocationAccuracy
@@ -500,8 +612,19 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(n))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
+
 ```
 
 ## Oceans
@@ -517,8 +640,18 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(n))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 ## Countries
@@ -535,8 +668,19 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(n))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 ## FishCouncilRegion(s)
@@ -552,8 +696,18 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(n))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 ## Marine Eco-Regions of the World
@@ -569,8 +723,18 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(n))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 
@@ -587,8 +751,18 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(n))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 
@@ -625,9 +799,9 @@ g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(10,9)])
 
 ### IndividualCount
 `r options(digits = 3)`
-* min: `r min(sub2$IndividualCount, digits = 3)`
-* median: `r median(sub2$IndividualCount, digits = 3)`
-* max: `r max(sub2$IndividualCount)`
+* min: `r min(sub$IndividualCount, digits = 3)`
+* median: `r median(sub$IndividualCount, digits = 3)`
+* max: `r max(sub$IndividualCount)`
 
 `r options(digits = 5)`
 
@@ -643,8 +817,18 @@ sum_tbl <-
   dplyr::summarize(
     n = n()) %>%
   arrange(desc(CategoricalAbundance))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 ## Density Values (per square meter)
@@ -678,8 +862,18 @@ sum_tbl <-
     medianCover = median(Cover),
     n = n()) %>%
   arrange(desc(medianCover))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 5)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 
 ```
 
@@ -702,8 +896,18 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(Genus))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 ## Weight Values 
@@ -722,8 +926,18 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(WeightInKg))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 ## Condition Values 
@@ -739,8 +953,18 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(Condition))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 # Environment
@@ -762,8 +986,17 @@ sum_tbl <-
 
 sum_tbl <- sum_tbl %>% filter(n > 100) 
   
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 
 
 ```
@@ -861,9 +1094,18 @@ sum_tbl <- sub %>%
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(pH))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
 
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 ## pHscale Values
@@ -878,8 +1120,18 @@ sum_tbl <- sub %>%
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(pHscale))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 
 ```
 
@@ -895,8 +1147,18 @@ sum_tbl <- sub %>%
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(pCO2))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 
 ```
 
@@ -912,8 +1174,18 @@ sum_tbl <- sub %>%
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(TA))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 
 ```
 
@@ -929,8 +1201,18 @@ sum_tbl <- sub %>%
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(DIC))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 
 ```
 
@@ -940,7 +1222,7 @@ sum_tbl
 
 ## Observation Dates 
 
-Number of ObservationDate values recorded:
+### Number of ObservationDate values recorded:
 
 `r x <- sub %>%
 filter(
@@ -954,9 +1236,11 @@ n = n()
 
 sum(x$n)`
 
-ObservationDate values grouped by SurveyID: 
+### ObservationDate values grouped by SurveyID: 
 
-`r x <- sub %>%
+```{r, echo=F}
+
+x <- sub %>%
 filter(
 is.na(ObservationDate) == F |
 ObservationDate != '-999'
@@ -966,7 +1250,21 @@ dplyr::summarize(ObservationDates = paste(unique(ObservationDate), collapse = ' 
 n = n()
 )
 
-kable(head(x, n=10), row.names = F, digits = 2)`
+ft <- flextable(x) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
+
+
+```
+
 
 ## Observation Time 
 
@@ -980,11 +1278,12 @@ dplyr::summarize(
 n = n()
 )`
 
-Number of ObservationTime values recorded: `r sum(x$n)`
+### Number of ObservationTime values recorded: `r sum(x$n)`
 
-View of some of the ObservationTime values: 
+View of the first 10 ObservationTime values: 
 
-`r x <- sub %>%
+```{r, echo=F}
+x <- sub %>%
 filter(
 is.na(ObservationTime) == F |
 ObservationTime != '-999'
@@ -994,7 +1293,20 @@ dplyr::summarize(
 n = n()
 ) 
 
-kable(head(x, n=10), row.names = F, digits = 2)`
+
+ft <- flextable(head(x, n=10)) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
+
+```
 
 ## Modified Dates 
 ``` {r Modified, echo=FALSE}
@@ -1009,8 +1321,18 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(Modified))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 
 ```
 
@@ -1027,8 +1349,18 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(EntryDate))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 
 ```
 
@@ -1046,13 +1378,23 @@ sum_tbl <-
     #mean.DepthGIS = mean(as.numeric(gisDepth)),
     n = n()) %>%
   arrange(desc(EntryUpdate))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 
 ```
 
 # Flagged Records
-``` {r Flags and CatalogNumbers, echo=FALSE, warning=FALSE}
+``` {r Flags_and_CatalogNumbers, echo=FALSE, warning=FALSE}
 sum_tbl <-
   sub %>%
   filter(Flag == "1") %>%
@@ -1063,8 +1405,18 @@ sum_tbl <-
     n = n()
     ) %>%
   arrange(desc(n))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 # Depth
@@ -1177,8 +1529,18 @@ sum_tbl <-
     max.Depth = max(as.numeric(DepthInMeters)), 
     n = n()) %>%
   arrange(median.Depth)
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 0)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 ## Depth Summary by ScientificName (Sponges)
@@ -1196,8 +1558,18 @@ sum_tbl <-
     max.Depth = max(as.numeric(DepthInMeters)), 
     n = n()) %>%
   arrange(ScientificName)
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 0)
-sum_tbl
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 ```
 
 ## Points > `r percrm` percent different than Coastal Relief Model
@@ -1397,8 +1769,17 @@ SurveyIDPattern <- filt %>%
     #Reporters = paste(unique(Reporter), collapse = ' | ')
   )
   
-sum_tbl <- kable(SurveyIDPattern, row.names = F, digits = 2)
-sum_tbl
+ft <- flextable(SurveyIDPattern) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft
 
 ```
 

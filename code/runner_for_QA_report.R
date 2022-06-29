@@ -7,22 +7,30 @@ library(tidyverse)
 library(curl)
 library(rmarkdown)
 library(googledrive)
+library(googlesheets4)
+
+##### authorization
+
+##### authorizations #####
+drive_auth(email = "robert.mcguinn@noaa.gov")
+gs4_auth(email = "robert.mcguinn@noaa.gov")
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-## manual change: make sure your target RMD in the render function step is correct.
+
 filename <- "20220414-1_NOAA_SWFSC_RL1905_2019"
 
 ## render
-rmarkdown::render("C:/rworking/deepseatools/code/20220309_rmd_accession_qa_dashboard.rmd",
+rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
 
+## manual change: make sure your target RMD in the render function step is correct.
 ##### MANUAL inspection of QA report in Word, #####
 ## manual: then SAVE to PDF.
 ## manual: then Develop Redmine Checklist
 
-##### Upload PDF report to specific folder on Google Drive #####
+##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
 folderurl <- "https://drive.google.com/drive/folders/1nsHRBtj1UUBZtticYJEjx5CBst6x8IDb"
 
