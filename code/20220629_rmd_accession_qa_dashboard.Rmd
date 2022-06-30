@@ -26,20 +26,6 @@ library(RColorBrewer)
 library(terra)
 library(sf)
 library(maps)
-
-font_import()
-# library(marmap)
-# library(googlesheets)
-# library(googledrive)
-# library(openxlsx)
-# library(scales)
-# library(extrafont)
-# library(RColorBrewer)
-# library(rgdal)
-# library(sp)
-# library(marmap)
-# library(worrms)
-# library(worms)
 ```
 
 ```{r setup, include=FALSE}
@@ -162,7 +148,7 @@ s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 m <- leaflet()
 m <- addProviderTiles(m, "Esri.OceanBasemap")
 m <- addCircleMarkers(m, data=sub,
-                      radius=5,
+                      radius=2,
                       weight=0,
                       fillColor= "red",
                       fillOpacity=.5,
@@ -1545,7 +1531,7 @@ ft
 
 ## Depth Summary by ScientificName (Sponges)
 
-Table is sorted in alpabetical order.
+Table is sorted by median depth in ascending order.
 
 ``` {r DepthSumByScientificNameSponges, echo=FALSE}
 sum_tbl <-
@@ -1557,7 +1543,7 @@ sum_tbl <-
     median.Depth = median(as.numeric(DepthInMeters)),
     max.Depth = max(as.numeric(DepthInMeters)), 
     n = n()) %>%
-  arrange(ScientificName)
+  arrange(median.Depth)
 
 ft <- flextable(sum_tbl) %>% 
   theme_zebra() %>% 
@@ -1759,6 +1745,7 @@ SurveyIDPattern <- filt %>%
   filter(Vessel %in% unique(sub$Vessel)) %>% 
   group_by(Vessel) %>% 
   dplyr::summarise(
+    VehicleName = paste(unique(VehicleName), collapse = ' | '),
     SurveyIDs = paste(unique(SurveyID), collapse = ' | '),
     DatasetIDs = paste(unique(DatasetID), collapse = ' | '),
     DataProviders = paste(unique(DataProvider), collapse = ' | '),

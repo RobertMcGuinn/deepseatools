@@ -8,13 +8,13 @@
 
 library(tidyverse)
 library(googledrive)
-library(googlesheets)
+library(googlesheets4)
 library(worrms)
 
 ##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 
-n <- '20200313-0'
+n <- '20220414-1'
 
 taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
 #gs_browse(taxfl)

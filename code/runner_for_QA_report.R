@@ -18,7 +18,7 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
 
-filename <- "20220414-1_NOAA_SWFSC_RL1905_2019"
+filename <- "20220607-3_ROPOS_2019_Dive_2114"
 
 ## render
 rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashboard.rmd",
@@ -27,13 +27,11 @@ rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashb
 
 ## manual change: make sure your target RMD in the render function step is correct.
 ##### MANUAL inspection of QA report in Word, #####
-## manual: then SAVE to PDF.
 ## manual: then Develop Redmine Checklist
-
+## manual: then SAVE to PDF.
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1nsHRBtj1UUBZtticYJEjx5CBst6x8IDb"
-
+folderurl <- "https://drive.google.com/drive/folders/1FMh4GKhVV6q5r5Ri1K-72HE38JT_1Wl1"
 
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
@@ -72,9 +70,6 @@ sub <- read.csv("dsc_natdb.csv", header = TRUE)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
-
-
-
 x <- filt %>%
   filter(FishCouncilRegion == "Caribbean" |
            FishCouncilRegion == "South Atlantic" |
@@ -108,12 +103,10 @@ filt %>%
   group_by(Repository, DatasetID) %>%
   summarize(n=n()) %>% View()
 
-
 filt %>%
   filter(grepl("YOGI", VehicleName)) %>%
   group_by(DataProvider, VehicleName) %>%
   summarize(n=n()) %>% View()
-
 
 x <- sub %>%
   filter(DepthInMeters < 50) %>%
@@ -126,35 +119,45 @@ x <- sub %>%
   summarize(n=n())
 View(x)
 
-
 x <- sub %>%
   filter(VernacularNameCategory == "nipple foliose sponge (yellow)") %>%
   group_by(Flag, FlagReason, ScientificName) %>%
   summarize(n=n())
 View(x)
 
-
+s %>% filter(FieldName == "Modified") %>% pull(ValidValues)
 s %>% filter(FieldName == "IdentificationVerificationStatus") %>% pull(ValidValues)
 s %>% filter(FieldName == "IdentificationVerificationStatus") %>% pull(FieldDescription)
 s %>% filter(FieldName == "TaxonRank") %>% pull(ValidValues)
 
-
 ##### checking #####
+sub %>%
+  # filter(FlagReason == "Insufficient taxonomic resolution") %>%
+  group_by(RecordType, SamplingEquipment, Repository, ) %>%
+  summarize(n=n()) %>%
+  View()
+
 sub %>%
   # filter(FlagReason == "Insufficient taxonomic resolution") %>%
   group_by(IndividualCount, CategoricalAbundance) %>%
   summarize(n=n()) %>%
   View()
 
-sub %>%
-  filter(grepl("Sentry", SamplingEquipment)) %>%
-  group_by(SamplingEquipment, Vessel) %>%
+filt %>%
+  filter(grepl("Natural History", DataProvider)) %>%
+  group_by(DataProvider) %>%
   summarize(n=n()) %>%
   View()
 
 sub %>%
   # filter(FlagReason == "Insufficient taxonomic resolution") %>%
   group_by(ObservationDate) %>%
+  summarize(n=n()) %>%
+  View()
+
+sub %>%
+  filter(grepl("Desmophyllum", ScientificName)) %>%
+  group_by(ScientificName) %>%
   summarize(n=n()) %>%
   View()
 
@@ -166,8 +169,8 @@ filt %>%
 
 
 x <- s %>%
-  filter(FieldName == 'IdentificationVerificationStatus') %>%
-  pull(FieldDescription) %>%
+  filter(FieldName == 'LocationAccuracy') %>%
+  pull(ValidValues) %>%
 View()
 
 x <- s %>%
