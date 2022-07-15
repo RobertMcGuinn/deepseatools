@@ -1,15 +1,14 @@
 ##### Header #####
-## Author: Robert McGuinn
-## Started: 20200921
+## author: Robert McGuinn
+## started: 20200921
 
 ##### packages #####
+library(bookdown)
 library(tidyverse)
 library(curl)
 library(rmarkdown)
 library(googledrive)
 library(googlesheets4)
-
-##### authorization
 
 ##### authorizations #####
 drive_auth(email = "robert.mcguinn@noaa.gov")
@@ -17,8 +16,7 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-
-filename <- "20220607-3_ROPOS_2019_Dive_2114"
+filename <- "20220713-0_NOAA_HB-19-03"
 
 ## render
 rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashboard.rmd",
@@ -143,11 +141,29 @@ sub %>%
   summarize(n=n()) %>%
   View()
 
+filt$DatasetURL <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Summaries/", filt$DatasetID, ".html", sep = "")
+#head(filt$DatasetURL)
+
+x <- "Yoklavich"
+yo <- filt %>%
+  filter(grepl(x, DataContact)|
+           grepl(x, Reporter)|
+           grepl(x, PI)|
+           grepl(x, DatasetID) |
+           grepl(x, Repository))
+
+unique(yo$DatasetURL)
+
+
 filt %>%
-  filter(grepl("Natural History", DataProvider)) %>%
-  group_by(DataProvider) %>%
+  filter(grepl("Southwest Fisheries", DataProvider)) %>%
+  group_by(DatasetID, SurveyID, SamplingEquipment, DataContact, PI, Reporter) %>%
   summarize(n=n()) %>%
   View()
+
+x <- filt %>%
+  filter(grepl("Southwest Fisheries", DataProvider) |
+           grepl("Northwest Fisheries", DataProvider))
 
 sub %>%
   # filter(FlagReason == "Insufficient taxonomic resolution") %>%
@@ -168,6 +184,13 @@ filt %>%
   View()
 
 
+filt %>%
+  filter(grepl("ftp:", WebSite)) %>%
+  group_by(WebSite, Citation, DatasetID, SurveyID, ObservationDate) %>%
+  summarize(n=n()) %>%
+  View()
+
+
 x <- s %>%
   filter(FieldName == 'LocationAccuracy') %>%
   pull(ValidValues) %>%
@@ -178,6 +201,38 @@ x <- s %>%
   pull(FieldDescription) %>%
   View()
 
+##### mapit using leaflet #####
+## optional create new 'sub' ##
+# sub <- filt %>%
+#   filter(DatasetID == 'BOEM_Lophelia_I')
+
+
+m <- leaflet()
+m <- addProviderTiles(m, "Esri.OceanBasemap")
+m <- addCircleMarkers(m, data=sub,
+                      radius=2,
+                      weight=0,
+                      fillColor= "red",
+                      fillOpacity=.5,
+                      popup = paste(
+                        "<b><em>","Flag:","</b></em>", sub$Flag, "<br>",
+                        "<b><em>","Catalog Number:","</b></em>", sub$CatalogNumber, "<br>",
+                        "<b><em>","Record Type:","</b></em>", sub$RecordType, "<br>",
+                        "<b><em>","DatasetID:","</b></em>", sub$DatasetID, "<br>",
+                        "<b><em>","AccessionID:","</b></em>", sub$AccessionID, "<br>",
+                        "<b><em>","DataProvider:","</b></em>", sub$DataProvider, "<br>",
+                        "<b><em>","ObservationYear:","</b></em>", sub$ObservationYear, "<br>",
+                        "<b><em>","Vessel:","</b></em>", sub$Vessel, "<br>",
+                        "<b><em>","Locality:","</b></em>", sub$Locality, "<br>",
+                        "<b><em>","Scientific Name:","</b></em>", sub$ScientificName, "<br>",
+                        "<b><em>","Depth (meters):","</b></em>", sub$DepthInMeters, "<br>",
+                        "<b><em>","Survey ID:","</b></em>", sub$SurveyID, "<br>",
+                        "<b><em>","Event ID:","</b></em>", sub$EventID, "<br>",
+                        "<b><em>","Latitude:","</b></em>", sub$Latitude, "<br>",
+                        "<b><em>","Longitude:","</b></em>", sub$Longitude, "<br>",
+                        "<b><em>","Image:","</b></em>",sub$ImageURL))
+
+m
 
 ##### export points and dive centers to GIS #####
 ## load packages
