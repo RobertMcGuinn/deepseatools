@@ -29,7 +29,7 @@ rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashb
 ## manual: then SAVE to PDF.
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1FMh4GKhVV6q5r5Ri1K-72HE38JT_1Wl1"
+folderurl <- "https://drive.google.com/drive/folders/1xq6ZSxAd2Q81KE-AHRNITVJ1wtJECQ2g"
 
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
