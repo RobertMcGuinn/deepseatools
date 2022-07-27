@@ -5,43 +5,33 @@
 # 843-460-9696, 843-830-8845
 
 ##### packages #####
-
 library(tidyverse)
 library(googledrive)
 library(googlesheets4)
 library(worrms)
 
+##### authorizations #####
+drive_auth(email = "robert.mcguinn@noaa.gov")
+gs4_auth(email = "robert.mcguinn@noaa.gov")
+
 ##### load the most current taxonomy from Google Sheets #####
-# https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
-
-n <- '20220414-1'
-
-taxfl <- gs_title(paste(n, '_taxonomy_to_flag',sep = ''))
-#gs_browse(taxfl)
-taxfl <- gs_read(taxfl)
-
-taxch <- gs_title(paste(n, '_taxonomy_to_change', sep = ''))
-#gs_browse(taxch)
-taxch <- gs_read(taxch)
-
-tax <- gs_title(paste(n, '_taxonomy', sep = ''))
-#gs_browse(tax)
-tax <- gs_read(tax)
+## https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
+## manual change IDs below if new version has new drive_id
+tax <- read_sheet("1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ")
+taxch <- read_sheet("11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8")
+taxfl <- read_sheet("1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M")
 
 ##### replace sp.#####
-
 tax$ScientificName <- str_replace(tax$ScientificName, " sp.", "")
 taxch$ScientificName <- str_replace(taxch$ScientificName, " sp.", "")
 
 ## getting rid of duplicates now that ' .sp' is gone
 taxch <- taxch[!(taxch$VerbatimScientificName == taxch$ScientificName),]
 
-## write out results
+## write out results (optional)
 setwd("C:/rworking/deepseatools/indata")
-
 taxch %>%
   write.csv(paste("20200303-0", '_taxonomy_to_change', ".csv", sep = ''), row.names = FALSE)
-
 tax %>%
   write.csv(paste("20200303-0", '_taxonomy', ".csv", sep = ''), row.names = FALSE)
 
@@ -58,7 +48,6 @@ setwd("C:/rworking/deepseatools/indata")
 sub <- read.xlsx('20191216-0_UnpurgedRecords_THourigan.xlsx', sheet = 1)
 
 ##### get records where mismatch to master taxonomy table #####
-
 sub1 <- sub %>% filter(FlagReason == "Insufficient taxonomic information")
 
 ##### checking #####

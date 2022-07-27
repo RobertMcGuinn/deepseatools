@@ -19,17 +19,17 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 ##### load NDB #####
 ## the data must be in the folder below
 ## get the latest from google drive
-setwd("C:/rworking/deepseatools/indata")
-indata <- read.csv("DSCRTP_NatDB_20220426-0.csv", header = TRUE)
-filt <- indata %>%
-  filter(Flag == "0", is.na(Phylum) == F)
+# setwd("C:/rworking/deepseatools/indata")
+# indata <- read.csv("DSCRTP_NatDB_20220426-0.csv", header = TRUE)
+# filt <- indata %>%
+#   filter(Flag == "0", is.na(Phylum) == F)
 
 ## cleanup
-rm(indata)
+# rm(indata)
 
 ##### load schema #####
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
-gs4_browse('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+# gs4_browse('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 
 ##### checking #####
 # s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(FieldDescription)
