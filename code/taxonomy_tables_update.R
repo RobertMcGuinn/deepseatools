@@ -1,8 +1,8 @@
 ##### Header#####
-# started: 20170628
-# Robert McGuinn
-# robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-# 843-460-9696, 843-830-8845
+## started: 20170628
+## Robert McGuinn
+## robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
+## 843-460-9696, 843-830-8845
 
 ##### packages #####
 library(tidyverse)
@@ -21,58 +21,51 @@ tax <- read_sheet("1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ")
 taxch <- read_sheet("11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8")
 taxfl <- read_sheet("1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M")
 
-##### replace sp.#####
+##### optional cleanup steps #####
+
+## replace sp.
 tax$ScientificName <- str_replace(tax$ScientificName, " sp.", "")
 taxch$ScientificName <- str_replace(taxch$ScientificName, " sp.", "")
 
 ## getting rid of duplicates now that ' .sp' is gone
 taxch <- taxch[!(taxch$VerbatimScientificName == taxch$ScientificName),]
 
-## write out results (optional)
+###### write out results (optional) #####
 setwd("C:/rworking/deepseatools/indata")
 taxch %>%
   write.csv(paste("20200303-0", '_taxonomy_to_change', ".csv", sep = ''), row.names = FALSE)
 tax %>%
   write.csv(paste("20200303-0", '_taxonomy', ".csv", sep = ''), row.names = FALSE)
 
-## check
-tax %>% dplyr::select(ScientificName, ScientificNameNew) %>% View()
-
-##### load in subset alone without running QA dash #####
+##### --OR-- load in subset alone without running QA dash #####
+## manual change required
 x <- "20200303-1_NOAA_FGBNMS_DFH35_DFH37_Manta_Mohawk_Blakeway_2018_2018"
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.csv(paste(x,'.csv', sep = ''), header = T)
 
-##### load in subset from Excel #####
+##### --OR-- load in subset from Excel #####
+## manual change required
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.xlsx('20191216-0_UnpurgedRecords_THourigan.xlsx', sheet = 1)
 
-##### get records where mismatch to master taxonomy table #####
-sub1 <- sub %>% filter(FlagReason == "Insufficient taxonomic information")
-
 ##### checking #####
-
-length(setdiff(unique(sub1$ScientificName), tax$ScientificName))
+length(setdiff(unique(sub$ScientificName), tax$ScientificName))
 
 ##### create a character vector of non-matching taxa #####
-
-taxa <- as.character(setdiff(unique(sub1$ScientificName), tax$ScientificName))
+taxa <- as.character(setdiff(unique(sub$ScientificName), tax$ScientificName))
 
 # taxa
 # length(taxa)
 
-##### -OR- just bring in a list of mismatches #####
-
-setwd("C:/rworkin==g/deepseatools/indata")
+##### -OR- just bring in a list of predetermined mismatches #####
+setwd("C:/rworking/deepseatools/indata")
 taxa <- read.csv('taxa.csv', header = F)
 taxa$V1 <- gsub("'", '', taxa$V1)
 
 ##### -OR- create a list of mismatches #####
-
 taxa <- setdiff(sub$ScientificName, tax$ScientificName)
 
 ##### -OR- bring in a single taxa
-
 taxa <- as.character("Sessiliflorae")
 
 #### __OPTIONAL__ break them into chunks for WoRMs interface #####
@@ -81,12 +74,10 @@ taxa2 <- taxa[51:66]
 taxa1 <- taxa
 
 ##### checking #####
-
 length(taxa1)
 length(taxa2)
 
 ##### match chunks with with WoRMS database 50 at a time then rbind them #####
-
 x <- wm_records_taxamatch(name = taxa,
                           ids = TRUE,
                           verbose = TRUE,
@@ -94,17 +85,13 @@ x <- wm_records_taxamatch(name = taxa,
                           sleep_btw_chunks_in_sec = 0.2
 )
 
-# create a proper data frame from the list
-
+##### create a proper data frame from the list #####
 x <- bind_rows(x, .id = "column_label")
 
-# merge back to get original submitted names
-
+##### merge back to get original submitted names #####
 y <- merge(taxa, x, by.x = "row.names", by.y = 'row.names')
 
-
-##### search for a specfic taxa #####
-
+##### search for a specfic taxa in taxonomy tables #####
 ## assign
 yo <- 'Callogorgia'
 
@@ -125,19 +112,16 @@ x <- wm_records_taxamatch(name = taxa2,
                           sleep_btw_chunks_in_sec = 0.2
 )
 
-# create a proper data frame from the list
-
+## create a proper data frame from the list
 x <- bind_rows(x, .id = "column_label")
 
-# merge back to get original submitted names
-
+## merge back to get original submitted names
 z <- merge(taxa2, x, by.x = "row.names", by.y = 'column_label')
 
-# bind the two files together
-
+## bind the two files together
 match <- rbind(y,z)
 
-# OR
+## OR
 match <- y
 
 ##### getting rid of unaccepted taxa #####

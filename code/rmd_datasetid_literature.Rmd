@@ -131,7 +131,7 @@ Link: `r unique(sub$method_link[1])`
 
 Download data dictionary: [LINK](https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/at_download/file)
 
-**Note:** When importing CSV files into Excel, use the data import wizard (under the 'data' tab) and set all column types to 'text' to avoid data tranformation issues. This step will prevent the automated alteration of dates in Excel.
+**Note:** When importing CSV files into Excel, use the data import wizard (under the 'data' tab) and set all column types to 'text' to avoid data transformation issues. This step will prevent the automated alteration of dates in Excel.
 
 ### Download ISO metadata as xml: [LINK](`r y`)
 

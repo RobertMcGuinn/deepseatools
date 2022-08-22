@@ -44,37 +44,48 @@ opts_chunk$set(
 ```{r load_NDB, eval=F, echo=F, message=FALSE, warning=FALSE, cache=FALSE}
 ##### manual input: latest version of NDB #####
 ## the data must be in the folder below
-## get the latest from google drive 
+## get the latest from google drive and place in your local folder
 setwd("C:/rworking/deepseatools/indata")
-indata <- read.csv("DSCRTP_NatDB_20220426-0.csv", header = TRUE)
+indata <- read.csv("DSCRTP_NatDB_20220426-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
-
+## get the flagged records alone
+flagged <- sub %>%  filter(Flag == "1")
 ```
 
-```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
-# setwd("C:/rworking/deepseatools/indata")
-# #filename <- ""
-# sub <- read.csv(paste(filename,'.csv', sep = ''), header = T) 
-# flagged <- sub %>%  filter(Flag == "1")
+```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=T}
+## set direct path to file 
+string <- "C:/rworking/deepseatools/indata/20220425-0_2022-Q2_New_Records_THourigan/20220425-0_2022-Q2_New_Records_THourigan.csv"
+sub <- read.csv(string, fileEncoding="latin1", header = T, stringsAsFactors=FALSE)
+flagged <- sub %>%  filter(Flag == "1")
 ```
 
-```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE}
-
+```{r OR_dOOOOOata_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=F}
 ## google drive authorization
 ## drive_auth()
 
-## set the file name (user supplied th file name root, without extension). You can
-## do this action from the runner too.
-## find the file in google drive by name
+##### authorizations #####
+drive_auth(email = "robert.mcguinn@noaa.gov")
+gs4_auth(email = "robert.mcguinn@noaa.gov")
+
+## find the file in google drive by name [filename] is from runner
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
 ## getting the id as a character string
 y <- x$id
+
 ## download the zip file
 dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
-# extract just the file of interest from the zip file
-sub <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
+
+## extract just the file of interest from the zip file
+sub <- read.csv(unz(dl$local_path, 
+                    paste(filename, 
+                          ".csv",
+                          sep = '')),
+                fileEncoding="latin1")
+
+## get the flagged records alone
 flagged <- sub %>%  filter(Flag == "1")
+
 ```
 
 ```{r view_map, echo=F, eval=F}
