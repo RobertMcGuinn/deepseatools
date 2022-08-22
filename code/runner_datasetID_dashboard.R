@@ -61,7 +61,7 @@ y <- x$id
 ## download the zip file
 dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
 ## extract just the file of interest from the zip file
-sub <- read.csv(unz(dl$local_path, paste(substr(filename, 1, 23), ".csv", sep = '')), encoding = "iso-8859-1")
+sub <- read.csv(unz(dl$local_path, paste(substr(filename, 1, 23), ".csv", sep = '')))
 flagged <- sub %>%  filter(Flag == "1")
 ## change all 'missing' values in factors to explicit NA's
 # filt <- filt %>% mutate_if(is.factor,
@@ -92,7 +92,7 @@ version <- as.character(version)
 ##### ***OR*** bringing in datasetID key from xls stored on Google Drive ####
 
 ## create a list of files (or single file) that meets title query (Manual change)
-x <- drive_find(q = "name contains '20220701-0_DatasetID_Key_DSCRTP'") #
+x <- drive_find(q = "name contains '20220801-1_DatasetID_Key_DSCRTP'") #
 
 ## browse to it
 # x %>% drive_browse()
@@ -102,7 +102,7 @@ y <- x$id
 
 # this downloads the file to the specified path (manual change required)
 dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/20211207-1_DatasetID_Key_DSCRTP.xlsx",
+                     path = "C:/rworking/deepseatools/indata/20220801-1_DatasetID_Key_DSCRTP.xlsx",
                      overwrite = TRUE)
 
 ## read the file into R as a data frame
@@ -112,72 +112,74 @@ key <- read.xlsx(dl$local_path)
 rm(y)
 rm(x)
 ##### ***OR*** bring in old datasetID key from local path #####
-key <- read.xlsx("C:/rworking/deepseatools/indata/20211207-1_DatasetID_Key_DSCRTP.xlsx")
+# key <- read.xlsx("C:/rworking/deepseatools/indata/20211207-1_DatasetID_Key_DSCRTP.xlsx")
 
 ## checking
-oldkey <- key
-setdiff(oldkey$DatasetID, key$DatasetID)
-setdiff(key$DatasetID, oldkey$DatasetID)
+# oldkey <- key
+# setdiff(oldkey$DatasetID, key$DatasetID)
+# setdiff(key$DatasetID, oldkey$DatasetID)
 
 ##### checking #####
-setdiff(filt$DatasetID, key$DatasetID)
-setdiff(key$DatasetID, filt$DatasetID)
-
-x <- setdiff(filt$DatasetID, key$DatasetID)
-x <- filt %>% filter(DatasetID %in% x) %>%
-  group_by(ObservationDate, DatasetID, RecordType, SamplingEquipment, VehicleName, DataProvider, Repository, Locality, SurveyComments, Citation, Vessel, WebSite) %>%
-  summarize(n=n())
-View(x)
-
-key %>%
-  filter(DatasetID == "NOAA_PC-11-05-L1") %>%
-  pull(abstract)
-
-x <- setdiff(filt$DatasetID, key$DatasetID)
-x <- filt %>% filter(DatasetID %in% x) %>%
-  group_by(DatasetID) %>%
-  summarize(n=n())
-View(x)
-
-x <- "NOAA_CINMS_SW-19-06"
-x <- filt %>% filter(DatasetID == x) %>% pull(Locality) %>% unique()
-View(x)
-
-x <- "Nancy Foster"
-x <- filt %>% filter(grepl(x,Vessel)) %>%
-  group_by(Vessel, SurveyID, ObservationYear, DatasetID) %>%
-  summarize(n=n())
-View(x)
-
-id <- "BOEM_Mid-Atlantic_Canyons"
-x <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Summaries/", id, ".html", sep = '')
-browseURL(x)
-
-
-
-View(x)
-
-
-rm(x)
-
-setdiff(indata$DatasetID, key$DatasetID)
-setdiff(key$DatasetID, indata$DatasetID)
+# setdiff(filt$DatasetID, key$DatasetID)
+# setdiff(key$DatasetID, filt$DatasetID)
+#
+# x <- setdiff(filt$DatasetID, key$DatasetID)
+# x <- filt %>% filter(DatasetID %in% x) %>%
+#   group_by(ObservationDate, DatasetID, RecordType, SamplingEquipment, VehicleName, DataProvider, Repository, Locality, SurveyComments, Citation, Vessel, WebSite) %>%
+#   summarize(n=n())
+# View(x)
+#
+# filt %>% filter(grepl("NOAA", DatasetID)) %>% pull(DatasetID) %>% table()
+#
+# key %>%
+#   filter(DatasetID == "NOAA_PC-11-05-L1") %>%
+#   pull(abstract)
+#
+# x <- setdiff(filt$DatasetID, key$DatasetID)
+# x <- filt %>% filter(DatasetID %in% x) %>%
+#   group_by(DatasetID) %>%
+#   summarize(n=n())
+# View(x)
+#
+# x <- "NOAA_CINMS_SW-19-06"
+# x <- filt %>% filter(DatasetID == x) %>% pull(Locality) %>% unique()
+# View(x)
+#
+# x <- "Nancy Foster"
+# x <- filt %>% filter(grepl(x,Vessel)) %>%
+#   group_by(Vessel, SurveyID, ObservationYear, DatasetID) %>%
+#   summarize(n=n())
+# View(x)
+#
+# id <- "BOEM_Mid-Atlantic_Canyons"
+# x <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Summaries/", id, ".html", sep = '')
+# browseURL(x)
+#
+#
+#
+# View(x)
+#
+#
+# rm(x)
+#
+# setdiff(indata$DatasetID, key$DatasetID)
+# setdiff(key$DatasetID, indata$DatasetID)
 
 ##### MANUAL STEP: go update the DatasetID key with the new values #####
-setdiff(filt$DatasetID, key$DatasetID)
+# setdiff(filt$DatasetID, key$DatasetID)
 
 ##### checking #####
-x <- filt %>%
-  filter(DatasetID == "NOAA_PC-16-05") %>%
-  group_by(Vessel, VehicleName, WebSite) %>%
-  summarize(n=n())
-
-x
-
-x <- filt %>%
-  filter(DatasetID == "NOAA_PC-16-05") %>% pull(Citation) %>% unique()
-
-x
+# x <- filt %>%
+#   filter(DatasetID == "NOAA_PC-16-05") %>%
+#   group_by(Vessel, VehicleName, WebSite) %>%
+#   summarize(n=n())
+#
+# x
+#
+# x <- filt %>%
+#   filter(DatasetID == "NOAA_PC-16-05") %>% pull(Citation) %>% unique()
+#
+# x
 
 ##### write the citation information #####
 
@@ -202,80 +204,80 @@ filt$CitationMaker <- paste(filt$DataProvider,'. ',
 
 ##### checking: looking at the Citation #####
 
-# [1] "NOAA_HB-14-02" "NOAA_HB-17-04"
-# [3] "OET_NA122"     "OET_NA116"
-# [5] "OET_NA077"     "OET_NA110"
-
-x <- "OET_NA114"
-
-
-filt %>% filter(DatasetID == x) %>%
-  pull(CitationMaker) %>%
-  unique()
-
-filt %>% filter(DatasetID == x) %>%
-  pull(Citation) %>%
-  unique()
-
-filt %>%
-  filter(DatasetID == x) %>%
-  pull(ObservationDate) %>% unique()
-
-filt %>%
-  filter(DatasetID == x) %>%
-  pull(WebSite) %>% unique()
-
-filt %>%
-  filter(DatasetID == x) %>%
-  pull(Locality) %>% unique()
+# # [1] "NOAA_HB-14-02" "NOAA_HB-17-04"
+# # [3] "OET_NA122"     "OET_NA116"
+# # [5] "OET_NA077"     "OET_NA110"
+#
+# x <- "OET_NA114"
+#
+#
+# filt %>% filter(DatasetID == x) %>%
+#   pull(CitationMaker) %>%
+#   unique()
+#
+# filt %>% filter(DatasetID == x) %>%
+#   pull(Citation) %>%
+#   unique()
+#
+# filt %>%
+#   filter(DatasetID == x) %>%
+#   pull(ObservationDate) %>% unique()
+#
+# filt %>%
+#   filter(DatasetID == x) %>%
+#   pull(WebSite) %>% unique()
+#
+# filt %>%
+#   filter(DatasetID == x) %>%
+#   pull(Locality) %>% unique()
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from local path #####
-key <- read.xlsx("C:/rworking/deepseatools/indata/20220426-1_DatasetID_Key_DSCRTP.xlsx")
+# key <- read.xlsx("C:/rworking/deepseatools/indata/20220426-1_DatasetID_Key_DSCRTP.xlsx")
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from Google Drive #####
-## create a list of files (or single file) that meets title query (Manual change)
-
-x <- drive_find(q = "name contains '20220801-1_DatasetID_Key_DSCRTP'") #
-
-## browse to it
-# x %>% drive_browse()
-
-# getting the id as a character string
-y <- x$id
-
-# this downloads the file to the specified path (manual change required)
-dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/20220426-0_DatasetID_Key_DSCRTP.xlsx",
-                     overwrite = TRUE)
-
-## read the file into R as a data frame
-key <- read.xlsx(dl$local_path)
+# ## create a list of files (or single file) that meets title query (Manual change)
+#
+# x <- drive_find(q = "name contains '20220801-1_DatasetID_Key_DSCRTP'") #
+#
+# ## browse to it
+# # x %>% drive_browse()
+#
+# # getting the id as a character string
+# y <- x$id
+#
+# # this downloads the file to the specified path (manual change required)
+# dl <- drive_download(as_id(y),
+#                      path = "C:/rworking/deepseatools/indata/20220426-0_DatasetID_Key_DSCRTP.xlsx",
+#                      overwrite = TRUE)
+#
+# ## read the file into R as a data frame
+# key <- read.xlsx(dl$local_path)
 
 
 ##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
-## build a frequency table by DatasetID from new file
-x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
-
-# strip 'n' from existing key
-names(key)
-y <- key[,1:8]
-names(y)
-
-## merge new numbers to create old key + new counts
-z <- merge(y,x)
-
-## write out result
-write.xlsx(z, "C:/rworking/deepseatools/indata/20220801-0_DatasetID_Key_DSCRTP.xlsx",
-           overwrite = TRUE)
+# ## build a frequency table by DatasetID from new file
+# x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
+#
+# # strip 'n' from existing key
+# names(key)
+# y <- key[,1:8]
+# names(y)
+#
+# ## merge new numbers to create old key + new counts
+# z <- merge(y,x)
+#
+# ## write out result
+# write.xlsx(z, "C:/rworking/deepseatools/indata/20220801-0_DatasetID_Key_DSCRTP.xlsx",
+#            overwrite = TRUE)
 
 ##### manual upload new key to Google Drive #####
 ##### ***OPTIONAL*** subsetting of indata to d (optional step for testing purposes) #####
-d <- filt %>%
-  filter(
-    DatasetID == 'NOAA_HB-19-03' |
-    DatasetID == 'OET_NA114' #|
-    # DatasetID == 'NOAA_AFSC_Longline_Survey' #Program
-  )
+# d <- filt %>%
+#   filter(
+#     DatasetID == 'NOAA_HB-19-03' |
+#     DatasetID == 'OET_NA114' #|
+#     # DatasetID == 'NOAA_AFSC_Longline_Survey' #Program
+#   )
 
 ##### ***OR*** full run set 'filt' to d #####
 d <- filt
@@ -301,34 +303,34 @@ rm(y)
 #             n=n())
 # View(yo)
 
-#### summary view of new datasets #####
-x <- d %>%
-  arrange(ObservationYear) %>%
-  filter(DatasetID %in% setdiff(d$DatasetID, key$DatasetID)) %>%
-  group_by(DatasetID) %>%
-  summarize(
-      ObservationYear_list = toString(unique(ObservationYear)),
-      ObservationDate_list = toString(unique(ObservationDate)),
-      Locality_list = toString(unique(Locality)),
-      RecordType_list = toString(unique(RecordType)),
-      N_Records=n(),
-      # DatasetID_list = toString(unique(DatasetID)),
-      DataProvider_list = toString(unique(DataProvider)),
-      Repository_list = toString(unique(Repository)),
-
-      Vessel_list = toString(unique(Vessel)),
-      VehicleName_list = toString(unique(VehicleName)),
-      WebSite_list = toString(unique(WebSite)),
-      #ImageURL = toString(unique(ImageURL)),
-      PI_list = toString(unique(PI)),
-      PIAffiliation_list = toString(unique(PIAffiliation)),
-      Citation_list = toString(unique(Citation)),
-      DataContact_list = toString(unique(DataContact)),
-      Reporter_list = toString(unique(Reporter)),
-      SurveyID_list = toString(unique(SurveyID))
-    )
-
-View(x)
+#### checking: summary view of new datasets #####
+# x <- d %>%
+#   arrange(ObservationYear) %>%
+#   filter(DatasetID %in% setdiff(d$DatasetID, key$DatasetID)) %>%
+#   group_by(DatasetID) %>%
+#   summarize(
+#       ObservationYear_list = toString(unique(ObservationYear)),
+#       ObservationDate_list = toString(unique(ObservationDate)),
+#       Locality_list = toString(unique(Locality)),
+#       RecordType_list = toString(unique(RecordType)),
+#       N_Records=n(),
+#       # DatasetID_list = toString(unique(DatasetID)),
+#       DataProvider_list = toString(unique(DataProvider)),
+#       Repository_list = toString(unique(Repository)),
+#
+#       Vessel_list = toString(unique(Vessel)),
+#       VehicleName_list = toString(unique(VehicleName)),
+#       WebSite_list = toString(unique(WebSite)),
+#       #ImageURL = toString(unique(ImageURL)),
+#       PI_list = toString(unique(PI)),
+#       PIAffiliation_list = toString(unique(PIAffiliation)),
+#       Citation_list = toString(unique(Citation)),
+#       DataContact_list = toString(unique(DataContact)),
+#       Reporter_list = toString(unique(Reporter)),
+#       SurveyID_list = toString(unique(SurveyID))
+#     )
+#
+# View(x)
 
 ##### ***OPTIONAL*** Fixing DatasetID Problems (optional) #####
 # d <- d %>% mutate(DatasetID =
@@ -352,13 +354,13 @@ setdiff(key$DatasetID, d$DatasetID)
 d <- merge(d, key, all.x = TRUE)
 
 ##### check #####
-table(d$class, useNA = 'always')
-
-x <- d %>%
-  group_by(class) %>%
-  summarize(DatasetsbyClass = length(unique(DatasetID)),
-    n = n())
-View(x)
+# table(d$class, useNA = 'always')
+#
+# x <- d %>%
+#   group_by(class) %>%
+#   summarize(DatasetsbyClass = length(unique(DatasetID)),
+#     n = n())
+# View(x)
 
 # setdiff(d$DatasetID, key$DatasetID)
 # setdiff(key$DatasetID, d$DatasetID)
