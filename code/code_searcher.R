@@ -1,5 +1,5 @@
 ##### find file #####
-x <- "rmd_datasetid_literature"
+x <- "runner"
 list<-list.files('C:/rworking/deepseatools/code',
                  pattern=x,
                  full.names=TRUE)
@@ -7,7 +7,7 @@ list<-list.files('C:/rworking/deepseatools/code',
 list
 
 ##### choose and open #####
-y <- 1
+y <- 5
 path <- list[y]
 file.edit(path)
 

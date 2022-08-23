@@ -11,7 +11,7 @@ library(googledrive)
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
 ## manual change: make sure your target RMD in the render function step is correct.
-filename <- "20220426-0_quarterly_update_report"
+filename <- "20220801-0_quarterly_update_report"
 
 ## render
 rmarkdown::render("C:/rworking/deepseatools/code/rmd_quarterly_report_for_database_update.rmd",

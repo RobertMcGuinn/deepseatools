@@ -61,7 +61,7 @@ y <- x$id
 ## download the zip file
 dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
 ## extract just the file of interest from the zip file
-sub <- read.csv(unz(dl$local_path, paste(substr(filename, 1, 23), ".csv", sep = '')))
+sub <- read.csv(unz(dl$local_path, paste(substr(filename, 1, 23), ".csv", sep = '')), fileEncoding = 'latin9')
 flagged <- sub %>%  filter(Flag == "1")
 ## change all 'missing' values in factors to explicit NA's
 # filt <- filt %>% mutate_if(is.factor,
@@ -73,10 +73,9 @@ rm(dl)
 rm(x)
 rm(y)
 
-
 ##### ***OR*** read current database from disk #####
-sub <- read.csv("C:/rworking/deepseatools/indata/DSCRTP_NatDB_20220801-0_CSV/DSCRTP_NatDB_20220801-0.csv")
-flagged <- sub %>%  filter(Flag == "1")
+# sub <- read.csv("C:/rworking/deepseatools/indata/DSCRTP_NatDB_20220801-0_CSV/DSCRTP_NatDB_20220801-0.csv", fileEncoding = "latin9")
+# flagged <- sub %>%  filter(Flag == "1")
 
 ##### change name of 'sub' to 'indata' and create 'filt' #####
 indata <- sub
@@ -90,7 +89,6 @@ version <- unique(filt$DatabaseVersion)
 version <- as.character(version)
 
 ##### ***OR*** bringing in datasetID key from xls stored on Google Drive ####
-
 ## create a list of files (or single file) that meets title query (Manual change)
 x <- drive_find(q = "name contains '20220801-1_DatasetID_Key_DSCRTP'") #
 
@@ -354,6 +352,13 @@ setdiff(key$DatasetID, d$DatasetID)
 d <- merge(d, key, all.x = TRUE)
 
 ##### check #####
+x <- d %>% filter(DatasetID == "Carranza_etal_2012")
+write.csv(test, "c:/rworking/deepseatools/indata/carranza.csv")
+test2 <- read_utf8("c:/rworking/deepseatools/indata/carranza.csv")
+
+d %>% filter(CatalogNumber == '618051') %>% pull(Citation)
+
+
 # table(d$class, useNA = 'always')
 #
 # x <- d %>%
@@ -373,6 +378,9 @@ d <- merge(d, key, all.x = TRUE)
 #   #   )
 #
 # table(factor(x$class), useNA = 'always')
+#
+# library(stringr)
+# test <- stringr::str_conv(d, "UTF-8")
 
 ##### *** run the reports *** #####
 ##### _create the folders for each type of report #####
@@ -426,7 +434,6 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/program')
 }
 
-
 ##### _repository #####
 yo <- d %>%
   filter(
@@ -474,9 +481,6 @@ setdiff(biglist, unique(filt$DatasetID))
 length(unique(filt$DatasetID))
 length(biglist)
 
-length(unique(indata$DatasetID))
-length(unique(filt$DatasetID))
-setdiff(unique(indata$DatasetID), unique(filt$DatasetID))
 
 ##### publish a list of datasetID's for review sheet #####
 x <- d %>% group_by(DatasetID, class) %>%

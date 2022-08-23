@@ -67,8 +67,7 @@ Go back to data set index page: [LINK](https://deepseacoraldata.noaa.gov/Dataset
 * **Data Contact:** `r unique(sub$DataContact)`
 
 # Interactive Map (click on points)
-```{r, intmap, echo = FALSE, message = FALSE, warning=FALSE,fig.width=5.5, fig.height=4}
-
+```{r, intmap, eval = T, echo = FALSE, message = FALSE, warning=FALSE,fig.width=5.5, fig.height=4}
 library(leaflet)
 m <- leaflet() %>% setView(lng = 5,lat = 38, zoom = 1) 
 m <- addProviderTiles(m, "Esri.OceanBasemap",  options = providerTileOptions(noWrap = TRUE))
@@ -88,6 +87,7 @@ m <- addCircleMarkers(m, data=sub,
                                   
   )
 m
+
 ```
 
 
