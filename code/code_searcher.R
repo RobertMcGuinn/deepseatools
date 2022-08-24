@@ -1,5 +1,5 @@
 ##### find file #####
-x <- "runner"
+x <- "obis"
 list<-list.files('C:/rworking/deepseatools/code',
                  pattern=x,
                  full.names=TRUE)
@@ -7,7 +7,7 @@ list<-list.files('C:/rworking/deepseatools/code',
 list
 
 ##### choose and open #####
-y <- 5
+y <- 1
 path <- list[y]
 file.edit(path)
 

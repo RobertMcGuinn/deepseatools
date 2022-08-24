@@ -146,41 +146,41 @@ x <- indata %>%
 
 write.csv(x, "c:/rworking/deepseatools/indata/dups.csv")
 
-# names(obis)
-#
-# x <- filt %>% pull(CatalogNumber) %>% length()
-# y <- obis %>% pull(occurrenceID) %>% length()
-# x-y
-#
-#
-# obis %>% pull(DatabaseVersion) %>% table(useNA = 'always')
-# obis %>% pull(datasetID) %>% table(useNA = 'always')
-# obis %>%
-#   filter(is.na(scientificName) == T) %>%
-#   pull(scientificName) %>%
-#   table(useNA = 'always')
-# obis %>% pull(individualCount) %>% table(useNA = 'always')
-# head(obis$individualCount)
-# plot(obis$individualCount)
-# filt %>%
-#   filter(IndividualCount == '21895') %>%
-#   pull(ScientificName)
-# obis %>%
-#   filter(is.na(scientificNameID) == F) %>%
-#   pull(scientificNameID) %>%
-#   table(useNA = 'always')
-# head(obis$scientificName)
-# head(obis$occurrenceID)
-# head(obis$eventDate)
-# head(obis$minimumDepthInMeters)
-# head(obis$maximumDepthInMeters)
-# table(obis$basisOfRecord)
-# obis %>%
-#   filter(is.na(associatedMedia) == T) %>%
-#   pull(associatedMedia) %>%
-#   table(useNA = 'always')
-# head(obis$references)
-# table(obis$occurrenceStatus)
+names(obis)
+
+x <- filt %>% pull(CatalogNumber) %>% length()
+y <- obis %>% pull(occurrenceID) %>% length()
+x-y
+
+
+obis %>% pull(DatabaseVersion) %>% table(useNA = 'always')
+obis %>% pull(datasetID) %>% table(useNA = 'always')
+obis %>%
+  filter(is.na(scientificName) == T) %>%
+  pull(scientificName) %>%
+  table(useNA = 'always')
+obis %>% pull(individualCount) %>% table(useNA = 'always')
+head(obis$individualCount)
+plot(obis$individualCount)
+filt %>%
+  filter(IndividualCount == '21895') %>%
+  pull(RecordType)
+obis %>%
+  filter(is.na(scientificNameID) == F) %>%
+  pull(scientificNameID) %>%
+  table(useNA = 'always')
+head(obis$scientificName)
+head(obis$occurrenceID)
+head(obis$eventDate)
+head(obis$minimumDepthInMeters)
+head(obis$maximumDepthInMeters)
+table(obis$basisOfRecord)
+obis %>%
+  filter(is.na(associatedMedia) == T) %>%
+  pull(associatedMedia) %>%
+  table(useNA = 'always')
+head(obis$references)
+table(obis$occurrenceStatus)
 
 
 ##### DarwinCore crosswalk for other fields we might use later on #####
