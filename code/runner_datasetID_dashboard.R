@@ -33,8 +33,8 @@ library(raster)
 #install.packages("spocc")
 library(spocc)
 #install.packages('arcgisbinding')
-library(arcgisbinding)
-arc.check_product()
+# library(arcgisbinding)
+# arc.check_product()
 #install.packages('refinr')
 library(refinr)
 # install.packages('marmap')
@@ -74,8 +74,8 @@ rm(x)
 rm(y)
 
 ##### ***OR*** read current database from disk #####
-# sub <- read.csv("C:/rworking/deepseatools/indata/DSCRTP_NatDB_20220801-0_CSV/DSCRTP_NatDB_20220801-0.csv", fileEncoding = "latin9")
-# flagged <- sub %>%  filter(Flag == "1")
+sub <- read.csv("C:/rworking/deepseatools/indata/DSCRTP_NatDB_20220801-0.csv", fileEncoding = "latin9")
+flagged <- sub %>%  filter(Flag == "1")
 
 ##### change name of 'sub' to 'indata' and create 'filt' #####
 indata <- sub
@@ -522,9 +522,24 @@ setwd("C:/rworking/deepseatools/indata")
 export %>%
   write.csv(paste("yo",".csv", sep = ''), row.names = FALSE)
 
+## checking
+table(sub$Flag)
+filt <- sub %>% filter(Flag == "0")
+filt %>% filter(CatalogNumber == "618055") %>% pull(Latitude)
 
 
 
 
 
+##### check #####
+filt %>%
+  pull(DatasetID) %>% unique()
 
+filt %>%
+  filter(EndLatitude != "-999") %>%
+  pull(DatasetID) %>% table()
+
+
+sub %>%
+  filter(CatalogNumber == "912379") %>%
+  dplyr::select(Latitude, Longitude)
