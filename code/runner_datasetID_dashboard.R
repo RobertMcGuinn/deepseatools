@@ -35,7 +35,7 @@ library(spocc)
 #install.packages('arcgisbinding')
 # library(arcgisbinding)
 # arc.check_product()
-#install.packages('refinr')
+#install.packages('refinr')=
 library(refinr)
 # install.packages('marmap')
 library(marmap) #yo
@@ -76,6 +76,11 @@ rm(y)
 ##### ***OR*** read current database from disk #####
 sub <- read.csv("C:/rworking/deepseatools/indata/DSCRTP_NatDB_20220801-0.csv", fileEncoding = "latin9")
 flagged <- sub %>%  filter(Flag == "1")
+
+yo <- read.csv("C:/rworking/deepseatools/indata/DSCRTP_NatDB_FeatureLayer.csv", fileEncoding = "latin9")
+
+
+  "C:\rworking\deepseatools\indata\DSCRTP_NatDB_FeatureLayer.csv"
 
 ##### change name of 'sub' to 'indata' and create 'filt' #####
 indata <- sub

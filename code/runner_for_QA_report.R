@@ -238,6 +238,7 @@ m
 ## load packages
 library(tidyverse)
 library(rgdal)
+install.packages("arcgisbinding")
 library(arcgisbinding)
 arc.check_product()
 
