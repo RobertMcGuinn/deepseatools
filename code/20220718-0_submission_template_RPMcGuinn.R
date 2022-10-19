@@ -1,14 +1,10 @@
 ##### Header #####
 ## Author: Robert McGuinn
 ## Start date: 20220718
-## Submission Template
-
+## purpose: generate a submission template from the data dictionary
 
 ##### packages #####
-library(bookdown)
 library(tidyverse)
-library(curl)
-library(rmarkdown)
 library(googledrive)
 library(googlesheets4)
 
@@ -47,34 +43,35 @@ s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 
 ##### create custom submission template #####
 ## pick out variables needed in the template
-x <- s %>% dplyr::select( FieldOrder,
-                          FieldName,
-                          FieldDescription,
-                          ValidValues,
-                          DSCRTPFieldClass,
-                          DSCRTPCategory,
-                          DSCRTPGroup,
-                          # PointHist,
-                          # PointNew
-                          PointProgram
-                          # TransHist,
-                          # TransNew,
-                          # TransProgram,
-                          # TrawlHist,
-                          # TrawlNew,
-                          # TrawlProgram
-)
+x <- s %>%
+  dplyr::select( FieldOrder,
+                 FieldName,
+                 FieldDescription,
+                 ValidValues,
+                 # DSCRTPFieldClass,
+                 # DSCRTPCategory,
+                 # DSCRTPGroup,
+                 # PointHist,
+                 # PointNew,
+                 PointProgram,
+                 # TransHist,
+                 # TransNew,
+                 # TransProgram,
+                 # TrawlHist,
+                 # TrawlNew,
+                 # TrawlProgram
+  )
 
 y <- x %>% filter(PointProgram == "R" |
-                    PointProgram== "D")
+                    PointProgram == "D")
 
+##### transpose the result #####
 z <- y %>% t()
-
 View(z)
 
 ##### write submission template #####
-# setwd("C:/rworking/deepseatools/indata")
-# write_csv(x, "20220718-0_dscrtp_submission_template.csv")
+setwd("C:/rworking/deepseatools/indata")
+write_csv(x, "20220718-0_dscrtp_submission_template.csv")
 
 
 

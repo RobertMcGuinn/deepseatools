@@ -25,9 +25,10 @@ ndb_filt <- ndb_all %>%
 # rm(ndb_all)
 
 ##### check #####
-# yo <- ndb_filt %>%
-#   group_by(Flag) %>%
-#   summarize(n=n()) %>% View()
+ndb_filt %>%
+  filter(grepl("Henry", Vessel)) %>%
+  group_by(Vessel,SurveyID, DatasetID) %>%
+  summarize(n=n()) %>% View()
 
 ##### make copy to turn into spatial points data frame #####
 ndb_filt_geo <- ndb_filt
