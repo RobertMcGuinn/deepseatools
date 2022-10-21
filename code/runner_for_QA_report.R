@@ -16,7 +16,7 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20220425-0_2022-Q2_New_Records_THourigan"
+filename <- "20221021-0_NOAA_HB_19_03_pt_2"
 
 ## render
 rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashboard.rmd",
@@ -29,8 +29,7 @@ rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashb
 ## manual: then SAVE to PDF.
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1xq6ZSxAd2Q81KE-AHRNITVJ1wtJECQ2g"
-
+folderurl <- "https://drive.google.com/drive/folders/1xWqi1z7rDGBnooGD6wcjdZZZhN0RDoDi"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
@@ -39,7 +38,10 @@ drive_upload(paste(filename,".PDF", sep=''),
 
 ##### checking #####
 unique(sub$DatasetID)
+filt %>% filter(grepl("HB", DatasetID)) %>% pull(DatasetID) %>% table()
 unique(sub$SurveyID)
+filt %>% filter(grepl("HB", SurveyID)) %>% pull(SurveyID) %>% table()
+unique(sub$EventID)
 unique(sub$Citation)
 unique(sub$Repository)
 
@@ -283,5 +285,79 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 fgdb_path <- 'C:/rworking/sf/sf.gdb'
 arc.write(file.path(fgdb_path, 'x_geo_dives'), data=x_geo, overwrite = TRUE)
+
+##### checking #####
+filt %>%
+  filter(grepl("Alaska", DataProvider)) %>%
+  group_by(Vessel,IdentificationQualifier, IdentificationVerificationStatus, DataProvider, RecordType, VehicleName, SamplingEquipment, Repository, PI, Reporter, ReporterEmail) %>%
+  summarize(n=n()) %>% View()
+
+filt %>%
+  filter(grepl("Alaska", DataProvider)) %>%
+  group_by(SurveyID, EventID, Station, Locality) %>%  summarize(n=n()) %>% View()
+
+sub %>%
+  #filter(grepl("Alaska", DataProvider)) %>%
+  group_by(SurveyID, EventID, Station, Locality, ObservationYear) %>%
+  summarize(n=n()) %>% View()
+
+sub %>%
+  #filter(FlagReason == "Invalid latitude | Invalid longitude") %>%
+  group_by(Flag, Latitude, Longitude, EndLatitude, StartLatitude, EndLongitude, StartLongitude) %>%
+  summarize(n=n()) %>% View()
+
+
+sub %>%
+  filter(FlagReason == "Possible intersection with land") %>%
+  group_by(Flag, Latitude, Longitude) %>%
+  summarize(n=n()) %>% View()
+
+##### check side by side #####
+x <- filt %>%
+  filter(grepl("NOAA_HB-19-03", DatasetID)) %>%
+  group_by(DatasetID,
+           PIAffiliation,
+           LocationAccuracy,
+           Vessel,
+           EventID,
+           SurveyID,
+           IdentificationQualifier,
+           IdentificationVerificationStatus,
+           DataProvider,
+           RecordType,
+           VehicleName,
+           SamplingEquipment,
+           Repository,
+           PI,
+           Reporter,
+           ReporterEmail) %>%
+  summarize(n=n())
+
+y <- sub %>%
+  # filter(grepl("NOAA_HB-19-03", DatasetID)) %>%
+  group_by(DatasetID,
+           PIAffiliation,
+           LocationAccuracy,
+           Vessel,
+           EventID,
+           SurveyID,
+           IdentificationQualifier,
+           IdentificationVerificationStatus,
+           DataProvider,
+           RecordType,
+           VehicleName,
+           SamplingEquipment,
+           Repository,
+           PI,
+           Reporter,
+           ReporterEmail) %>%
+  summarize(n=n())
+View(x)
+View(y)
+
+
+
+
+
 
 

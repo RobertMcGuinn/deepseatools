@@ -41,26 +41,26 @@ opts_chunk$set(
 
 ```
 
-```{r load_NDB, eval=F, echo=F, message=FALSE, warning=FALSE, cache=FALSE}
+```{r load_NDB, echo=F, message=FALSE, warning=FALSE, cache=FALSE, eval=F}
 ##### manual input: latest version of NDB #####
 ## the data must be in the folder below
 ## get the latest from google drive and place in your local folder
 setwd("C:/rworking/deepseatools/indata")
-indata <- read.csv("DSCRTP_NatDB_20220426-0.csv", header = T)
+indata <- read.csv("DSCRTP_NatDB_20220801-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 ## get the flagged records alone
 flagged <- sub %>%  filter(Flag == "1")
 ```
 
-```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=T}
+```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
 ## set direct path to file 
 string <- "C:/rworking/deepseatools/indata/20220425-0_2022-Q2_New_Records_THourigan/20220425-0_2022-Q2_New_Records_THourigan.csv"
 sub <- read.csv(string, fileEncoding="latin1", header = T, stringsAsFactors=FALSE)
 flagged <- sub %>%  filter(Flag == "1")
 ```
 
-```{r OR_dOOOOOata_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=F}
+```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=T}
 ## google drive authorization
 ## drive_auth()
 
