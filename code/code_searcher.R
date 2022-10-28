@@ -1,5 +1,5 @@
 ##### find file #####
-x <- 'accession_qa'
+x <- 'runner'
 path <- 'C:/rworking/deepseatools/code'
 list<-list.files(path,
                  pattern=x,

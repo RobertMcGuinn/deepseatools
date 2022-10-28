@@ -16,7 +16,7 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20221021-0_NOAA_HB_19_03_pt_2"
+filename <- "20220414-1_NOAA_SWFSC_SH1812_2018"
 
 ## render
 rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashboard.rmd",
@@ -29,7 +29,7 @@ rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashb
 ## manual: then SAVE to PDF.
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1xWqi1z7rDGBnooGD6wcjdZZZhN0RDoDi"
+folderurl <- "https://drive.google.com/drive/folders/1WcL_fMRU7SXpsc_60OWd5XzRQBvyCJOz"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
@@ -287,14 +287,39 @@ fgdb_path <- 'C:/rworking/sf/sf.gdb'
 arc.write(file.path(fgdb_path, 'x_geo_dives'), data=x_geo, overwrite = TRUE)
 
 ##### checking #####
+x <- filt %>%
+  filter(grepl("Shimada", Vessel),
+         ObservationYear == 2019) %>%
+  group_by(DatasetID,
+           PI,
+           PIAffiliation,
+           NavType,
+           Vessel,
+           ObservationYear,
+           SurveyID,
+           VehicleName,
+           SamplingEquipment,
+           DataContact,
+           Reporter,
+           ReporterEmail) %>%
+  summarize(n=n())
+
+View(x)
+
+write.csv(x, "c:/rworking/deepseatools/indata/20221027_pacific_cruises_post_2016_RPMcGuinn.csv")
+
+sub %>%
+  group_by(SampleID, EventID) %>%
+  summarize(n=n()) %>% View()
+
 filt %>%
-  filter(grepl("Alaska", DataProvider)) %>%
+  filter(grepl("West Coast", FishCouncilRegion)) %>%
   group_by(Vessel,IdentificationQualifier, IdentificationVerificationStatus, DataProvider, RecordType, VehicleName, SamplingEquipment, Repository, PI, Reporter, ReporterEmail) %>%
   summarize(n=n()) %>% View()
 
 filt %>%
   filter(grepl("Alaska", DataProvider)) %>%
-  group_by(SurveyID, EventID, Station, Locality) %>%  summarize(n=n()) %>% View()
+  group_by(DatasetID, Vessel, SurveyID, ObservationYear) %>%  summarize(n=n()) %>% View()
 
 sub %>%
   #filter(grepl("Alaska", DataProvider)) %>%
@@ -314,11 +339,14 @@ sub %>%
 
 ##### check side by side #####
 x <- filt %>%
-  filter(grepl("NOAA_HB-19-03", DatasetID)) %>%
+
+  filter(grepl("Pacific", FishCouncilRegion)) %>%
   group_by(DatasetID,
            PIAffiliation,
+           NavType,
            LocationAccuracy,
            Vessel,
+           ObservationYear,
            EventID,
            SurveyID,
            IdentificationQualifier,
@@ -333,10 +361,13 @@ x <- filt %>%
            ReporterEmail) %>%
   summarize(n=n())
 
+View(x)
+
 y <- sub %>%
-  # filter(grepl("NOAA_HB-19-03", DatasetID)) %>%
+  # filter(grepl("AFSC", DatasetID)) %>%
   group_by(DatasetID,
            PIAffiliation,
+           NavType,
            LocationAccuracy,
            Vessel,
            EventID,

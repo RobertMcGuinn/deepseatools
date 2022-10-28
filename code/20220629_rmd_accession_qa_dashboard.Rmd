@@ -50,7 +50,7 @@ indata <- read.csv("DSCRTP_NatDB_20220801-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 ## get the flagged records alone
-flagged <- sub %>%  filter(Flag == "1")
+# flagged <- sub %>%  filter(Flag == "1")
 ```
 
 ```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
