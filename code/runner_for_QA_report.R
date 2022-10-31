@@ -16,7 +16,7 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20220414-1_NOAA_SWFSC_SH1812_2018"
+filename <- "20220425-0_2022-Q2_New_Records_THourigan"
 
 ## render
 rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashboard.rmd",
@@ -205,34 +205,34 @@ x <- s %>%
 
 ##### mapit using leaflet #####
 ## optional create new 'sub' ##
-# sub <- filt %>%
-#   filter(DatasetID == 'BOEM_Lophelia_I')
-
-
+sub2 <- sub %>%
+   filter(FlagReason =='IdentificationDate earlier than ObservationDate') %>%
+group_by(WebSite, DataProvider, ObservationDate, IdentificationDate) %>% summarize(n=n()) %>% View()
+   # filter(CatalogNumber == "1178074")
 m <- leaflet()
 m <- addProviderTiles(m, "Esri.OceanBasemap")
-m <- addCircleMarkers(m, data=sub,
+m <- addCircleMarkers(m, data=sub2,
                       radius=2,
                       weight=0,
                       fillColor= "red",
                       fillOpacity=.5,
                       popup = paste(
-                        "<b><em>","Flag:","</b></em>", sub$Flag, "<br>",
-                        "<b><em>","Catalog Number:","</b></em>", sub$CatalogNumber, "<br>",
-                        "<b><em>","Record Type:","</b></em>", sub$RecordType, "<br>",
-                        "<b><em>","DatasetID:","</b></em>", sub$DatasetID, "<br>",
-                        "<b><em>","AccessionID:","</b></em>", sub$AccessionID, "<br>",
-                        "<b><em>","DataProvider:","</b></em>", sub$DataProvider, "<br>",
-                        "<b><em>","ObservationYear:","</b></em>", sub$ObservationYear, "<br>",
-                        "<b><em>","Vessel:","</b></em>", sub$Vessel, "<br>",
-                        "<b><em>","Locality:","</b></em>", sub$Locality, "<br>",
-                        "<b><em>","Scientific Name:","</b></em>", sub$ScientificName, "<br>",
-                        "<b><em>","Depth (meters):","</b></em>", sub$DepthInMeters, "<br>",
-                        "<b><em>","Survey ID:","</b></em>", sub$SurveyID, "<br>",
-                        "<b><em>","Event ID:","</b></em>", sub$EventID, "<br>",
-                        "<b><em>","Latitude:","</b></em>", sub$Latitude, "<br>",
-                        "<b><em>","Longitude:","</b></em>", sub$Longitude, "<br>",
-                        "<b><em>","Image:","</b></em>",sub$ImageURL))
+                        "<b><em>","Flag:","</b></em>", sub2$Flag, "<br>",
+                        "<b><em>","Catalog Number:","</b></em>", sub2$CatalogNumber, "<br>",
+                        "<b><em>","Record Type:","</b></em>", sub2$RecordType, "<br>",
+                        "<b><em>","DatasetID:","</b></em>", sub2$DatasetID, "<br>",
+                        "<b><em>","AccessionID:","</b></em>", sub2$AccessionID, "<br>",
+                        "<b><em>","DataProvider:","</b></em>", sub2$DataProvider, "<br>",
+                        "<b><em>","ObservationYear:","</b></em>", sub2$ObservationYear, "<br>",
+                        "<b><em>","Vessel:","</b></em>", sub2$Vessel, "<br>",
+                        "<b><em>","Locality:","</b></em>", sub2$Locality, "<br>",
+                        "<b><em>","Scientific Name:","</b></em>", sub2$ScientificName, "<br>",
+                        "<b><em>","Depth (meters):","</b></em>", sub2$DepthInMeters, "<br>",
+                        "<b><em>","Survey ID:","</b></em>", sub2$SurveyID, "<br>",
+                        "<b><em>","Event ID:","</b></em>", sub2$EventID, "<br>",
+                        "<b><em>","Latitude:","</b></em>", sub2$Latitude, "<br>",
+                        "<b><em>","Longitude:","</b></em>", sub2$Longitude, "<br>",
+                        "<b><em>","Image:","</b></em>",sub2$ImageURL))
 
 m
 
@@ -287,9 +287,15 @@ fgdb_path <- 'C:/rworking/sf/sf.gdb'
 arc.write(file.path(fgdb_path, 'x_geo_dives'), data=x_geo, overwrite = TRUE)
 
 ##### checking #####
+yo <- filt %>% filter(grepl("Thomas", Vessel)) %>%
+  group_by(DataProvider, SamplingEquipment, Vessel, VehicleName) %>%
+  summarize(n=n())
+View(yo)
+
+
 x <- filt %>%
-  filter(grepl("Shimada", Vessel),
-         ObservationYear == 2019) %>%
+  filter(grepl("1907", SurveyID)) %>%
+       #  ObservationYear == 2019) %>%
   group_by(DatasetID,
            PI,
            PIAffiliation,

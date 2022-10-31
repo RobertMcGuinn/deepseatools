@@ -53,14 +53,14 @@ filt <- indata %>%
 # flagged <- sub %>%  filter(Flag == "1")
 ```
 
-```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
+```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=T}
 ## set direct path to file 
 string <- "C:/rworking/deepseatools/indata/20220425-0_2022-Q2_New_Records_THourigan/20220425-0_2022-Q2_New_Records_THourigan.csv"
 sub <- read.csv(string, fileEncoding="latin1", header = T, stringsAsFactors=FALSE)
 flagged <- sub %>%  filter(Flag == "1")
 ```
 
-```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=T}
+```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=F}
 ## google drive authorization
 ## drive_auth()
 
