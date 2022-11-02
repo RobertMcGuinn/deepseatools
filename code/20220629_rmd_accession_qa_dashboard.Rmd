@@ -55,8 +55,11 @@ filt <- indata %>%
 
 ```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=T}
 ## set direct path to file 
-string <- "C:/rworking/deepseatools/indata/20220425-0_2022-Q2_New_Records_THourigan/20220425-0_2022-Q2_New_Records_THourigan.csv"
-sub <- read.csv(string, fileEncoding="latin1", header = T, stringsAsFactors=FALSE)
+string <- "C:/rworking/deepseatools/indata/20221031-0_2022-Q2_New_Records_THourigan.csv"
+sub <- read.csv(string,
+                fileEncoding="latin1", 
+                header = T, 
+                stringsAsFactors=FALSE)
 flagged <- sub %>%  filter(Flag == "1")
 ```
 
@@ -81,7 +84,7 @@ sub <- read.csv(unz(dl$local_path,
                     paste(filename, 
                           ".csv",
                           sep = '')),
-                fileEncoding="latin1")
+                fileEncoding="latin1", header = T, stringsAsFactors = F)
 
 ## get the flagged records alone
 flagged <- sub %>%  filter(Flag == "1")

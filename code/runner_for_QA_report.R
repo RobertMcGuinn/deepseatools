@@ -16,12 +16,37 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20220425-0_2022-Q2_New_Records_THourigan"
+filename <- "20221031-0_2022-Q2_New_Records_THourigan"
 
 ## render
 rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
+
+##### check #####
+sub %>% filter(ScientificName == "Keratoisis magnifica") %>%
+  group_by(Flag,
+           FlagReason,
+           ScientificName,
+           Phylum,
+           Class,
+           Order,
+           Family,
+           Genus,
+           Species,
+           VernacularNameCategory
+  ) %>% summarize (n=n()) %>%
+  View()
+
+# Acanthogorgia spissa (N=4)
+# Anthomastus gyratus (N=1)
+# Anthoptilum gowlettholmesae (N=4)
+# Anthothela vickersi (N=5)
+# Aphanostichopathes paucispina (N=1)
+# Calibelemnon francei (N=1)
+# Cladarisis nouvianae (N=2)
+# Cornulariidae (N=1)
+# Distichopathes hickersonae (N=2)
 
 ## manual change: make sure your target RMD in the render function step is correct.
 ##### MANUAL inspection of QA report in Word, #####
@@ -29,7 +54,7 @@ rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashb
 ## manual: then SAVE to PDF.
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1WcL_fMRU7SXpsc_60OWd5XzRQBvyCJOz"
+folderurl <- "https://drive.google.com/drive/folders/11wmxLllntSGEI-s9iP8jelIEDj7XrWU0"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
@@ -185,13 +210,11 @@ filt %>%
   summarize(n=n()) %>%
   View()
 
-
 filt %>%
   filter(grepl("ftp:", WebSite)) %>%
   group_by(WebSite, Citation, DatasetID, SurveyID, ObservationDate) %>%
   summarize(n=n()) %>%
   View()
-
 
 x <- s %>%
   filter(FieldName == 'LocationAccuracy') %>%
@@ -292,9 +315,8 @@ yo <- filt %>% filter(grepl("Thomas", Vessel)) %>%
   summarize(n=n())
 View(yo)
 
-
 x <- filt %>%
-  filter(grepl("1907", SurveyID)) %>%
+  filter(grepl("NOAA_SWFSC_AST", DatasetID)) %>%
        #  ObservationYear == 2019) %>%
   group_by(DatasetID,
            PI,
@@ -309,7 +331,6 @@ x <- filt %>%
            Reporter,
            ReporterEmail) %>%
   summarize(n=n())
-
 View(x)
 
 write.csv(x, "c:/rworking/deepseatools/indata/20221027_pacific_cruises_post_2016_RPMcGuinn.csv")
