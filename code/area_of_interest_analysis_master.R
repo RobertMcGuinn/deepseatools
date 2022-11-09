@@ -116,20 +116,11 @@ drive_upload(filename,
              name = filename,
              overwrite = T)
 
-##### query and load images to folder (go get a coffee) #####
+##### query and load images to local folder (go get a coffee if you have tons of images) #####
 aoi_points_images <- aoi_points %>%
   filter(is.na(ImageURL) == F,
-         ImageURL != "NA",
-         DatasetID != "YPM_IZ")
+         ImageURL != "NA")
 
-length(unique(aoi_points_images$ImageURL))
-
-x <- aoi_points_images %>%
-  group_by(ImageURL) %>%
-  summarize(n=n())
-
-## checking
-table(aoi_points_images$ImageURL, useNA = 'always')
 
 path <- 'C:/rworking/deepseatools/images/aoi_imageset_GARFO'
 dir.create(path)
@@ -145,13 +136,12 @@ for(i in 1:length(aoi_points_images$CatalogNumber)){
                 mode = "wb")
 }
 
-
-##### Loading files from a local folder to Google Drive #####
+##### loading files from a local folder to Google Drive #####
 ## MANUAL CHANGE "folderurl" to the desired drive folder ID
-folderurl <- "https://drive.google.com/drive/folders/1oOiCVRWJUc4fQQ1dec9q3APYfk1Ea4nj"
+folderurl <- "https://drive.google.com/drive/folders/1AvTgB31Y5_8w250zyTn_j6GTcTMpjqqq"
 
 ## get the list of files from the local folder
-files <- list.files(path="C:/rworking/deepseatools/indata/imageset_5000", full.names=TRUE, recursive=FALSE)
+files <- list.files(path = path, full.names=TRUE, recursive=FALSE)
 
 ## loop upload images to Google Drive
 for(i in files){
