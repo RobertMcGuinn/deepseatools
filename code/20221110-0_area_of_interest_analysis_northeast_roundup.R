@@ -13,14 +13,33 @@ library(marmap)
 library(raster)
 library(googledrive)
 
+##### authorizations #####
+drive_auth(email = "robert.mcguinn@noaa.gov")
+gs4_auth(email = "robert.mcguinn@noaa.gov")
+
 ##### manual: load latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
 indata <- read.csv("DSCRTP_NatDB_20220801-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
-
 rm(indata)
+
+##### manual: load latest version of Sarah Bingo file #####
+## https://vlab.noaa.gov/redmine/issues/109659
+setwd("C:/rworking/deepseatools/indata")
+sbingo <- read.csv("20221104-1_NOAA_EX1304_Northeast_US_SBingo_2013.csv", header = T)
+
+##### rbind the sbingo file with the filt #####
+filt <- rbind(filt, sbingo)
+
+##### check ######
+# length(filt$CatalogNumber) +
+# length(sbingo$CatalogNumber)
+# length(filtbingo$CatalogNumber)
+
 ##### import shapefile of aoi using sf #####
+## 2 separate shapefiles
+
 midatl <- sf::st_read(
   "C:/data/gis_data/fish_council_region_2017_update_heather/MidAtlanticFMCregion2017update.shp")
 midatl <- st_transform(midatl,32618)
@@ -29,18 +48,19 @@ neweng <- sf::st_read(
   "C:/data/gis_data/fish_council_region_2017_update_heather/NewEnglandFMCregion2017update.shp")
 neweng <- st_transform(neweng,32618)
 
-###### buffer operation #####
+##### buffer operation #####
 midatl_buff_5000 <- st_buffer(midatl,dist = 5000)
 neweng_buff_5000 <- st_buffer(neweng,dist = 5000)
 
+##### join buffered polygons #####
 pa <- dplyr::bind_rows(list(midatl_buff_5000, neweng_buff_5000))
 pa <- st_union(pa)
 
 ##### check #####
-names(pa)
-table(pa$REGION, useNA = 'always')
-ggplot(pa) + geom_sf()
-names(pa)
+# names(pa)
+# table(pa$REGION, useNA = 'always')
+# ggplot(pa) + geom_sf()
+# names(pa)
 
 ##### assign pa to aoi #####
 aoi <- pa
@@ -54,15 +74,6 @@ plot(aoi)
 points <- st_as_sf(filt, coords = c("Longitude", "Latitude"), crs = 4326)
 
 ##### check #####
-## experiment: get a filtered set of points from a certain EntryDate #####
-class(filt$EntryDate)
-x <- filt %>% filter(as.Date(EntryDate) > as.Date("2019-10-01"))
-
-table(as.Date(filt$EntryDate))
-table(as.Date(x$EntryDate))
-length(x$CatalogNumber)
-6846+24375
-
 ##### set CRS of points to be same as AOI #####
 points_1 <- st_transform(points, crs = st_crs(aoi))
 
@@ -106,7 +117,7 @@ ggplot() +
          expand = FALSE)
 
 ## save the plot
-ggsave("c:/rworking/deepseatools/images/20221110-quick_map_NE_summary.png",
+ggsave("c:/rworking/deepseatools/images/20221128-quick_map_NE_summary.png",
        width = 20,
        height = 20,
        units = "cm")
@@ -129,7 +140,7 @@ sum_tbl_df <- sum_tbl %>% st_drop_geometry()
 write.csv(sum_tbl_df,
           "c:/rworking/deepseatools/reports/20221110-0_greater_atlantic_summary.csv")
 
-#### upload csv summary to specific folder on Google Drive #####
+##### upload csv summary to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
 folderurl <- "https://drive.google.com/drive/folders/1-mTXFck0tA_O-QzXvas0NGtPi9wZ0VaV"
 setwd("C:/rworking/deepseatools/reports")

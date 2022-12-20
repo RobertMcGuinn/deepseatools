@@ -11,6 +11,7 @@ library(rnaturalearthdata)
 library(ggspatial)
 library(marmap)
 library(raster)
+library(googledrive)
 
 ##### import current database #####
 ##### manual input: load latest version of NDB #####
@@ -20,19 +21,27 @@ filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
 rm(indata)
+##### manual: load latest version of Sarah Bingo file #####
+## https://vlab.noaa.gov/redmine/issues/109659
+setwd("C:/rworking/deepseatools/indata")
+sbingo <- read.csv("20221104-1_NOAA_EX1304_Northeast_US_SBingo_2013.csv", header = T)
+
+##### rbind the sbingo file with the filt #####
+filt <- rbind(filt, sbingo)
+
 ##### import shapefile using sf #####
 pa <- sf::st_read("C:/data/gis_data/protected_areas/shapefiles/20221104_protected_areas.shp")
 
 ##### check #####
-names(pa)
+## names(pa)
 
 ##### extract the aoi polygon of interest using a filter #####
 aoi <- pa %>% filter(grepl("NE Canyons and Seamounts", Sitename))
 
 ##### check #####
-aoi$Sitename
-View(aoi)
-plot(aoi)
+# aoi$Sitename
+# View(aoi)
+# plot(aoi)
 
 ##### transform coral and sponge points to sf object #####
 points <- st_as_sf(filt, coords = c("Longitude", "Latitude"), crs = 4326)
@@ -44,16 +53,9 @@ points_1 <- st_transform(points, crs = st_crs(aoi))
 aoi_points <- st_intersection(points_1, aoi)
 
 ##### check #####
-st_crs(aoi_points)
+# st_crs(aoi_points)
 
 ##### make a simple map #####
-## get bathy layer
-# bathy = getNOAA.bathy(lon1 = -75,
-#                       lon2 = -65,
-#                       lat1 = 38,
-#                       lat2 = 44,
-#                       resolution = 1)
-
 ## create a world map and transform coordinates to be same as aoi
 world <- ne_countries(scale = "medium", returnclass = "sf")
 world <- st_transform(world, crs = st_crs(aoi))
@@ -106,6 +108,24 @@ species_list_df <- species_list_df[,1:8]
 
 write.csv(species_list_df, "c:/rworking/deepseatools/reports/20221104-0_unique_coral_and_sponge_species_in_Northeast_Canyons_and_Seamounts_Nat_Monument.csv")
 
+##### check #####
+names(species_list_df)
+names(aoi_points)
+table(aoi_points$DatasetID)
+aoi_points_sub <- aoi_points %>%
+  filter(grepl("Bingo", DataContact)) %>%
+  group_by(DatasetID, DataProvider, SurveyID) %>%
+  summarize(n=n())
+View(aoi_points_sub)
+
+
+ndb_sub_bingo <- filt %>%
+  filter(grepl("Bingo", DataContact)) %>%
+  group_by(DatasetID, DataProvider, SurveyID) %>%
+  summarize(n=n())
+View(ndb_sub_bingo)
+
+
 ##### upload csv species list to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
 folderurl <- "https://drive.google.com/drive/folders/1nwzGrKuTWx5bc8FyYXiDWqE1HHwI7pye"
@@ -121,6 +141,9 @@ aoi_points_images <- aoi_points %>%
   filter(is.na(ImageURL) == F,
          ImageURL != "NA")
 
+aoi_points_images <- aoi_points_sub %>%
+  filter(is.na(ImageFilePath) == F,
+         ImageFilePath != "NA")
 
 path <- 'C:/rworking/deepseatools/images/aoi_imageset_GARFO'
 dir.create(path)
