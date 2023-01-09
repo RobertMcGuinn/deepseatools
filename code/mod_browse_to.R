@@ -1,17 +1,16 @@
 ##### header #####
 ## author: Robert P. McGuinn | rpm@alumni.duke.edu
-## purpose: modular: open dashboard or other url
+## purpose: modular: browse to datasetID
 
 ##### packages #####
 library(tidyverse)
 
-##### check #####
-# filt %>%
-#   filter(grepl("HURL", DatasetID)) %>%
-#   group_by(Locality) %>%
-#   summarize(n=n())
-
-##### browse to a specified DatasetID dashboard #####
+##### define variables #####
 datasetid <- 'HURL'
-url <- paste('https://deepseacoraldata.noaa.gov/Dataset%20Summaries/', datasetid, '.html', sep = '')
+
+url <- paste('https://deepseacoraldata.noaa.gov/Dataset%20Summaries/',
+             datasetid,
+             '.html',
+             sep = '')
+
 browseURL(url)

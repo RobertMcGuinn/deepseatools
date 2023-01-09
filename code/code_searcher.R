@@ -1,5 +1,5 @@
 ##### find file #####
-x <- 'GARFO'
+x <- 'query'
 path <- 'C:/rworking/deepseatools/code'
 list<-list.files(path,
                  pattern=x,
@@ -7,6 +7,6 @@ list<-list.files(path,
 list
 
 ##### choose and open #####
-y <- 2# manual input required: pick the number you want from the list presented
+y <- 4# manual input required: pick the number you want from the list presented
 path <- list[y]
 file.edit(path)

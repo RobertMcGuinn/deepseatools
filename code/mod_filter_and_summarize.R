@@ -5,9 +5,12 @@
 ##### packages #####
 library(tidyverse)
 
+##### variables #####
+datasetID <- "KOK 05-11"
 
+##### filter and summarize #####
 filt %>%
-  filter(grepl("KOK 05-11", SurveyID)) %>%
+  filter(grepl(datasetID, SurveyID)) %>%
   #filter(CatalogNumber == "538350") %>%
            group_by(DatasetID,
                     SurveyID,
@@ -16,4 +19,8 @@ filt %>%
                     ObservationDate) %>%
            summarize(n=n()) %>%
            View()
+
+
+
+
 
