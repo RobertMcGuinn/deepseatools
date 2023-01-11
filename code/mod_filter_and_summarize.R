@@ -9,7 +9,7 @@ library(tidyverse)
 datasetID <- "KOK 05-11"
 
 ##### filter and summarize #####
-filt %>%
+x <- filt %>%
   filter(grepl(datasetID, SurveyID)) %>%
   #filter(CatalogNumber == "538350") %>%
            group_by(DatasetID,
@@ -17,8 +17,8 @@ filt %>%
                     Locality,
                     ObservationYear,
                     ObservationDate) %>%
-           summarize(n=n()) %>%
-           View()
+           summarize(n=n())
+print(x)
 
 
 

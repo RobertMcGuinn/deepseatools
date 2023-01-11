@@ -7,7 +7,7 @@ library(tidyverse)
 
 ##### variables #####
 path <- "C:/rworking/deepseatools/indata"
-csv <- "DSCRTP_NatDB_20221213-0_ingest.csv"
+csv <- "DSCRTP_NatDB_20221213-0.csv"
 ##  "DSCRTP_NatDB_20220801-0.csv"
 ## "DSCRTP_NatDB_20221213-0_ingest"
 
