@@ -1,3 +1,27 @@
+---
+title: "Field Definitions for NOAA's National Database for Deep-sea Corals and Sponges (database version: 20221213-0)"
+author: "Contact: robert.mcguinn@noaa.gov"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(width = 100)
+```
+
+```{css, echo=FALSE}
+    body .main-container {
+      max-width: 1200px !important;
+      width: 1200px !important;
+    }
+    body {
+      max-width: 1200px !important;
+    }
+    
+```
+
+```{r, echo=FALSE, message=FALSE}
+
 ##### header #####
 ## author: Robert McGuinn
 ## date started: 20221004
@@ -7,6 +31,11 @@
 library(tidyverse)
 library(googlesheets4)
 library(googledrive)
+library(flextable)
+library(knitr)
+library(kableExtra)
+library(tableHTML)
+library(htmlTable)
 
 ##### authorizations #####
 drive_auth(email = "robert.mcguinn@noaa.gov")
@@ -27,7 +56,10 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 ## Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 
+
 ## checking
+# class(s)
+# s <- data.frame(s)
 # s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(FieldDescription)
 # s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(ValidValues)
 # setdiff(names(filt), s$FieldName)
@@ -35,10 +67,24 @@ s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 
 ##### filter to make a public version for inclusion on NOAA GeoPlatform #####
 s_public <- s %>%
-  # filter(InternalUseOnly == 0) %>%
-  dplyr::select(1:4)
+  filter(InternalUseOnly == 0) %>%
+  group_by(FieldOrder, 
+           FieldName, 
+           FieldDescription, 
+           ValidValues) %>% 
+  summarize(n=n())
+
+s_public <- s_public[,1:4]
+
+##### check #####
+# (s_public)
 
 ##### write the CSV ######
 write_csv(s_public, "c:/rworking/deepseatools/indata/20221213-0_NOAA_NDB_corals_sponges_data_dictionary.csv")
 
+##### make the html table #####
+s_public %>% 
+  flextable() %>% 
+  theme_zebra() 
 
+```

@@ -6,7 +6,7 @@
 setwd("c:/rworking/deepseatools/code")
 
 ##### load the current database (wait) #####
-## source("mod_load_current_ndb.R")
+source("mod_load_current_ndb.R")
 
 ##### filter and summarize #####
 source("mod_filter_and_summarize.R")
