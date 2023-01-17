@@ -53,7 +53,7 @@ options(lifecycle_disable_warnings = TRUE)
 
 ##### ***OR*** load current database(from Google Drive)#####
 ## set the file name (user supplied th file name root, without extension).
-filename <- 'DSCRTP_NatDB_20220801-0_CSV' #
+filename <- 'DSCRTP_NatDB_20221213-0_CSV' #
 # find the file in google drive by name
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
 ## getting the id as a character string
@@ -95,7 +95,7 @@ version <- as.character(version)
 
 ##### ***OR*** bringing in datasetID key from xls stored on Google Drive ####
 ## create a list of files (or single file) that meets title query (Manual change)
-x <- drive_find(q = "name contains '20220801-1_DatasetID_Key_DSCRTP'") #
+x <- drive_find(q = "name contains '20221021-0_DatasetID_Key_DSCRTP'") #
 
 ## browse to it
 # x %>% drive_browse()
@@ -105,7 +105,7 @@ y <- x$id
 
 # this downloads the file to the specified path (manual change required)
 dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/20220801-1_DatasetID_Key_DSCRTP.xlsx",
+                     path = "C:/rworking/deepseatools/indata/20221021-1_DatasetID_Key_DSCRTP.xlsx",
                      overwrite = TRUE)
 
 ## read the file into R as a data frame
@@ -207,32 +207,41 @@ filt$CitationMaker <- paste(filt$DataProvider,'. ',
 
 ##### checking: looking at the Citation #####
 
-# # [1] "NOAA_HB-14-02" "NOAA_HB-17-04"
-# # [3] "OET_NA122"     "OET_NA116"
-# # [5] "OET_NA077"     "OET_NA110"
-#
-# x <- "OET_NA114"
-#
-#
-# filt %>% filter(DatasetID == x) %>%
-#   pull(CitationMaker) %>%
-#   unique()
-#
-# filt %>% filter(DatasetID == x) %>%
-#   pull(Citation) %>%
-#   unique()
-#
-# filt %>%
-#   filter(DatasetID == x) %>%
-#   pull(ObservationDate) %>% unique()
-#
-# filt %>%
-#   filter(DatasetID == x) %>%
-#   pull(WebSite) %>% unique()
-#
-# filt %>%
-#   filter(DatasetID == x) %>%
-#   pull(Locality) %>% unique()
+# 1] "NOAA_NEFSC_HB-15-04"
+# [2] "NOAA_AFSC_Tiglax_D2017"
+# [3] "NOAA_AFSC_Tiglax_SSL_2016"
+# [4] "NOAA_SH-18-12_ROV-Transect"
+# [5] "SOI_FK171005"
+# [6] "ZSM"
+# [7] "Choy et al, 2020"
+# [8] "Lehnert & Stone 2016"
+# [9] "RBCM"
+# [10] "Watling 2015"
+# [11] "Shen2019"
+# [12] "TMAG"
+
+x <- "Shen2019"
+
+y <- filt %>% filter(DatasetID == x) %>%
+  group_by(VernacularNameCategory,
+           gisMEOW,
+           RecordType,
+           Phylum,
+           Vessel,
+           VehicleName,
+           SurveyID,
+           ObservationYear,
+           ObservationDate,
+           Locality,
+           DataProvider,
+           Repository,
+           Citation,
+           IdentifiedBy, PI) %>%
+  summarize(n=n()) %>%  View()
+
+filt %>% filter(DatasetID == x) %>%
+  pull(Locality) %>%
+  unique()
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from local path #####
 # key <- read.xlsx("C:/rworking/deepseatools/indata/20220426-1_DatasetID_Key_DSCRTP.xlsx")
@@ -357,12 +366,12 @@ setdiff(key$DatasetID, d$DatasetID)
 d <- merge(d, key, all.x = TRUE)
 
 ##### check #####
-x <- d %>% filter(DatasetID == "Carranza_etal_2012")
-write.csv(test, "c:/rworking/deepseatools/indata/carranza.csv")
-test2 <- read_utf8("c:/rworking/deepseatools/indata/carranza.csv")
-
-d %>% filter(CatalogNumber == '618051') %>% pull(Citation)
-
+# x <- d %>% filter(DatasetID == "Carranza_etal_2012")
+# write.csv(test, "c:/rworking/deepseatools/indata/carranza.csv")
+# test2 <- read_utf8("c:/rworking/deepseatools/indata/carranza.csv")
+#
+# d %>% filter(CatalogNumber == '618051') %>% pull(Citation)
+#
 
 # table(d$class, useNA = 'always')
 #
