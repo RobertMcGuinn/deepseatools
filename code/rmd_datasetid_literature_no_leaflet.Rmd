@@ -34,14 +34,16 @@ sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ',
                          sep = '')
 
 ##### creating the datasetID dashboard url#####
-sub$dash <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Summaries/",sub$DatasetID,".html", sep = '')
+sub$dash <- paste("https://www.ncei.noaa.gov/waf/dsc-data/dashboards/",sub$DatasetID,".html", sep = '')
+
 
 ##### creating a ERDDAP tabledap query url #####
 sub$erddap <- paste("https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_corals.csv?CatalogNumber%2CVernacularNameCategory%2CVernacularName%2CScientificName%2CVerbatimScientificName%2CTaxonRank%2CAphiaID%2CPhylum%2CClass%2CSubclass%2COrder%2CSuborder%2CFamily%2CSubfamily%2CGenus%2CSubgenus%2CSpecies%2CSubspecies%2CScientificNameAuthorship%2CTypeStatus%2CSynonyms%2CIdentificationComments%2CIdentifiedBy%2CIdentificationDate%2CIdentificationQualifier%2CAssociatedSequences%2CIndividualCount%2CCategoricalAbundance%2CDensity%2CCover%2CVerbatimSize%2CMinimumSize%2CMaximumSize%2CWeightInKg%2CCondition%2CAssociatedTaxa%2COccurrenceComments%2CSubstrate%2CHabitat%2CCMECSGeoForm%2CCMECSSubstrate%2CCMECSBiotic%2CTemperature%2CSalinity%2COxygen%2CpH%2CpHscale%2CpCO2%2CTA%2CDIC%2COcean%2CLargeMarineEcosystem%2CCountry%2CFishCouncilRegion%2CLocality%2CStation%2CObservationDate%2CObservationYear%2CObservationTime%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CShallowFlag%2CgisEtopoDepth%2CgisGEBCODepth%2CgisCRMDepth%2CStartLatitude%2CStartLongitude%2CEndLatitude%2CEndLongitude%2CMinimumDepthInMeters%2CMaximumDepthInMeters%2CVerbatimLatitude%2CVerbatimLongitude%2CLocationAccuracy%2CNavType%2CLocationComments%2CSurveyID%2CVessel%2CPI%2CPIAffiliation%2CPurpose%2CSurveyComments%2CEventID%2CSamplingEquipment%2CVehicleName%2CSampleAreaInSquareMeters%2CfootprintWKT%2CfootprintSRS%2COtherData%2CEntryDate%2CReporter%2CReporterEmail%2CReporterComments%2CDataProvider%2CDataContact%2CModified%2CRecordType%2CRepository%2CCitation%2CSampleID%2CTrackingID%2CDatasetID%2CWebSite%2CImageURL&", "DatasetID", "=%22",
                   sub$DatasetID, "%22", sep = '')
 
 ##### creating the xml metadata file url #####
-sub$meta <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Metadata/", sub$DatasetID, ".xml", sep = '')
+##### creating the xml metadata file url #####
+sub$meta <- paste("https://www.ncei.noaa.gov/waf/dsc-data/metadata/", sub$DatasetID, ".xml", sep = '')
 
 ```
 
@@ -55,9 +57,9 @@ sub <- all[all$Flag == "0",]
 
 ```
 
-Go back to data set index page: [LINK](https://deepseacoraldata.noaa.gov/DatasetID_Table/DatasetID_Table.html)
+Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/dashboards/DatasetID_Table.html)
 
-**Please send [feedback](https://deepseacoraldata.noaa.gov/about-us/feedback) if you notice any problems with this data set.**
+**Please send [feedback](https://deepseacoraldata.woc.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
 # `r unique(factor(sub$title))`
 
@@ -104,7 +106,7 @@ sub2 <- sub %>%
 gis<-sub2
 coordinates(gis) <- c("Longitude", "Latitude", "DepthInMeters")
 proj4string(gis) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
-x<-bbox(gis)
+# x<-bbox(gis)
 
 m <- map_data("world") #, xlim = c(x[1,1]-1,x[1,2]+1), ylim = c(x[2,1]-1,x[2,2]+1))
 
@@ -155,7 +157,7 @@ Link: `r unique(sub$method_link[1])`
 
 ### Download comma delimited file: [LINK](`r x`)
 
-Download data dictionary: [LINK](https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/at_download/file)
+Download data dictionary: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/metadata/20221213-0_NOAA_NDB_corals_sponges_data_dictionary.csv)
 
 **Note:** When importing CSV files into Excel, use the data import wizard (under the 'data' tab) and set all column types to 'text' to avoid data transformation issues. This step will prevent the automated alteration of dates in Excel.
 
@@ -273,7 +275,9 @@ if(nrow(sum_tbl) == 0){
 # sum_tbl
 ```
 
-**Please send [feedback](https://deepseacoraldata.noaa.gov/about-us/feedback) if you notice any problems with this data set.**
+**Please send [feedback](https://deepseacoraldata.woc.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
-Go back to data set index page: [LINK](https://deepseacoraldata.noaa.gov/DatasetID_Table/DatasetID_Table.html)
+Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/dashboards/DatasetID_Table.html)
+
+
 

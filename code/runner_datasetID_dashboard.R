@@ -61,7 +61,7 @@ y <- x$id
 ## download the zip file
 dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
 ## extract just the file of interest from the zip file
-sub <- read.csv(unz(dl$local_path, paste(substr(filename, 1, 23), ".csv", sep = '')), fileEncoding = 'latin9')
+sub <- read.csv(unz(dl$local_path, paste(substr(filename, 1, 23), ".csv", sep = '')), fileEncoding = 'latin1')
 flagged <- sub %>%  filter(Flag == "1")
 ## change all 'missing' values in factors to explicit NA's
 # filt <- filt %>% mutate_if(is.factor,
@@ -74,13 +74,9 @@ rm(x)
 rm(y)
 
 ##### ***OR*** read current database from disk #####
-sub <- read.csv("C:/rworking/deepseatools/indata/DSCRTP_NatDB_20220801-0.csv", fileEncoding = "latin9")
+sub <- read.csv("C:/rworking/deepseatools/indata/DSCRTP_NatDB_20221213-0.csv", fileEncoding = "latin9")
 flagged <- sub %>%  filter(Flag == "1")
 
-yo <- read.csv("C:/rworking/deepseatools/indata/DSCRTP_NatDB_FeatureLayer.csv", fileEncoding = "latin9")
-
-
-  "C:\rworking\deepseatools\indata\DSCRTP_NatDB_FeatureLayer.csv"
 
 ##### change name of 'sub' to 'indata' and create 'filt' #####
 indata <- sub
@@ -93,9 +89,10 @@ rm(sub)
 version <- unique(filt$DatabaseVersion)
 version <- as.character(version)
 
-##### ***OR*** bringing in datasetID key from xls stored on Google Drive ####
+##### ***OR*** bringing in datasetID key from xls stored on Google Drive #####
+## (UNTESTED: Do not use as of 20230117.  I think it introduces some encoding issues)
 ## create a list of files (or single file) that meets title query (Manual change)
-x <- drive_find(q = "name contains '20221021-0_DatasetID_Key_DSCRTP'") #
+x <- drive_find(q = "name contains '20221213-0_DatasetID_Key_DSCRTP'") #
 
 ## browse to it
 # x %>% drive_browse()
@@ -114,6 +111,7 @@ key <- read.xlsx(dl$local_path)
 ## clean up
 rm(y)
 rm(x)
+
 ##### ***OR*** bring in old datasetID key from local path #####
 # key <- read.xlsx("C:/rworking/deepseatools/indata/20211207-1_DatasetID_Key_DSCRTP.xlsx")
 
@@ -158,8 +156,8 @@ rm(x)
 # x <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Summaries/", id, ".html", sep = '')
 # browseURL(x)
 #
-#
-#
+
+
 # View(x)
 #
 #
@@ -220,69 +218,68 @@ filt$CitationMaker <- paste(filt$DataProvider,'. ',
 # [11] "Shen2019"
 # [12] "TMAG"
 
-x <- "Shen2019"
-
-y <- filt %>% filter(DatasetID == x) %>%
-  group_by(VernacularNameCategory,
-           gisMEOW,
-           RecordType,
-           Phylum,
-           Vessel,
-           VehicleName,
-           SurveyID,
-           ObservationYear,
-           ObservationDate,
-           Locality,
-           DataProvider,
-           Repository,
-           Citation,
-           IdentifiedBy, PI) %>%
-  summarize(n=n()) %>%  View()
-
-filt %>% filter(DatasetID == x) %>%
-  pull(Locality) %>%
-  unique()
+# x <- "Shen2019"
+#
+# y <- filt %>% filter(DatasetID == x) %>%
+#   group_by(VernacularNameCategory,
+#            gisMEOW,
+#            RecordType,
+#            Phylum,
+#            Vessel,
+#            VehicleName,
+#            SurveyID,
+#            ObservationYear,
+#            ObservationDate,
+#            Locality,
+#            DataProvider,
+#            Repository,
+#            Citation,
+#            IdentifiedBy, PI) %>%
+#   summarize(n=n()) %>%  View()
+#
+# filt %>% filter(DatasetID == x) %>%
+#   pull(Locality) %>%
+#   unique()
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from local path #####
 # key <- read.xlsx("C:/rworking/deepseatools/indata/20220426-1_DatasetID_Key_DSCRTP.xlsx")
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from Google Drive #####
-# ## create a list of files (or single file) that meets title query (Manual change)
-#
-# x <- drive_find(q = "name contains '20220801-1_DatasetID_Key_DSCRTP'") #
-#
-# ## browse to it
-# # x %>% drive_browse()
-#
-# # getting the id as a character string
-# y <- x$id
-#
-# # this downloads the file to the specified path (manual change required)
-# dl <- drive_download(as_id(y),
-#                      path = "C:/rworking/deepseatools/indata/20220426-0_DatasetID_Key_DSCRTP.xlsx",
-#                      overwrite = TRUE)
-#
-# ## read the file into R as a data frame
-# key <- read.xlsx(dl$local_path)
+## create a list of files (or single file) that meets title query (Manual change)
 
+x <- drive_find(q = "name contains '20221213-0_DatasetID_Key_DSCRTP'") #
+
+## browse to it
+# x %>% drive_browse()
+
+# getting the id as a character string
+y <- x$id
+
+# this downloads the file to the specified path (manual change required)
+dl <- drive_download(as_id(y),
+                     path = "C:/rworking/deepseatools/indata/20221213-0_DatasetID_Key_DSCRTP.xlsx",
+                     overwrite = TRUE)
+
+## read the file into R as a data frame
+key <- read.xlsx(dl$local_path)
 
 ##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
-# ## build a frequency table by DatasetID from new file
-# x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
-#
-# # strip 'n' from existing key
-# names(key)
-# y <- key[,1:8]
-# names(y)
-#
-# ## merge new numbers to create old key + new counts
-# z <- merge(y,x)
-#
-# ## write out result
-# write.xlsx(z, "C:/rworking/deepseatools/indata/20220801-0_DatasetID_Key_DSCRTP.xlsx",
-#            overwrite = TRUE)
+## build a frequency table by DatasetID from new file
+x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
 
-##### manual upload new key to Google Drive #####
+# strip 'n' from existing key
+names(key)
+y <- key[,1:8]
+names(y)
+
+## merge new numbers to create old key + new counts
+z <- merge(y,x)
+
+## write out result (manual change to file name)
+write.xlsx(z, "C:/rworking/deepseatools/indata/20221213-0_DatasetID_Key_DSCRTP.xlsx",
+           overwrite = TRUE)
+
+##### manual upload new key to Google Drive (point and click stuff) #####
 ##### ***OPTIONAL*** subsetting of indata to d (optional step for testing purposes) #####
 # d <- filt %>%
 #   filter(
@@ -315,7 +312,7 @@ rm(y)
 #             n=n())
 # View(yo)
 
-#### checking: summary view of new datasets #####
+##### checking #####
 # x <- d %>%
 #   arrange(ObservationYear) %>%
 #   filter(DatasetID %in% setdiff(d$DatasetID, key$DatasetID)) %>%
@@ -360,18 +357,18 @@ rm(y)
 #                            as.character(DatasetID)))
 
 ##### checking #####
-setdiff(d$DatasetID, key$DatasetID)
-setdiff(key$DatasetID, d$DatasetID)
+# setdiff(d$DatasetID, key$DatasetID)
+# setdiff(key$DatasetID, d$DatasetID)
 ##### merge database with key  #####
 d <- merge(d, key, all.x = TRUE)
 
-##### check #####
+##### checking #####
 # x <- d %>% filter(DatasetID == "Carranza_etal_2012")
 # write.csv(test, "c:/rworking/deepseatools/indata/carranza.csv")
 # test2 <- read_utf8("c:/rworking/deepseatools/indata/carranza.csv")
-#
+
 # d %>% filter(CatalogNumber == '618051') %>% pull(Citation)
-#
+
 
 # table(d$class, useNA = 'always')
 #
@@ -415,7 +412,7 @@ yo <- d %>%
 library("rmarkdown")
 for (id in unique(yo$DatasetID)){
   sub <- yo[yo$DatasetID == id,]
-  render("C:/rworking/deepseatools/code/rmd_datasetid_cruise.rmd" ,
+  render("C:/rworking/deepseatools/code/rmd_datasetid_cruise_no_leaflet.rmd" ,
          output_file =  paste(id,".html", sep=''),
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/cruise')
 }
@@ -429,7 +426,7 @@ yo <- d %>%
 library("rmarkdown")
 for (id in unique(yo$DatasetID)){
   sub <- yo[yo$DatasetID == id,]
-  render("C:/rworking/deepseatools/code/rmd_datasetid_literature.rmd" ,
+  render("C:/rworking/deepseatools/code/rmd_datasetid_literature_no_leaflet.rmd" ,
          output_file =  paste(id,".html", sep=''),
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/literature')
 }
@@ -443,7 +440,7 @@ yo <- d %>%
 library("rmarkdown")
 for (id in unique(yo$DatasetID)){
   sub <- yo[yo$DatasetID == id,]
-  render("C:/rworking/deepseatools/code/rmd_datasetid_program.rmd" ,
+  render("C:/rworking/deepseatools/code/rmd_datasetid_program_no_leaflet.rmd" ,
          output_file =  paste(id,".html", sep=''),
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/program')
 }
@@ -458,7 +455,7 @@ yo <- d %>%
 library("rmarkdown")
 for (id in unique(yo$DatasetID)){
   sub <- yo[yo$DatasetID == id,]
-  render("C:/rworking/deepseatools/code/rmd_datasetid_repository.rmd" ,
+  render("C:/rworking/deepseatools/code/rmd_datasetid_repository_no_leaflet.rmd" ,
          output_file =  paste(id,".html", sep=''),
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/repository')
 }
@@ -472,7 +469,7 @@ yo <- d %>%
 library("rmarkdown")
 for (id in unique(yo$DatasetID)){
   sub <- yo[yo$DatasetID == id,]
-  render("C:/rworking/deepseatools/code/rmd_datasetid_repository_MBARI.rmd" ,
+  render("C:/rworking/deepseatools/code/rmd_datasetid_repository_MBARI_no_leaflet.rmd" ,
          output_file =  paste(id,".html", sep=''),
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/repository')
 }
@@ -495,7 +492,7 @@ setdiff(biglist, unique(filt$DatasetID))
 length(unique(filt$DatasetID))
 length(biglist)
 
-
+as.m
 ##### publish a list of datasetID's for review sheet #####
 x <- d %>% group_by(DatasetID, class) %>%
   summarize(n = n()) %>%
