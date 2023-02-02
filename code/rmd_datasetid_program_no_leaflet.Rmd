@@ -63,7 +63,7 @@ sub <- all[all$Flag == "0",]
 
 Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/dashboards/DatasetID_Table.html)
 
-**Please send [feedback](https://deepseacoraldata.woc.noaa.gov/resources/contact) if you notice any problems with this data set.**
+**Please send [feedback](https://deepseacoraldata.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
 # `r unique(factor(sub$title))`
 
@@ -76,52 +76,40 @@ Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/da
 
 ```{r, map, echo = FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=TRUE, fig.align='center'}
 
-# # ##### Using ggmap libary #####
-# #getting rid of  missing lat/long data
-#library(ggmap)
+##### static locator map creation ##### 
+## filter out -999 
 sub2 <- sub %>%
   filter(Latitude != '-999' , Longitude != '-999')
-# 
-# # use this when not crossing dateline
-# xpos <- sub2$Longitude
-# # also use this additional calculation to transforming longitudes to 0-360 if crossing dateline as in Western AK and HI
-# xpos <- ifelse(xpos < 0, (180 + xpos) + 180, xpos)
-# 
-# myLocation <- c(lon = mean(xpos), lat = mean(sub2$Latitude))
-# #manually set center longitude if in an area that crosses dateline
-# myLocation <- c(lon = 180, lat = mean(sub2$Latitude))
-# 
-# p <- get_map(location=myLocation, maptype = "watercolor", source = 'stamen', crop=FALSE, zoom=2)
-# # # put transLong below if
-# ggmap(p)+
-# geom_point(aes(x = xpos, y = Latitude), data = sub2,
-#  alpha = .5, color="darkred", size = 3)
-# 
-# 
-# #> converting bounding box to center/zoom specification. (experimental)
-# #> Map from URL : http://maps.googleapis.com/maps/api/staticmap?center=34.75309,-119.751995&zoom=16&size=640x640&scale=2&maptype=satellite&language=en-EN&sensor=false
-# ggmap(sq_map) + geom_point(data = sub2, mapping = aes(x = Longitude, y = Latitude), color = "red")
-# #> Warning: Removed 3 rows containing missing values (geom_point).
 
+## set projection of incoming data
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-###### this will make a simple maps if you have problems with the method above #####
-# library(dplyr)
-# library(ggplot2)
-gis<-sub2
-coordinates(gis) <- c("Longitude", "Latitude", "DepthInMeters")
-proj4string(gis) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
-# x<-bbox(gis)
+## create sf object
+geosub <- st_as_sf(x = sub2,                         
+           coords = c("Longitude", "Latitude"),
+           crs = projcrs)
+# geosub <- st_shift_longitude(geosub)
 
-m <- map_data("world") #, xlim = c(x[1,1]-1,x[1,2]+1), ylim = c(x[2,1]-1,x[2,2]+1))
+## calc the bounding box
+bbox <- st_bbox(geosub)
+bbox <- as.matrix(bbox)
 
-z <- ggplot(m, aes(x = long, y = lat, group = group)) +
-  geom_polygon()
+## get sf basemap
+world <- ne_countries(scale = "medium", returnclass = "sf")
+# class(world)
 
-z + geom_point(data=sub2,
-               color = "red",
-               size = 1,
-               aes(x=Longitude, y = Latitude), inherit.aes = FALSE)
+ggplot() + 
+  geom_sf(data = world, fill = "grey") + 
+  geom_sf(data = geosub,
+        color = "red", 
+        size = 2,
+        shape = 15) + 
+  coord_sf(xlim = c(bbox[1,1]-3,bbox[3,1]+3), 
+           ylim = c(bbox[2,1]-3,bbox[4,1]+3), 
+           expand = FALSE)
+
 ```
+
 # Geographic Range
 * **Ocean:** `r unique(sub$Ocean)`
 * **Fishery Management Council Region(s):** `r unique(sub$FishCouncilRegion[is.na(sub$FishCouncilRegion) == FALSE])`
@@ -176,6 +164,7 @@ Percent of coral and sponge records by lowest taxonomic rank.
 ## Corals
 
 **Number of coral records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Cnidaria"]), big.mark = ",")` 
+
 ```{r taxsummary_coral, echo=FALSE}
 sub$TaxonRank <- factor(sub$TaxonRank, levels = c("phylum", "class", "subclass", "order", "suborder","family","subfamily", "genus","subgenus","species","subspecies","forma","variety"))
 
@@ -274,7 +263,7 @@ if(nrow(sum_tbl) == 0){
 # sum_tbl
 ```
 
-**Please send [feedback](https://deepseacoraldata.woc.noaa.gov/resources/contact) if you notice any problems with this data set.**
+**Please send [feedback](https://deepseacoraldata.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
 Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/dashboards/DatasetID_Table.html)
 

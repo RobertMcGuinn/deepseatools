@@ -63,7 +63,6 @@ Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/da
 
 # `r unique(factor(sub$title))`
 
-
 * **Dataset ID:** `r unique(factor(sub$DatasetID))`
 * **Database Version:** `r version`
 * **Data Provider:** `r unique(sub$DataProvider)`
@@ -79,32 +78,41 @@ sub2 <- sub %>%
   filter(Latitude != '-999' , Longitude != '-999')
 
 ## set projection of incoming data
-projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+projcrs <- 4326
+
+domainCRS <- '+proj=aea +lat_1=30 +lat_2=70 +lat_0=52 +lon_0=-170 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs '
 
 ## create sf object
 geosub <- st_as_sf(x = sub2,                         
            coords = c("Longitude", "Latitude"),
            crs = projcrs)
-# geosub <- st_shift_longitude(geosub)
+
+geosub <- st_transform(geosub, crs = domainCRS)
 
 ## calc the bounding box
-bbox <- st_bbox(geosub)
-bbox <- as.matrix(bbox)
+# bbox <- st_bbox(geosub)
+# bbox <- as.matrix(bbox)
+
+polybbox <- geosub  %>% 
+  st_bbox() %>% 
+  st_as_sfc()
+
+polybbox_buffer <- st_buffer(polybbox, dist=1) # map units are in meters 2000000
+bbox <- st_bbox(polybbox_buffer)
 
 ## get sf basemap
-world <- ne_countries(scale = "medium", returnclass = "sf")
-# class(world)
+world <- ne_countries(scale = "medium", returnclass = "sf") #, country = "United States of America"
+world <- st_transform(world, crs = domainCRS)
+world <- st_crop(world, bbox)
 
 ggplot() + 
-  geom_sf(data = world, fill = "grey") + 
+  geom_sf(data = world) +
   geom_sf(data = geosub,
-        color = "red", 
-        size = 2,
-        shape = 15) + 
-  coord_sf(xlim = c(bbox[1,1]-3,bbox[3,1]+3), 
-           ylim = c(bbox[2,1]-3,bbox[4,1]+3), 
-           expand = FALSE)
-
+          color = "red", 
+          size = 3,
+          shape = 15) 
+  
+  
 ```
 
 # Geographic Range

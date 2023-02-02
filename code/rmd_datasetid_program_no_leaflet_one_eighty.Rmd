@@ -1,5 +1,5 @@
 ---
-title: "NOAA's National Database for Deep-Sea Corals and Sponges: Data Set Dashboard (Cruise)"
+title: "NOAA's National Database for Deep-Sea Corals and Sponges: Data Set Dashboard (Program)"
 author: "NOAA Deep Sea Coral Research and Technology Program (DSCRTP)"
 date: "Report last ran on `r Sys.Date()`"
 output:
@@ -8,6 +8,7 @@ output:
     highlight: github
 
 ---
+
 ```{r setup, include=FALSE}
 
 opts_chunk$set(fig.width=8, fig.height=4, warning = FALSE, message = FALSE)
@@ -16,7 +17,7 @@ opts_chunk$set(fig.width=8, fig.height=4, warning = FALSE, message = FALSE)
 
 ```{r enhance, echo=FALSE}
 ##### creating an automated Citation #####
-sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ', 
+sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ',  
                          min(sub$ObservationYear[sub$ObservationYear != "-999"]),' to ',
                          max(sub$ObservationYear[sub$ObservationYear != "-999"]),'. ',
                          'Coral or sponge occurrence observations submitted to the NOAA National Database for Deep Sea Corals and Sponges (www.deepseacoraldata.noaa.gov)', '. ',
@@ -43,12 +44,13 @@ sub$erddap <- paste("https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_corals.c
 
 
 ##### creating the xml metadata file url #####
+##### creating the xml metadata file url #####
 sub$meta <- paste("https://www.ncei.noaa.gov/waf/dsc-data/metadata/", sub$DatasetID, ".xml", sep = '')
 
+##### creating the automated abstract variable #####
 ```
 
 ```{r, some_variable_setup, echo=FALSE}
-
 x <- unique(sub$erddap)
 y <- unique(sub$meta)
 z <- unique(sub$abstract)
@@ -62,7 +64,6 @@ Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/da
 **Please send [feedback](https://deepseacoraldata.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
 # `r unique(factor(sub$title))`
-
 
 * **Dataset ID:** `r unique(factor(sub$DatasetID))`
 * **Database Version:** `r version`
@@ -79,32 +80,41 @@ sub2 <- sub %>%
   filter(Latitude != '-999' , Longitude != '-999')
 
 ## set projection of incoming data
-projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+projcrs <- 4326
+
+domainCRS <- '+proj=aea +lat_1=30 +lat_2=70 +lat_0=52 +lon_0=-170 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs '
 
 ## create sf object
 geosub <- st_as_sf(x = sub2,                         
            coords = c("Longitude", "Latitude"),
            crs = projcrs)
-# geosub <- st_shift_longitude(geosub)
+
+geosub <- st_transform(geosub, crs = domainCRS)
 
 ## calc the bounding box
-bbox <- st_bbox(geosub)
-bbox <- as.matrix(bbox)
+# bbox <- st_bbox(geosub)
+# bbox <- as.matrix(bbox)
+
+polybbox <- geosub  %>% 
+  st_bbox() %>% 
+  st_as_sfc()
+
+polybbox_buffer <- st_buffer(polybbox, dist=1) # map units are in meters 2000000
+bbox <- st_bbox(polybbox_buffer)
 
 ## get sf basemap
-world <- ne_countries(scale = "medium", returnclass = "sf")
-# class(world)
+world <- ne_countries(scale = "medium", returnclass = "sf") #, country = "United States of America"
+world <- st_transform(world, crs = domainCRS)
+world <- st_crop(world, bbox)
 
 ggplot() + 
-  geom_sf(data = world, fill = "grey") + 
+  geom_sf(data = world) +
   geom_sf(data = geosub,
-        color = "red", 
-        size = 2,
-        shape = 15) + 
-  coord_sf(xlim = c(bbox[1,1]-3,bbox[3,1]+3), 
-           ylim = c(bbox[2,1]-3,bbox[4,1]+3), 
-           expand = FALSE)
-
+          color = "red", 
+          size = 1,
+          shape = 15) 
+  
+  
 ```
 
 # Geographic Range
@@ -142,11 +152,11 @@ Coordinates are in WGS 84: [EPSG:4326](https://spatialreference.org/ref/epsg/wgs
 `r sub$method_text[1]`  
 Link: `r unique(sub$method_link[1])`
 
-### Download comma delimited (CSV) file: [LINK](`r x`)
+### Download comma delimited file: [LINK](`r x`)
 
 Download data dictionary: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/metadata/20221213-0_NOAA_NDB_corals_sponges_data_dictionary.csv)
 
-**Note:** When importing CSV files into Excel, use the data import wizard (under the 'data' tab) and set all column types to 'text' to avoid data tranformation issues. This step will prevent the automated alteration of dates in Excel.  
+**Note:** When importing CSV files into Excel, use the data import wizard (under the 'data' tab) and set all column types to 'text' to avoid data tranformation issues. This step will prevent the automated alteration of dates in Excel.
 
 ### Download ISO metadata as xml: [LINK](`r y`)
 
@@ -155,26 +165,10 @@ Download data dictionary: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/metadata
 
 *Note:* Individual records within a data set may have additional citations in the 'Citation' field.
 
-# Expedition Details
-
-``` {r source, echo=FALSE}
-sum_tbl <-
-  sub %>%
-  group_by(SurveyID) %>%
-  summarize(Vessel = toString(unique(Vessel)),
-            VehicleName = toString(unique(VehicleName)),
-            SamplingEquipment = toString(unique(SamplingEquipment)),
-            RecordType = toString(unique(RecordType)))
-
-
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
-```
-
 # Taxonomic Summary
 Percent of coral and sponge records by lowest taxonomic rank.
 
-## Corals 
+## Corals
 
 **Number of coral records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Cnidaria"]), big.mark = ",")` 
 ```{r taxsummary_coral, echo=FALSE}
@@ -200,9 +194,9 @@ if(nrow(sum_tbl) == 0){
 
 ```
 
-## Sponges 
+## Sponges  
 
-**Number of sponge records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Porifera"]), big.mark = ",")` 
+**Number of sponge records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Porifera"]), big.mark = ",")`
 ```{r taxsummary_sponges, echo=FALSE}
 sub$TaxonRank <- factor(sub$TaxonRank, levels = c("phylum", "class", "subclass", "order", "suborder","family","subfamily", "genus","subgenus","species","subspecies","forma","variety"))
 
@@ -278,4 +272,5 @@ if(nrow(sum_tbl) == 0){
 **Please send [feedback](https://deepseacoraldata.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
 Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/dashboards/DatasetID_Table.html)
+
 

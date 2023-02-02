@@ -42,10 +42,14 @@ filt$references <- paste('https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_cor
                           filt$CatalogNumber, sep = '')
 
 ##### fix Depth issues #####
-filt$MinimumDepthInMeters <- ifelse(test = is.na(filt$MinimumDepthInMeters) == T, yes = filt$DepthInMeters, no = filt$MinimumDepthInMeters)
-filt$MaximumDepthInMeters <- ifelse(test = is.na(filt$MaximumDepthInMeters) == T, yes = filt$DepthInMeters, no = filt$MaximumDepthInMeters)
+filt$MinimumDepthInMeters <- ifelse(test = is.na(filt$MinimumDepthInMeters) == T,
+                                    yes = filt$DepthInMeters,
+                                    no = filt$MinimumDepthInMeters)
+filt$MaximumDepthInMeters <- ifelse(test = is.na(filt$MaximumDepthInMeters) == T,
+                                    yes = filt$DepthInMeters,
+                                    no = filt$MaximumDepthInMeters)
 
-##### fix species issues #####
+##### OPTIONAL: fix species issues #####
 # filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932164', yes = "Narella", no = filt$ScientificName)
 # filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932389', yes = "Narella", no = filt$ScientificName)
 
@@ -127,7 +131,7 @@ obis$coordinateUncertaintyInMeters <- gsub("[^[:digit:]., ]", "", obis$coordinat
 obis %>% pull(coordinateUncertaintyInMeters) %>% table(useNA = 'always')
 
 ##### write out file for submission #####
-today <- '20220824-0'
+today <- '20221213-0'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%

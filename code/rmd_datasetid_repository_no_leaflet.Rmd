@@ -61,7 +61,7 @@ sub <- all[all$Flag == "0",]
 
 Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/dashboards/DatasetID_Table.html)
 
-**Please send [feedback](https://deepseacoraldata.woc.noaa.gov/resources/contact) if you notice any problems with this data set.**
+**Please send [feedback](https://deepseacoraldata.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
 
 # `r unique(factor(sub$title))`
@@ -75,51 +75,35 @@ Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/da
 
 ```{r, map, echo = FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=TRUE, fig.align='center'}
 
-# # ##### Using ggmap libary #####
-# #getting rid of  missing lat/long data
-#library(ggmap)
+##### Using ggmap libary #####
+## getting rid of  missing lat/long data
+
 sub2 <- sub %>%
   filter(Latitude != '-999' , Longitude != '-999')
-# 
-# # use this when not crossing dateline
-# xpos <- sub2$Longitude
-# # also use this additional calculation to transforming longitudes to 0-360 if crossing dateline as in Western AK and HI
-# xpos <- ifelse(xpos < 0, (180 + xpos) + 180, xpos)
-# 
-# myLocation <- c(lon = mean(xpos), lat = mean(sub2$Latitude))
-# #manually set center longitude if in an area that crosses dateline
-# myLocation <- c(lon = 180, lat = mean(sub2$Latitude))
-# 
-# p <- get_map(location=myLocation, maptype = "watercolor", source = 'stamen', crop=FALSE, zoom=2)
-# # # put transLong below if
-# ggmap(p)+
-# geom_point(aes(x = xpos, y = Latitude), data = sub2,
-#  alpha = .5, color="darkred", size = 3)
-# 
-# 
-# #> converting bounding box to center/zoom specification. (experimental)
-# #> Map from URL : http://maps.googleapis.com/maps/api/staticmap?center=34.75309,-119.751995&zoom=16&size=640x640&scale=2&maptype=satellite&language=en-EN&sensor=false
-# ggmap(sq_map) + geom_point(data = sub2, mapping = aes(x = Longitude, y = Latitude), color = "red")
-# #> Warning: Removed 3 rows containing missing values (geom_point).
 
-
-###### this will make a simple maps if you have problems with the method above #####
-# library(dplyr)
-# library(ggplot2)
+##### using ggplot 2 to make map #####
+library(ggplot2)
 gis<-sub2
 coordinates(gis) <- c("Longitude", "Latitude", "DepthInMeters")
 proj4string(gis) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
-# x<-bbox(gis)
 
-m <- map_data("world") #, xlim = c(x[1,1]-1,x[1,2]+1), ylim = c(x[2,1]-1,x[2,2]+1))
+##
+m <- map_data("world")
+
+## note: you can put xlim and ylim in automatically like this
+## you must add them to the map_data function above
+## x<-bbox(gis)
+# xlim = c(x[1,1]-1,x[1,2]+1), ylim = c(x[2,1]-1,x[2,2]+1))
 
 z <- ggplot(m, aes(x = long, y = lat, group = group)) +
-  geom_polygon()
+  geom_polygon() +
+  geom_point(data=sub2,
+             color = "red",
+             size = 3,
+             aes(x=Longitude, y = Latitude),
+             inherit.aes = FALSE)
+z
 
-z + geom_point(data=sub2,
-               color = "red",
-               size = 1,
-               aes(x=Longitude, y = Latitude), inherit.aes = FALSE)
 ```
 
 
@@ -278,7 +262,7 @@ if(nrow(sum_tbl) == 0){
 # sum_tbl
 ```
 
-**Please send [feedback](https://deepseacoraldata.woc.noaa.gov/resources/contact) if you notice any problems with this data set.**
+**Please send [feedback](https://deepseacoraldata.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
 Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/dashboards/DatasetID_Table.html)
 

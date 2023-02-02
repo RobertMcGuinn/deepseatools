@@ -1,5 +1,5 @@
 ---
-title: "NOAA's National Database for Deep-Sea Corals and Sponges: Data Set Dashboard (Cruise)"
+title: "NOAA's National Database for Deep-Sea Corals and Sponges: Data Set Dashboard (Repository)"
 author: "NOAA Deep Sea Coral Research and Technology Program (DSCRTP)"
 date: "Report last ran on `r Sys.Date()`"
 output:
@@ -16,7 +16,7 @@ opts_chunk$set(fig.width=8, fig.height=4, warning = FALSE, message = FALSE)
 
 ```{r enhance, echo=FALSE}
 ##### creating an automated Citation #####
-sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ', 
+sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ',  
                          min(sub$ObservationYear[sub$ObservationYear != "-999"]),' to ',
                          max(sub$ObservationYear[sub$ObservationYear != "-999"]),'. ',
                          'Coral or sponge occurrence observations submitted to the NOAA National Database for Deep Sea Corals and Sponges (www.deepseacoraldata.noaa.gov)', '. ',
@@ -25,7 +25,7 @@ sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ',
                          #'Vessel(s): ', sub$Vessel,'. ',
                          #'Sampling vehicle: ', sub$VehicleName,'. ',
                          #'Survey ID: ', sub$SurveyID,'. ',
-                         'Principal investigator: ', sub$PI,'. ',
+                         # 'Principal investigator: ', sub$PI,'. ',
                          'DSCRTP Dataset ID: ', sub$DatasetID, '. ',
                          'Database version: ', version, '. ',
                          #'Data contact: ', sub$DataContact,'. ',
@@ -37,11 +37,13 @@ sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ',
 ##### creating the datasetID dashboard url#####
 sub$dash <- paste("https://www.ncei.noaa.gov/waf/dsc-data/dashboards/",sub$DatasetID,".html", sep = '')
 
+
 ##### creating a ERDDAP tabledap query url #####
 sub$erddap <- paste("https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_corals.csv?CatalogNumber%2CVernacularNameCategory%2CVernacularName%2CScientificName%2CVerbatimScientificName%2CTaxonRank%2CAphiaID%2CPhylum%2CClass%2CSubclass%2COrder%2CSuborder%2CFamily%2CSubfamily%2CGenus%2CSubgenus%2CSpecies%2CSubspecies%2CScientificNameAuthorship%2CTypeStatus%2CSynonyms%2CIdentificationComments%2CIdentifiedBy%2CIdentificationDate%2CIdentificationQualifier%2CAssociatedSequences%2CIndividualCount%2CCategoricalAbundance%2CDensity%2CCover%2CVerbatimSize%2CMinimumSize%2CMaximumSize%2CWeightInKg%2CCondition%2CAssociatedTaxa%2COccurrenceComments%2CSubstrate%2CHabitat%2CCMECSGeoForm%2CCMECSSubstrate%2CCMECSBiotic%2CTemperature%2CSalinity%2COxygen%2CpH%2CpHscale%2CpCO2%2CTA%2CDIC%2COcean%2CLargeMarineEcosystem%2CCountry%2CFishCouncilRegion%2CLocality%2CStation%2CObservationDate%2CObservationYear%2CObservationTime%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CShallowFlag%2CgisEtopoDepth%2CgisGEBCODepth%2CgisCRMDepth%2CStartLatitude%2CStartLongitude%2CEndLatitude%2CEndLongitude%2CMinimumDepthInMeters%2CMaximumDepthInMeters%2CVerbatimLatitude%2CVerbatimLongitude%2CLocationAccuracy%2CNavType%2CLocationComments%2CSurveyID%2CVessel%2CPI%2CPIAffiliation%2CPurpose%2CSurveyComments%2CEventID%2CSamplingEquipment%2CVehicleName%2CSampleAreaInSquareMeters%2CfootprintWKT%2CfootprintSRS%2COtherData%2CEntryDate%2CReporter%2CReporterEmail%2CReporterComments%2CDataProvider%2CDataContact%2CModified%2CRecordType%2CRepository%2CCitation%2CSampleID%2CTrackingID%2CDatasetID%2CWebSite%2CImageURL&", "DatasetID", "=%22",
                   sub$DatasetID, "%22", sep = '')
 
 
+##### creating the xml metadata file url #####
 ##### creating the xml metadata file url #####
 sub$meta <- paste("https://www.ncei.noaa.gov/waf/dsc-data/metadata/", sub$DatasetID, ".xml", sep = '')
 
@@ -61,8 +63,8 @@ Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/da
 
 **Please send [feedback](https://deepseacoraldata.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
-# `r unique(factor(sub$title))`
 
+# `r unique(factor(sub$title))`
 
 * **Dataset ID:** `r unique(factor(sub$DatasetID))`
 * **Database Version:** `r version`
@@ -73,41 +75,40 @@ Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/da
 
 ```{r, map, echo = FALSE, message = FALSE, warning=FALSE, dpi=300, fig.width=8, fig.height=4.1, eval=TRUE, fig.align='center'}
 
-##### static locator map creation ##### 
-## filter out -999 
+##### Using ggmap libary #####
+## getting rid of  missing lat/long data
+
 sub2 <- sub %>%
   filter(Latitude != '-999' , Longitude != '-999')
 
-## set projection of incoming data
-projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+##### using ggplot 2 to make map #####
 
-## create sf object
-geosub <- st_as_sf(x = sub2,                         
-           coords = c("Longitude", "Latitude"),
-           crs = projcrs)
-# geosub <- st_shift_longitude(geosub)
+gis<-sub2
+coordinates(gis) <- c("Longitude", "Latitude", "DepthInMeters")
+proj4string(gis) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
-## calc the bounding box
-bbox <- st_bbox(geosub)
-bbox <- as.matrix(bbox)
+##
+m <- map_data("world")
 
-## get sf basemap
-world <- ne_countries(scale = "medium", returnclass = "sf")
-# class(world)
+## note: you can put xlim and ylim in automatically like this
+## you must add them to the map_data function above
+## x<-bbox(gis)
+# xlim = c(x[1,1]-1,x[1,2]+1), ylim = c(x[2,1]-1,x[2,2]+1))
 
-ggplot() + 
-  geom_sf(data = world, fill = "grey") + 
-  geom_sf(data = geosub,
-        color = "red", 
-        size = 2,
-        shape = 15) + 
-  coord_sf(xlim = c(bbox[1,1]-3,bbox[3,1]+3), 
-           ylim = c(bbox[2,1]-3,bbox[4,1]+3), 
-           expand = FALSE)
+z <- ggplot(m, aes(x = long, y = lat, group = group)) +
+  geom_polygon() +
+  geom_point(data=sub2,
+             color = "red",
+             size = 3,
+             aes(x=Longitude, y = Latitude),
+             inherit.aes = FALSE)
+z
 
 ```
 
+
 # Geographic Range
+
 * **Ocean:** `r unique(sub$Ocean)`
 * **Fishery Management Council Region(s):** `r unique(sub$FishCouncilRegion[is.na(sub$FishCouncilRegion) == FALSE])`
 * **Large Marine Ecosystem(s):** `r unique(sub$LargeMarineEcosystem[is.na(sub$LargeMarineEcosystem) == FALSE])`
@@ -142,11 +143,11 @@ Coordinates are in WGS 84: [EPSG:4326](https://spatialreference.org/ref/epsg/wgs
 `r sub$method_text[1]`  
 Link: `r unique(sub$method_link[1])`
 
-### Download comma delimited (CSV) file: [LINK](`r x`)
+### Download comma delimited file: [LINK](`r x`)
 
 Download data dictionary: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/metadata/20221213-0_NOAA_NDB_corals_sponges_data_dictionary.csv)
 
-**Note:** When importing CSV files into Excel, use the data import wizard (under the 'data' tab) and set all column types to 'text' to avoid data tranformation issues. This step will prevent the automated alteration of dates in Excel.  
+**Note:** When importing CSV files into Excel, use the data import wizard (under the 'data' tab) and set all column types to 'text' to avoid data tranformation issues. This step will prevent the automated alteration of dates in Excel.
 
 ### Download ISO metadata as xml: [LINK](`r y`)
 
@@ -155,26 +156,10 @@ Download data dictionary: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/metadata
 
 *Note:* Individual records within a data set may have additional citations in the 'Citation' field.
 
-# Expedition Details
-
-``` {r source, echo=FALSE}
-sum_tbl <-
-  sub %>%
-  group_by(SurveyID) %>%
-  summarize(Vessel = toString(unique(Vessel)),
-            VehicleName = toString(unique(VehicleName)),
-            SamplingEquipment = toString(unique(SamplingEquipment)),
-            RecordType = toString(unique(RecordType)))
-
-
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
-```
-
 # Taxonomic Summary
 Percent of coral and sponge records by lowest taxonomic rank.
 
-## Corals 
+##Corals  
 
 **Number of coral records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Cnidaria"]), big.mark = ",")` 
 ```{r taxsummary_coral, echo=FALSE}
@@ -200,7 +185,7 @@ if(nrow(sum_tbl) == 0){
 
 ```
 
-## Sponges 
+##Sponges   
 
 **Number of sponge records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Porifera"]), big.mark = ",")` 
 ```{r taxsummary_sponges, echo=FALSE}
@@ -226,6 +211,7 @@ if(nrow(sum_tbl) == 0){
 ```
 
 # Coral Taxa Observed
+
 *Note:* Nothing will appear here if no coral taxa were observed.
 
 ``` {r CoralByScientificName, echo=FALSE }
@@ -252,6 +238,7 @@ if(nrow(sum_tbl) == 0){
 ```
 
 # Sponge Taxa Observed
+
 *Note:* Nothing will appear here if no sponge taxa were observed.
 
 ``` {r SpongeByScientificName, echo=FALSE }
@@ -278,4 +265,5 @@ if(nrow(sum_tbl) == 0){
 **Please send [feedback](https://deepseacoraldata.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
 Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/dashboards/DatasetID_Table.html)
+
 

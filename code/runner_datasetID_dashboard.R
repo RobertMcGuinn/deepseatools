@@ -6,6 +6,7 @@
 #(because it is so huge it can't have an interactive map)
 
 ##### install packages #####
+library(sf)
 # install.packages('xlsx')
 #install.packages('openxlsx')
 library(openxlsx)
@@ -47,11 +48,14 @@ library(robis)
 library(devtools)
 library(httr)
 library(jsonlite)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(googlesheets4)
 
 ##### set an option #####
 options(lifecycle_disable_warnings = TRUE)
 
-##### ***OR*** load current database(from Google Drive)#####
+##### ***OR*** load current database(from Google Drive) (DON'T USE THIS, found error, encoding issue)#####
 ## set the file name (user supplied th file name root, without extension).
 filename <- 'DSCRTP_NatDB_20221213-0_CSV' #
 # find the file in google drive by name
@@ -74,9 +78,18 @@ rm(x)
 rm(y)
 
 ##### ***OR*** read current database from disk #####
-sub <- read.csv("C:/rworking/deepseatools/indata/DSCRTP_NatDB_20221213-0.csv", fileEncoding = "latin9")
-flagged <- sub %>%  filter(Flag == "1")
+sub <- read.csv(
+  "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20221213-0.csv",
+  fileEncoding = "latin9")
 
+flagged <- sub %>% filter(Flag == "1")
+
+##### ***OPTIONAL download Google Sheet version of schema for use in R  documents #####
+# Register and download Google Sheet using googlesheets4::read_sheet
+s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+## checking
+# s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(FieldDescription)
+# s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(ValidValues)
 
 ##### change name of 'sub' to 'indata' and create 'filt' #####
 indata <- sub
@@ -84,6 +97,28 @@ filt <- indata %>% filter(Flag == 0)
 
 ## cleanup
 rm(sub)
+
+##### check #####
+## occurrenceID==NOAA_DSCRTP:1178027,
+## that had an NA value for "basisOfRecord".
+## The rest of the dataset has a value of "PreservedSpecimen".
+filt %>% filter(CatalogNumber == 1178027) %>%
+  group_by(DatasetID, PI, Repository) %>%
+  summarize(n=n()) %>% View()
+
+
+  ## Not valid eventDates for:
+  ## occurrenceID==NOAA_DSCRTP:1178069 ; eventDate == 3.1973
+  ## occurrenceID==NOAA_DSCRTP:1178068 ; eventDate == 3.1973
+  ## occurrenceID==NOAA_DSCRTP:1178065 ; eventDate == 2010-0-27
+
+filt %>% filter(CatalogNumber == 1178065) %>%
+  group_by(DatasetID,
+           SampleID,
+           Repository,
+           ObservationDate,
+           ScientificName) %>%
+  summarize(n=n()) %>% View()
 
 ##### define database version (this variable called in RMD files) #####
 version <- unique(filt$DatabaseVersion)
@@ -121,6 +156,9 @@ rm(x)
 # setdiff(key$DatasetID, oldkey$DatasetID)
 
 ##### checking #####
+# key %>% filter(grepl('Tu', DatasetID)) %>%
+#   pull(title) %>% unique()
+
 # setdiff(filt$DatasetID, key$DatasetID)
 # setdiff(key$DatasetID, filt$DatasetID)
 #
@@ -250,7 +288,7 @@ filt$CitationMaker <- paste(filt$DataProvider,'. ',
 x <- drive_find(q = "name contains '20221213-0_DatasetID_Key_DSCRTP'") #
 
 ## browse to it
-# x %>% drive_browse()
+x %>% drive_browse()
 
 # getting the id as a character string
 y <- x$id
@@ -262,7 +300,7 @@ dl <- drive_download(as_id(y),
 
 ## read the file into R as a data frame
 key <- read.xlsx(dl$local_path)
-
+►
 ##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
 ## build a frequency table by DatasetID from new file
 x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
@@ -311,6 +349,18 @@ rm(y)
 #   summarise(DatasetID = paste(unique(DatasetID), collapse = " | "),
 #             n=n())
 # View(yo)
+# key %>% filter(grepl("Tu", DatasetID)) %>% pull(title) %>% unique()
+yo <- filt %>%
+  filter(as.numeric(Longitude) > 0) %>%
+  pull(DatasetID) %>%
+  unique()
+
+yo2 <- filt %>%
+  filter(as.numeric(Longitude) < 0) %>%
+  pull(DatasetID) %>%
+  unique()
+
+oneeighty <- intersect(yo, yo2)
 
 ##### checking #####
 # x <- d %>%
@@ -359,7 +409,7 @@ rm(y)
 ##### checking #####
 # setdiff(d$DatasetID, key$DatasetID)
 # setdiff(key$DatasetID, d$DatasetID)
-##### merge database with key  #####
+##### important!! merge database with key  #####
 d <- merge(d, key, all.x = TRUE)
 
 ##### checking #####
@@ -394,8 +444,24 @@ d <- merge(d, key, all.x = TRUE)
 # test <- stringr::str_conv(d, "UTF-8")
 
 ##### *** run the reports *** #####
-##### _create the folders for each type of report #####
+##### assign which datasets cross the 180 line #####
+yo <- filt %>%
+  filter(as.numeric(Longitude) > 0) %>%
+  pull(DatasetID) %>%
+  unique()
 
+yo2 <- filt %>%
+  filter(as.numeric(Longitude) < 0) %>%
+  pull(DatasetID) %>%
+  unique()
+
+one_eighty <- intersect(yo, yo2)
+not_one_eighty <- setdiff(filt$DatasetID, one_eighty)
+
+##### checking #####
+length(one_eighty)+length(not_oneeighty)
+
+##### _create the folders for each type of report #####
 dir.create('C:/rworking/deepseatools/reports/datasetid/cruise')
 dir.create('C:/rworking/deepseatools/reports/datasetid/literature')
 dir.create('C:/rworking/deepseatools/reports/datasetid/program')
@@ -405,9 +471,11 @@ dir.create('C:/rworking/deepseatools/reports/datasetid/repository')
 #cruise subset
 yo <- d %>%
   filter(
-    class == 'Cruise'
+    class == 'Cruise',
+    DatasetID %in% not_one_eighty
   )
 
+# length(unique(yo$DatasetID)
 # run RMD
 library("rmarkdown")
 for (id in unique(yo$DatasetID)){
@@ -417,10 +485,28 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/cruise')
 }
 
+yo <- d %>%
+  filter(
+    class == 'Cruise',
+    DatasetID %in% one_eighty
+  )
+
+# length(unique(yo$DatasetID)
+# run RMD
+
+library("rmarkdown")
+for (id in unique(yo$DatasetID)){
+  sub <- yo[yo$DatasetID == id,]
+  render("C:/rworking/deepseatools/code/rmd_datasetid_cruise_no_leaflet_one_eighty.rmd" ,
+         output_file =  paste(id,".html", sep=''),
+         output_dir = 'C:/rworking/deepseatools/reports/datasetid/cruise')
+}
+
 ##### _literature ######
 yo <- d %>%
   filter(
-    class == 'Literature'
+    class == 'Literature',
+    DatasetID %in% not_one_eighty
   )
 
 library("rmarkdown")
@@ -431,10 +517,25 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/literature')
 }
 
+yo <- d %>%
+  filter(
+    class == 'Literature',
+    DatasetID %in% one_eighty
+  )
+
+library("rmarkdown")
+for (id in unique(yo$DatasetID)){
+  sub <- yo[yo$DatasetID == id,]
+  render("C:/rworking/deepseatools/code/rmd_datasetid_literature_no_leaflet_one_eighty.rmd" ,
+         output_file =  paste(id,".html", sep=''),
+         output_dir = 'C:/rworking/deepseatools/reports/datasetid/literature')
+}
+
 ##### _program #####
 yo <- d %>%
   filter(
-    class == 'Program'
+    class == 'Program',
+    DatasetID %in% not_one_eighty
   )
 
 library("rmarkdown")
@@ -445,17 +546,45 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/program')
 }
 
+yo <- d %>%
+  filter(
+    class == 'Program',
+    DatasetID %in% one_eighty
+  )
+
+library("rmarkdown")
+for (id in unique(yo$DatasetID)){
+  sub <- yo[yo$DatasetID == id,]
+  render("C:/rworking/deepseatools/code/rmd_datasetid_program_no_leaflet_one_eighty.rmd" ,
+         output_file =  paste(id,".html", sep=''),
+         output_dir = 'C:/rworking/deepseatools/reports/datasetid/program')
+}
+
 ##### _repository #####
 yo <- d %>%
   filter(
     class == 'Repository',
-    DatasetID != 'MBARI'
+    DatasetID %in% not_one_eighty
   )
 
 library("rmarkdown")
 for (id in unique(yo$DatasetID)){
   sub <- yo[yo$DatasetID == id,]
   render("C:/rworking/deepseatools/code/rmd_datasetid_repository_no_leaflet.rmd" ,
+         output_file =  paste(id,".html", sep=''),
+         output_dir = 'C:/rworking/deepseatools/reports/datasetid/repository')
+}
+
+yo <- d %>%
+  filter(
+    class == 'Repository',
+    DatasetID %in% one_eighty
+  )
+
+library("rmarkdown")
+for (id in unique(yo$DatasetID)){
+  sub <- yo[yo$DatasetID == id,]
+  render("C:/rworking/deepseatools/code/rmd_datasetid_repository_no_leaflet_one_eighty.rmd" ,
          output_file =  paste(id,".html", sep=''),
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/repository')
 }
@@ -489,10 +618,34 @@ biglist <- c(cruise, literature, program, repository)
 biglist <- gsub(pattern = "\\.html$", "", biglist)
 
 setdiff(biglist, unique(filt$DatasetID))
+setdiff(unique(filt$DatasetID), biglist)
 length(unique(filt$DatasetID))
 length(biglist)
 
-as.m
+##### check #####
+d %>% filter(class == "Cruise") %>%
+  pull(DatasetID) %>%
+  unique()
+217
+
+d %>% filter(class == "Literature") %>%
+  pull(DatasetID) %>%
+  unique()
+
+26
+
+d %>% filter(class == "Program") %>%
+  pull(DatasetID) %>%
+  unique()
+
+12
+
+d %>% filter(class == "Repository") %>%
+  pull(DatasetID) %>%
+  unique()
+
+38
+
 ##### publish a list of datasetID's for review sheet #####
 x <- d %>% group_by(DatasetID, class) %>%
   summarize(n = n()) %>%
@@ -554,3 +707,4 @@ filt %>%
 sub %>%
   filter(CatalogNumber == "912379") %>%
   dplyr::select(Latitude, Longitude)
+=

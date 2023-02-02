@@ -1,5 +1,5 @@
 ##### find file #####
-x <- 'runner'
+x <- 'datasetid_cruise'
 path <- 'C:/rworking/deepseatools/code'
 list<-list.files(path,
                  pattern=x,
@@ -7,6 +7,6 @@ list<-list.files(path,
 list
 
 ##### choose and open #####
-y <- 3# manual input required: pick the number you want from the list presented
+y <- 3 # manual input required: pick the number you want from the list presented
 path <- list[y]
 file.edit(path)
