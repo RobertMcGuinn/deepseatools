@@ -1,12 +1,18 @@
 ##### find file #####
-x <- 'datasetid_cruise'
+
+## manual: edit string
+x <- 'obis'
 path <- 'C:/rworking/deepseatools/code'
-list<-list.files(path,
-                 pattern=x,
-                 full.names=TRUE)
-list
+files<-list.files(path,
+                  pattern=x,
+                  full.names=TRUE)
+
+## look at the list
+files
 
 ##### choose and open #####
-y <- 3 # manual input required: pick the number you want from the list presented
-path <- list[y]
+
+## manual input required: pick the number or number you want from the list presented
+y <- c(3)
+path <- files[y]
 file.edit(path)
