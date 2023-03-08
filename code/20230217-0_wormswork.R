@@ -4,23 +4,32 @@
 ## Purpose: WoRMS API calls.
 
 ##### packages #####
+# install.packages("tidyverse")
 library(tidyverse)
+# install.packages("worrms")
 library(worrms)
 
 ##### load NDB from local file (manual)#####
-## [manual]
-# setwd("C:/rworking/deepseatools/indata")
-# filename <- "DSCRTP_NatDB_20221213-0.csv"
-# indata<-read_csv(filename,
-#                  col_types = cols(.default = "c"),
-#                  locale = locale(encoding = 'latin9'),
-#                  na = c("-999", "NA"))
+setwd("C:/rworking/deepseatools/indata")
+filename <- "DSCRTP_NatDB_20221213-0.csv"
+indata<-read_csv(filename,
+                 col_types = cols(.default = "c"),
+                 locale = locale(encoding = 'latin9'),
+                 na = c("-999", "NA"))
+
+
+filt <- indata %>%
+  filter(Flag == 0)
+
+rm(indata)
+
+##### check #####
+# filt %>% pull(AphiaID) %>% is.na() %>% table()
 #
-# filt <- indata %>%
-#   filter(Flag == 0)
-#
-#
-# rm(indata)
+# filt %>%
+#   filter(is.na(AphiaID) == T) %>%
+#   pull(ScientificName) %>%
+#   table()
 
 ##### filter the database to taxa of interest #####
 namesToMatch <- filt %>%
@@ -41,7 +50,7 @@ species_list <- wm_records_names(name = namesToMatch)
 # View(species_list)
 
 ##### targeted AphiaID (note: should start loop here) #####
-species <- species_list[[1]]
+species <- species_list[[7]]
 id <- species %>% pull(AphiaID)
 
 ##### get some additional information about the AphiaID #####
