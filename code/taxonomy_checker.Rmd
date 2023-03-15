@@ -210,7 +210,8 @@ newtax$HigherTaxonNameAuthorship <- NA
 ```{r}
 ##### binding new taxonomy table with existing #####
 newtax <- rbind(tax, newtax)
-## checking
+
+# checking
 length(tax$VernacularNameCategory)
 length(newtax$VernacularNameCategory)
 
