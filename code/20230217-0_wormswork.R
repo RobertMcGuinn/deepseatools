@@ -74,39 +74,51 @@ tax_tom$Species_edit <- gsub('\\(O.\\)','', tax_tom$Species_edit)
 tax_tom$Species_edit <- gsub('\\(T.\\)','', tax_tom$Species_edit)
 tax_tom$Species_edit <- gsub('\\(U.\\)','', tax_tom$Species_edit)
 
+## parse the 'Species' names in Tom's list for use in the WoRMS API
 parsed_list <- gbif_parse(tax_tom$Species_edit)
 View(parsed_list)
 
-namesToMatch <- parsed_list$canonicalname
+## add parsed list to Tom's taxonomy
+dim(parsed_list)
+tax_tom <- cbind(parsed_list$canonicalname, tax_tom)
+tax_tom <- tax_tom %>% rename(scientificname = "parsed_list$canonicalname")
 
-##### --OR-- get your names list together manually #####
-namesToMatch <- c('Madracis asanoi')
+##### create names list from parsed_list
+namesToMatch <- parsed_list$canonicalname
 
 ##### checking #####
 # class(namesToMatch)
 # length(namesToMatch)
 
 ##### --OR--match your names list using the worrms API #####
-species_list <- wm_records_names(name = namesToMatch[1:50])
 
 ## create vector of names from parsed list
-my_vector <- parsed_list$canonicalname[1:100]
+my_vector <- parsed_list$canonicalname
 
 ## make groups of 50 (because the API limit is 50)
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
 
 ##### loop to get records #####
-species_list <- wm_records_name("Caryophyllia corrugata")
+species_list <- wm_records_name("Antipathes griggi")
 df <- species_list[0,]
 
 for (i in seq_along(my_groups)){
-  species_list <- wm_records_names(name = my_groups[[i]])
+  species_list <- wm_records_names(name = my_groups[[i]],
+                                   fuzzy = F,
+                                   marine_only = T
+                                   )
   species_list <- do.call("rbind", species_list)
   df <- rbind(df, species_list)
 }
 species_list <- df
 
-##_______________________________________________
+species_list_accepted <- species_list %>% filter(status == "accepted")
+
+##### left join the species_list results with Tom's original file
+tax_tom_enhanced <- left_join(tax_tom,
+                              species_list,
+                              multiple = "all")
+
 ##### --OR--match your species using AphiaID #####
 ## get rid of any -999 AphiaIDs
 tax_sub <- tax %>% filter(AphiaID != "-999")
@@ -118,7 +130,7 @@ my_vector <- tax_sub$AphiaID[0:55]
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
 
 ##### loop to get records #####
-species_list <- wm_records_name("Caryophyllia corrugata")
+species_list <- wm_records_name("Caryophyllia corrugata", fuzzy = FALSE)
 df <- species_list[0,]
 
 for (i in seq_along(my_groups)){
