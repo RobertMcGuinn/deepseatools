@@ -6,6 +6,8 @@
 ##### packages #####
 library(tidyverse)
 library(worrms)
+# install.packages("openxlsx")
+library(openxlsx)
 
 ##### load NDB from local file (manual)#####
 setwd("C:/rworking/deepseatools/indata")
@@ -83,7 +85,7 @@ dim(parsed_list)
 tax_tom <- cbind(parsed_list$canonicalname, tax_tom)
 tax_tom <- tax_tom %>% rename(scientificname = "parsed_list$canonicalname")
 
-##### create names list from parsed_list
+##### create names list from parsed_list #####
 namesToMatch <- parsed_list$canonicalname
 
 ##### checking #####
@@ -98,10 +100,13 @@ my_vector <- parsed_list$canonicalname
 ## make groups of 50 (because the API limit is 50)
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
 
-##### loop to get records #####
+##### loop to get records by names list #####
+## run this to get the data structure for an empty dataframe
 species_list <- wm_records_name("Antipathes griggi")
+## initiate the data frame
 df <- species_list[0,]
 
+## loop to get WoRMS records from names (b)
 for (i in seq_along(my_groups)){
   species_list <- wm_records_names(name = my_groups[[i]],
                                    fuzzy = F,
@@ -112,24 +117,19 @@ for (i in seq_along(my_groups)){
 }
 species_list <- df
 
-species_list_accepted <- species_list %>% filter(status == "accepted")
-
-##### left join the species_list results with Tom's original file
+##### left join the species_list (worms record) results with Tom's original taxonomy file #####
 tax_tom_enhanced <- left_join(tax_tom,
                               species_list,
                               multiple = "all")
 
 ##### --OR--match your species using AphiaID #####
-## get rid of any -999 AphiaIDs
-tax_sub <- tax %>% filter(AphiaID != "-999")
-
-## create vector from AphiaIDs
-my_vector <- tax_sub$AphiaID[0:55]
+##### create vector from AphiaIDs #####
+my_vector <- tax_tom_enhanced$AphiaID
 
 ## make groups of 50 (because the API limit is 50)
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
 
-##### loop to get records #####
+##### loop to get records by AphiaID #####
 species_list <- wm_records_name("Caryophyllia corrugata", fuzzy = FALSE)
 df <- species_list[0,]
 
@@ -166,9 +166,9 @@ df <- data.frame(
   Variety = character(),
   stringsAsFactors=FALSE)
 
-##### loop to get full classification #####
+## loop to get full classification
 for (i in my_vector){
-classification <- wm_classification(i)
+try(classification <- wm_classification(i))
 classification_wide <- classification %>%
   select(rank,scientificname) %>%
   pivot_wider(
@@ -196,79 +196,79 @@ for (i in my_vector){
   df <- bind_rows(df, vernaculars_wide)
 }
 
-##### checking #####
-View(species_list)
+vernaculars <- df
 
-##### loop #####
-for (i in seq_along(my_vector)){
-  species <- species_list[[i]]
-  id <- species %>% pull(AphiaID)
-  classification <- wm_classification(id)
-  vernaculars <- wm_common_id(id)
-  synonyms <- wm_synonyms(id)
-  classification_wide <- classification %>%
-    select(rank,scientificname) %>%
-    pivot_wider(
-      names_from = rank,
-      values_from = scientificname
-    )
-  classification_wide$AphiaID <- id
-  vernaculars_list <- paste(vernaculars$vernacular, collapse=" | ")
-  AphiaID = id
-  vernaculars_wide <- data.frame(AphiaID, vernaculars_list)
-  worms_taxonomy <- left_join(classification_wide, vernaculars_wide, by = 'AphiaID')
-  worms_taxonomy <- left_join(worms_taxonomy, synonyms_wide, by = "AphiaID")
-  df <- rbind(df, worms_taxonomy)
+##### loop to get synonyms #####
+df <- data.frame(
+  AphiaID = numeric(),
+  synonyms_list = character()
+)
+
+for (i in my_vector){
+  try(
+    synonyms <- wm_synonyms(i))
+  synonyms_list <- paste(synonyms$scientificname, collapse=" | ")
+  AphiaID <- i
+  synonyms_wide <- data.frame(AphiaID, synonyms_list)
+  df <- bind_rows(df, synonyms_wide)
 }
 
+synonyms <- df
 
-
-
-## ______________________________________________
-
-##### targeted AphiaID (note: should start loop here) #####
-species <- species_list[[1]]
-id <- species %>% pull(AphiaID)
-
-##### get vernaculars and synonyms #####
-classification <- wm_classification(id)
-vernaculars <- wm_common_id(id)
-synonyms <- wm_synonyms(id)
-
-##### do some transformation of the information returned #####
-classification_wide <- classification %>%
-  select(rank,scientificname) %>%
-  pivot_wider(
-    names_from = rank,
-    values_from = scientificname
-  )
-
-classification_wide$AphiaID <- id
 
 ##### check #####
-# View(classification_wide)
+dim(tax_tom_enhanced)
+dim(classification)
+dim(vernaculars)
+dim(synonyms)
 
-##### get vernaculars #####
-vernaculars_list <- paste(vernaculars$vernacular, collapse=" | ")
-AphiaID <- id
-vernaculars_wide <- data.frame(AphiaID, vernaculars_list)
+head(tax_tom_enhanced$AphiaID)
+head(classification$AphiaID)
+head(vernaculars$AphiaID)
+head(synonyms$AphiaID)
 
-##### get synonyms
-synonym_list <- paste(synonyms$scientificname, collapse=" | ")
-AphiaID <- id
-synonyms_wide <- data.frame(AphiaID, synonym_list)
+tail(tax_tom_enhanced$AphiaID)
+tail(classification$AphiaID)
+tail(vernaculars$AphiaID)
+tail(synonyms$AphiaID)
 
-##### merge info together #####
-worms_taxonomy <- left_join(classification_wide, vernaculars_wide, by = 'AphiaID')
-worms_taxonomy <- left_join(worms_taxonomy, synonyms_wide, by = "AphiaID")
+class(tax_tom_enhanced$AphiaID)
+class(classification$AphiaID)
+class(vernaculars$AphiaID)
+class(synonyms$AphiaID)
 
-##### add some other variables #####
-rank <- species %>% pull(rank)
+names(tax_tom_enhanced2)
 
-##### checking #####
-View(worms_taxonomy)
+tax_tom_enhanced2 %>%
+  dplyr::select(AphiaID_x, Species_edit, status, valid_name) %>%
+  View()
 
-##### build master taxonomy dataframe #####
+##### cbind vernaculars, classification, synonyms to Tom's list #####
+classification2 <- classification %>% select(-AphiaID)
+synonyms2 <- synonyms %>% select(-AphiaID)
+vernaculars2 <- vernaculars %>% select(-AphiaID)
+
+tax_tom_enhanced2 <- cbind(tax_tom_enhanced,
+                           classification2
+)
+
+
+tax_tom_enhanced2 <- cbind(tax_tom_enhanced2,
+                           synonyms2
+)
+
+tax_tom_enhanced2 <- cbind(tax_tom_enhanced2,
+                           vernaculars2
+)
+
+##### check the file #####
+dim(tax_tom_enhanced2)
+
+##### deliver the goods (export to CSV) #####
+write.xlsx(tax_tom_enhanced2, "c:/rworking/deepseatools/indata/20230317-0_master_taxonomy_checker_THourigan_RPMcGuinn.csv", fileEncoding = "UTF-8")
+
+
+
 
 
 
