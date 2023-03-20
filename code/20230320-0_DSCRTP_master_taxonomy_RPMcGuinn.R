@@ -24,10 +24,10 @@ rm(indata)
 rm(filename)
 
 ##### load the taxonomy tables from CSV #####
-tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
+tax <- read.xlsx("C:/rworking/deepseatools/indata/tax.xlsx")
 tax_fl <- read.csv("C:/rworking/deepseatools/indata/tax_fl.csv")
 tax_ch <- read.csv("C:/rworking/deepseatools/indata/tax_ch.csv")
-
+""
 ##### load the Tom Hourigan list (US_only_comprehensive) #####
 ## copy the path from clipboard, shift+rightclick_copy as path in windows file explorer.
 ## copy this path to clipboard: "C:\rworking\deepseatools\indata\20230314-0_2022-ComprehensiveList-11-8-2022_THourigan.csv"
@@ -151,55 +151,55 @@ for (i in my_vector){
 synonyms <- df
 
 ##### check #####
-dim(tax_tom_enhanced)
+dim(tax)
 dim(classification)
 dim(vernaculars)
 dim(synonyms)
 
-head(tax_tom_enhanced$AphiaID)
+head(tax$AphiaID)
+head(species_list$AphiaID)
 head(classification$AphiaID)
 head(vernaculars$AphiaID)
 head(synonyms$AphiaID)
 
-tail(tax_tom_enhanced$AphiaID)
+tail(tax_$AphiaID)
+tail(species_list$AphiaID)
 tail(classification$AphiaID)
 tail(vernaculars$AphiaID)
 tail(synonyms$AphiaID)
 
-class(tax_tom_enhanced$AphiaID)
+class(tax$AphiaID)
 class(classification$AphiaID)
 class(vernaculars$AphiaID)
 class(synonyms$AphiaID)
 
-names(tax_tom_enhanced2)
-
-tax_tom_enhanced2 %>%
-  dplyr::select(AphiaID_x, Species_edit, status, valid_name) %>%
-  View()
+names(tax)
 
 ##### cbind vernaculars, classification, synonyms to Tom's list #####
 ## preparation step to get rid of duplicate AphiaID
 classification2 <- classification %>% select(-AphiaID)
 synonyms2 <- synonyms %>% select(-AphiaID)
 vernaculars2 <- vernaculars %>% select(-AphiaID)
+species_list2 <- species_list %>% select(-AphiaID)
 
-tax_tom_enhanced2 <- cbind(tax_tom_enhanced,
-                           classification2
-)
-
-tax_tom_enhanced2 <- cbind(tax_tom_enhanced2,
-                           synonyms2
-)
-
-tax_tom_enhanced2 <- cbind(tax_tom_enhanced2,
-                           vernaculars2
-)
+master_list <- cbind(tax, species_list2)
+master_list <- cbind(master_list,classification2)
+master_list <- cbind(master_list,synonyms2)
+master_list <- cbind(master_list,vernaculars2)
 
 ##### check the file #####
-dim(tax_tom_enhanced2)
+dim(master_list)
 
 ##### deliver the goods (export to CSV) #####
-write.xlsx(tax_tom_enhanced2, "c:/rworking/deepseatools/indata/20230317-0_master_taxonomy_checker_THourigan_RPMcGuinn.xlsx", fileEncoding = "UTF-8")
+write.xlsx(master_list,
+           "c:/rworking/deepseatools/indata/20230320-0_master_taxonomy_all_taxa_THourigan_RPMcGuinn.xlsx",
+           fileEncoding = "UTF-8")
+
+write.xlsx(tax,
+           "c:/rworking/deepseatools/indata/tax.xlsx",
+           fileEncoding = "UTF-8")
+
+
 
 
 
