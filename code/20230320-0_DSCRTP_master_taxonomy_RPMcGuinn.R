@@ -28,7 +28,7 @@ tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 tax_fl <- read.csv("C:/rworking/deepseatools/indata/tax_fl.csv")
 tax_ch <- read.csv("C:/rworking/deepseatools/indata/tax_ch.csv")
 
-##### load the Tom Hourigan list #####
+##### load the Tom Hourigan list (US_only_comprehensive) #####
 ## copy the path from clipboard, shift+rightclick_copy as path in windows file explorer.
 ## copy this path to clipboard: "C:\rworking\deepseatools\indata\20230314-0_2022-ComprehensiveList-11-8-2022_THourigan.csv"
 
@@ -54,76 +54,12 @@ tax_tom <- tax_tom %>%
 #   pull(ScientificName) %>%
 #   table()
 
-##### --OR --taxa of interest by name #####
-namesToMatch <- filt %>%
-  filter(grepl('Madracis asanoi', ScientificName)) %>%
-  # filter(is.na(AphiaID) == T) %>%
-  pull(ScientificName) %>%
-  unique()
-
-##### --OR-- pull taxa from Tom's list  #####
-## parse names
-install.packages("taxize")
-library(taxize)
-
-## make a few changes
-tax_tom$Species_edit <- gsub('\\(C.\\)','', tax_tom$Species)
-tax_tom$Species_edit <- gsub('\\(B.\\)','', tax_tom$Species_edit)
-tax_tom$Species_edit <- gsub('\\(F.\\)','', tax_tom$Species_edit)
-tax_tom$Species_edit <- gsub('\\(S.\\)','', tax_tom$Species_edit)
-tax_tom$Species_edit <- gsub('\\(O.\\)','', tax_tom$Species_edit)
-tax_tom$Species_edit <- gsub('\\(T.\\)','', tax_tom$Species_edit)
-tax_tom$Species_edit <- gsub('\\(U.\\)','', tax_tom$Species_edit)
-
-## parse the 'Species' names in Tom's list for use in the WoRMS API
-parsed_list <- gbif_parse(tax_tom$Species_edit)
-View(parsed_list)
-
-## add parsed list to Tom's taxonomy
-dim(parsed_list)
-tax_tom <- cbind(parsed_list$canonicalname, tax_tom)
-tax_tom <- tax_tom %>% rename(scientificname = "parsed_list$canonicalname")
-
-##### create names list from parsed_list #####
-namesToMatch <- parsed_list$canonicalname
-
-##### checking #####
-# class(namesToMatch)
-# length(namesToMatch)
-
-##### --OR--match your names list using the worrms API #####
-
-## create vector of names from parsed list
-my_vector <- parsed_list$canonicalname
-
-## make groups of 50 (because the API limit is 50)
-my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
-
-##### loop to get records by names list #####
-## run this to get the data structure for an empty dataframe
-species_list <- wm_records_name("Antipathes griggi")
-## initiate the data frame
-df <- species_list[0,]
-
-## loop to get WoRMS records from names (b)
-for (i in seq_along(my_groups)){
-  species_list <- wm_records_names(name = my_groups[[i]],
-                                   fuzzy = F,
-                                   marine_only = T
-                                   )
-  species_list <- do.call("rbind", species_list)
-  df <- rbind(df, species_list)
-}
-species_list <- df
-
-##### left join the species_list (worms record) results with Tom's original taxonomy file #####
-tax_tom_enhanced <- left_join(tax_tom,
-                              species_list,
-                              multiple = "all")
-
 ##### --OR--match your species using AphiaID #####
 ##### create vector from AphiaIDs #####
-my_vector <- tax_tom_enhanced$AphiaID
+my_vector <- tax$AphiaID
+
+##### check ####
+length(my_vector)
 
 ## make groups of 50 (because the API limit is 50)
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
@@ -214,7 +150,6 @@ for (i in my_vector){
 
 synonyms <- df
 
-
 ##### check #####
 dim(tax_tom_enhanced)
 dim(classification)
@@ -243,6 +178,7 @@ tax_tom_enhanced2 %>%
   View()
 
 ##### cbind vernaculars, classification, synonyms to Tom's list #####
+## preparation step to get rid of duplicate AphiaID
 classification2 <- classification %>% select(-AphiaID)
 synonyms2 <- synonyms %>% select(-AphiaID)
 vernaculars2 <- vernaculars %>% select(-AphiaID)
@@ -250,7 +186,6 @@ vernaculars2 <- vernaculars %>% select(-AphiaID)
 tax_tom_enhanced2 <- cbind(tax_tom_enhanced,
                            classification2
 )
-
 
 tax_tom_enhanced2 <- cbind(tax_tom_enhanced2,
                            synonyms2
