@@ -102,6 +102,7 @@ my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
 ##### loop to get records by names list #####
 ## run this to get the data structure for an empty dataframe
 species_list <- wm_records_name("Antipathes griggi")
+
 ## initiate the data frame
 df <- species_list[0,]
 

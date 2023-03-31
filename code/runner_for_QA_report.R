@@ -16,10 +16,11 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20221031-0_2022-Q2_New_Records_THourigan"
+filename <- "20221104-1_NOAA_EX1304_Northeast_US_SBingo_2013"
 
 ## render
-rmarkdown::render("C:/rworking/deepseatools/code/20220629_rmd_accession_qa_dashboard.rmd",
+## manual change version of dashboard
+rmarkdown::render("C:/rworking/deepseatools/code/20230330-0_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
 
