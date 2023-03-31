@@ -10,22 +10,19 @@ library(rmarkdown)
 library(googledrive)
 library(googlesheets4)
 
-##### authorizations #####
-drive_auth(email = "robert.mcguinn@noaa.gov")
-gs4_auth(email = "robert.mcguinn@noaa.gov")
-
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
 filename <- "20221104-1_NOAA_EX1304_Northeast_US_SBingo_2013"
 
 ## render
-## manual change version of dashboard
+## manual change version of dashboard version number is required
 rmarkdown::render("C:/rworking/deepseatools/code/20230330-0_rmd_accession_qa_dashboard.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
 
 ##### check #####
-sub %>% filter(ScientificName == "Keratoisis magnifica") %>%
+sub %>%
+  # filter(ScientificName == "Keratoisis magnifica") %>%
   group_by(Flag,
            FlagReason,
            ScientificName,
@@ -50,9 +47,9 @@ sub %>% filter(ScientificName == "Keratoisis magnifica") %>%
 # Distichopathes hickersonae (N=2)
 
 ## manual change: make sure your target RMD in the render function step is correct.
-##### MANUAL inspection of QA report in Word, #####
+##### MANUAL inspection of QA report in Word #####
 ## manual: then Develop Redmine Checklist
-## manual: then SAVE to PDF.
+## manual: then SAVE to PDF
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
 folderurl <- "https://drive.google.com/drive/folders/11wmxLllntSGEI-s9iP8jelIEDj7XrWU0"

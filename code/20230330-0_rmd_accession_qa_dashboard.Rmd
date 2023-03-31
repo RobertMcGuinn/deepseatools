@@ -26,6 +26,7 @@ library(RColorBrewer)
 library(terra)
 library(sf)
 library(maps)
+
 ```
 
 ```{r setup, include=FALSE}
@@ -41,7 +42,7 @@ opts_chunk$set(
 
 ```
 
-```{r load_NDB, echo=F, message=FALSE, warning=FALSE, cache=FALSE, eval=F}
+```{r load_NDB, echo=F, message=FALSE, warning=FALSE, cache=T, eval=F}
 ##### manual input: latest version of NDB #####
 ## the data must be in the folder below
 ## get the latest from google drive and place in your local folder
@@ -54,24 +55,48 @@ filt <- indata %>%
 # flagged <- sub %>%  filter(Flag == "1")
 ```
 
+```{r authorizations, echo=F, message=F, warning=F, cache=F, eval=F}
+## google drive authorization just once pes session
+## drive_auth()
+
+##### authorizations #####
+# Set authentication token to be stored in a folder called \.secrets``
+
+options(gargle_oauth_cache = ".secrets")
+
+# Authenticate manually
+
+gs4_auth()
+
+# If successful, the previous step stores a token file.
+
+# Check that a file has been created with:
+
+list.files(".secrets/")
+
+# Check that the non-interactive authentication works by first deauthorizing:
+gs4_deauth()
+
+# Authenticate using token. If no browser opens, the authentication works.
+gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+drive_auth()
+
+```
+
+
 ```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=T}
 ## manual: set direct path to file 
-string <- paste(filename,".csv", "'", sep = '')
+path <- "C:/rworking/deepseatools/indata/"
+string <- paste(path,filename,".csv",sep = '')
 sub <- read.csv(string,
-                fileEncoding="latin1", 
+                fileEncoding="latin9", 
                 header = T, 
                 stringsAsFactors=FALSE)
 flagged <- sub %>%  filter(Flag == "1")
 ```
 
 ```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=F}
-## google drive authorization
-## drive_auth()
-
-##### authorizations #####
-drive_auth(email = "robert.mcguinn@noaa.gov")
-gs4_auth(email = "robert.mcguinn@noaa.gov")
-
+##### ##### 
 ## find the file in google drive by name [filename] is from runner
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
 ## getting the id as a character string
@@ -85,7 +110,7 @@ sub <- read.csv(unz(dl$local_path,
                     paste(filename, 
                           ".csv",
                           sep = '')),
-                fileEncoding="latin1", header = T, stringsAsFactors = F)
+                fileEncoding="latin9", header = T, stringsAsFactors = F)
 
 ## get the flagged records alone
 flagged <- sub %>%  filter(Flag == "1")
@@ -113,7 +138,6 @@ x_geo_sf <- st_as_sf(x = x_geo,
 
 ##### thin down the variables #####
 x_geo_export <- x_geo_sf %>% dplyr::select(CatalogNumber, Phylum, ScientificName, SampleID, DepthInMeters, SurveyID, EventID)
-
 
 
 ##### make a leaflet map #####
@@ -146,7 +170,7 @@ m
 ```{r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
 ##### download Google Sheet version of schema for use in R  documents ##### 
 ## run this command once per session to authorize googlesheets4 to your account
-## gs4_auth()
+# gs4_auth()
 
 # Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
