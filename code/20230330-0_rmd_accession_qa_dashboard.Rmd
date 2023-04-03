@@ -68,7 +68,7 @@ options(gargle_oauth_cache = ".secrets")
 
 gs4_auth()
 
-# If successful, the previous step stores a token file.
+1# If successful, the previous step stores a token file.
 
 # Check that a file has been created with:
 
@@ -83,19 +83,16 @@ drive_auth()
 
 ```
 
-
-```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=T}
+```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
 ## manual: set direct path to file 
 path <- "C:/rworking/deepseatools/indata/"
-string <- paste(path,filename,".csv",sep = '')
-sub <- read.csv(string,
-                fileEncoding="latin9", 
-                header = T, 
-                stringsAsFactors=FALSE)
+string <- paste(path,filename,".txt",sep = '')
+sub <- read_tsv(string)
 flagged <- sub %>%  filter(Flag == "1")
+
 ```
 
-```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=F}
+```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=T}
 ##### ##### 
 ## find the file in google drive by name [filename] is from runner
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
@@ -167,7 +164,7 @@ m
 
 ```
 
-```{r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE}
+```{r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE, eval=FALSE}
 ##### download Google Sheet version of schema for use in R  documents ##### 
 ## run this command once per session to authorize googlesheets4 to your account
 # gs4_auth()
@@ -181,14 +178,38 @@ s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 ```
 
 ```{r mapit, include = F, eval=F}
+sub2 <- sub %>%  
+  filter(FlagReason == 'Horizontal position or depth is questionable')
 
 m <- leaflet()
 m <- addProviderTiles(m, "Esri.OceanBasemap")
 m <- addCircleMarkers(m, data=sub,
                       radius=2,
                       weight=0,
-                      fillColor= "red",
+                      fillColor= "green",
                       fillOpacity=.5,
+                      popup = paste(
+                        "<b><em>","Flag:","</b></em>", sub$Flag, "<br>",
+                        "<b><em>","Catalog Number:","</b></em>", sub$CatalogNumber, "<br>",
+                        "<b><em>","Record Type:","</b></em>", sub$RecordType, "<br>",
+                        "<b><em>","DatasetID:","</b></em>", sub$DatasetID, "<br>",
+                        "<b><em>","AccessionID:","</b></em>", sub$AccessionID, "<br>",
+                        "<b><em>","DataProvider:","</b></em>", sub$DataProvider, "<br>",
+                        "<b><em>","ObservationYear:","</b></em>", sub$ObservationYear, "<br>",
+                        "<b><em>","Vessel:","</b></em>", sub$Vessel, "<br>",
+                        "<b><em>","Locality:","</b></em>", sub$Locality, "<br>",
+                        "<b><em>","Scientific Name:","</b></em>", sub$ScientificName, "<br>",
+                        "<b><em>","Depth (meters):","</b></em>", sub$DepthInMeters, "<br>",
+                        "<b><em>","Survey ID:","</b></em>", sub$SurveyID, "<br>",
+                        "<b><em>","Event ID:","</b></em>", sub$EventID, "<br>",
+                        "<b><em>","Latitude:","</b></em>", sub$Latitude, "<br>",
+                        "<b><em>","Longitude:","</b></em>", sub$Longitude, "<br>",
+                        "<b><em>","Image:","</b></em>",sub$ImageURL))
+m <- addCircleMarkers(m, data=sub2,
+                      radius=2,
+                      weight=0,
+                      fillColor= "black",
+                      fillOpacity=.2,
                       popup = paste(
                         "<b><em>","Flag:","</b></em>", sub$Flag, "<br>",
                         "<b><em>","Catalog Number:","</b></em>", sub$CatalogNumber, "<br>",
@@ -322,8 +343,8 @@ ft <- flextable(sum_tbl) %>%
   fontsize(size = 7, part = "all") # %>%
 # align(j = 1:6, align = 'left', part = 'all')
  
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
-
 ```
 
 # Dive Table 
@@ -351,6 +372,7 @@ ft <- flextable(sum_tbl) %>%
   fontsize(size = 7, part = "all") # %>%
 # align(j = 1:6, align = 'left', part = 'all')
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -445,6 +467,7 @@ ft <- flextable(sum_tbl) %>%
   # width(j = 7, 1.5)
  
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 
@@ -470,6 +493,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% #header, body, all
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -499,6 +523,7 @@ ft <- flextable(sum_tbl) %>%
   #autofit() #%>% 
   #width(j = 2, 2)
  
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -528,6 +553,7 @@ ft <- flextable(sum_tbl) %>%
   #autofit() #%>% 
   #width(j = 2, 2)
  
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -557,6 +583,7 @@ ft <- flextable(sum_tbl) %>%
   #width(j = 2, 2)
  
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -589,6 +616,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 
@@ -619,6 +647,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -646,8 +675,8 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
-
 ```
 
 ## Oceans
@@ -674,6 +703,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -703,6 +733,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -730,6 +761,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -757,6 +789,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -785,6 +818,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -851,6 +885,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -896,6 +931,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -930,6 +966,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -960,6 +997,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -987,6 +1025,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -1019,6 +1058,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 
@@ -1128,6 +1168,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -1154,6 +1195,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -1181,6 +1223,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -1208,6 +1251,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -1235,6 +1279,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -1283,6 +1328,7 @@ ft <- flextable(x) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 
@@ -1327,6 +1373,7 @@ ft <- flextable(head(x, n=10)) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -1355,6 +1402,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -1383,6 +1431,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -1412,6 +1461,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```
@@ -1439,6 +1489,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -1563,6 +1614,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -1592,6 +1644,7 @@ ft <- flextable(sum_tbl) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 ```
 
@@ -1803,6 +1856,7 @@ ft <- flextable(SurveyIDPattern) %>%
   font(fontname = "Cambria", part = "all")  %>% 
   fontsize(size = 7, part = "all")
 
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
 ```

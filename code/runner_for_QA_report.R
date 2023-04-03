@@ -12,7 +12,7 @@ library(googlesheets4)
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20221104-1_NOAA_EX1304_Northeast_US_SBingo_2013"
+filename <- "20230329-0_EX-14-04-L2-L3"
 
 ## render
 ## manual change version of dashboard version number is required
@@ -36,6 +36,22 @@ sub %>%
   ) %>% summarize (n=n()) %>%
   View()
 
+sub %>% pull(DepthInMeters) %>% median()
+sub %>% filter(DepthInMeters == "68523") %>% pull(SampleID)
+sub %>% pull(SurveyID) %>% table()
+sub %>% pull(RecordType) %>% table()
+s %>% filter(FieldName == "DataContact") %>% pull(FieldDescription)
+sub %>% filter(grepl('>100', VerbatimSize)) %>% pull(MaximumSize)
+sub %>% filter(is.na(LocationAccuracy) == T) %>% rownames()
+sub %>% filter(grepl('>100', VerbatimSize)) %>% rownames()
+rownames(sub %>% filter(grepl('>100', VerbatimSize)))
+sub$row <- rownames(sub)
+sub %>% filter(is.na(LocationAccuracy) == T) %>% pull(row)
+sub %>% filter(row == "246") %>% pull(LocationAccuracy)
+sub %>% filter(row == "247") %>% pull(LocationAccuracy)
+sub %>% filter(row == "248") %>% pull(LocationAccuracy)
+sub %>% slice(246:248) %>% pull(SampleID)
+
 # Acanthogorgia spissa (N=4)
 # Anthomastus gyratus (N=1)
 # Anthoptilum gowlettholmesae (N=4)
@@ -52,13 +68,12 @@ sub %>%
 ## manual: then SAVE to PDF
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/11wmxLllntSGEI-s9iP8jelIEDj7XrWU0"
+folderurl <- "https://drive.google.com/drive/folders/12xZuKPqlGAcj82hosOQPBnVg4dVvO1ss"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
              name = paste(filename,".PDF", sep=''),
              overwrite = T)
-
 ##### checking #####
 unique(sub$DatasetID)
 filt %>% filter(grepl("HB", DatasetID)) %>% pull(DatasetID) %>% table()

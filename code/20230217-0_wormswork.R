@@ -290,3 +290,35 @@ write.xlsx(tax_tom_enhanced2, "c:/rworking/deepseatools/indata/20230317-0_master
 
 
 
+
+##### check #####
+setdiff("Actinernus nobilis", tax$ScientificName)
+setdiff("Actinernus", tax$ScientificName)
+setdiff("Actinernus", tax_fl$ScientificName)
+setdiff("Actinernus nobilis", tax_fl$ScientificName)
+
+sub %>% filter(ScientificName == "Actinernus" |
+                 ScientificName == "Actinernus nobilis") %>%
+  pull(CatalogNumber) %>%
+  length()
+
+sub %>% filter(ScientificName == "Actinernus" |
+                 ScientificName == "Actinernus nobilis") %>%
+  pull(Flag) %>%
+  table()
+
+sub %>% filter(ScientificName == "Actinernus" |
+                 ScientificName == "Actinernus nobilis") %>%
+  pull(Family) %>%
+  table()
+
+## Actinoscyphia Actinoscyphiidae
+setdiff("Actinoscyphiidae", tax_fl$ScientificName)
+
+s %>% filter(FieldName == 'VernacularNameCategory') %>%
+  pull(ValidValues)
+
+
+
+
+
