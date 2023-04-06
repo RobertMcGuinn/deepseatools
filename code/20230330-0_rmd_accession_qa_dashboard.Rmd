@@ -68,7 +68,7 @@ options(gargle_oauth_cache = ".secrets")
 
 gs4_auth()
 
-1# If successful, the previous step stores a token file.
+# If successful, the previous step stores a token file.
 
 # Check that a file has been created with:
 

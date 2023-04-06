@@ -17,7 +17,8 @@ filt$DashLink <- paste('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/',
 tab <- filt %>%
   filter(ObservationYear == 2013 |
            ObservationYear == 2014|
-           ObservationYear == 2015,
+           ObservationYear == 2015 |
+           ObservationYear == 2018,
          grepl('Nizinski', PI) |
            grepl('Packer', DataContact) |
            grepl('Nizinski', DataContact) |
@@ -31,14 +32,15 @@ tab <- filt %>%
            DashLink) %>%
   summarize(n=n())
 
+View(tab)
+
 ##### create output #####
 write_csv(tab,'c:/rworking/deepseatools/reports/NE_initiative_summary_ObservationYear_2013-2015.csv')
 
 ##### check #####
 x <- filt %>%
-  filter(DatasetID == "NOAA_CT-13-07",
-         EventID == "Tow 5") %>%
-  group_by(ImageFilePath, ScientificName) %>%
+  filter(DatasetID == "NOAA_HB-14-02") %>%
+  group_by(ObservationYear, ObservationDate) %>%
   summarize(n=n())
 View(x)
 

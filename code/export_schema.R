@@ -34,11 +34,10 @@ drive_auth()
 # filt <- indata %>% filter(Flag == "0")
 
 ##### download Google Sheet version of schema for use in R #####
-
 ## Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 
-##### set version number
+##### set version number #####
 s$version <- '20230405-0'
 
 ## checking
@@ -50,7 +49,7 @@ s$version <- '20230405-0'
 ##### filter to make a public version for inclusion on NOAA GeoPlatform #####
 s_public <- s %>%
   filter(InternalUseOnly == 0) %>%
-  dplyr::select(version, 1,3,4)
+  dplyr::select(version,1,3,4)
 
 ##### write the CSV ######
 write_csv(s_public,
@@ -60,14 +59,21 @@ write_csv(s_public,
 library(flextable)
 ft <- s_public %>%
   flextable() %>%
-  theme_zebra()
+  autofit() %>%
+  theme_zebra() %>%
+  fontsize(size = 7)
 
-ft <- width(ft, j = 3,
-            width = 2,
+ft <- width(ft, j = 1,
+            width = 3,
             unit = "in")
 
 ## print the flextable object
-ft
+setwd('c:/rworking/deepseatools/reports/')
+save_as_html(ft,
+             path='c:/rworking/deepseatools/reports/NOAA_NDB_corals_sponges_data_dictionary.html',
+             title = paste('Data Dictionary version', unique(s$version))
+             )
+
 
 
 
