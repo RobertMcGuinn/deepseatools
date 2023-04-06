@@ -1,6 +1,6 @@
 ##### find file #####
-## manual: edit string
-x <- 'schema'
+## manual: edit string for x
+x <- 'mod_'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -10,9 +10,8 @@ files<-list.files(path,
 files
 
 ##### choose and open #####
-
 ## manual input required: pick the number or number you want from the list presented
-y <- c(1,2,3)
+y <- c(4)
 path <- files[y]
 file.edit(path)
 

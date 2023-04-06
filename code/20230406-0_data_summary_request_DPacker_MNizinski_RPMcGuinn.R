@@ -14,7 +14,6 @@ source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
 ##### filter and summarize #####
 filt$DashLink <- paste('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/',
                        filt$DatasetID, sep = '')
-
 tab <- filt %>%
   filter(ObservationYear == 2013 |
            ObservationYear == 2014|

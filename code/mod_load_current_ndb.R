@@ -16,4 +16,6 @@ setwd(path)
 indata <- read.csv(csv, header = T)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
+## cleanup
+rm(indata)
 
