@@ -1,5 +1,5 @@
 ---
-title: "Field Definitions for NOAA's National Database for Deep-sea Corals and Sponges (database version: 20221213-0)"
+title: "Field Definitions for NOAA's National Database for Deep-sea Corals and Sponge, version 20230405-0
 author: "Contact: robert.mcguinn@noaa.gov"
 output: html_document
 ---
@@ -11,35 +11,19 @@ options(width = 100)
 
 ```{css, echo=FALSE}
     body .main-container {
-      max-width: 1200px !important;
-      width: 1200px !important;
+      max-width: 1000px !important;
+      width: 1000px !important;
     }
     body {
-      max-width: 1200px !important;
+      max-width: 1000px !important;
     }
     
 ```
 
 ```{r, echo=FALSE, message=FALSE}
 
-##### header #####
-## author: Robert McGuinn
-## date started: 20221004
-## purpose: load the data dictionary / schema
-
 ##### packages #####
-library(tidyverse)
-library(googlesheets4)
-library(googledrive)
-library(flextable)
-library(knitr)
-library(kableExtra)
-library(tableHTML)
-library(htmlTable)
 
-##### authorizations #####
-drive_auth(email = "robert.mcguinn@noaa.gov")
-gs4_auth(email = "robert.mcguinn@noaa.gov")
 ##### load NDB #####
 ## [manual]
 # setwd("C:/rworking/deepseatools/indata")
@@ -68,23 +52,29 @@ s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 ##### filter to make a public version for inclusion on NOAA GeoPlatform #####
 s_public <- s %>%
   filter(InternalUseOnly == 0) %>%
-  group_by(FieldOrder, 
-           FieldName, 
-           FieldDescription, 
-           ValidValues) %>% 
+  group_by(
+    FieldName, 
+    FieldDescription, 
+    ValidValues
+  ) %>% 
   summarize(n=n())
 
-s_public <- s_public[,1:4]
+View(s_public)
 
 ##### check #####
 # (s_public)
 
 ##### write the CSV ######
-write_csv(s_public, "c:/rworking/deepseatools/indata/20221213-0_NOAA_NDB_corals_sponges_data_dictionary.csv")
+write_csv(s_public, "c:/rworking/deepseatools/indata/NOAA_NDB_corals_sponges_data_dictionary.csv")
 
 ##### make the html table #####
-s_public %>% 
+ft <- s_public %>% 
   flextable() %>% 
   theme_zebra() 
+
+ft <- width(ft, j = 1, width = 1, unit = "in")
+
+# Print the flextable object
+ft
 
 ```

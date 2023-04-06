@@ -7,10 +7,21 @@
 library(tidyverse)
 library(googlesheets4)
 library(googledrive)
+library(flextable)
 
 ##### authorizations #####
-drive_auth(email = "robert.mcguinn@noaa.gov")
-gs4_auth(email = "robert.mcguinn@noaa.gov")
+# Set authentication token to be stored in a folder called \.secrets``
+options(gargle_oauth_cache = ".secrets")
+gs4_auth()
+list.files(".secrets/")
+
+# Check that the non-interactive authentication works by first deauthorizing:
+gs4_deauth()
+
+# Authenticate using token. If no browser opens, the authentication works.
+gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+drive_auth()
+
 ##### load NDB #####
 ## [manual]
 # setwd("C:/rworking/deepseatools/indata")
@@ -27,6 +38,9 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 ## Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 
+##### set version number
+s$version <- '20230405-0'
+
 ## checking
 # s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(FieldDescription)
 # s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(ValidValues)
@@ -35,10 +49,25 @@ s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
 
 ##### filter to make a public version for inclusion on NOAA GeoPlatform #####
 s_public <- s %>%
-  # filter(InternalUseOnly == 0) %>%
-  dplyr::select(1:4)
+  filter(InternalUseOnly == 0) %>%
+  dplyr::select(version, 1,3,4)
 
 ##### write the CSV ######
-write_csv(s_public, "c:/rworking/deepseatools/indata/20221213-0_NOAA_NDB_corals_sponges_data_dictionary.csv")
+write_csv(s_public,
+          "c:/rworking/deepseatools/indata/NOAA_NDB_corals_sponges_data_dictionary.csv")
+
+##### write the html #####
+library(flextable)
+ft <- s_public %>%
+  flextable() %>%
+  theme_zebra()
+
+ft <- width(ft, j = 3,
+            width = 2,
+            unit = "in")
+
+## print the flextable object
+ft
+
 
 
