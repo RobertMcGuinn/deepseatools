@@ -56,16 +56,11 @@ filt <- indata %>%
 ```
 
 ```{r authorizations, echo=F, message=F, warning=F, cache=F, eval=F}
-## google drive authorization just once pes session
-## drive_auth()
-
 ##### authorizations #####
 # Set authentication token to be stored in a folder called \.secrets``
-
 options(gargle_oauth_cache = ".secrets")
 
 # Authenticate manually
-
 gs4_auth()
 
 # If successful, the previous step stores a token file.
@@ -79,7 +74,7 @@ gs4_deauth()
 
 # Authenticate using token. If no browser opens, the authentication works.
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
-drive_auth()
+drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ```
 
@@ -563,6 +558,37 @@ sum_tbl <-
   sub %>% 
   arrange(ScientificName) %>% 
   filter(Phylum == 'Porifera') %>% 
+  group_by(Family) %>%
+  dplyr::summarize(
+    ScientificName = paste(unique(ScientificName), collapse=" | "),
+    TaxonRank = paste(unique(TaxonRank), collapse=" | "),
+    UnFlagged = length(Flag[Flag == "0"]), 
+    Flagged = length(Flag[Flag == "1"]),
+    FlagReason = paste(unique(FlagReason), collapse=" | "),
+    Records = n())
+
+colkeys <- names(sum_tbl[,-1])
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% #booktabs, vanilla, box, tron, tron_legacy, vader
+  colformat_num(j = 4, digits = 0, big.mark = ",", na_str = "NA") %>%
+  colformat_num(j = 7, digits = 0, big.mark = ",", na_str = "NA") %>%
+  font(fontname = "Cambria", part = "all")  %>% #header, body, all
+  fontsize(size = 7, part = "all") %>%
+  autofit() # %>% 
+  #width(j = 2, 2)
+ 
+
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
+ft
+
+```
+
+# List of ScientificNames (Fish) - Grouped by Family
+``` {r ByScientificNameFish, echo=FALSE }
+sum_tbl <-
+  sub %>% 
+  arrange(ScientificName) %>% 
+  filter(Phylum == 'Chordata') %>% 
   group_by(Family) %>%
   dplyr::summarize(
     ScientificName = paste(unique(ScientificName), collapse=" | "),
