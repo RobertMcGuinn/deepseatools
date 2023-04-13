@@ -248,7 +248,7 @@ FitFlextableToPage <- function(ft, pgwidth = 6){
 }
 ```
 
-# File Version Used in this Report:
+# File Version Used in this Report
 *`r substring(filename, 1, 10)`*
 
 # Target AccessionID: 
