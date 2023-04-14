@@ -12,7 +12,7 @@ library(googlesheets4)
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20230403-1_NOAA_EX1304_Northeast_US_SBingo_2013"
+filename <- "20230411-4_NOAA_SH-22-09"
 
 ## render
 ## manual change version of dashboard version number is required
@@ -51,6 +51,10 @@ sub %>% filter(row == "246") %>% pull(LocationAccuracy)
 sub %>% filter(row == "247") %>% pull(LocationAccuracy)
 sub %>% filter(row == "248") %>% pull(LocationAccuracy)
 sub %>% slice(246:248) %>% pull(SampleID)
+sub %>% filter(DepthInMeters > 30000) %>% pull(SampleID)
+
+x <- paste(sub$SampleID, sub$ScientificName, sub$VerbatimScientificName)
+table(duplicated(x))
 
 # Acanthogorgia spissa (N=4)
 # Anthomastus gyratus (N=1)
@@ -68,7 +72,7 @@ sub %>% slice(246:248) %>% pull(SampleID)
 ## manual: then SAVE to PDF
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1h94xYy4VSzZ1rTWSo5rNlbgUio6azEwi"
+folderurl <- "https://drive.google.com/drive/folders/14NAAsfPnYbgRNh9Z99VwlhcG9auy24Is"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
