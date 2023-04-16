@@ -28,8 +28,14 @@ tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 tax_fl <- read.csv("C:/rworking/deepseatools/indata/tax_fl.csv")
 tax_ch <- read.csv("C:/rworking/deepseatools/indata/tax_ch.csv")
 
-##### sub is loaded from another code #####
-##### make any needed taxonomic changes to incoming #####
+##### load dataset of interest ('sub') from local file #####
+setwd("C:/rworking/deepseatools/indata")
+filename <- "20230411-4_NOAA_SH-22-09.csv"
+sub <- read_csv(filename,
+                 col_types = cols(.default = "c"),
+                 locale = locale(encoding = 'latin9'),
+                 na = c("-999", "NA"))
+##### make any needed taxonomic changes to incoming (specific to each new dataset) #####
 sub2 <- sub %>%
   mutate(ScientificName = str_replace(ScientificName, "Eptatretus spp.", "Eptatretus")) %>%
   mutate(ScientificName = str_replace(ScientificName, "Glytocephalus zachirus", "Glyptocephalus zachirus")) %>%
@@ -64,29 +70,39 @@ df <- species_list[0,]
 for (i in seq_along(my_groups)){
   species_list <- wm_records_names(name = my_groups[[i]],
                                    fuzzy = F,
-                                   marine_only = T
+                                   marine_only = T,
+
                                    )
   species_list <- do.call("rbind", species_list)
   df <- rbind(df, species_list)
 }
 species_list <- df
 
+## get rid of any extinct matches
+species_list <- species_list %>%
+  filter(isExtinct == 0 |
+           is.na(isExtinct) == T)
+
 ##### check #####
 dim(species_list)
-# View(species_list)
+View(species_list)
 
 ##### left join the parsed list #####
 by <- join_by(canonicalname == scientificname)
 joined <- left_join(parsed_list, species_list, by)
 
-##### check the joined file #####
+##### create a summary joined file #####
 summary <- joined %>% group_by(status,
                                phylum,
                                scientificname,
                                canonicalname,
                                valid_name,
-                               valid_AphiaID) %>%
+                               valid_AphiaID,
+                               rank,
+                               authority) %>%
   summarize(n=n())
+
+##### check #####
 View(summary)
 
 ##### test the difficult taxa #####
@@ -97,7 +113,6 @@ nomatch <- summary %>% filter(is.na(sametest) == T) %>% pull(scientificname)
 changes
 nomatch
 
-##### match your valid AphiaID #####
 ##### create vector from valid AphiaIDs #####
 summary <- summary %>% filter(is.na(valid_AphiaID) == F)
 my_vector <- summary$valid_AphiaID
@@ -202,6 +217,11 @@ dim(classification)
 dim(vernaculars)
 dim(synonyms)
 
+names(species_list)
+names(classification)
+names(vernaculars)
+names(synonyms)
+
 head(species_list$AphiaID)
 head(classification$AphiaID)
 head(vernaculars$AphiaID)
@@ -217,35 +237,54 @@ class(classification$AphiaID)
 class(vernaculars$AphiaID)
 class(synonyms$AphiaID)
 
-names(tax_tom_enhanced2)
+##### left join the parsed list #####
+by <- join_by(valid_AphiaID == AphiaID)
+joined2 <- left_join(summary, classification, by)
 
-tax_tom_enhanced2 %>%
-  dplyr::select(AphiaID_x, Species_edit, status, valid_name) %>%
-  View()
+by <- join_by(valid_AphiaID == AphiaID)
+joined3 <- left_join(joined2, vernaculars, by)
 
-##### cbind vernaculars, classification, synonyms to Tom's list #####
-classification2 <- classification %>% select(-AphiaID)
-synonyms2 <- synonyms %>% select(-AphiaID)
-vernaculars2 <- vernaculars %>% select(-AphiaID)
-
-tax_tom_enhanced2 <- cbind(tax_tom_enhanced,
-                           classification2
-)
-
-
-tax_tom_enhanced2 <- cbind(tax_tom_enhanced2,
-                           synonyms2
-)
-
-tax_tom_enhanced2 <- cbind(tax_tom_enhanced2,
-                           vernaculars2
-)
+by <- join_by(valid_AphiaID == AphiaID)
+joined4 <- left_join(joined3, synonyms, by)
 
 ##### check the file #####
-dim(tax_tom_enhanced2)
+names(joined4)
 
-##### deliver the goods (export to CSV) #####
-write.xlsx(tax_tom_enhanced2, "c:/rworking/deepseatools/indata/20230317-0_master_taxonomy_checker_THourigan_RPMcGuinn.xlsx", fileEncoding = "UTF-8")
+##### add taxonomy to sub #####
+by <- join_by(ScientificName == scientificname)
+sub_enhanced <- left_join(sub2, joined4, by)
+
+sub_enhanced$VerbatimScientificName <- sub_enhanced$ScientificName
+sub_enhanced$ScientificName <- sub_enhanced$valid_name
+sub_enhanced$VernacularName <- sub_enhanced$vernaculars_list
+sub_enhanced$TaxonRank <- sub_enhanced$rank
+sub_enhanced$AphiaID <- sub_enhanced$valid_AphiaID
+sub_enhanced$Phylum <- sub_enhanced$Phylum.y
+sub_enhanced$Class <- sub_enhanced$Class.y
+sub_enhanced$Subclass <- sub_enhanced$Subclass.y
+sub_enhanced$Order <- sub_enhanced$Order.y
+sub_enhanced$Suborder <- sub_enhanced$Suborder.y
+sub_enhanced$Family <- sub_enhanced$Family.y
+sub_enhanced$Subfamily <- sub_enhanced$Subfamily.y
+sub_enhanced$Genus <- sub_enhanced$Genus.y
+sub_enhanced$Subgenus <- sub_enhanced$Subgenus.y
+sub_enhanced$Species <- word(sub_enhanced$Species.y, -1)
+sub_enhanced$Subspecies <- sub_enhanced$Subspecies.y
+sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority
+sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
+
+##### get rid of unneeded column names #####
+sub_enhanced <- sub_enhanced %>% dplyr::select(all_of(names_list))
+names(sub_enhanced)
+
+##### check #####
+unique(sub_enhanced$Synonyms)
+
+##### export result to csv (export to CSV) #####
+filename <- '20230416-4_NOAA_SH-22-09.csv'
+write_csv(sub_enhanced,
+          paste("c:/rworking/deepseatools/indata/",filename),
+          fileEncoding = "latin9")
 
 
 
