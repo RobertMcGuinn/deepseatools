@@ -62,7 +62,7 @@ my_groups <- split(my_vector_parsed, ceiling(seq_along(my_vector)/50))
 ##### loop to get records by names list #####
 ## run this just once to get the proper data structure for an empty dataframe
 species_list <- wm_records_name("Haliclona", fuzzy = F)
-View(species_list)
+
 ## initiate the empty data frame
 df <- species_list[0,]
 
@@ -84,8 +84,8 @@ species_list <- species_list %>%
            is.na(isExtinct) == T)
 
 ##### **check #####
-dim(species_list)
-View(species_list)
+# dim(species_list)
+# View(species_list)
 
 ##### left join the parsed list #####
 by <- join_by(canonicalname == scientificname)
@@ -104,7 +104,7 @@ summary <- joined %>%
   summarize(n=n())
 
 ##### **check #####
-View(summary)
+# View(summary)
 
 ##### **check: test for difficult taxa #####
 summary$sametest <- ifelse(summary$canonicalname == summary$valid_name,"Yes","No")
@@ -172,7 +172,6 @@ for (i in my_vector){
 }
 
 classification <- df
-View(classification)
 
 ##### loop to get vernacular name #####
 df <- data.frame(
@@ -182,7 +181,8 @@ df <- data.frame(
 
 for (i in my_vector){
   try(
-  vernaculars <- wm_common_id(i))
+  vernaculars <- wm_common_id(i)) # i <- 125588
+  vernaculars <- vernaculars %>% filter(language == 'English')
   vernaculars_list <- paste(vernaculars$vernacular, collapse=" | ")
   AphiaID <- i
   vernaculars_wide <- data.frame(AphiaID, vernaculars_list)
@@ -199,7 +199,7 @@ df <- data.frame(
 
 for (i in my_vector){
   try(
-    synonyms <- wm_synonyms(i))
+    synonyms <- wm_synonyms(i)) # i <- 274788
   synonyms_list <- paste(synonyms$scientificname, collapse=" | ")
   AphiaID <- i
   synonyms_wide <- data.frame(AphiaID, synonyms_list)
@@ -209,35 +209,35 @@ for (i in my_vector){
 synonyms <- df
 
 ##### **check #####
-View(classification)
-View(vernaculars)
-View(classification)
-View(synonyms)
-
-dim(species_list)
-dim(classification)
-dim(vernaculars)
-dim(synonyms)
-
-names(species_list)
-names(classification)
-names(vernaculars)
-names(synonyms)
-
-head(species_list$AphiaID)
-head(classification$AphiaID)
-head(vernaculars$AphiaID)
-head(synonyms$AphiaID)
-
-tail(tax_tom_enhanced$AphiaID)
-tail(classification$AphiaID)
-tail(vernaculars$AphiaID)
-tail(synonyms$AphiaID)
-
-class(tax_tom_enhanced$AphiaID)
-class(classification$AphiaID)
-class(vernaculars$AphiaID)
-class(synonyms$AphiaID)
+# View(classification)
+# View(vernaculars)
+# View(classification)
+# View(synonyms)
+#
+# dim(species_list)
+# dim(classification)
+# dim(vernaculars)
+# dim(synonyms)
+#
+# names(species_list)
+# names(classification)
+# names(vernaculars)
+# names(synonyms)
+#
+# head(species_list$AphiaID)
+# head(classification$AphiaID)
+# head(vernaculars$AphiaID)
+# head(synonyms$AphiaID)
+#
+# tail(tax_tom_enhanced$AphiaID)
+# tail(classification$AphiaID)
+# tail(vernaculars$AphiaID)
+# tail(synonyms$AphiaID)
+#
+# class(tax_tom_enhanced$AphiaID)
+# class(classification$AphiaID)
+# class(vernaculars$AphiaID)
+# class(synonyms$AphiaID)
 
 ##### left join the summary from above with all of the other API tables #####
 by <- join_by(valid_AphiaID == AphiaID)
@@ -250,7 +250,7 @@ by <- join_by(valid_AphiaID == AphiaID)
 joined4 <- left_join(joined3, synonyms, by)
 
 ##### **check #####
-names(joined4)
+# names(joined4)
 
 ##### add taxonomy to sub #####
 by <- join_by(ScientificName == scientificname)
@@ -296,6 +296,14 @@ softfamilies <- c("Alcyoniidae","Aquaumbridae", "Ifalukellidae",
 othercorallikehydrozoanfamilies <- c("Solanderiidae", "Haleciidae")
 
 
+stonycoralbranching <- tax %>%
+  filter(VernacularNameCategory == 'stony coral (branching)') %>%
+  pull(ScientificName)
+
+stonycoralcupcoral <- tax %>%
+  filter(VernacularNameCategory == 'stony coral (cup coral)') %>%
+  pull(ScientificName)
+
 sub_enhanced2 <- sub_enhanced %>%
   mutate(VernacularNameCategory = case_when(
     Phylum %in% c('Chordata') ~ 'fish',
@@ -313,26 +321,38 @@ sub_enhanced2 <- sub_enhanced %>%
       Family %notin%  c('Solanderiidae') ~ 'lace coral',
     Family %in% c('Lithotelestidae') ~ 'lithotelestid coral',
     Family %in% othercorallikehydrozoanfamilies ~ 'other coral-like hydrozoan',
-    Order %in% c('Pennatuloidea') ~ 'sea pen',
+    Order %in% c('Scleralcyonacea') ~ 'sea pen',
     ScientificName %in% c('Porifera') ~ 'sponge',
     Suborder %in% c('Stolonifera') ~ 'stoloniferan coral',
-    Order %in% c('Scleractinia') ~ 'stony coral (unspecified)',
-    TRUE ~ 'missing'))
+    Order %in% c('Scleractinia') &
+      TaxonRank %in% c('Order')  ~ 'stony coral (unspecified)',
+    ScientificName %in% stonycoralbranching ~ 'stony coral (branching)',
+    ScientificName %in% stonycoralcupcoral ~ 'stony coral (branching)',
+    TRUE ~ ''))
 
-
-# stony coral (branching)
-# stony coral (cup coral)
-# stony coral (unspecified)
-
-
-##### check #####
-table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
-
-
-sub_enhanced2 %>%
-  filter(VernacularNameCategory == 'missing') %>%
-  select(VernacularNameCategory, VerbatimScientificName, ScientificName, Phylum, Class, Order) %>%
-  View()
+##### **check #####
+# table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
+#
+# sub_enhanced2 %>%
+#   filter(VernacularNameCategory == '') %>%
+#   select(VernacularNameCategory, VerbatimScientificName, ScientificName, Phylum, Class, Order) %>%
+#   View()
+#
+# sub_enhanced2 %>%
+#   group_by(VernacularNameCategory,
+#          VerbatimScientificName,
+#          ScientificName,
+#          Phylum,
+#          Class,
+#          Subclass,
+#          Order,
+#          Suborder,
+#          Family,
+#          Subfamily,
+#          Genus,
+#          Species) %>%
+#   summarize(n=n()) %>%
+#   View()
 
 ##### get rid of unneeded column names #####
 names_list <- names(sub)
@@ -341,8 +361,9 @@ sub_enhanced <- sub_enhanced %>%
 
 ##### **check #####
 table(sub_enhanced$Phylum)
+
 ##### get rid of everything not Chordata, Cnidaria, and Porifera #####
-sub_enhanced2 <- sub_enhanced %>%
+sub_enhanced2 <- sub_enhanced2 %>%
   filter(Phylum == 'Chordata' |
            Phylum == 'Cnidaria' |
            Phylum == 'Porifera')
