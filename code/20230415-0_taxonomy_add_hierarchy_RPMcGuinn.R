@@ -62,7 +62,7 @@ my_groups <- split(my_vector_parsed, ceiling(seq_along(my_vector)/50))
 ##### loop to get records by names list #####
 ## run this just once to get the proper data structure for an empty dataframe
 species_list <- wm_records_name("Haliclona", fuzzy = F)
-
+View(species_list)
 ## initiate the empty data frame
 df <- species_list[0,]
 
@@ -83,7 +83,7 @@ species_list <- species_list %>%
   filter(isExtinct == 0 |
            is.na(isExtinct) == T)
 
-##### check #####
+##### **check #####
 dim(species_list)
 View(species_list)
 
@@ -92,20 +92,21 @@ by <- join_by(canonicalname == scientificname)
 joined <- left_join(parsed_list, species_list, by)
 
 ##### create a summary joined file #####
-summary <- joined %>% group_by(status,
-                               phylum,
-                               scientificname,
-                               canonicalname,
-                               valid_name,
-                               valid_AphiaID,
-                               rank,
-                               authority) %>%
+summary <- joined %>%
+  group_by(status,
+           phylum,
+           scientificname,
+           canonicalname,
+           valid_name,
+           valid_AphiaID,
+           rank,
+           authority) %>%
   summarize(n=n())
 
-##### check #####
+##### **check #####
 View(summary)
 
-##### test the difficult taxa #####
+##### **check: test for difficult taxa #####
 summary$sametest <- ifelse(summary$canonicalname == summary$valid_name,"Yes","No")
 changes <- summary %>% filter(sametest == "No") %>% pull(scientificname)
 nomatch <- summary %>% filter(is.na(sametest) == T) %>% pull(scientificname)
@@ -171,6 +172,7 @@ for (i in my_vector){
 }
 
 classification <- df
+View(classification)
 
 ##### loop to get vernacular name #####
 df <- data.frame(
@@ -206,7 +208,7 @@ for (i in my_vector){
 
 synonyms <- df
 
-##### check #####
+##### **check #####
 View(classification)
 View(vernaculars)
 View(classification)
@@ -237,7 +239,7 @@ class(classification$AphiaID)
 class(vernaculars$AphiaID)
 class(synonyms$AphiaID)
 
-##### left join the parsed list #####
+##### left join the summary from above with all of the other API tables #####
 by <- join_by(valid_AphiaID == AphiaID)
 joined2 <- left_join(summary, classification, by)
 
@@ -247,13 +249,14 @@ joined3 <- left_join(joined2, vernaculars, by)
 by <- join_by(valid_AphiaID == AphiaID)
 joined4 <- left_join(joined3, synonyms, by)
 
-##### check the file #####
+##### **check #####
 names(joined4)
 
 ##### add taxonomy to sub #####
 by <- join_by(ScientificName == scientificname)
 sub_enhanced <- left_join(sub2, joined4, by)
 
+##### gather information into proper variables #####
 sub_enhanced$VerbatimScientificName <- sub_enhanced$ScientificName
 sub_enhanced$ScientificName <- sub_enhanced$valid_name
 sub_enhanced$VernacularName <- sub_enhanced$vernaculars_list
@@ -273,18 +276,82 @@ sub_enhanced$Subspecies <- sub_enhanced$Subspecies.y
 sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority
 sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
 
-##### get rid of unneeded column names #####
-sub_enhanced <- sub_enhanced %>% dplyr::select(all_of(names_list))
-names(sub_enhanced)
+##### assign VernacularNameCategory #####
+## define not in
+`%notin%` <- Negate(`%in%`)
+
+gorgfamilies <- c("Chrysogorgiidae","Dendrobrachiidae",
+                  "Ellisellidae", "Isididae",
+                  "Pleurogorgiidae", "Primnoidae",
+                  "Acanthogorgiidae", "Gorgoniidae","Keroeididae",
+                  "Plexauridae", "Anthothelidae",
+                  "Coralliidae", "Melithaeidae",
+                  "Paragorgiidae", "Parisididae","Spongiodermidae", "Subergorgiidae",
+                  "Victorgorgiidae", "Keratoisididae")
+
+softfamilies <- c("Alcyoniidae","Aquaumbridae", "Ifalukellidae",
+                  "Nephtheidae","Nidaliidae", "Paralcyoniidae",
+                  "Xeniidae", "Taiaroidae")
+
+othercorallikehydrozoanfamilies <- c("Solanderiidae", "Haleciidae")
+
+
+sub_enhanced2 <- sub_enhanced %>%
+  mutate(VernacularNameCategory = case_when(
+    Phylum %in% c('Chordata') ~ 'fish',
+    TaxonRank %in% c('Order') &
+      Order %in% c('Alcyonacea') ~ 'alcyonacean (unspecified)',
+    Order %in% c('Antipatharia') ~ 'black coral',
+    Class %in% c('Calcarea')~ 'calcareous sponge',
+    Class %in% c('Demospongiae') ~ 'demosponge',
+    Class %in% c('Hexactinellida') ~ 'glass sponge',
+    Class %in% c('Homoscleromorpha') ~ 'homoscleromorph sponge',
+    Family %in% c('Parazoanthidae') ~ 'gold coral',
+    Family %in% gorgfamilies ~ 'gorgonian coral',
+    Family %in% softfamilies ~ 'soft coral',
+    Order %in% c('Anthoathecata') &
+      Family %notin%  c('Solanderiidae') ~ 'lace coral',
+    Family %in% c('Lithotelestidae') ~ 'lithotelestid coral',
+    Family %in% othercorallikehydrozoanfamilies ~ 'other coral-like hydrozoan',
+    Order %in% c('Pennatuloidea') ~ 'sea pen',
+    ScientificName %in% c('Porifera') ~ 'sponge',
+    Suborder %in% c('Stolonifera') ~ 'stoloniferan coral',
+    Order %in% c('Scleractinia') ~ 'stony coral (unspecified)',
+    TRUE ~ 'missing'))
+
+
+# stony coral (branching)
+# stony coral (cup coral)
+# stony coral (unspecified)
+
 
 ##### check #####
-unique(sub_enhanced$Synonyms)
+table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
+
+
+sub_enhanced2 %>%
+  filter(VernacularNameCategory == 'missing') %>%
+  select(VernacularNameCategory, VerbatimScientificName, ScientificName, Phylum, Class, Order) %>%
+  View()
+
+##### get rid of unneeded column names #####
+names_list <- names(sub)
+sub_enhanced <- sub_enhanced %>%
+  dplyr::select(all_of(names_list))
+
+##### **check #####
+table(sub_enhanced$Phylum)
+##### get rid of everything not Chordata, Cnidaria, and Porifera #####
+sub_enhanced2 <- sub_enhanced %>%
+  filter(Phylum == 'Chordata' |
+           Phylum == 'Cnidaria' |
+           Phylum == 'Porifera')
 
 ##### export result to csv (export to CSV) #####
-filename <- '20230416-4_NOAA_SH-22-09.csv'
-write_csv(sub_enhanced,
-          paste("c:/rworking/deepseatools/indata/",filename),
-          fileEncoding = "latin9")
+filename <- '20230417-0_NOAA_SH-22-09.csv'
+write_csv(sub_enhanced2,
+          paste("c:/rworking/deepseatools/indata/",
+                filename))
 
 
 
@@ -305,37 +372,6 @@ write_csv(sub_enhanced,
 
 
 
-
-
-
-
-
-##### check #####
-setdiff("Actinernus nobilis", tax$ScientificName)
-setdiff("Actinernus", tax$ScientificName)
-setdiff("Actinernus", tax_fl$ScientificName)
-setdiff("Actinernus nobilis", tax_fl$ScientificName)
-
-sub %>% filter(ScientificName == "Actinernus" |
-                 ScientificName == "Actinernus nobilis") %>%
-  pull(CatalogNumber) %>%
-  length()
-
-sub %>% filter(ScientificName == "Actinernus" |
-                 ScientificName == "Actinernus nobilis") %>%
-  pull(Flag) %>%
-  table()
-
-sub %>% filter(ScientificName == "Actinernus" |
-                 ScientificName == "Actinernus nobilis") %>%
-  pull(Family) %>%
-  table()
-
-## Actinoscyphia Actinoscyphiidae
-setdiff("Actinoscyphiidae", tax_fl$ScientificName)
-
-s %>% filter(FieldName == 'VernacularNameCategory') %>%
-  pull(ValidValues)
 
 
 
