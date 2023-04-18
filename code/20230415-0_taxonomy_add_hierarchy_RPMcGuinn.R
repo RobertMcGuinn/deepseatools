@@ -276,6 +276,11 @@ sub_enhanced$Subspecies <- sub_enhanced$Subspecies.y
 sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority
 sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
 
+##### get rid of unneeded column names #####
+names_list <- names(sub)
+sub_enhanced <- sub_enhanced %>%
+  dplyr::select(all_of(names_list))
+
 ##### assign VernacularNameCategory #####
 ## define not in
 `%notin%` <- Negate(`%in%`)
@@ -353,11 +358,6 @@ sub_enhanced2 <- sub_enhanced %>%
 #          Species) %>%
 #   summarize(n=n()) %>%
 #   View()
-
-##### get rid of unneeded column names #####
-names_list <- names(sub)
-sub_enhanced <- sub_enhanced %>%
-  dplyr::select(all_of(names_list))
 
 ##### **check #####
 table(sub_enhanced$Phylum)
