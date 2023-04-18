@@ -1,7 +1,7 @@
 ##### header #####
 ## author: Robert McGuinn
 ## started on: 20230418
-## purpose: analyze habs data for JCM.
+## purpose: coral bleaching map layouts for JCM.
 ## google drive folder: https://drive.google.com/drive/folders/1E0Nnd6kYpmPHdA_eyn7DxURIm_y4aWse?usp=share_link
 ## ArcGIS project path: C:\Users\Robert.Mcguinn\Documents\ArcGIS\Projects\20230418-0_coral_bleaching_JCMcGuinn_RPMcGuinn\
 
