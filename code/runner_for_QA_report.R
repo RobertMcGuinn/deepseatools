@@ -10,9 +10,28 @@ library(rmarkdown)
 library(googledrive)
 library(googlesheets4)
 
+##### authorizations #####
+# Set authentication token to be stored in a folder called \.secrets``
+options(gargle_oauth_cache = ".secrets")
+
+# Authenticate manually
+gs4_auth()
+
+# If successful, the previous step stores a token file.
+# Check that a file has been created with:
+
+list.files(".secrets/")
+
+# Check that the non-interactive authentication works by first deauthorizing:
+gs4_deauth()
+
+# Authenticate using token. If no browser opens, the authentication works.
+gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20230411-4_NOAA_SH-22-09"
+filename <- "20230403-1_NOAA_EX1304_Northeast_US_SBingo_2013"
 
 ## render
 ## manual change version of dashboard version number is required
@@ -56,6 +75,16 @@ sub %>% filter(DepthInMeters > 30000) %>% pull(SampleID)
 x <- paste(sub$SampleID, sub$ScientificName, sub$VerbatimScientificName)
 table(duplicated(x))
 
+filt %>% filter(grepl("NOAA", DataProvider)) %>% pull(DataProvider) %>% unique()
+
+sub %>% filter(DepthInMeters>7000) %>% select(CatalogNumber, DepthInMeters)
+
+yo <- read.delim('c:/rworking/deepseatools/indata/20221031-0_NOAA_EX1304_Northeast_US_SBingo_2013.txt', sep = '\t')
+
+yo %>% filter(DepthInMeters > 7000) %>% select(TrackingID, DepthInMeters)
+sub %>% filter(DepthInMeters > 7000) %>% select(TrackingID, DepthInMeters)
+
+
 # Acanthogorgia spissa (N=4)
 # Anthomastus gyratus (N=1)
 # Anthoptilum gowlettholmesae (N=4)
@@ -72,7 +101,7 @@ table(duplicated(x))
 ## manual: then SAVE to PDF
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/14NAAsfPnYbgRNh9Z99VwlhcG9auy24Is"
+folderurl <- "https://drive.google.com/drive/folders/1Yz_-aOHIkZJ-WP2vdhUGVfMCUKQfxlgv"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
