@@ -1,9 +1,11 @@
 ##### Header #####
+## projectname: 20230329_BSEE_Alaska_deep_ESI_RPMcGuinn
 ## author: Robert McGuinn
 ## date started:
 ## forkedfrom: none
-## purpose:
-## drive:
+## drive:https://drive.google.com/drive/folders/1BSXMVD5khNni1lvwKaT8posa71HwpUJ7?usp=share_link
+## purpose: aoi analysis for RPI ESI work for BSEE
+
 
 ##### packages #####
 library(tidyverse)
@@ -29,7 +31,7 @@ gs4_deauth()
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
-##### load national database #####
+##### load national database (local) #####
 setwd("C:/rworking/deepseatools/indata")
 filename <- "DSCRTP_NatDB_20221213-0.csv"
 indata<-read_csv(filename,
@@ -40,20 +42,20 @@ indata<-read_csv(filename,
 filt <- indata %>%
   filter(Flag == 0)
 
-##### clear all object besided
+##### clear all objects besides national database #####
 rm(list = setdiff(ls(), "filt"))
 
 ##### load data subsets of interest #####
 ## next file
 path <- "C:/rworking/deepseatools/indata/"
-filename <- "20230420-0_NOAA_EX1304_Northeast_US_SBingo_2013"
+filename <- ""
 string <- paste(path,filename,".csv",sep = '')
 sub <- read_csv(string)
 flagged <- sub %>%  filter(Flag == "1")
 
 ## next file
 path <- "C:/rworking/deepseatools/indata/"
-filename <- "20230420-0_EX-14-04-L2-L3"
+filename <- ""
 string <- paste(path,filename,".csv",sep = '')
 sub2 <- read_csv(string)
 flagged <- sub %>%  filter(Flag == "1")

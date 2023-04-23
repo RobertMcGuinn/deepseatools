@@ -2,6 +2,7 @@
 ## author: Robert McGuinn
 ## date started: 20230421
 ## forkedfrom: none
+## drive: https://drive.google.com/drive/folders/1BSXMVD5khNni1lvwKaT8posa71HwpUJ7?usp=share_link
 ## purpose: Northeast data extract of existing and currently in queue datasets.
 
 ##### packages #####
@@ -65,7 +66,7 @@ filt2 <- rbind(filt2,sub2)
 filt2 <- filt2 %>%
   filter(Latitude != '-999' , Longitude != '-999')
 
-##### creating a geographic bounding box (south atlantic) #####
+##### creating a geographic bounding box (Northeasten US Atlantic Ocean) #####
 minLon <- -77
 maxLon <- -54
 minLat <- 33
