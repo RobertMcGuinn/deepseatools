@@ -103,6 +103,7 @@ beta
 ```{r}
 ## Bray-Curtis as binary (presence/absence) of species per equation above
 sp_bray_binary = vegdist(site.sp, method='bray', binary=T)
+as.matrix(sp_bray_binary)
 
 ## Bray-Curtis as amount (density) of species
 sp_bray = vegdist(site.sp, method='bray')
