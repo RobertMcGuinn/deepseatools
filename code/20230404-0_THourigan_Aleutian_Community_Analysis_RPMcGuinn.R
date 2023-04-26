@@ -197,7 +197,7 @@ species.scores$species <- rownames(species.scores)  # create a column of species
 species.scores$spec_code <- 1:(length(species.scores$species))
 
 
-##### plotting the NMDS scores with habitat #####
+##### plotting the NMDS scores with habitat and species #####
 hull <- site.scores %>% group_by(habitat) %>%
   slice(chull(NMDS2, NMDS1))
 
@@ -231,7 +231,187 @@ ggplot() +
   coord_cartesian(xlim=c(xlow, xhigh),
                   ylim=c(ylow, yhigh))
 
-ggsave('c:/rworking/deepseatools/images/20230426_NMDS_habitat_RPMcGuinn.png')
+ggsave('c:/rworking/deepseatools/images/20230426_NMDS_habitat_species_RPMcGuinn.png')
+
+##### plotting the NMDS scores with habitat and sites #####
+hull <- site.scores %>% group_by(habitat) %>%
+  slice(chull(NMDS2, NMDS1))
+
+xlow <- min(site.scores$NMDS2)-.5
+xhigh <- max(site.scores$NMDS2)+.5
+ylow <- min(site.scores$NMDS1)-.25
+yhigh <- max(site.scores$NMDS1)+.25
+
+ggplot() +
+  geom_point(data=site.scores,
+             aes(x=NMDS2,
+                 y=NMDS1,
+                 color=habitat),
+             size=2) +
+  geom_polygon(data=hull,
+               aes(x=NMDS2,
+                   y=NMDS1,
+                   fill=habitat,
+                   group=habitat),
+               alpha=0.1) + # add the convex hulls
+  # geom_text(data=species.scores,
+  #           aes(x=NMDS2,y=NMDS1,
+  #               label = species),
+  #           check_overlap = TRUE,
+  #           size=3) +
+  geom_text(data=site.scores,
+            aes(x=NMDS2,y=NMDS1,
+                label = EventID),
+            check_overlap = TRUE,
+            size=3) +
+  coord_cartesian(xlim=c(xlow, xhigh),
+                  ylim=c(ylow, yhigh))
+
+ggsave('c:/rworking/deepseatools/images/20230426_NMDS_habitat_sites_RPMcGuinn.png')
+
+##### plotting the NMDS scores with DepthCat and species #####
+hull <- site.scores %>% group_by(DepthCat) %>%
+  slice(chull(NMDS2, NMDS1))
+
+xlow <- min(site.scores$NMDS2)-.5
+xhigh <- max(site.scores$NMDS2)+.5
+ylow <- min(site.scores$NMDS1)-.25
+yhigh <- max(site.scores$NMDS1)+.25
+
+ggplot() +
+  geom_point(data=site.scores,
+             aes(x=NMDS2,
+                 y=NMDS1,
+                 color=DepthCat),
+             size=2) +
+  geom_polygon(data=hull,
+               aes(x=NMDS2,
+                   y=NMDS1,
+                   fill=DepthCat,
+                   group=DepthCat),
+               alpha=0.1) + # add the convex hulls
+  geom_text(data=species.scores,
+            aes(x=NMDS2,y=NMDS1,
+                label = species),
+            check_overlap = TRUE,
+            size=3) +
+  # geom_text(data=site.scores,
+  #           aes(x=NMDS2,y=NMDS1,
+  #               label = EventID),
+  #           check_overlap = TRUE,
+  #           size=3) +
+  coord_cartesian(xlim=c(xlow, xhigh),
+                  ylim=c(ylow, yhigh))
+
+ggsave('c:/rworking/deepseatools/images/20230426_NMDS_DepthCat_species_RPMcGuinn.png')
+
+##### plotting the NMDS scores with DepthCat and sites #####
+hull <- site.scores %>% group_by(DepthCat) %>%
+  slice(chull(NMDS2, NMDS1))
+
+xlow <- min(site.scores$NMDS2)-.5
+xhigh <- max(site.scores$NMDS2)+.5
+ylow <- min(site.scores$NMDS1)-.25
+yhigh <- max(site.scores$NMDS1)+.25
+
+ggplot() +
+  geom_point(data=site.scores,
+             aes(x=NMDS2,
+                 y=NMDS1,
+                 color=DepthCat),
+             size=2) +
+  geom_polygon(data=hull,
+               aes(x=NMDS2,
+                   y=NMDS1,
+                   fill=DepthCat,
+                   group=DepthCat),
+               alpha=0.1) + # add the convex hulls
+  # geom_text(data=species.scores,
+  #           aes(x=NMDS2,y=NMDS1,
+  #               label = species),
+  #           check_overlap = TRUE,
+  #           size=3) +
+  geom_text(data=site.scores,
+            aes(x=NMDS2,y=NMDS1,
+                label = EventID),
+            check_overlap = TRUE,
+            size=3) +
+  coord_cartesian(xlim=c(xlow, xhigh),
+                  ylim=c(ylow, yhigh))
+
+ggsave('c:/rworking/deepseatools/images/20230426_NMDS_DepthCat_sites_RPMcGuinn.png')
+
+##### plotting the NMDS scores with temp_cat and species #####
+hull <- site.scores %>% group_by(temp_cat) %>%
+  slice(chull(NMDS2, NMDS1))
+
+xlow <- min(site.scores$NMDS2)-.5
+xhigh <- max(site.scores$NMDS2)+.5
+ylow <- min(site.scores$NMDS1)-.25
+yhigh <- max(site.scores$NMDS1)+.25
+
+ggplot() +
+  geom_point(data=site.scores,
+             aes(x=NMDS2,
+                 y=NMDS1,
+                 color=temp_cat),
+             size=2) +
+  geom_polygon(data=hull,
+               aes(x=NMDS2,
+                   y=NMDS1,
+                   fill=temp_cat,
+                   group=temp_cat),
+               alpha=0.1) + # add the convex hulls
+  geom_text(data=species.scores,
+            aes(x=NMDS2,y=NMDS1,
+                label = species),
+            check_overlap = TRUE,
+            size=3) +
+  # geom_text(data=site.scores,
+  #           aes(x=NMDS2,y=NMDS1,
+  #               label = EventID),
+  #           check_overlap = TRUE,
+  #           size=3) +
+  coord_cartesian(xlim=c(xlow, xhigh),
+                  ylim=c(ylow, yhigh))
+
+ggsave('c:/rworking/deepseatools/images/20230426_NMDS_temp_cat_species_RPMcGuinn.png')
+
+##### plotting the NMDS scores with temp_cat and sites #####
+hull <- site.scores %>% group_by(temp_cat) %>%
+  slice(chull(NMDS2, NMDS1))
+
+xlow <- min(site.scores$NMDS2)-.5
+xhigh <- max(site.scores$NMDS2)+.5
+ylow <- min(site.scores$NMDS1)-.25
+yhigh <- max(site.scores$NMDS1)+.25
+
+ggplot() +
+  geom_point(data=site.scores,
+             aes(x=NMDS2,
+                 y=NMDS1,
+                 color=temp_cat),
+             size=2) +
+  geom_polygon(data=hull,
+               aes(x=NMDS2,
+                   y=NMDS1,
+                   fill=temp_cat,
+                   group=temp_cat),
+               alpha=0.1) + # add the convex hulls
+  # geom_text(data=species.scores,
+  #           aes(x=NMDS2,y=NMDS1,
+  #               label = species),
+  #           check_overlap = TRUE,
+  #           size=3) +
+  geom_text(data=site.scores,
+            aes(x=NMDS2,y=NMDS1,
+                label = EventID),
+            check_overlap = TRUE,
+            size=3) +
+  coord_cartesian(xlim=c(xlow, xhigh),
+                  ylim=c(ylow, yhigh))
+
+ggsave('c:/rworking/deepseatools/images/20230426_NMDS_temp_cat_sites_RPMcGuinn.png')
 
 
 ##### legend to species #####
