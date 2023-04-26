@@ -733,7 +733,7 @@ mycols
 
 ##### filter d down to just the species appearing in the top ten ##### 
 z <- d %>% filter(
-  ScientificName %in% topten$ScientificName
+  ScientificName %in% topten$ScientificName,
   EventID %in% c("NA101-H1715","NA101-H1720")
   )
 
