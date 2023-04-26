@@ -13,6 +13,7 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(vegan)
 library(maditr)
+install.packages("ggord")
 
 ##### load data #####
 path <- "C:/rworking/deepseatools/indata/20230404-0_THourigan_Aleutian_Community_Analysis_RPMcGuinn/20230404-0_AleutianRecords-ForMap_THourigan.xlsx"
@@ -21,7 +22,7 @@ mapdata <- read.xlsx(path)
 path2 <- "C:/rworking/deepseatools/indata/20230404-0_THourigan_Aleutian_Community_Analysis_RPMcGuinn/20230404-0_AleutianSurveysTaxonCategories_THourigan.xlsx"
 com <- read.xlsx(path2)
 
-##### check #####
+##### ** check #####
 # dim(mapdata)
 # names(mapdata)
 #
@@ -83,17 +84,26 @@ x$place[grepl("Umnak", x$Locality)] <- 'Umnak'
 x$place[grepl("Unalaska", x$Locality)] <- 'Unalaska'
 x$place[grepl("Attu", x$Locality)] <- 'Attu'
 x$place[grepl("Semichi", x$Locality)] <- 'Semichi'
-table(x$place, useNA = 'always')
+# table(x$place, useNA = 'always')
+
+##### set habitat categories #####
+x$habitat[grepl("Rock-", x$Habitat)] <- 'Rock'
+x$habitat[grepl("Sand-", x$Habitat)] <- 'Sand'
+x$habitat[grepl("Cobble-", x$Habitat)] <- 'Cobble'
+x$habitat[grepl("MixedCoarse-", x$Habitat)] <- 'MixedCoarse'
+x$habitat[grepl("Gravel-", x$Habitat)] <- 'Gravel'
+x$habitat[grepl("Boulder", x$Habitat)] <- 'Boulder'
+# table(x$place, useNA = 'always')
 
 ##### filter some problem sites #####
-# x <- x %>% filter(EventID != 'HAPC_43')
-# x <- x %>% filter(EventID != 'TG16_21')
-# x <- x %>% filter(EventID != 'TG16_22')
-# x <- x %>% filter(EventID != 'transect 2012-39')
-# x <- x %>% filter(EventID != 'transect 2014-56')
-# x <- x %>% filter(EventID != 'transect 2012-104')
-# x <- x %>% filter(EventID != 'transect 2012-62')
-# x <- x %>% filter(AnalysisCategory != 'Ptilosarcus gurneyi')
+x <- x %>% filter(EventID != 'HAPC_43')
+x <- x %>% filter(EventID != 'TG16_21')
+x <- x %>% filter(EventID != 'TG16_22')
+x <- x %>% filter(EventID != 'transect 2012-39')
+x <- x %>% filter(EventID != 'transect 2014-56')
+x <- x %>% filter(EventID != 'transect 2012-104')
+x <- x %>% filter(EventID != 'transect 2012-62')
+x <- x %>% filter(AnalysisCategory != 'Ptilosarcus gurneyi')
 
 ##### add IndividualCount variable #####
 x$IndividualCount <- 1
@@ -118,23 +128,18 @@ sitenames <- row.names(site.sp)
 ##### running NMDS on site by species matrix #####
 NMDS <- metaMDS(site.sp,
                 distance = "bray",
-                binary = F,
-                k=3,
+                binary = T,
+                k=4,
                 trymax = 40)
 
-##### plot the NMDS results #####
+##### *** plot the NMDS results *** #####
+##### make a site centered plot using ordiplot #####
+## set zoom
 xlow <- -4
 xhigh <- 0
 ylow <- -.7
 yhigh <- 1.5
 
-
-xlow <- -2.5
-xhigh <- -2.1
-ylow <- -0.7
-yhigh <- 0.5
-
-##### make a site centered plot #####
 ordiplot(NMDS,
          display = "sites",
          type = "n",
@@ -150,7 +155,19 @@ text(NMDS,
      col = "black",
      cex = 0.3)
 
-##### make a species centered plot #####
+##### make a species centered plot using ordiplot #####
+## set zoom
+xlow <- -4
+xhigh <- 5
+ylow <- -5
+yhigh <- 5
+
+## set zoom
+# xlow <- -2.0
+# xhigh <- -2.0
+# ylow <- -0.3
+# yhigh <- 0.2
+
 ordiplot(NMDS,
          display = "species",
          add = TRUE,
@@ -158,22 +175,20 @@ ordiplot(NMDS,
          pch = 24,
          bg = "orange",
          cex = 0.2,
-         xlim = c(xlow, xhigh),
-         ylim = c(ylow, yhigh)
+         # xlim = c(xlow, xhigh),
+         # ylim = c(ylow, yhigh)
          )
 text(NMDS,
      display = "species",
      col = "black",
-     cex = 0.2)
+     cex = 0.3)
 
 ##### extracting the site scores #####
 site.scores <- as.data.frame(scores(NMDS, "site"))
 
-##### check #####
-# dim (site.scores)
-
 ##### joining information from original table #####
-yo <- x %>% group_by(EventID, DepthCat, temp_cat, loc, DensityCategory, Locality, place) %>% summarize(n=n())
+site.scores$EventID <- row.names(site.scores)
+yo <- x %>% group_by(EventID, DepthCat, temp_cat, loc, DensityCategory, Locality, place, habitat) %>% summarize(n=n())
 site.scores <- left_join(site.scores, yo)
 
 ##### extracting species scores #####
@@ -181,13 +196,43 @@ species.scores <- as.data.frame(scores(NMDS, "species"))  #Using the scores func
 species.scores$species <- rownames(species.scores)  # create a column of species, from the rownames of species
 species.scores$spec_code <- 1:(length(species.scores$species))
 
-##### plotting the NMDS scores #####
+
+##### plotting the NMDS scores with habitat #####
+hull <- site.scores %>% group_by(habitat) %>%
+  slice(chull(NMDS2, NMDS1))
+
+xlow <- min(site.scores$NMDS2)-.5
+xhigh <- max(site.scores$NMDS2)+.5
+ylow <- min(site.scores$NMDS1)-.25
+yhigh <- max(site.scores$NMDS1)+.25
+
 ggplot() +
-  geom_point(data=site.scores,aes(x=NMDS2,y=NMDS1, color=place), size=2) +
+  geom_point(data=site.scores,
+             aes(x=NMDS2,
+                 y=NMDS1,
+                 color=habitat),
+             size=2) +
+  geom_polygon(data=hull,
+               aes(x=NMDS2,
+                   y=NMDS1,
+                   fill=habitat,
+                   group=habitat),
+               alpha=0.1) + # add the convex hulls
   geom_text(data=species.scores,
             aes(x=NMDS2,y=NMDS1,
-                label = spec_code),
-            size=3)
+                label = species),
+            check_overlap = TRUE,
+            size=3) +
+  # geom_text(data=site.scores,
+  #           aes(x=NMDS2,y=NMDS1,
+  #               label = EventID),
+  #           check_overlap = TRUE,
+  #           size=3) +
+  coord_cartesian(xlim=c(xlow, xhigh),
+                  ylim=c(ylow, yhigh))
+
+ggsave('c:/rworking/deepseatools/images/20230426_NMDS_habitat_RPMcGuinn.png')
+
 
 ##### legend to species #####
 species.scores %>%  dplyr::select(spec_code)
@@ -286,6 +331,7 @@ st_write(geosub,
 ##### **check #####
 mapdata2 %>% group_by(EventID, groups) %>% summarize(n=n()) %>% View()
 
+##### *** for map layout *** #####
 ##### filter lat and longs ######
 ## filter out -999
 sub2 <- mapdata %>%
