@@ -52,6 +52,7 @@ beaufort <- sf::st_read(paste(path,"BSEE_AOI_BEAUFORT_SEA/BSEE_AOI_BEAUFORT_SEA.
 chukchi <- sf::st_read(paste(path, "BSEE_AOI_CHUKCHI_SEA/BSEE_AOI_CHUKCHI_SEA.shp", sep = ''))
 cook <- sf::st_read(paste(path,"BSEE_AOI_COOK_INLET_KODIAK_IS/BSEE_AOI_COOK_INLET_KODIAK_IS.shp", sep = ''))
 
+
 ##### transform coral and sponge points to sf object #####
 points <- st_as_sf(filt, coords = c("Longitude", "Latitude"), crs = 4326)
 
@@ -310,7 +311,6 @@ st_write(obis_points_intersect,
 
 ##### look at the DSCRTP data #####
 obis_cook_kodiak_sea %>% filter(dataset_id == 'f5a4799e-dc24-4807-89d9-01da47d52e3b') %>% pull(dataset_id)
-
 
 
 
