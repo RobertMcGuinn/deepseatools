@@ -13,7 +13,11 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(vegan)
 library(maditr)
-install.packages("ggord")
+install.packages("arcgisbinding",
+                 repos="https://r.esri.com",
+                 type="win.binary")
+library(arcgisbinding)
+arc.check_product()
 
 ##### load data #####
 path <- "C:/rworking/deepseatools/indata/20230404-0_THourigan_Aleutian_Community_Analysis_RPMcGuinn/20230404-0_AleutianRecords-ForMap_THourigan.xlsx"
@@ -21,6 +25,9 @@ mapdata <- read.xlsx(path)
 
 path2 <- "C:/rworking/deepseatools/indata/20230404-0_THourigan_Aleutian_Community_Analysis_RPMcGuinn/20230404-0_AleutianSurveysTaxonCategories_THourigan.xlsx"
 com <- read.xlsx(path2)
+
+# path3 <- "C:/rworking/deepseatools/indata/20230428-0_AleutianRecords-ForMap2_THourigan.xlsx"
+# com <- read.xlsx(path3)
 
 ##### load current database: input: csv, output (filt) #####
 source("C:/rworking/deepseatools/code/mod_load_current_ndb.R")
@@ -561,13 +568,27 @@ st_write(geosub,
          delete_dsn = T)
 
 ##### import protected area shapefile using sf #####
-pa <- sf::st_read("C:/data/gis_data/protected_area/shapefiles/20221104_protected_areas.shp")
+gdb <- 'C:/data/gis_data/protected_areas_HColeman/DSC_SeaTrawl_Alaska.gdb'
+layer <- 'Alaska_SeaFloorTrawl'
+pa <- st_read(gdb, layer = layer )
+pa <- st_transform(pa, crs = domainCRS)
+geosub <- st_transform(geosub, crs = domainCRS)
+pa_points <- st_intersection(geosub, pa)
+st_write(pa_points,
+         "C:/rworking/deepseatools/indata/points.shp",
+         delete_dsn = T)
+protected_list <- unique(pa_points$EventID)
+site_list_hd <- unique(com$EventID)
+protected_list_hd <- intersect(protected_list, site_list_hd)
+unprotected_list <- setdiff(site_list_hd, protected_list_hd)
 
-'C:/data/gis_data/protected_areas_HColeman/DSC_SeaTrawl_Alaska.gdb'
+df <- data.frame(site = site_list_hd)
 
-Alaska_SeaFloorTrawl
+df$protected <-
+  case_when(
+    df$site %in% protected_list_hd ~ "protected",
+    df$site %in% unprotected_list ~ "unprotected",
+  )
 
-
-
-
+write.csv(df, 'c:/rworking/deepseatools/indata/20230428-0_summary_of_protected_status_of_sites_RPMcGuinn.csv')
 
