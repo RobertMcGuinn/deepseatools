@@ -22,6 +22,9 @@ mapdata <- read.xlsx(path)
 path2 <- "C:/rworking/deepseatools/indata/20230404-0_THourigan_Aleutian_Community_Analysis_RPMcGuinn/20230404-0_AleutianSurveysTaxonCategories_THourigan.xlsx"
 com <- read.xlsx(path2)
 
+##### load current database: input: csv, output (filt) #####
+source("C:/rworking/deepseatools/code/mod_load_current_ndb.R")
+
 ##### ** check #####
 # dim(mapdata)
 # names(mapdata)
@@ -511,6 +514,7 @@ st_write(geosub,
 ##### **check #####
 mapdata2 %>% group_by(EventID, groups) %>% summarize(n=n()) %>% View()
 
+
 ##### *** for map layout *** #####
 ##### filter lat and longs ######
 ## filter out -999
@@ -557,4 +561,13 @@ st_write(geosub,
          delete_dsn = T)
 
 ##### import protected area shapefile using sf #####
-pa <- sf::st_read("C:/data/gis_data/protected_areas/shapefiles/20221104_protected_areas.shp")
+pa <- sf::st_read("C:/data/gis_data/protected_area/shapefiles/20221104_protected_areas.shp")
+
+'C:/data/gis_data/protected_areas_HColeman/DSC_SeaTrawl_Alaska.gdb'
+
+Alaska_SeaFloorTrawl
+
+
+
+
+

@@ -18,7 +18,7 @@ library(rnaturalearthdata)
 # Set authentication token to be stored in a folder called \.secrets``
 options(gargle_oauth_cache = ".secrets")
 
-# Authenticate manually
+# Authenticate manually (run separately and select account)
 gs4_auth()
 
 # If successful, the previous step stores a token file.
@@ -51,7 +51,6 @@ path <- 'C:/Users/Robert.Mcguinn/Documents/ArcGIS/Projects/20230329_BSEE_Alaska_
 beaufort <- sf::st_read(paste(path,"BSEE_AOI_BEAUFORT_SEA/BSEE_AOI_BEAUFORT_SEA.shp", sep = ''))
 chukchi <- sf::st_read(paste(path, "BSEE_AOI_CHUKCHI_SEA/BSEE_AOI_CHUKCHI_SEA.shp", sep = ''))
 cook <- sf::st_read(paste(path,"BSEE_AOI_COOK_INLET_KODIAK_IS/BSEE_AOI_COOK_INLET_KODIAK_IS.shp", sep = ''))
-
 
 ##### transform coral and sponge points to sf object #####
 points <- st_as_sf(filt, coords = c("Longitude", "Latitude"), crs = 4326)
