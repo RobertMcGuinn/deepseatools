@@ -20,14 +20,14 @@ library(arcgisbinding)
 arc.check_product()
 
 ##### load data #####
-path <- "C:/rworking/deepseatools/indata/20230404-0_THourigan_Aleutian_Community_Analysis_RPMcGuinn/20230404-0_AleutianRecords-ForMap_THourigan.xlsx"
-mapdata <- read.xlsx(path)
+# path <- "C:/rworking/deepseatools/indata/20230404-0_THourigan_Aleutian_Community_Analysis_RPMcGuinn/20230404-0_AleutianRecords-ForMap_THourigan.xlsx"
+# mapdata <- read.xlsx(path)
 
 path2 <- "C:/rworking/deepseatools/indata/20230404-0_THourigan_Aleutian_Community_Analysis_RPMcGuinn/20230404-0_AleutianSurveysTaxonCategories_THourigan.xlsx"
 com <- read.xlsx(path2)
 
-# path3 <- "C:/rworking/deepseatools/indata/20230428-0_AleutianRecords-ForMap2_THourigan.xlsx"
-# com <- read.xlsx(path3)
+path3 <- "C:/rworking/deepseatools/indata/20230428-0_AleutianRecords-ForMap2_THourigan.xlsx"
+mapdata <- read.xlsx(path3)
 
 ##### load current database: input: csv, output (filt) #####
 source("C:/rworking/deepseatools/code/mod_load_current_ndb.R")
@@ -567,6 +567,12 @@ st_write(geosub,
          "C:/Users/Robert.Mcguinn/Documents/ArcGIS/Projects/20230404-0_THourigan_Aleutian_Community_Analysis_RPMcGuinn/shapefiles/mapdata.shp",
          delete_dsn = T)
 
+##### **check #####
+mapdata %>% filter(EventID == 'TG16_44') %>% pull(DensityCategory)
+mapdata %>% filter(EventID == 'transect 2012-26') %>% pull(DensityCategory)
+mapdata %>% filter(EventID == 'transect 2012-42') %>% pull(DensityCategory)
+mapdata %>% filter(EventID == 'transect 2012-50') %>% pull(DensityCategory)
+
 ##### import protected area shapefile using sf #####
 gdb <- 'C:/data/gis_data/protected_areas_HColeman/DSC_SeaTrawl_Alaska.gdb'
 layer <- 'Alaska_SeaFloorTrawl'
@@ -578,7 +584,8 @@ st_write(pa_points,
          "C:/rworking/deepseatools/indata/points.shp",
          delete_dsn = T)
 protected_list <- unique(pa_points$EventID)
-site_list_hd <- unique(com$EventID)
+site_list_hd <- mapdata %>% filter(DensityCategory == 'High 1-5/m2' | DensityCategory == 'Very High > 5/m2') %>%
+  pull(EventID) %>% unique()
 protected_list_hd <- intersect(protected_list, site_list_hd)
 unprotected_list <- setdiff(site_list_hd, protected_list_hd)
 
@@ -590,5 +597,5 @@ df$protected <-
     df$site %in% unprotected_list ~ "unprotected",
   )
 
-write.csv(df, 'c:/rworking/deepseatools/indata/20230428-0_summary_of_protected_status_of_sites_RPMcGuinn.csv')
+write.csv(df, 'c:/rworking/deepseatools/indata/20230430-0_summary_of_protected_status_of_sites_RPMcGuinn.csv')
 
