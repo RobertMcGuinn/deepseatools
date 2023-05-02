@@ -573,17 +573,28 @@ mapdata %>% filter(EventID == 'transect 2012-26') %>% pull(DensityCategory)
 mapdata %>% filter(EventID == 'transect 2012-42') %>% pull(DensityCategory)
 mapdata %>% filter(EventID == 'transect 2012-50') %>% pull(DensityCategory)
 
-##### import protected area shapefile using sf #####
+##### produce a list of protected vs. unprotected #####
 gdb <- 'C:/data/gis_data/protected_areas_HColeman/DSC_SeaTrawl_Alaska.gdb'
 layer <- 'Alaska_SeaFloorTrawl'
 pa <- st_read(gdb, layer = layer )
 pa <- st_transform(pa, crs = domainCRS)
+
+am <- st_read('c:/data/gis_data/20230427-0_Alaska_Mackerel_Sea_Lion_Protection_Areas/Atka_Mackerel.shp')
+am <- st_transform(am, crs = domainCRS)
+am_sub <- am %>% filter(HTM == 'AI_No_Atka_Mack.htm')
+
 geosub <- st_transform(geosub, crs = domainCRS)
 pa_points <- st_intersection(geosub, pa)
+am_points <- st_intersection(geosub, am_sub)
+
 st_write(pa_points,
          "C:/rworking/deepseatools/indata/points.shp",
          delete_dsn = T)
-protected_list <- unique(pa_points$EventID)
+
+protected_list1 <- unique(pa_points$EventID)
+protected_list2 <- unique(am_points$EventID)
+protected_list <- c(protected_list1, protected_list2)
+
 site_list_hd <- mapdata %>% filter(DensityCategory == 'High 1-5/m2' | DensityCategory == 'Very High > 5/m2') %>%
   pull(EventID) %>% unique()
 protected_list_hd <- intersect(protected_list, site_list_hd)
@@ -597,5 +608,5 @@ df$protected <-
     df$site %in% unprotected_list ~ "unprotected",
   )
 
-write.csv(df, 'c:/rworking/deepseatools/indata/20230430-0_summary_of_protected_status_of_sites_RPMcGuinn.csv')
+write.csv(df, 'c:/rworking/deepseatools/indata/20230502-0_summary_of_protected_status_of_sites_RPMcGuinn.csv')
 

@@ -18,6 +18,8 @@ tab <- filt %>%
   filter(ObservationYear == 2013 |
            ObservationYear == 2014|
            ObservationYear == 2015 |
+           ObservationYear == 2016 |
+           ObservationYear == 2017 |
            ObservationYear == 2018,
          grepl('Nizinski', PI) |
            grepl('Packer', DataContact) |
@@ -29,6 +31,7 @@ tab <- filt %>%
            PI,
            DataContact,
            Reporter,
+           IdentifiedBy,
            DashLink) %>%
   summarize(n=n())
 

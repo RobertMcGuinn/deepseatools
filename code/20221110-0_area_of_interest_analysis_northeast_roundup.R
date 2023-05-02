@@ -9,7 +9,6 @@ library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(ggspatial)
-library(marmap)
 library(raster)
 library(googledrive)
 
@@ -19,10 +18,20 @@ gs4_auth(email = "robert.mcguinn@noaa.gov")
 
 ##### manual: load latest version of NDB #####
 setwd("C:/rworking/deepseatools/indata")
-indata <- read.csv("DSCRTP_NatDB_20220801-0.csv", header = T)
+indata <- read.csv("DSCRTP_NatDB_20221213-0.csv", header = T)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 rm(indata)
+
+##### **check #####
+filt %>% filter(grepl('Bigelow', Vessel)) %>%
+  group_by(DatasetID, Reporter, ObservationYear) %>% summarize(n=n())
+
+filt %>% filter(grepl('NOAA_HB-17-04', DatasetID)) %>%
+  group_by(SurveyID, ObservationYear, VehicleName, DashLink) %>%
+  summarize(n=n(),
+            ObservationDates = paste(unique(ObservationDate), collapse = ' | ')) %>% View()
+View()
 
 ##### manual: load latest version of Sarah Bingo file #####
 ## https://vlab.noaa.gov/redmine/issues/109659
