@@ -54,7 +54,7 @@ rm(x)
 rm(indata)
 ```
 
-## Fix
+## Fix the data
 
 ```{r fix_data, echo=F, cache=F, eval=T}
 ##### strip off the Density measurements for later merge step

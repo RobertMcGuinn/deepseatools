@@ -326,7 +326,7 @@ sub_enhanced2 <- sub_enhanced %>%
       Family %notin%  c('Solanderiidae') ~ 'lace coral',
     Family %in% c('Lithotelestidae') ~ 'lithotelestid coral',
     Family %in% othercorallikehydrozoanfamilies ~ 'other coral-like hydrozoan',
-    Order %in% c('Scleralcyonacea') ~ 'sea pen',
+    Superfamily %in% c('Pennatuloidea') ~ 'sea pen',
     ScientificName %in% c('Porifera') ~ 'sponge',
     Suborder %in% c('Stolonifera') ~ 'stoloniferan coral',
     Order %in% c('Scleractinia') &
