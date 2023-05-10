@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'Aleutian'
+x <- 'ISDSC8'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -14,4 +14,8 @@ files
 y <- c(1)
 path <- files[y]
 file.edit(path)
+
+
+###### clean up everything except core objects ######
+rm(list=setdiff(ls(), c("filt")))
 
