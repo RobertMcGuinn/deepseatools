@@ -7,79 +7,45 @@
 
 ##### install packages #####
 library(sf)
-# install.packages('xlsx')
-#install.packages('openxlsx')
 library(openxlsx)
-library(sp)
 library(tidyverse)
-library(rerddap)
-#install.packages('leaflet')
-library(leaflet)
-# install.packages('extrafont')
-library(extrafont)
-# install.packages('RColorBrewer')
 library(RColorBrewer)
-# install.packages('googlesheets')
-library(googlesheets)
-# install.packages('googledrive')
 library(googledrive)
 library(rmarkdown)
 library(knitr)
-#install.packages("maps")
 library(maps)
-#install.packages("rgdal")
-library(rgdal)
-#install('raster')
-library(raster)
-#install.packages("spocc")
-library(spocc)
-#install.packages('arcgisbinding')
-# library(arcgisbinding)
-# arc.check_product()
-#install.packages('refinr')=
-library(refinr)
-# install.packages('marmap')
-library(marmap) #yo
-#install.packages('prettydoc')
 library(prettydoc)
-#install.packages('robis')
-library(robis)
-#install.packages('devtools')
-library(devtools)
 library(httr)
 library(jsonlite)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(googlesheets4)
 
+##### authorizations #####
+# Set authentication token to be stored in a folder called \.secrets``
+options(gargle_oauth_cache = ".secrets")
+
+# Authenticate manually
+gs4_auth()
+
+# If successful, the previous step stores a token file.
+# Check that a file has been created with:
+
+list.files(".secrets/")
+
+# Check that the non-interactive authentication works by first deauthorizing:
+gs4_deauth()
+
+# Authenticate using token. If no browser opens, the authentication works.
+gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+
 ##### set an option #####
 options(lifecycle_disable_warnings = TRUE)
 
-##### ***OR*** load current database(from Google Drive) (DON'T USE THIS, found error, encoding issue)#####
-## set the file name (user supplied th file name root, without extension).
-filename <- 'DSCRTP_NatDB_20221213-0_CSV' #
-# find the file in google drive by name
-x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
-## getting the id as a character string
-y <- x$id
-## download the zip file
-dl <- drive_download(as_id(y), path = "C:/rworking/deepseatools/indata/file.zip", overwrite = TRUE)
-## extract just the file of interest from the zip file
-sub <- read.csv(unz(dl$local_path, paste(substr(filename, 1, 23), ".csv", sep = '')), fileEncoding = 'latin1')
-flagged <- sub %>%  filter(Flag == "1")
-## change all 'missing' values in factors to explicit NA's
-# filt <- filt %>% mutate_if(is.factor,
-#                       fct_explicit_na,
-#                       na_level = "to_impute")
-
-## cleanup
-rm(dl)
-rm(x)
-rm(y)
-
 ##### ***OR*** read current database from disk #####
 sub <- read.csv(
-  "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20221213-0.csv",
+  "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20230428-0.csv",
   fileEncoding = "latin9")
 
 flagged <- sub %>% filter(Flag == "1")
@@ -124,41 +90,9 @@ filt %>% filter(CatalogNumber == 1178065) %>%
 version <- unique(filt$DatabaseVersion)
 version <- as.character(version)
 
-##### ***OR*** bringing in datasetID key from xls stored on Google Drive #####
-## (UNTESTED: Do not use as of 20230117.  I think it introduces some encoding issues)
-## create a list of files (or single file) that meets title query (Manual change)
-x <- drive_find(q = "name contains '20221213-0_DatasetID_Key_DSCRTP'") #
-
-## browse to it
-# x %>% drive_browse()
-
-# getting the id as a character string
-y <- x$id
-
-# this downloads the file to the specified path (manual change required)
-dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/20221021-1_DatasetID_Key_DSCRTP.xlsx",
-                     overwrite = TRUE)
-
-## read the file into R as a data frame
-key <- read.xlsx(dl$local_path)
-
-## clean up
-rm(y)
-rm(x)
-
-##### ***OR*** bring in old datasetID key from local path #####
-# key <- read.xlsx("C:/rworking/deepseatools/indata/20211207-1_DatasetID_Key_DSCRTP.xlsx")
-
-## checking
-# oldkey <- key
-# setdiff(oldkey$DatasetID, key$DatasetID)
-# setdiff(key$DatasetID, oldkey$DatasetID)
-
+##### bring in datasetID key from local path #####
+key <- read.xlsx("C:/rworking/deepseatools/indata/20230428-0_DatasetID_Key_DSCRTP.xlsx")
 ##### checking #####
-# key %>% filter(grepl('Tu', DatasetID)) %>%
-#   pull(title) %>% unique()
-
 # setdiff(filt$DatasetID, key$DatasetID)
 # setdiff(key$DatasetID, filt$DatasetID)
 #
@@ -168,12 +102,19 @@ rm(x)
 #   summarize(n=n())
 # View(x)
 #
-# filt %>% filter(grepl("NOAA", DatasetID)) %>% pull(DatasetID) %>% table()
+# filt %>% filter(grepl("HB-15-04", DatasetID)) %>% pull(DatasetID) %>% table()
 #
 # key %>%
 #   filter(DatasetID == "NOAA_PC-11-05-L1") %>%
 #   pull(abstract)
 #
+# x <- "NOAA_SH-22-09"
+# x <- filt %>% filter(grepl(x, DatasetID)) %>%
+#   group_by(Citation, CitationMaker, WebSite, Vessel, SurveyID, ObservationYear, ObservationDate, DatasetID) %>%
+#   summarize(n=n())
+# View(x)
+
+
 # x <- setdiff(filt$DatasetID, key$DatasetID)
 # x <- filt %>% filter(DatasetID %in% x) %>%
 #   group_by(DatasetID) %>%
@@ -184,11 +125,7 @@ rm(x)
 # x <- filt %>% filter(DatasetID == x) %>% pull(Locality) %>% unique()
 # View(x)
 #
-# x <- "Nancy Foster"
-# x <- filt %>% filter(grepl(x,Vessel)) %>%
-#   group_by(Vessel, SurveyID, ObservationYear, DatasetID) %>%
-#   summarize(n=n())
-# View(x)
+
 #
 # id <- "BOEM_Mid-Atlantic_Canyons"
 # x <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Summaries/", id, ".html", sep = '')
@@ -285,7 +222,7 @@ filt$CitationMaker <- paste(filt$DataProvider,'. ',
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from Google Drive #####
 ## create a list of files (or single file) that meets title query (Manual change)
 
-x <- drive_find(q = "name contains '20221213-0_DatasetID_Key_DSCRTP'") #
+x <- drive_find(q = "name contains '20230428-0_DatasetID_Key_DSCRTP'") #
 
 ## browse to it
 x %>% drive_browse()
@@ -295,12 +232,12 @@ y <- x$id
 
 # this downloads the file to the specified path (manual change required)
 dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/20221213-0_DatasetID_Key_DSCRTP.xlsx",
+                     path = "C:/rworking/deepseatools/indata/20230428-0_DatasetID_Key_DSCRTP.xlsx",
                      overwrite = TRUE)
 
 ## read the file into R as a data frame
 key <- read.xlsx(dl$local_path)
-►
+
 ##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
 ## build a frequency table by DatasetID from new file
 x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
@@ -314,7 +251,7 @@ names(y)
 z <- merge(y,x)
 
 ## write out result (manual change to file name)
-write.xlsx(z, "C:/rworking/deepseatools/indata/20221213-0_DatasetID_Key_DSCRTP.xlsx",
+write.xlsx(z, "C:/rworking/deepseatools/indata/20230428-0_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
 ##### manual upload new key to Google Drive (point and click stuff) #####

@@ -102,7 +102,7 @@ for(i in list){
 
 
 ##### create sf object from subset #####
-points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+points <- st_as_sf(filt, coords = c("Longitude", "Latitude"), crs = 4326)
 points <- points %>% select(VernacularNameCategory, ScientificName)
 
 ##### ** check #####
