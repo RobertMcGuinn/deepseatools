@@ -72,7 +72,6 @@ filt %>% filter(CatalogNumber == 1178027) %>%
   group_by(DatasetID, PI, Repository) %>%
   summarize(n=n()) %>% View()
 
-
   ## Not valid eventDates for:
   ## occurrenceID==NOAA_DSCRTP:1178069 ; eventDate == 3.1973
   ## occurrenceID==NOAA_DSCRTP:1178068 ; eventDate == 3.1973
@@ -396,7 +395,7 @@ one_eighty <- intersect(yo, yo2)
 not_one_eighty <- setdiff(filt$DatasetID, one_eighty)
 
 ##### checking #####
-length(one_eighty)+length(not_oneeighty)
+length(one_eighty)+length(not_one_eighty)
 
 ##### _create the folders for each type of report #####
 dir.create('C:/rworking/deepseatools/reports/datasetid/cruise')
