@@ -29,8 +29,8 @@ indata<-read_csv(filename,
                  locale = locale(encoding = 'latin9'),
                  na = c("-999", "NA"))
 
-##### filter the NDB (look closely at how this is done.) #####
-## this deserves inspection.
+##### check #####
+##### filter the NDB) #####
 flagged <- indata %>%  filter(Flag == "1")
 filt <- indata %>% filter(Flag == "0")
 
@@ -131,7 +131,7 @@ obis$coordinateUncertaintyInMeters <- gsub("[^[:digit:]., ]", "", obis$coordinat
 obis %>% pull(coordinateUncertaintyInMeters) %>% table(useNA = 'always')
 
 ##### write out file for submission #####
-today <- '20221213-0'
+today <- '20230428-0'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
@@ -144,7 +144,7 @@ library(dplyr)
 # this checks for records with duplicate CatalogNumbers.
 # There should be none. If you find any, alert the entire team immediately.
 
-x <- indata %>%
+x <- filt %>%
   group_by(CatalogNumber) %>%
   filter(n()>1) %>% pull(CatalogNumber) %>% length()
 

@@ -110,3 +110,33 @@ plot(points)
 
 ##### export shapefile #####
 st_write(points, "C:/Users/Robert.Mcguinn/Documents/ArcGIS/Projects/20230511-0_ISDSC8_Scotland_RPMcGuinn/shapefiles/sub_geo.shp", delete_dsn = T)
+
+##### top ten tables #####
+
+list <- unique(filt$FishCouncilRegion)
+
+for(i in list){
+x <- filt %>%
+  filter(
+    FishCouncilRegion == i,
+    Phylum != 'Chordata',
+         ) %>%
+  group_by(ScientificName, Phylum, FishCouncilRegion) %>%
+  summarize(n=n()) %>%
+  arrange(desc(n))
+x <- x %>% select(ScientificName, Phylum, n)
+print(x[1:20,])
+}
+
+
+"South Atlantic"
+"Gulf of Mexico"
+NA
+"New England"
+"Mid-Atlantic"
+"Caribbean"
+"North Pacific"
+"Pacific"
+"Western Pacific"
+
+##### images #####
