@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'runner'
+x <- 'ISDSC8'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -11,10 +11,10 @@ files
 
 ##### choose and open #####
 ## manual input required: pick the number or number you want from the list presented
-y <- c(3)
+y <- c(1)
 path <- files[y]
 file.edit(path)
-
+☺
 
 ###### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
