@@ -111,6 +111,9 @@ points <- points %>% select(VernacularNameCategory, ScientificName)
 
 ##### ** check #####
 plot(points)
+filt %>% filter(SurveyID == 'NA052') %>% pull(DataContact) %>% unique()
+filt %>% filter(grepl('1038228', CatalogNumber)) %>% pull(ScientificName) %>% unique()
+
 
 ##### export shapefile #####
 st_write(points, "C:/Users/Robert.Mcguinn/Documents/ArcGIS/Projects/20230511-0_ISDSC8_Scotland_RPMcGuinn/shapefiles/sub_geo.shp", delete_dsn = T)
@@ -143,4 +146,4 @@ NA
 "Pacific"
 "Western Pacific"
 
-##### images #####
+

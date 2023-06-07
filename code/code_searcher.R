@@ -14,7 +14,6 @@ files
 y <- c(1)
 path <- files[y]
 file.edit(path)
-☺
 
 ###### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
