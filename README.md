@@ -5,7 +5,8 @@ Started on: 20190516
 
 # Status of this repository
 
-This repository is currently under continuous heavy development until further notice.   
+This repository is currently under continuous heavy development until further notice. 
+Note: (Full reset on contribution history on 20230629) 
 
 # Purpose of this repository
 
