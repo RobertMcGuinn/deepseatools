@@ -1,5 +1,5 @@
 ---
-title: "CAPSTONE High Density Communities"
+title: "CAPSTONE High Density Communities Report"
 author: "Robert.McGuinn@NOAA.gov; 843-460-9696"
 date: '`r Sys.Date()`'
 output: word_document
