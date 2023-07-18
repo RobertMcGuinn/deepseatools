@@ -11,10 +11,12 @@ files
 
 ##### choose and open #####
 ## manual input required: pick the number or number you want from the list presented
-y <- c(1)
+y <- c(4)
 path <- files[y]
 file.edit(path)
 
-###### clean up everything except core objects ######
+##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
+
+
 
