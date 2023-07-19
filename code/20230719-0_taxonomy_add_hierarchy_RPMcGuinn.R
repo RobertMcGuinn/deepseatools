@@ -34,19 +34,20 @@ sub <- read_csv(filename,
                  locale = locale(encoding = 'latin9'))
 
 ##### make any needed taxonomic changes to incoming (specific to each new dataset) #####
-sub2 <- sub #%>%
-  # mutate(ScientificName = str_replace(ScientificName, "Eptatretus spp.", "Eptatretus")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Glytocephalus zachirus", "Glyptocephalus zachirus")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Icelinus spp.", "Icelinus")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Raja spp.", "Raja")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Rajiformes egg cases","Rajiformes")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Rathbunella spp.", "Rathbunella")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Scyliorhinidae egg cases", "Scyliorhinidae")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Sebastes spp.", "Sebastes")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Sebastolobus spp.", "Sebastolobus"))
+sub2 <- sub %>%
+  mutate(ScientificName = str_replace(ScientificName, "Anarchichas minor", "Anarhichas minor")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Corhyphaenoides", "Coryphaenoides" )) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Corhyphaenoides ruprestris", "Coryphaenoides rupestris")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Macrourine", "Macrourinae")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Notacanthus chementzii", "Notacanthus chemnitzii")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Selachimorpha", "Elasmobranchii")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Coryphaenoides ruprestris", "Coryphaenoides rupestris")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Arctozenus rissoi", "Arctozenus risso"))
+
 
 ##### create vector of names #####
 my_vector <- unique(sub2$ScientificName)
+my_vector <- my_vector[complete.cases(my_vector)]
 
 ##### parse the list using taxize function 'gbif_parse' #####
 parsed_list <- gbif_parse(my_vector)
@@ -102,7 +103,7 @@ summary <- joined %>%
   summarize(n=n())
 
 ##### **check #####
-# View(summary)
+View(summary)
 
 ##### **check: test for difficult taxa #####
 summary$sametest <- ifelse(summary$canonicalname == summary$valid_name,"Yes","No")
@@ -254,13 +255,18 @@ joined4 <- left_join(joined3, synonyms, by)
 by <- join_by(ScientificName == scientificname)
 sub_enhanced <- left_join(sub2, joined4, by)
 
+##### check #####
+# sub_enhanced %>% filter(is.na(phylum) == T) %>%
+#   pull(ScientificName) %>%
+#   unique()
+
 ##### gather information into proper variables #####
-sub_enhanced$VerbatimScientificName <- sub_enhanced$ScientificName
+sub_enhanced$VerbatimScientificName <- sub$ScientificName
 sub_enhanced$ScientificName <- sub_enhanced$valid_name
 sub_enhanced$VernacularName <- sub_enhanced$vernaculars_list
 sub_enhanced$TaxonRank <- sub_enhanced$rank
 sub_enhanced$AphiaID <- sub_enhanced$valid_AphiaID
-sub_enhanced$Phylum <- sub_enhanced$Phylum.y
+sub_enhanced$Phylum <- sub_enhanced$phylum
 sub_enhanced$Class <- sub_enhanced$Class.y
 sub_enhanced$Subclass <- sub_enhanced$Subclass.y
 sub_enhanced$Order <- sub_enhanced$Order.y
@@ -273,11 +279,6 @@ sub_enhanced$Species <- word(sub_enhanced$Species.y, -1)
 sub_enhanced$Subspecies <- sub_enhanced$Subspecies.y
 sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority
 sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
-
-##### get rid of unneeded column names #####
-names_list <- names(sub)
-sub_enhanced <- sub_enhanced %>%
-  dplyr::select(all_of(names_list))
 
 ##### assign VernacularNameCategory #####
 ## define not in
@@ -333,13 +334,18 @@ sub_enhanced2 <- sub_enhanced %>%
     ScientificName %in% stonycoralcupcoral ~ 'stony coral (branching)',
     TRUE ~ ''))
 
+##### get rid of unneeded column names #####
+names_list <- names(sub)
+sub_enhanced2 <- sub_enhanced2 %>%
+  dplyr::select(all_of(names_list))
+
 ##### **check #####
 # table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
 #
-# sub_enhanced2 %>%
-#   filter(VernacularNameCategory == '') %>%
-#   select(VernacularNameCategory, VerbatimScientificName, ScientificName, Phylum, Class, Order) %>%
-#   View()
+sub_enhanced2 %>%
+  filter(VernacularNameCategory == '') %>%
+  select(VernacularNameCategory, VerbatimScientificName, ScientificName, Phylum, Class, Order) %>%
+  View()
 #
 # sub_enhanced2 %>%
 #   group_by(VernacularNameCategory,
@@ -358,7 +364,11 @@ sub_enhanced2 <- sub_enhanced %>%
 #   View()
 
 ##### **check #####
-table(sub_enhanced$Phylum)
+table(sub_enhanced2$Phylum)
+sub_enhanced2 %>% filter(VerbatimScientificName == "Selachimorpha") %>%
+  group_by(VerbatimScientificName, ScientificName) %>%
+  summarize(n=n())
+View(sub_enhanced2)
 
 ##### get rid of everything not Chordata, Cnidaria, and Porifera #####
 sub_enhanced2 <- sub_enhanced2 %>%
@@ -367,10 +377,12 @@ sub_enhanced2 <- sub_enhanced2 %>%
            Phylum == 'Porifera')
 
 ##### export result to csv (export to CSV) #####
-filename <- '20230417-0_NOAA_SH-22-09.csv'
+filename <- '20230719-0_NOAA_HB1703_ROPOS_Fishes_MRhode.csv'
 write_csv(sub_enhanced2,
           paste("c:/rworking/deepseatools/indata/",
                 filename))
+
+
 
 
 

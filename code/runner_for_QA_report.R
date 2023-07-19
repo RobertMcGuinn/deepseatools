@@ -31,13 +31,17 @@ drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
-filename <- "20230403-1_NOAA_EX1304_Northeast_US_SBingo_2013"
+knitr::opts_knit$set(resource.path = "c:/rworking/deepseatools/code")
+setwd('c:/rworking/deepseatools/code')
+
+filename <- "20230718-0_NOAA_HB1703_ROPOS_Fishes_MRhode"
 
 ## render
 ## manual change version of dashboard version number is required
-rmarkdown::render("C:/rworking/deepseatools/code/20230330-0_rmd_accession_qa_dashboard.rmd",
-       output_file =  paste(filename,".docx", sep=''),
-       output_dir = 'C:/rworking/deepseatools/reports')
+rmarkdown::render("C:/rworking/deepseatools/code/20230718-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
 
 ##### check #####
 sub %>%
@@ -77,7 +81,7 @@ table(duplicated(x))
 
 filt %>% filter(grepl("NOAA", DataProvider)) %>% pull(DataProvider) %>% unique()
 
-sub %>% filter(DepthInMeters>7000) %>% select(CatalogNumber, DepthInMeters)
+sub %>% filter(DepthInMeters>500) %>% select(CatalogNumber, DepthInMeters)
 
 yo <- read.delim('c:/rworking/deepseatools/indata/20221031-0_NOAA_EX1304_Northeast_US_SBingo_2013.txt', sep = '\t')
 
