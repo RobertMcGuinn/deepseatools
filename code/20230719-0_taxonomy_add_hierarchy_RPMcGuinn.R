@@ -44,7 +44,6 @@ sub2 <- sub %>%
   mutate(ScientificName = str_replace(ScientificName, "Coryphaenoides ruprestris", "Coryphaenoides rupestris")) %>%
   mutate(ScientificName = str_replace(ScientificName, "Arctozenus rissoi", "Arctozenus risso"))
 
-
 ##### create vector of names #####
 my_vector <- unique(sub2$ScientificName)
 my_vector <- my_vector[complete.cases(my_vector)]
