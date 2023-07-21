@@ -12,28 +12,28 @@ library(taxize)
 ##### load NDB from local file (manual)#####
 setwd("C:/rworking/deepseatools/indata")
 filename <- "DSCRTP_NatDB_20230620-0.csv"
-indata<-read_csv(filename,
-                 col_types = cols(.default = "c"),
-                 locale = locale(encoding = 'latin9'),
-                 na = c("-999", "NA"))
-
+indata <- read.csv(filename,
+                   encoding = "latin9",
+                   header = TRUE,
+                   stringsAsFactors = FALSE)
 filt <- indata %>%
   filter(Flag == 0)
 
 rm(indata)
 rm(filename)
 
-##### load the taxonomy tables from CSV #####
+##### load the taxonomy table from CSV #####
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 
 ##### load dataset of interest ('sub') from local file #####
 setwd("C:/rworking/deepseatools/indata")
 filename <- "20230718-0_NOAA_HB1703_ROPOS_Fishes_MRhode.csv"
-sub <- read_csv(filename,
-                 col_types = cols(.default = "c"),
-                 locale = locale(encoding = 'latin9'))
+sub <- read.csv(filename,
+                encoding = "latin9",
+                header = TRUE,
+                stringsAsFactors = FALSE)
 
-##### make any needed taxonomic changes to incoming (specific to each new dataset) #####
+##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
 sub2 <- sub %>%
   mutate(ScientificName = str_replace(ScientificName, "Anarchichas minor", "Anarhichas minor")) %>%
   mutate(ScientificName = str_replace(ScientificName, "Corhyphaenoides", "Coryphaenoides" )) %>%
@@ -81,7 +81,7 @@ species_list <- species_list %>%
   filter(isExtinct == 0 |
            is.na(isExtinct) == T)
 
-##### **check #####
+##### check #####
 # dim(species_list)
 # View(species_list)
 
@@ -101,16 +101,16 @@ summary <- joined %>%
            authority) %>%
   summarize(n=n())
 
-##### **check #####
-View(summary)
+##### check #####
+# View(summary)
 
-##### **check: test for difficult taxa #####
-summary$sametest <- ifelse(summary$canonicalname == summary$valid_name,"Yes","No")
-changes <- summary %>% filter(sametest == "No") %>% pull(scientificname)
-nomatch <- summary %>% filter(is.na(sametest) == T) %>% pull(scientificname)
-
-changes
-nomatch
+##### check: test for difficult taxa #####
+# summary$sametest <- ifelse(summary$canonicalname == summary$valid_name,"Yes","No")
+# changes <- summary %>% filter(sametest == "No") %>% pull(scientificname)
+# nomatch <- summary %>% filter(is.na(sametest) == T) %>% pull(scientificname)
+#
+# changes
+# nomatch
 
 ##### create vector from valid AphiaIDs #####
 summary <- summary %>% filter(is.na(valid_AphiaID) == F)
@@ -206,7 +206,7 @@ for (i in my_vector){
 
 synonyms <- df
 
-##### **check #####
+##### check #####
 # View(classification)
 # View(vernaculars)
 # View(classification)
@@ -247,7 +247,7 @@ joined3 <- left_join(joined2, vernaculars, by)
 by <- join_by(valid_AphiaID == AphiaID)
 joined4 <- left_join(joined3, synonyms, by)
 
-##### **check #####
+##### check #####
 # names(joined4)
 
 ##### add taxonomy to sub #####
@@ -338,7 +338,7 @@ names_list <- names(sub)
 sub_enhanced2 <- sub_enhanced2 %>%
   dplyr::select(all_of(names_list))
 
-##### **check #####
+##### check #####
 # table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
 #
 sub_enhanced2 %>%
@@ -362,7 +362,7 @@ sub_enhanced2 %>%
 #   summarize(n=n()) %>%
 #   View()
 
-##### **check #####
+##### check #####
 table(sub_enhanced2$Phylum)
 sub_enhanced2 %>% filter(VerbatimScientificName == "Selachimorpha") %>%
   group_by(VerbatimScientificName, ScientificName) %>%
@@ -376,13 +376,13 @@ sub_enhanced2 <- sub_enhanced2 %>%
            Phylum == 'Porifera')
 
 ##### export result to csv (export to CSV) #####
-filename <- '20230719-0_NOAA_HB1703_ROPOS_Fishes_MRhode.csv'
-write_csv(sub_enhanced2,
+filename <- '20230721-2_test_RPMcGuinn.csv'
+write.csv(sub_enhanced2,
           paste("c:/rworking/deepseatools/indata/",
-                filename))
+                filename), fileEncoding = "latin9")
 
-
-
+##### clean up everything except core objects ######
+rm(list=setdiff(ls(), c("filt")))
 
 
 
