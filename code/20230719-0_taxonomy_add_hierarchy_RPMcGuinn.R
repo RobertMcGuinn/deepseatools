@@ -379,7 +379,8 @@ sub_enhanced2 <- sub_enhanced2 %>%
 filename <- '20230721-2_test_RPMcGuinn.csv'
 write.csv(sub_enhanced2,
           paste("c:/rworking/deepseatools/indata/",
-                filename), fileEncoding = "latin9")
+                filename),
+          fileEncoding = "latin9")
 
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
