@@ -7,6 +7,9 @@
 ##### packages #####
 library(tidyverse)
 
+##### options #####
+digits = 12
+
 ##### variables #####
 path <- "C:/rworking/deepseatools/indata"
 csv <- "DSCRTP_NatDB_20230620-0.csv"

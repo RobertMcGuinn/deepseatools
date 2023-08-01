@@ -34,15 +34,8 @@ sub <- read.csv(filename,
                 stringsAsFactors = FALSE)
 
 ##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
-sub2 <- sub %>%
-  mutate(ScientificName = str_replace(ScientificName, "Anarchichas minor", "Anarhichas minor")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Corhyphaenoides", "Coryphaenoides" )) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Corhyphaenoides ruprestris", "Coryphaenoides rupestris")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Macrourine", "Macrourinae")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Notacanthus chementzii", "Notacanthus chemnitzii")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Selachimorpha", "Elasmobranchii")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Coryphaenoides ruprestris", "Coryphaenoides rupestris")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Arctozenus rissoi", "Arctozenus risso"))
+sub2 <- sub
+  # mutate(ScientificName = str_replace(ScientificName, "Anarchichas minor", "Anarhichas minor")) %>%
 
 ##### create vector of names #####
 my_vector <- unique(sub2$ScientificName)
@@ -105,12 +98,12 @@ summary <- joined %>%
 # View(summary)
 
 ##### check: test for difficult taxa #####
-# summary$sametest <- ifelse(summary$canonicalname == summary$valid_name,"Yes","No")
-# changes <- summary %>% filter(sametest == "No") %>% pull(scientificname)
-# nomatch <- summary %>% filter(is.na(sametest) == T) %>% pull(scientificname)
-#
-# changes
-# nomatch
+summary$sametest <- ifelse(summary$canonicalname == summary$valid_name,"Yes","No")
+changes <- summary %>% filter(sametest == "No") %>% pull(scientificname)
+nomatch <- summary %>% filter(is.na(sametest) == T) %>% pull(scientificname)
+
+changes
+nomatch
 
 ##### create vector from valid AphiaIDs #####
 summary <- summary %>% filter(is.na(valid_AphiaID) == F)
@@ -172,38 +165,57 @@ for (i in my_vector){
 classification <- df
 
 ##### loop to get vernacular name #####
-df <- data.frame(
-  AphiaID = numeric(),
-  vernaculars_list = character()
-)
+## initialize an empty list to store successful results
+result_list <- list()
 
-for (i in my_vector){
-  try(
-  vernaculars <- wm_common_id(i)) # i <- 125588
-  vernaculars <- vernaculars %>% filter(language == 'English')
-  vernaculars_list <- paste(vernaculars$vernacular, collapse=" | ")
-  AphiaID <- i
-  vernaculars_wide <- data.frame(AphiaID, vernaculars_list)
-  df <- bind_rows(df, vernaculars_wide)
+## loop through my_vector
+for (i in my_vector) {
+  ## use try() to handle errors
+  vernaculars <- try({
+    wm_result <- wm_common_id(i)
+    wm_result %>% filter(language == 'English')
+  }, silent = TRUE) ## Use silent = TRUE to suppress error messages
+
+  ## check if there was an error in wm_common_id()
+  if (!inherits(vernaculars, "try-error")) {
+    ## If no error, proceed to append the data to the result_list
+    vernaculars_list <- paste(vernaculars$vernacular, collapse = " | ")
+    AphiaID <- i
+    vernaculars_wide <- data.frame(AphiaID, vernaculars_list)
+    result_list[[length(result_list) + 1]] <- vernaculars_wide
+  }
 }
 
+## Combine the successful results into the final data frame df
+df <- do.call(rbind, result_list)
 vernaculars <- df
 
-##### loop to get synonyms #####
-df <- data.frame(
-  AphiaID = numeric(),
-  synonyms_list = character()
-)
+##### check #####
+# wm_common_id(1567760)
 
-for (i in my_vector){
-  try(
-    synonyms <- wm_synonyms(i)) # i <- 274788
-  synonyms_list <- paste(synonyms$scientificname, collapse=" | ")
-  AphiaID <- i
-  synonyms_wide <- data.frame(AphiaID, synonyms_list)
-  df <- bind_rows(df, synonyms_wide)
+##### loop to get synonyms #####
+## initialize a results list
+result_list <- list()
+
+## loop through my_vector
+for (i in my_vector) {
+  ## use try() to handle errors
+  synonyms <- try({
+    wm_result <- wm_synonyms(i) # i = 423632
+  }, silent = TRUE) # Use silent = TRUE to suppress error messages
+
+  ## check if there was an error in wm_synonyms()
+  if (!inherits(synonyms, "try-error")) {
+    ## if no error, proceed to append the data to the result_list
+    synonyms_list <- paste(synonyms$scientificname, collapse = " | ")
+    AphiaID <- i
+    synonyms_wide <- data.frame(AphiaID, synonyms_list)
+    result_list[[length(result_list) + 1]] <- synonyms_wide
+  }
 }
 
+## Combine the successful results into the final data frame df
+df <- do.call(rbind, result_list)
 synonyms <- df
 
 ##### check #####
@@ -290,7 +302,7 @@ gorgfamilies <- c("Chrysogorgiidae","Dendrobrachiidae",
                   "Plexauridae", "Anthothelidae",
                   "Coralliidae", "Melithaeidae",
                   "Paragorgiidae", "Parisididae","Spongiodermidae", "Subergorgiidae",
-                  "Victorgorgiidae", "Keratoisididae")
+                  "Victorgorgiidae", "Keratoisididae", "Malacalcyonacea incertae sedis")
 
 softfamilies <- c("Alcyoniidae","Aquaumbridae", "Ifalukellidae",
                   "Nephtheidae","Nidaliidae", "Paralcyoniidae",
@@ -342,7 +354,7 @@ sub_enhanced2 <- sub_enhanced2 %>%
 # table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
 #
 sub_enhanced2 %>%
-  filter(VernacularNameCategory == '') %>%
+  filter(is.na(VernacularNameCategory) == T) %>%
   select(VernacularNameCategory, VerbatimScientificName, ScientificName, Phylum, Class, Order) %>%
   View()
 #
@@ -376,7 +388,7 @@ sub_enhanced2 <- sub_enhanced2 %>%
            Phylum == 'Porifera')
 
 ##### export result to csv (export to CSV) #####
-filename <- '20230721-2_test_RPMcGuinn.csv'
+filename <- '20230801-1_test_RPMcGuinn.csv'
 write.csv(sub_enhanced2,
           paste("c:/rworking/deepseatools/indata/",
                 filename),

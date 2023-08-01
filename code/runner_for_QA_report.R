@@ -11,34 +11,48 @@ library(googledrive)
 library(googlesheets4)
 
 ##### authorizations #####
-# Set authentication token to be stored in a folder called \.secrets``
-options(gargle_oauth_cache = ".secrets")
+## Set authentication token to be stored in a folder called \.secrets``
+# options(gargle_oauth_cache = ".secrets")
 
-# Authenticate manually
-gs4_auth()
+## Authenticate manually
+# gs4_auth()
 
 # If successful, the previous step stores a token file.
 # Check that a file has been created with:
 
-list.files(".secrets/")
+# list.files(".secrets/")
 
-# Check that the non-interactive authentication works by first deauthorizing:
-gs4_deauth()
+## Check that the non-interactive authentication works by first deauthorizing:
+# gs4_deauth()
 
-# Authenticate using token. If no browser opens, the authentication works.
+## Authenticate using token. If no browser opens, the authentication works.
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+
+##### load NDB from local file (manual)#####
+digits = 12
+setwd("C:/rworking/deepseatools/indata")
+filename <- "DSCRTP_NatDB_20230620-0.csv"
+indata <- read.csv(filename,
+                   encoding = "latin9",
+                   header = TRUE,
+                   stringsAsFactors = FALSE)
+filt <- indata %>%
+  filter(Flag == 0)
+
+##### clean up everything except core objects ######
+rm(list=setdiff(ls(), c("filt")))
 
 ##### render the QA dashboard #####
 ## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
 knitr::opts_knit$set(resource.path = "c:/rworking/deepseatools/code")
 setwd('c:/rworking/deepseatools/code')
 
-filename <- "20230718-0_NOAA_HB1703_ROPOS_Fishes_MRhode"
+filename <- "20230410-2_NOAA_SH-19-07"
 
 ## render
 ## manual change version of dashboard version number is required
-rmarkdown::render("C:/rworking/deepseatools/code/20230718-0_rmd_accession_qa_dashboard.Rmd",
+rmarkdown::render("C:/rworking/deepseatools/code/20230731-0_rmd_accession_qa_dashboard.Rmd",
                   output_file =  paste(filename,".docx", sep=''),
                   output_dir = 'C:/rworking/deepseatools/reports')
 
@@ -135,8 +149,13 @@ x <- filt %>%
 View(x)
 
 x <- filt %>%
-  filter(grepl("Monterey", DataProvider)) %>%
-  group_by(ImageURL) %>%
+  filter(grepl("NOAA", DataProvider)) %>%
+  group_by(DataProvider) %>%
+  summarize(n=n())
+View(x)
+
+x <- sub %>%
+  group_by(Locality) %>%
   summarize(n=n())
 View(x)
 
@@ -278,9 +297,9 @@ x <- s %>%
 
 ##### mapit using leaflet #####
 ## optional create new 'sub' ##
-sub2 <- sub %>%
-   filter(FlagReason =='IdentificationDate earlier than ObservationDate') %>%
-group_by(WebSite, DataProvider, ObservationDate, IdentificationDate) %>% summarize(n=n()) %>% View()
+sub2 <- sub
+sub2$Longitude <- as.numeric(sub$Longitude)-6
+
    # filter(CatalogNumber == "1178074")
 m <- leaflet()
 m <- addProviderTiles(m, "Esri.OceanBasemap")
@@ -310,15 +329,14 @@ m <- addCircleMarkers(m, data=sub2,
 m
 
 ##### export points and dive centers to GIS #####
-## load packages
-library(tidyverse)
-library(rgdal)
 # install.packages("arcgisbinding")
 library(arcgisbinding)
 arc.check_product()
 
 ## create x from sub
-x <- sub
+sub2 <- sub
+sub2$Longitude <- as.numeric(sub$Longitude)-6
+x <- sub2
 
 ## filter data
 # get rid of any missing Latitudes or Longitudes
@@ -331,7 +349,7 @@ coordinates(x_geo) <- c("Longitude", "Latitude")
 proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 ## create feature-class
-fgdb_path <- 'C:/rworking/sf/sf.gdb'
+fgdb_path <- 'C:/rworking/deepseatools/gis/gis.gdb'
 arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
 
 ### Export dive points
