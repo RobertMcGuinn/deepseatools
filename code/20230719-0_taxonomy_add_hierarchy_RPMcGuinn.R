@@ -27,15 +27,22 @@ tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 
 ##### load dataset of interest ('sub') from local file #####
 setwd("C:/rworking/deepseatools/indata")
-filename <- "20230718-0_NOAA_HB1703_ROPOS_Fishes_MRhode.csv"
+filename <- "20230721-2_NOAA_HB1703_ROPOS_Fishes_MRhode.csv"
 sub <- read.csv(filename,
                 encoding = "latin9",
                 header = TRUE,
                 stringsAsFactors = FALSE)
 
 ##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
-sub2 <- sub
-  # mutate(ScientificName = str_replace(ScientificName, "Anarchichas minor", "Anarhichas minor")) %>%
+sub2 <- sub %>%
+  mutate(ScientificName = str_replace(ScientificName, "Anarchichas minor", "Anarhichas minor")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Corhyphaenoides", "Coryphaenoides" )) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Corhyphaenoides ruprestris", "Coryphaenoides rupestris")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Macrourine", "Macrourinae")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Notacanthus chementzii", "Notacanthus chemnitzii")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Selachimorpha", "Elasmobranchii")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Coryphaenoides ruprestris", "Coryphaenoides rupestris")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Arctozenus rissoi", "Arctozenus risso"))
 
 ##### create vector of names #####
 my_vector <- unique(sub2$ScientificName)
@@ -354,8 +361,16 @@ sub_enhanced2 <- sub_enhanced2 %>%
 # table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
 #
 sub_enhanced2 %>%
-  filter(is.na(VernacularNameCategory) == T) %>%
-  select(VernacularNameCategory, VerbatimScientificName, ScientificName, Phylum, Class, Order) %>%
+  # filter(is.na(VernacularNameCategory) == T |
+  #          VernacularNameCategory == '') %>%
+  group_by(VernacularNameCategory,
+           VerbatimScientificName,
+           ScientificName,
+           Phylum,
+           Class,
+           Order,
+           TaxonRank) %>%
+  summarize(n=n()) %>%
   View()
 #
 # sub_enhanced2 %>%
@@ -387,8 +402,13 @@ sub_enhanced2 <- sub_enhanced2 %>%
            Phylum == 'Cnidaria' |
            Phylum == 'Porifera')
 
+##### check #####
+sub_enhanced %>% filter(is.na(phylum) == T) %>%
+  pull(ScientificName) %>%
+  unique()
+
 ##### export result to csv (export to CSV) #####
-filename <- '20230801-1_test_RPMcGuinn.csv'
+filename <- '20230801-0_NOAA_HB1703_ROPOS_Fishes_MRhode.csv'
 write.csv(sub_enhanced2,
           paste("c:/rworking/deepseatools/indata/",
                 filename),

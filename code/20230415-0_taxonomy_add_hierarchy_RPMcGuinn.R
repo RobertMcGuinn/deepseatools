@@ -35,15 +35,15 @@ sub <- read_csv(filename,
 
 ##### make any needed taxonomic changes to incoming (specific to each new dataset) #####
 sub2 <- sub #%>%
-  # mutate(ScientificName = str_replace(ScientificName, "Eptatretus spp.", "Eptatretus")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Glytocephalus zachirus", "Glyptocephalus zachirus")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Icelinus spp.", "Icelinus")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Raja spp.", "Raja")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Rajiformes egg cases","Rajiformes")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Rathbunella spp.", "Rathbunella")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Scyliorhinidae egg cases", "Scyliorhinidae")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Sebastes spp.", "Sebastes")) %>%
-  # mutate(ScientificName = str_replace(ScientificName, "Sebastolobus spp.", "Sebastolobus"))
+  mutate(ScientificName = str_replace(ScientificName, "Eptatretus spp.", "Eptatretus")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Glytocephalus zachirus", "Glyptocephalus zachirus")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Icelinus spp.", "Icelinus")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Raja spp.", "Raja")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Rajiformes egg cases","Rajiformes")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Rathbunella spp.", "Rathbunella")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Scyliorhinidae egg cases", "Scyliorhinidae")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Sebastes spp.", "Sebastes")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Sebastolobus spp.", "Sebastolobus"))
 
 ##### create vector of names #####
 my_vector <- unique(sub2$ScientificName)
