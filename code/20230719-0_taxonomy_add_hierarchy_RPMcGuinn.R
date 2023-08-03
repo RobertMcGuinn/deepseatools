@@ -10,24 +10,24 @@ library(openxlsx)
 library(taxize)
 
 ##### load NDB from local file (manual)#####
-setwd("C:/rworking/deepseatools/indata")
-filename <- "DSCRTP_NatDB_20230620-0.csv"
-indata <- read.csv(filename,
-                   encoding = "latin9",
-                   header = TRUE,
-                   stringsAsFactors = FALSE)
-filt <- indata %>%
-  filter(Flag == 0)
-
-rm(indata)
-rm(filename)
+# setwd("C:/rworking/deepseatools/indata")
+# filename <- "DSCRTP_NatDB_20230620-0.csv"
+# indata <- read.csv(filename,
+#                    encoding = "latin9",
+#                    header = TRUE,
+#                    stringsAsFactors = FALSE)
+# filt <- indata %>%
+#   filter(Flag == 0)
+#
+# rm(indata)
+# rm(filename)
 
 ##### load the taxonomy table from CSV #####
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 
 ##### load dataset of interest ('sub') from local file #####
 setwd("C:/rworking/deepseatools/indata")
-filename <- "20230721-2_NOAA_HB1703_ROPOS_Fishes_MRhode.csv"
+filename <- "20230719-2_NOAA_HB1404_TowCam_fishes_MRhode_2014.csv"
 sub <- read.csv(filename,
                 encoding = "latin9",
                 header = TRUE,
@@ -35,14 +35,21 @@ sub <- read.csv(filename,
 
 ##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
 sub2 <- sub %>%
-  mutate(ScientificName = str_replace(ScientificName, "Anarchichas minor", "Anarhichas minor")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Corhyphaenoides", "Coryphaenoides" )) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Corhyphaenoides ruprestris", "Coryphaenoides rupestris")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Macrourine", "Macrourinae")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Notacanthus chementzii", "Notacanthus chemnitzii")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Selachimorpha", "Elasmobranchii")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Coryphaenoides ruprestris", "Coryphaenoides rupestris")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Arctozenus rissoi", "Arctozenus risso"))
+  mutate(ScientificName = str_replace(ScientificName, "Merluccius sp.", "Merluccius")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Lophius sp.", "Lophius" )) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Amblyraja sp.", "Amblyraja")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Harriotta sp.", "Harriotta")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Bathyraja sp.", "Bathyraja")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Hydrolagus sp.", "Hydrolagus")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Cottunculus sp.", "Cottunculus")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Urophycis sp.", "Urophycis")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Laemonema sp.", "Laemonema")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Macrourus sp.", "Macrourus")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Notacanthus sp.", "Notacanthus")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Halosaurus sp.", "Halosaurus")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Coryphaenoides sp.", "Coryphaenoides")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Lycenchelys sp.", "Lycenchelys")) %>%
+  mutate(ScientificName = str_replace(ScientificName, "Luciobrotula sp.", "Luciobrotula"))
 
 ##### create vector of names #####
 my_vector <- unique(sub2$ScientificName)
@@ -53,6 +60,9 @@ parsed_list <- gbif_parse(my_vector)
 
 # View(parsed_list)
 my_vector_parsed <- parsed_list$canonicalname
+
+##### check #####
+#my_vector_parsed
 
 ##### make groups of 50 (because the API limit is 50) #####
 my_groups <- split(my_vector_parsed, ceiling(seq_along(my_vector)/50))
@@ -357,9 +367,17 @@ names_list <- names(sub)
 sub_enhanced2 <- sub_enhanced2 %>%
   dplyr::select(all_of(names_list))
 
+##### get rid of everything not Chordata, Cnidaria, and Porifera #####
+sub_enhanced2 <- sub_enhanced2 %>%
+  filter(Phylum == 'Chordata' |
+           Phylum == 'Cnidaria' |
+           Phylum == 'Porifera')
+
 ##### check #####
-# table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
-#
+length(names(sub))
+length(names(sub_enhanced2))
+table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
+
 sub_enhanced2 %>%
   # filter(is.na(VernacularNameCategory) == T |
   #          VernacularNameCategory == '') %>%
@@ -372,46 +390,41 @@ sub_enhanced2 %>%
            TaxonRank) %>%
   summarize(n=n()) %>%
   View()
-#
-# sub_enhanced2 %>%
-#   group_by(VernacularNameCategory,
-#          VerbatimScientificName,
-#          ScientificName,
-#          Phylum,
-#          Class,
-#          Subclass,
-#          Order,
-#          Suborder,
-#          Family,
-#          Subfamily,
-#          Genus,
-#          Species) %>%
-#   summarize(n=n()) %>%
-#   View()
+
+sub_enhanced2 %>%
+  group_by(VernacularNameCategory,
+         VerbatimScientificName,
+         ScientificName,
+         Phylum,
+         Class,
+         Subclass,
+         Order,
+         Suborder,
+         Family,
+         Subfamily,
+         Genus,
+         Species) %>%
+  summarize(n=n()) %>%
+  View()
 
 ##### check #####
+sub_enhanced2 %>%
+  filter(is.na(Phylum) == T) %>%
+  pull(ScientificName) %>%
+  unique()
+
+
 table(sub_enhanced2$Phylum)
 sub_enhanced2 %>% filter(VerbatimScientificName == "Selachimorpha") %>%
   group_by(VerbatimScientificName, ScientificName) %>%
   summarize(n=n())
 View(sub_enhanced2)
 
-##### get rid of everything not Chordata, Cnidaria, and Porifera #####
-sub_enhanced2 <- sub_enhanced2 %>%
-  filter(Phylum == 'Chordata' |
-           Phylum == 'Cnidaria' |
-           Phylum == 'Porifera')
-
-##### check #####
-sub_enhanced %>% filter(is.na(phylum) == T) %>%
-  pull(ScientificName) %>%
-  unique()
-
 ##### export result to csv (export to CSV) #####
-filename <- '20230801-0_NOAA_HB1703_ROPOS_Fishes_MRhode.csv'
+filename <- '20230802-0_NOAA_HB1404_TowCam_fishes_MRhode_2014.csv'
 write.csv(sub_enhanced2,
           paste("c:/rworking/deepseatools/indata/",
-                filename),
+                filename, sep=''),
           fileEncoding = "latin9")
 
 ##### clean up everything except core objects ######

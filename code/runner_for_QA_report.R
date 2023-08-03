@@ -48,7 +48,8 @@ rm(list=setdiff(ls(), c("filt")))
 knitr::opts_knit$set(resource.path = "c:/rworking/deepseatools/code")
 setwd('c:/rworking/deepseatools/code')
 
-filename <- "20230410-2_NOAA_SH-19-07"
+filename <- "20230802-0_NOAA_HB1404_TowCam_fishes_MRhode_2014.csv"
+# 20230719-2_NOAA_HB1404_TowCam_fishes_MRhode_2014
 
 ## render
 ## manual change version of dashboard version number is required

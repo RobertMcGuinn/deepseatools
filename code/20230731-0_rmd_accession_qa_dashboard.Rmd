@@ -55,16 +55,17 @@ filt <- indata %>%
 # flagged <- sub %>%  filter(Flag == "1")
 ```
 
-```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
-## manual: set direct path to file 
-path <- "C:/rworking/deepseatools/indata/"
-string <- paste(path,filename,".txt",sep = '')
-sub <- read_csv(string) #or read_tsv as needed
-flagged <- sub %>%  filter(Flag == "1")
+```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=T}
+##### load dataset of interest ('sub') from local file #####
+setwd("C:/rworking/deepseatools/indata")
+sub <- read.csv(filename,
+                encoding = "latin9",
+                header = TRUE,
+                stringsAsFactors = FALSE)
 
 ```
 
-```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=T}
+```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=F}
 ##### ##### 
 ## find the file in google drive by name [filename] is from runner
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
@@ -1297,15 +1298,10 @@ ft
 
 ### Number of ObservationDate values recorded:
 
-`r x <- sub %>%
-filter(
-is.na(ObservationDate) == F |
-ObservationDate != '-999'
-) %>%
-group_by(DatasetID) %>%
-dplyr::summarize(
-n = n()
-) 
+`r x <-sub %>%
+  filter(is.na(as.Date(ObservationDate, format = "%Y-%m-%d")) == F) %>%
+           group_by(DatasetID) %>% 
+           summarize(n=n())
 
 sum(x$n)`
 
@@ -1314,10 +1310,7 @@ sum(x$n)`
 ```{r, echo=F}
 
 x <- sub %>%
-filter(
-is.na(ObservationDate) == F |
-ObservationDate != '-999'
-) %>%
+filter(is.na(as.Date(ObservationDate, format = "%Y-%m-%d")) == F) %>%
 group_by(SurveyID) %>%
 dplyr::summarize(ObservationDates = paste(unique(ObservationDate), collapse = ' | '),
 n = n()
