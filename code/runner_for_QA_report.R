@@ -30,7 +30,6 @@ gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ##### load NDB from local file (manual)#####
-digits = 12
 setwd("C:/rworking/deepseatools/indata")
 filename <- "DSCRTP_NatDB_20230620-0.csv"
 indata <- read.csv(filename,
@@ -39,6 +38,7 @@ indata <- read.csv(filename,
                    stringsAsFactors = FALSE)
 filt <- indata %>%
   filter(Flag == 0)
+rm(indata)
 
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
@@ -48,7 +48,7 @@ rm(list=setdiff(ls(), c("filt")))
 knitr::opts_knit$set(resource.path = "c:/rworking/deepseatools/code")
 setwd('c:/rworking/deepseatools/code')
 
-filename <- "20230802-0_NOAA_HB1404_TowCam_fishes_MRhode_2014.csv"
+filename <- "20230802-2_NOAA_SWFSC_fish_2018_2019"
 # 20230719-2_NOAA_HB1404_TowCam_fishes_MRhode_2014
 
 ## render
@@ -103,6 +103,14 @@ yo <- read.delim('c:/rworking/deepseatools/indata/20221031-0_NOAA_EX1304_Northea
 yo %>% filter(DepthInMeters > 7000) %>% select(TrackingID, DepthInMeters)
 sub %>% filter(DepthInMeters > 7000) %>% select(TrackingID, DepthInMeters)
 
+filt %>% filter(grepl("HB-17", DatasetID)) %>% pull(ImageURL) %>% table()
+sub %>% filter(grepl("HB-17", DatasetID)) %>% pull(ImageFilePath) %>% table()
+
+filt %>%
+  filter(grepl("Smithsonian", Repository)) %>%
+  pull(Repository) %>%
+  table()
+
 
 # Acanthogorgia spissa (N=4)
 # Anthomastus gyratus (N=1)
@@ -120,7 +128,7 @@ sub %>% filter(DepthInMeters > 7000) %>% select(TrackingID, DepthInMeters)
 ## manual: then SAVE to PDF
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1Yz_-aOHIkZJ-WP2vdhUGVfMCUKQfxlgv"
+folderurl <- "https://drive.google.com/drive/folders/1vtsdnB6jDeH0W_LGkJ-GpBI2BVAVTZkW"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
@@ -150,8 +158,8 @@ x <- filt %>%
 View(x)
 
 x <- filt %>%
-  filter(grepl("NOAA", DataProvider)) %>%
-  group_by(DataProvider) %>%
+  filter(grepl("NOAA", DatasetID)) %>%
+  group_by(DatasetID) %>%
   summarize(n=n())
 View(x)
 
@@ -336,12 +344,14 @@ arc.check_product()
 
 ## create x from sub
 sub2 <- sub
-sub2$Longitude <- as.numeric(sub$Longitude)-6
+sub2$Longitude <- as.numeric(sub$Longitude)
 x <- sub2
 
 ## filter data
 # get rid of any missing Latitudes or Longitudes
-x <- x %>% filter(Latitude != -999 | Longitude != -999)
+x <- x %>% filter(Latitude != -999 |
+                    Longitude != -999)
+
 # make copy to turn into spatial points data frame.
 x_geo <- x
 
@@ -353,10 +363,11 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 fgdb_path <- 'C:/rworking/deepseatools/gis/gis.gdb'
 arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
 
-### Export dive points
-
+##### Export dive points #####
 ## create summary by EventID
-x <- sub %>% filter(Flag == 0) %>%
+x <- sub %>% filter(Flag == 0,
+                    Latitude != -999 |
+                      Longitude != -999) %>%
   group_by(EventID) %>%
   summarise(Latitude = mean(Latitude),
             Longitude = mean(Longitude)
@@ -375,12 +386,17 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 ## create feature-class
 
-fgdb_path <- 'C:/rworking/sf/sf.gdb'
+fgdb_path <- 'C:/rworking/gis/gis.gdb'
 arc.write(file.path(fgdb_path, 'x_geo_dives'), data=x_geo, overwrite = TRUE)
 
 ##### checking #####
-yo <- filt %>% filter(grepl("Thomas", Vessel)) %>%
-  group_by(DataProvider, SamplingEquipment, Vessel, VehicleName) %>%
+filt %>% filter(grepl("Shimada", Vessel)) %>% pull(Vessel) %>% unique()
+
+filt %>% filter(grepl("SH1812", SurveyID)) %>% pull(DatasetID) %>% unique()
+filt %>% filter(grepl("RL1905", SurveyID)) %>% pull(DatasetID) %>% unique()
+
+yo <- filt %>% filter(grepl("Henry", Vessel)) %>%
+  group_by(DatasetID, DataProvider, SamplingEquipment, Vessel, VehicleName) %>%
   summarize(n=n())
 View(yo)
 

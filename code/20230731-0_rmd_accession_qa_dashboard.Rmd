@@ -58,10 +58,12 @@ filt <- indata %>%
 ```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=T}
 ##### load dataset of interest ('sub') from local file #####
 setwd("C:/rworking/deepseatools/indata")
-sub <- read.csv(filename,
+sub <- read.csv(paste(filename,".csv",sep = ''),
                 encoding = "latin9",
                 header = TRUE,
                 stringsAsFactors = FALSE)
+## get the flagged records alone
+flagged <- sub %>%  filter(Flag == "1")
 
 ```
 
@@ -238,8 +240,8 @@ SurveyComments: `r unique(factor(sub$SurveyComments))`
 
 * Number of records: *`r length(sub$CatalogNumber)`*
 * Number of records flagged: *`r length(flagged$CatalogNumber)`*
-* Minimum depth (unflagged): *`r min(sub[sub$DepthInMeters != "-999" & sub$Flag == "0",]$DepthInMeters)`*
-* Maximum depth (unflagged): *`r max(sub[sub$DepthInMeters != "-999" & sub$Flag == "0",]$DepthInMeters)`*
+* Minimum depth (unflagged): *`r min(sub[sub$DepthInMeters != "-999" | sub$Flag == "0",]$DepthInMeters)`*
+* Maximum depth (unflagged): *`r max(sub[sub$DepthInMeters != "-999" | sub$Flag == "0",]$DepthInMeters)`*
 * Number of dives or tows recorded: *`r length(unique(sub[sub$EventID != "NA" | is.na(sub$EventID) == F,]$EventID))`* 
 * Time frame: *`r min(as.numeric(min(sub$ObservationYear)))` to `r min(as.numeric(max(sub$ObservationYear)))`*
 * Number of ImageURL populated: `r sub %>% filter(is.na(ImageURL) == F) %>% pull(ImageURL) %>% length()`
