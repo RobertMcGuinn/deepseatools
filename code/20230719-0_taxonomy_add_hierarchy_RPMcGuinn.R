@@ -10,51 +10,51 @@ library(openxlsx)
 library(taxize)
 
 ##### load NDB from local file (manual)#####
-setwd("C:/rworking/deepseatools/indata")
-filename <- "DSCRTP_NatDB_20230620-0.csv"
-indata <- read.csv(filename,
-                   encoding = "latin9",
-                   header = TRUE,
-                   stringsAsFactors = FALSE)
-filt <- indata %>%
-  filter(Flag == 0)
-
-rm(indata)
-rm(filename)
+# setwd("C:/rworking/deepseatools/indata")
+# filename <- "DSCRTP_NatDB_20230620-0.csv"
+# indata <- read.csv(filename,
+#                    encoding = "latin9",
+#                    header = TRUE,
+#                    stringsAsFactors = FALSE)
+# filt <- indata %>%
+#   filter(Flag == 0)
+#
+# rm(indata)
+# rm(filename)
 
 ##### load the taxonomy table from CSV #####
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 
 ##### load dataset of interest ('sub') from local file #####
-setwd("C:/rworking/deepseatools/indata")
-filename <- "20230804120029_SH-18-12_dscrtp_submission_nearly_final.csv"
-sub <- read.csv(filename,
-                encoding = "latin9",
-                header = TRUE,
-                stringsAsFactors = FALSE)
+# setwd("C:/rworking/deepseatools/indata")
+# filename <- "20230804120029_SH-18-12_dscrtp_submission_nearly_final.csv"
+# sub <- read.csv(filename,
+#                 encoding = "latin9",
+#                 header = TRUE,
+#                 stringsAsFactors = FALSE)
 
 ##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
 ## flag these taxa
-sub1 <- sub %>% filter(ScientificName != 'Vertebrata')
+sub1 <- sub # %>% filter(ScientificName != 'Vertebrata')
 
 ## change these
 sub2 <- sub1 %>%
-  mutate(ScientificName = str_replace(ScientificName, "Citharichthys spp.", "Citharichthys")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Eptatretus spp.", "Eptatretus" )) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Glytocephalus zachirus", "Glyptocephalus zachirus")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Hydrolagus colliei egg case", "Hydrolagus colliei")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Icelinus spp.", "Icelinus")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Liparididae", "Liparidae")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Pleuronichthys spp.", "Pleuronichthys")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Raja spp", "Raja")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Rajiformes egg cases", "Rajiformes")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Rathbunella spp.", "Rathbunella")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Scyliorhinidae egg cases", "Scyliorhinidae")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Sebastes spp.", "Sebastes")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Sebastes spp. YOY", "Sebastes")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Sebastes YOY", "Sebastes")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "Sebastolobus spp.", "Sebastolobus")) %>%
-  mutate(ScientificName = str_replace(ScientificName, "unidentified sebastomus", "Sebastes (Sebastosomus)"))
+  mutate(ScientificName = str_replace(ScientificName, "Macrouridaev", "Macrouridae"))
+#  mutate(ScientificName = str_replace(ScientificName, "Cottunculus sp.", "Cottunculus" )) %>%
+#  mutate(ScientificName = str_replace(ScientificName, "Hydrolagus sp.", "Hydrolagus")) %>%
+#  mutate(ScientificName = str_replace(ScientificName, "Lophius sp.", "Lophius")) %>%
+#  mutate(ScientificName = str_replace(ScientificName, "Luciobrotula sp.", "Luciobrotula")) %>%
+#  mutate(ScientificName = str_replace(ScientificName, "Lycodes sp.", "Lycodes")) %>%
+#  mutate(ScientificName = str_replace(ScientificName, "Merluccius sp.", "Merluccius")) %>%
+#  mutate(ScientificName = str_replace(ScientificName, "Urophycis sp.", "Urophycis"))
+ # mutate(ScientificName = str_replace(ScientificName, "Nezumia sp.", "Nezumia")) %>%
+ # mutate(ScientificName = str_replace(ScientificName, "Urophycis sp.", "Urophycis"))
+#   mutate(ScientificName = str_replace(ScientificName, "Scyliorhinidae egg cases", "Scyliorhinidae")) %>%
+#   mutate(ScientificName = str_replace(ScientificName, "Sebastes spp.", "Sebastes")) %>%
+#   mutate(ScientificName = str_replace(ScientificName, "Sebastes spp. YOY", "Sebastes")) %>%
+#   mutate(ScientificName = str_replace(ScientificName, "Sebastes YOY", "Sebastes")) %>%
+#   mutate(ScientificName = str_replace(ScientificName, "Sebastolobus spp.", "Sebastolobus")) %>%
+#   mutate(ScientificName = str_replace(ScientificName, "unidentified sebastomus", "Sebastes (Sebastosomus)"))
 
 
 ## flag 'Vertebrata'
@@ -77,7 +77,8 @@ my_vector_parsed <- unique(my_vector_parsed)
 
 ##### check #####
 # my_vector_parsed
-# sort(my_vector_parsed)
+sort(my_vector_parsed)
+sort(my_vector)
 
 ##### make groups of 50 (because the API limit is 50) #####
 my_groups <- split(my_vector_parsed, ceiling(seq_along(my_vector)/50))
@@ -397,6 +398,7 @@ sub_enhanced3<- sub_enhanced2 %>%
          VerbatimScientificName,
          ScientificName,
          VernacularName,
+         VernacularNameCategory,
          TaxonRank,
          AphiaID,
          Phylum,
@@ -417,7 +419,7 @@ sub_enhanced3<- sub_enhanced2 %>%
 View(sub_enhanced3)
 
 ##### export result to csv (export to CSV) #####
-filename <- "20230802-2_NOAA_SWFSC_fish_2018_2019_taxonomy_patch.csv"
+filename <- "20221021-0_NOAA_HB1504_TowCam_Fishes_MRhode_taxonomy_patch.csv"
 write.csv(sub_enhanced3,
           paste("c:/rworking/deepseatools/indata/",
                 filename, sep=''),

@@ -55,7 +55,7 @@ filt <- indata %>%
 # flagged <- sub %>%  filter(Flag == "1")
 ```
 
-```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=T}
+```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
 ##### load dataset of interest ('sub') from local file #####
 setwd("C:/rworking/deepseatools/indata")
 sub <- read.csv(paste(filename,".csv",sep = ''),
@@ -67,7 +67,7 @@ flagged <- sub %>%  filter(Flag == "1")
 
 ```
 
-```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=F}
+```{r OR_data_and_subset_gdrive,echo=FALSE, message=FALSE, warning=FALSE, eval=T}
 ##### ##### 
 ## find the file in google drive by name [filename] is from runner
 x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))

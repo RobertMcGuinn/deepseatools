@@ -48,7 +48,7 @@ rm(list=setdiff(ls(), c("filt")))
 knitr::opts_knit$set(resource.path = "c:/rworking/deepseatools/code")
 setwd('c:/rworking/deepseatools/code')
 
-filename <- "20230802-2_NOAA_SWFSC_fish_2018_2019"
+filename <- "20221021-0_NOAA_HB-15-04"
 # 20230719-2_NOAA_HB1404_TowCam_fishes_MRhode_2014
 
 ## render
@@ -56,8 +56,6 @@ filename <- "20230802-2_NOAA_SWFSC_fish_2018_2019"
 rmarkdown::render("C:/rworking/deepseatools/code/20230731-0_rmd_accession_qa_dashboard.Rmd",
                   output_file =  paste(filename,".docx", sep=''),
                   output_dir = 'C:/rworking/deepseatools/reports')
-
-
 ##### check #####
 sub %>%
   # filter(ScientificName == "Keratoisis magnifica") %>%
@@ -94,7 +92,7 @@ sub %>% filter(DepthInMeters > 30000) %>% pull(SampleID)
 x <- paste(sub$SampleID, sub$ScientificName, sub$VerbatimScientificName)
 table(duplicated(x))
 
-filt %>% filter(grepl("NOAA", DataProvider)) %>% pull(DataProvider) %>% unique()
+filt %>% filter(grepl("NOAA", DataProvider)) %>% pull(DatasetID) %>% unique()
 
 sub %>% filter(DepthInMeters>500) %>% select(CatalogNumber, DepthInMeters)
 
@@ -103,7 +101,7 @@ yo <- read.delim('c:/rworking/deepseatools/indata/20221031-0_NOAA_EX1304_Northea
 yo %>% filter(DepthInMeters > 7000) %>% select(TrackingID, DepthInMeters)
 sub %>% filter(DepthInMeters > 7000) %>% select(TrackingID, DepthInMeters)
 
-filt %>% filter(grepl("HB-17", DatasetID)) %>% pull(ImageURL) %>% table()
+filt %>% filter(grepl("HB-12", DatasetID)) %>% pull(DatasetID) %>% table()
 sub %>% filter(grepl("HB-17", DatasetID)) %>% pull(ImageFilePath) %>% table()
 
 filt %>%
@@ -128,7 +126,7 @@ filt %>%
 ## manual: then SAVE to PDF
 ##### upload PDF report to specific folder on Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1vtsdnB6jDeH0W_LGkJ-GpBI2BVAVTZkW"
+folderurl <- "https://drive.google.com/drive/folders/15fcFKyi8WZgFVhwLaeAofUsINsB6H8M0"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".PDF", sep=''),
              path = as_id(folderurl),
