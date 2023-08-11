@@ -1498,6 +1498,25 @@ ft
 * Median Depth: `r median(sub[sub$DepthInMeters != '-999',]$DepthInMeters)`  
 * Maximum Depth: `r max(sub[sub$DepthInMeters != '-999',]$DepthInMeters)`  
 
+## Depth Method Summary
+``` {r DepthSumByMethod, echo=FALSE}
+sum_tbl <- data.frame(table(sub$DepthMethod, useNA = 'always'))
+names(sum_tbl) <- c('Depth_Method', 'Frequency')
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
+ft
+```
+
 ## Histogram of Depth Distribution
 ``` {r Coral_Depth_Summary_Boxplots, echo=FALSE, message=FALSE, warning=FALSE,fig.width=7, fig.height=3.5, dpi=300, cache=FALSE}
 
@@ -1626,6 +1645,34 @@ Table is sorted by median depth in ascending order.
 sum_tbl <-
   sub %>%
   filter(Phylum == "Porifera") %>%
+  group_by(ScientificName) %>%
+  dplyr::summarize(
+    min.Depth = min(as.numeric(DepthInMeters)),
+    median.Depth = median(as.numeric(DepthInMeters)),
+    max.Depth = max(as.numeric(DepthInMeters)), 
+    n = n()) %>%
+  arrange(median.Depth)
+
+ft <- flextable(sum_tbl) %>% 
+  theme_zebra() %>% 
+  colformat_num(
+    digits = 0, 
+    big.mark = ",", 
+    na_str = "NA"
+  ) %>% 
+  font(fontname = "Cambria", part = "all")  %>% 
+  fontsize(size = 7, part = "all")
+
+ft <- set_table_properties(ft, width = 1, layout = "autofit")
+ft
+```
+
+## Depth Summary by ScientificName (Fish)
+
+``` {r DepthSumByScientificNameFish, echo=FALSE}
+sum_tbl <-
+  sub %>%
+  filter(Phylum == "Chordata") %>%
   group_by(ScientificName) %>%
   dplyr::summarize(
     min.Depth = min(as.numeric(DepthInMeters)),

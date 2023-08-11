@@ -48,7 +48,7 @@ rm(list=setdiff(ls(), c("filt")))
 knitr::opts_knit$set(resource.path = "c:/rworking/deepseatools/code")
 setwd('c:/rworking/deepseatools/code')
 
-filename <- "20221021-0_NOAA_HB-15-04"
+filename <- "20230808-1_NOAA_HB-15-04"
 # 20230719-2_NOAA_HB1404_TowCam_fishes_MRhode_2014
 
 ## render
@@ -57,6 +57,9 @@ rmarkdown::render("C:/rworking/deepseatools/code/20230731-0_rmd_accession_qa_das
                   output_file =  paste(filename,".docx", sep=''),
                   output_dir = 'C:/rworking/deepseatools/reports')
 ##### check #####
+sub %>% filter(grepl('Invalid latitude', FlagReason)) %>% pull(Longitude)
+
+
 sub %>%
   # filter(ScientificName == "Keratoisis magnifica") %>%
   group_by(Flag,
@@ -133,6 +136,18 @@ drive_upload(paste(filename,".PDF", sep=''),
              name = paste(filename,".PDF", sep=''),
              overwrite = T)
 ##### checking #####
+x <- sub %>% filter(DepthInMeters != '-999', Oxygen != '-999', DepthInMeters > 40)
+plot(x$DepthInMeters, x$Oxygen)
+
+x <- sub %>% filter(DepthInMeters != '-999', Oxygen != '-999', DepthInMeters > 40, Temperature < 6)
+plot(x$DepthInMeters, x$Temperature)
+
+sub %>% filter(Temperature > 10) %>% pull(ScientificName)
+
+sub %>% filter(DepthInMeters < 30, Latitude != -999) %>% pull(ScientificName)
+
+sub %>% filter(Flag == 1, grepl('Invalid', FlagReason)) %>% pull(Longitude)
+
 unique(sub$DatasetID)
 filt %>% filter(grepl("HB", DatasetID)) %>% pull(DatasetID) %>% table()
 unique(sub$SurveyID)
@@ -305,11 +320,13 @@ x <- s %>%
 ##### mapit using leaflet #####
 ## optional create new 'sub' ##
 sub2 <- sub
-sub2$Longitude <- as.numeric(sub$Longitude)-6
+# sub2$Longitude <- as.numeric(sub$Longitude)-6
+sub2 <- sub2 %>% filter(Latitude != -999 |
+                    Longitude != -999)
 
    # filter(CatalogNumber == "1178074")
 m <- leaflet()
-m <- addProviderTiles(m, "Esri.OceanBasemap")
+m <- addProviderTiles(m, "Esri.NatGeoWorldMap")
 m <- addCircleMarkers(m, data=sub2,
                       radius=2,
                       weight=0,
@@ -343,7 +360,7 @@ arc.check_product()
 ## create x from sub
 sub2 <- sub
 sub2$Longitude <- as.numeric(sub$Longitude)
-x <- sub2
+x <- sub2 # %>% filter(Temperature > 13)
 
 ## filter data
 # get rid of any missing Latitudes or Longitudes
@@ -359,7 +376,7 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 ## create feature-class
 fgdb_path <- 'C:/rworking/deepseatools/gis/gis.gdb'
-arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
+arc.write(file.path(fgdb_path, 'x_geo2'), data=x_geo, overwrite = TRUE)
 
 ##### Export dive points #####
 ## create summary by EventID
@@ -387,8 +404,9 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 fgdb_path <- 'C:/rworking/gis/gis.gdb'
 arc.write(file.path(fgdb_path, 'x_geo_dives'), data=x_geo, overwrite = TRUE)
 
-##### checking #####
-filt %>% filter(grepl("Shimada", Vessel)) %>% pull(Vessel) %>% unique()
+##### checking #####f
+
+filt %>% filter(grepl("AUV", VehicleName) | VehicleName == 'AUV') %>% pull(VehicleName) %>% unique()
 
 filt %>% filter(grepl("SH1812", SurveyID)) %>% pull(DatasetID) %>% unique()
 filt %>% filter(grepl("RL1905", SurveyID)) %>% pull(DatasetID) %>% unique()
