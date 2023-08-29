@@ -40,26 +40,27 @@ x <- filt %>%
 x$EntryUpdate <- as.Date(x$EntryUpdate)
 hist(x$EntryUpdate, breaks = 50)
 
-##### inspect uncool taxonomy #####
+##### inspect un-cool taxonomy #####
 x <- filt %>%
   # filter(Genus == 'Bebryce') %>%
   filter(
     # ScientificName == 'Plexauridae',
-    TaxonRank == 'genus',
-    # is.na(Genus) == F,
-    is.na(Species) == F) %>%
-  group_by(DatasetID,
-           AccessionID,
-           EntryDate,
-           EntryUpdate,
-           AphiaID,
-           VerbatimScientificName,
-           TaxonRank,
-           ScientificName,
-           Genus,
-           Species) %>%
+    TaxonRank == 'family',
+    is.na(Genus) == F |
+      is.na(Species) == F) %>%
+  group_by(
+    #DatasetID,
+    #AccessionID,
+    #EntryDate,
+    EntryUpdate,
+    AphiaID,
+    VerbatimScientificName,
+    ScientificName,
+    TaxonRank,
+    Genus,
+    Species) %>%
   summarize(n=n())
 
 x$EntryUpdate <- as.Date(x$EntryUpdate)
-hist(x$EntryUpdate, breaks = 50)
+hist(x$EntryUpdate, breaks = 5)
 View(x)

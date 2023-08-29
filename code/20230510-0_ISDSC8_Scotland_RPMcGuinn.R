@@ -78,7 +78,9 @@ my_colors <- c(
 
 for(i in list){
   x <- sub %>% filter(FishCouncilRegion == i)
-  g <- ggplot(x, aes(reorder(VernacularNameCategory, DepthInMeters, FUN=median), as.numeric(DepthInMeters), fill = VernacularNameCategory)) +
+  g <- ggplot(x, aes(reorder(VernacularNameCategory, DepthInMeters, FUN=median),
+                     as.numeric(DepthInMeters),
+                     fill = VernacularNameCategory)) +
     geom_boxplot() +
     scale_y_reverse() +
     ylab("Depth (meters)") +

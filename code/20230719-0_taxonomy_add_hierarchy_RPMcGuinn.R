@@ -26,12 +26,12 @@ library(taxize)
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 
 ##### load dataset of interest ('sub') from local file #####
-# setwd("C:/rworking/deepseatools/indata")
-# filename <- "20230804120029_SH-18-12_dscrtp_submission_nearly_final.csv"
-# sub <- read.csv(filename,
-#                 encoding = "latin9",
-#                 header = TRUE,
-#                 stringsAsFactors = FALSE)
+setwd("C:/rworking/deepseatools/indata")
+filename <- "20230804120029_SH-18-12_dscrtp_submission_nearly_final.csv"
+sub <- read.csv(filename,
+                encoding = "latin9",
+                header = TRUE,
+                stringsAsFactors = FALSE)
 
 ##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
 ## flag these taxa
