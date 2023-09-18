@@ -12,18 +12,18 @@ library(googlesheets4)
 
 ##### authorizations #####
 ## Set authentication token to be stored in a folder called \.secrets``
-# options(gargle_oauth_cache = ".secrets")
+options(gargle_oauth_cache = ".secrets")
 
 ## Authenticate manually
-# gs4_auth()
+gs4_auth()
 
 # If successful, the previous step stores a token file.
 # Check that a file has been created with:
 
-# list.files(".secrets/")
+list.files(".secrets/")
 
 ## Check that the non-interactive authentication works by first deauthorizing:
-# gs4_deauth()
+gs4_deauth()
 
 ## Authenticate using token. If no browser opens, the authentication works.
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
@@ -519,4 +519,13 @@ View(y)
 
 
 
+
+
+##### check #####
+filt %>%
+  filter(grepl('1202', DatasetID)) %>%
+  group_by(DatasetID, SurveyID) %>%
+  summarize(n=n())
+
+filt %>%
 

@@ -1,7 +1,7 @@
-##### header #####
-## Author: Robert McGuinn
-## Started on: 20230415
-## Purpose: Adding taxonomy to incoming dataset using WoRMS API calls
+##### Header #####
+## Author: Robert McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
+## Started On: 20230905
+## Purpose: To check the full taxonomic contents of the national database against the WoRMS API
 
 ##### packages #####
 library(tidyverse)
@@ -22,128 +22,9 @@ filt <- indata %>%
 rm(indata)
 rm(filename)
 
-##### load the taxonomy table from CSV #####
-tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
-
-##### load dataset of interest ('sub') from local file #####
-setwd("C:/rworking/deepseatools/indata")
-filename <- "20230804120029_SH-18-12_dscrtp_submission_nearly_final.csv"
-sub <- read.csv(filename,
-                encoding = "latin9",
-                header = TRUE,
-                stringsAsFactors = FALSE)
-
-##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
-## flag these taxa
-sub1 <- sub # %>% filter(ScientificName != 'Vertebrata')
-
-## change these
-sub2 <- sub1 %>%
-  mutate(ScientificName = str_replace(ScientificName, "Macrouridaev", "Macrouridae"))
-#  mutate(ScientificName = str_replace(ScientificName, "Cottunculus sp.", "Cottunculus" )) %>%
-#  mutate(ScientificName = str_replace(ScientificName, "Hydrolagus sp.", "Hydrolagus")) %>%
-#  mutate(ScientificName = str_replace(ScientificName, "Lophius sp.", "Lophius")) %>%
-#  mutate(ScientificName = str_replace(ScientificName, "Luciobrotula sp.", "Luciobrotula")) %>%
-#  mutate(ScientificName = str_replace(ScientificName, "Lycodes sp.", "Lycodes")) %>%
-#  mutate(ScientificName = str_replace(ScientificName, "Merluccius sp.", "Merluccius")) %>%
-#  mutate(ScientificName = str_replace(ScientificName, "Urophycis sp.", "Urophycis"))
- # mutate(ScientificName = str_replace(ScientificName, "Nezumia sp.", "Nezumia")) %>%
- # mutate(ScientificName = str_replace(ScientificName, "Urophycis sp.", "Urophycis"))
-#   mutate(ScientificName = str_replace(ScientificName, "Scyliorhinidae egg cases", "Scyliorhinidae")) %>%
-#   mutate(ScientificName = str_replace(ScientificName, "Sebastes spp.", "Sebastes")) %>%
-#   mutate(ScientificName = str_replace(ScientificName, "Sebastes spp. YOY", "Sebastes")) %>%
-#   mutate(ScientificName = str_replace(ScientificName, "Sebastes YOY", "Sebastes")) %>%
-#   mutate(ScientificName = str_replace(ScientificName, "Sebastolobus spp.", "Sebastolobus")) %>%
-#   mutate(ScientificName = str_replace(ScientificName, "unidentified sebastomus", "Sebastes (Sebastosomus)"))
-
-
-## flag 'Vertebrata'
-
-##### create vector of names #####
-my_vector <- unique(sub2$ScientificName)
-my_vector <- my_vector[complete.cases(my_vector)]
-
-##### parse the list using taxize function 'gbif_parse' #####
-parsed_list <- gbif_parse(my_vector)
-
-## get only unique parsed names
-parsed_list <- distinct(parsed_list)
-
-## View(parsed_list)
-my_vector_parsed <- parsed_list$canonicalname
-
-## get only unique names
-my_vector_parsed <- unique(my_vector_parsed)
-
-##### check #####
-# my_vector_parsed
-sort(my_vector_parsed)
-sort(my_vector)
-
-##### make groups of 50 (because the API limit is 50) #####
-my_groups <- split(my_vector_parsed, ceiling(seq_along(my_vector)/50))
-
-##### loop to get records by names list #####
-## run this just once to get the proper data structure for an empty dataframe
-species_list <- wm_records_name("Octocorallia", fuzzy = F)
-
-## initiate the empty data frame
-df <- species_list[0,]
-
-## loop to get WoRMS records from names (b)
-for (i in seq_along(my_groups)){
-  species_list <- wm_records_names(name = my_groups[[i]],
-                                   fuzzy = F,
-                                   marine_only = T,
-
-                                   )
-  species_list <- do.call("rbind", species_list)
-  df <- rbind(df, species_list)
-}
-species_list <- df
-
-## get rid of any extinct matches
-species_list <- species_list %>%
-  filter(isExtinct == 0 |
-           is.na(isExtinct) == T)
-
-## get just the data that are distinct
-species_list <- distinct(species_list)
-
-##### check #####
-# dim(species_list)
-# View(species_list)
-
-##### left join the parsed list #####
-by <- join_by(canonicalname == scientificname)
-joined <- left_join(parsed_list, species_list, by)
-
-##### create a summary joined file #####
-summary <- joined %>%
-  group_by(status,
-           phylum,
-           scientificname,
-           canonicalname,
-           valid_name,
-           valid_AphiaID,
-           rank,
-           authority) %>%
-  summarize(n=n())
-
-##### check #####
-# View(summary)
-
-##### check: test for difficult taxa #####
-summary$sametest <- ifelse(summary$canonicalname == summary$valid_name,"Yes","No")
-changes <- summary %>% filter(sametest == "No") %>% pull(scientificname)
-nomatch <- summary %>% filter(is.na(sametest) == T) %>% pull(scientificname)
-
-changes
-nomatch
-
 ##### create vector from valid AphiaIDs #####
-summary <- summary %>% filter(is.na(valid_AphiaID) == F)
-my_vector <- summary$valid_AphiaID
+my_vector <- unique(filt$AphiaID)
+# my_vector <- my_vector[0:100]
 
 ## make groups of 50 (because the API limit is 50)
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
@@ -157,6 +38,20 @@ for (i in seq_along(my_groups)){
   df <- rbind(df, species_list)
 }
 species_list <- df
+
+##### check #####
+View(species_list)
+table(species_list$status, useNA = 'always')
+
+x <- species_list %>%
+  filter(status == 'unaccepted') %>% group_by(scientificname, valid_name) %>%
+  summarize(n=n())
+View(x)
+
+setdiff(species_list$AphiaID, species_list$valid_AphiaID)
+setdiff(species_list$valid_AphiaID, species_list$AphiaID)
+
+
 
 ##### loop to get classification #####
 df <- data.frame(
@@ -228,6 +123,7 @@ vernaculars <- df
 
 ##### check #####
 # wm_common_id(1567760)
+View(vernaculars)
 
 ##### loop to get synonyms #####
 ## initialize a results list
