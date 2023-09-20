@@ -22,7 +22,7 @@ indata <- read.csv(csv, header = T)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
-## cleanup
-rm(indata)
+##### clean up everything except core objects ######
+rm(list=setdiff(ls(), c("filt")))
 
 

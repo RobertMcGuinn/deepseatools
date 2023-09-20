@@ -160,12 +160,11 @@ Download data dictionary: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/metadata
 *Note:* Individual records within a data set may have additional citations in the 'Citation' field.
 
 # Taxonomic Summary
-Percent of coral and sponge records by lowest taxonomic rank.
+Percent of coral, sponge, and fish records by lowest taxonomic rank.
 
-## Corals
+## Corals 
 
 **Number of coral records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Cnidaria"]), big.mark = ",")` 
-
 ```{r taxsummary_coral, echo=FALSE}
 sub$TaxonRank <- factor(sub$TaxonRank, levels = c("phylum", "class", "subclass", "order", "suborder","family","subfamily", "genus","subgenus","species","subspecies","forma","variety"))
 
@@ -189,9 +188,9 @@ if(nrow(sum_tbl) == 0){
 
 ```
 
-## Sponges  
+## Sponges 
 
-**Number of sponge records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Porifera"]), big.mark = ",")`
+**Number of sponge records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Porifera"]), big.mark = ",")` 
 ```{r taxsummary_sponges, echo=FALSE}
 sub$TaxonRank <- factor(sub$TaxonRank, levels = c("phylum", "class", "subclass", "order", "suborder","family","subfamily", "genus","subgenus","species","subspecies","forma","variety"))
 
@@ -208,6 +207,31 @@ if(nrow(sum_tbl) == 0){
   cat('No sponge records in this data set.')
 } else{
   kable(sum_tbl, row.names = F, digits = 2, col.names = c('Taxon rank','Percent of all<br/> sponge records'))
+}
+# sum_tbl <- kable(sum_tbl, row.names = F, digits = 2, col.names = c('Taxon rank','Percent of all<br/> sponge records'))
+# sum_tbl
+
+```
+
+## Fishes 
+
+**Number of fish records:** `r prettyNum(length(sub$CatalogNumber[sub$Phylum == "Chordata"]), big.mark = ",")` 
+```{r taxsummary_fish, echo=FALSE}
+sub$TaxonRank <- factor(sub$TaxonRank, levels = c("phylum", "class", "subclass", "order", "suborder","family","subfamily", "genus","subgenus","species","subspecies","forma","variety"))
+
+sum_tbl <-
+  sub %>%
+  filter(Phylum == "Chordata") %>% 
+  group_by(TaxonRank) %>%
+  summarize(
+    Percent_of_Records = paste(round(n()/length(sub$CatalogNumber[sub$Phylum == "Chordata"])*100, digits = 0), "%")
+    ) %>%
+  arrange(TaxonRank)
+
+if(nrow(sum_tbl) == 0){
+  cat('No fish records in this data set.')
+} else{
+  kable(sum_tbl, row.names = F, digits = 2, col.names = c('Taxon rank','Percent of all<br/> fish records'))
 }
 # sum_tbl <- kable(sum_tbl, row.names = F, digits = 2, col.names = c('Taxon rank','Percent of all<br/> sponge records'))
 # sum_tbl
@@ -264,8 +288,30 @@ if(nrow(sum_tbl) == 0){
 # sum_tbl
 ```
 
+# Fish Taxa Observed
+*Note:* Nothing will appear here if no fish taxa were observed.
+
+``` {r FishByScientificName, echo=FALSE }
+sum_tbl <-
+  sub %>%
+  filter(Phylum == "Chordata") %>% 
+  group_by(ScientificName) %>%
+  summarize(
+    AphiaID = toString(unique(AphiaID)),
+    Order = toString(unique(Order)),
+    Family = toString(unique(Family)),
+    Records = n()) %>%
+  arrange(ScientificName)
+
+if(nrow(sum_tbl) == 0){
+  cat('No fish records in this data set.')
+} else{
+  kable(sum_tbl, row.names = F, digits = 2)
+}
+# sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+# sum_tbl
+```
+
 **Please send [feedback](https://deepseacoraldata.noaa.gov/resources/contact) if you notice any problems with this data set.**
 
 Go back to data set index page: [LINK](https://www.ncei.noaa.gov/waf/dsc-data/dashboards/DatasetID_Table.html)
-
-
