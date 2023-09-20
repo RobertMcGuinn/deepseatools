@@ -10,15 +10,15 @@ library(tidyverse)
 ##### options #####
 digits = 12
 
-##### variables #####
+##### load national database (manual) #####
 path <- "C:/rworking/deepseatools/indata"
-csv <- "DSCRTP_NatDB_20230620-0.csv"
+csv <- 'DSCRTP_NatDB_20230828-0.csv'
+# "DSCRTP_NatDB_20230620-0.csv"
 # "DSCRTP_NatDB_20230620-0_published.csv"
 # "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
 
-##### manual input: load latest version of NDB #####
 setwd(path)
-indata <- read.csv(csv, header = T)
+indata <- read.csv(csv, header = T, encoding = 'utf-8')
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
