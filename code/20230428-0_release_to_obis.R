@@ -23,7 +23,7 @@ library(naniar)
 ##### load NDB from local file (manual)#####
 ## [manual]
 setwd("C:/rworking/deepseatools/indata")
-filename <- "DSCRTP_NatDB_20230428-0.csv" # "Jessica Alba"
+filename <- "DSCRTP_NatDB_20230828-0" # "Jessica Alba"
 indata<-read_csv(filename,
                  col_types = cols(.default = "c"),
                  locale = locale(encoding = 'latin9'),

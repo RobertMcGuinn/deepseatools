@@ -18,7 +18,7 @@ csv <- 'DSCRTP_NatDB_20230828-0.csv'
 # "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
 
 setwd(path)
-indata <- read.csv(csv, header = T, encoding = 'utf-8')
+indata <- read.csv(csv, header = T, encoding = 'latin9')
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
