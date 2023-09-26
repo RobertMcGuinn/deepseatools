@@ -22,12 +22,16 @@ filt <- indata %>%
 rm(indata)
 rm(filename)
 
+##### check #####
 ##### create vector from valid AphiaIDs #####
 my_vector <- unique(filt$AphiaID)
 # my_vector <- my_vector[0:100]
 
 ## make groups of 50 (because the API limit is 50)
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
+
+##### check #####
+table(filt$AphiaID, useNA = 'always')
 
 ##### loop to get records by AphiaID #####
 species_list <- wm_records_name("Caryophyllia corrugata", fuzzy = FALSE)
@@ -188,6 +192,7 @@ saveRDS(classification, file = "C:/rworking/deepseatools/indata/taxonomy_objects
 saveRDS(vernaculars, file = "C:/rworking/deepseatools/indata/taxonomy_objects/20230918-0_vernaculars.rds")
 saveRDS(synonyms, file = "C:/rworking/deepseatools/indata/taxonomy_objects/20230918-0_synonyms.rds")
 
+
 ## read them all back in when you need them (don't do this unless you know version #)
 species_list <- readRDS(file ="C:/rworking/deepseatools/indata/taxonomy_objects/20230918-0_species_list.rds")
 classification <- readRDS(file ="C:/rworking/deepseatools/indata/taxonomy_objects/20230918-0_classification.rds")
@@ -208,8 +213,51 @@ joined3 <- left_join(joined2, vernaculars, by)
 by <- join_by(valid_AphiaID == AphiaID)
 joined4 <- left_join(joined3, synonyms, by)
 
+filt_tax <- filt %>%
+  group_by(AphiaID) %>%
+  summarize(ScientificName_DSCRTP = paste(unique(ScientificName), collapse = ' | '))
+
+by <- join_by(AphiaID == AphiaID)
+master_worms <- left_join(filt_tax, joined4, by)
+
+##### save or reload the master_worms file #####
+saveRDS(master_worms, file = "c:/rworking/deepseatools/indata/taxonomy_objects/20230918-0_master_worms.rds")
+master_worms <- readRDS(file ="C:/rworking/deepseatools/indata/taxonomy_objects/20230918-0_master_worms.rds")
+
 ##### check #####
+
+filt %>%
+  filter(ScientificName == 'Staurocalyptus pamelaturnerae') %>%
+  group_by(AphiaID, ScientificName) %>%
+  summarize(n=n())
+
+master_worms <- master_worms %>% mutate(ScientificName_DSCRTP =
+                    ifelse(ScientificName_DSCRTP == "Muriceides k\xfckenthali",
+                           'Muriceides kuekenthali',
+                           as.character(ScientificName_DSCRTP)))
+yo <- master_worms %>%
+  filter(grepl(" \\| ", ScientificName_DSCRTP)) %>%
+  group_by(AphiaID, valid_AphiaID, ScientificName_DSCRTP, scientificname, valid_name, status) %>%
+  summarize(n=n())
+
+View(yo)
+
+
+filt$AphiaID
+joined4$AphiaID
+filt %>% filter(is.na(AphiaID) == T)
+table(filt$AphiaID, useNA = 'always')
+
 # names(joined4)
+table(joined4$status, useNA = 'always')
+notaccepted <- joined4 %>% filter(status != 'accepted') %>%
+  group_by(AphiaID, valid_AphiaID, scientificname, valid_name, unacceptreason) %>%
+  summarize(n=n())
+View(notaccepted)
+
+
+##### export joined4
+write.xlsx(joined4, "c:/rworking/deepseatools/indata/taxonomy_list.xlsx")
 
 ##### add taxonomy to sub #####
 by <- join_by(ScientificName == scientificname)
@@ -219,6 +267,8 @@ sub_enhanced <- left_join(sub2, joined4, by)
 # sub_enhanced %>% filter(is.na(phylum) == T) %>%
 #   pull(ScientificName) %>%
 #   unique()
+
+
 
 ##### gather information into proper variables #####
 sub_enhanced$VerbatimScientificName <- sub1$ScientificName
