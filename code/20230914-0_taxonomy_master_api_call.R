@@ -215,7 +215,8 @@ joined4 <- left_join(joined3, synonyms, by)
 
 filt_tax <- filt %>%
   group_by(AphiaID) %>%
-  summarize(ScientificName_DSCRTP = paste(unique(ScientificName), collapse = ' | '))
+  summarize(ScientificName_DSCRTP = paste(unique(ScientificName), collapse = ' | '),
+            VerbatimScientificName_DSCRTP = paste(unique(VerbatimScientificName), collapse = ' | '))
 
 by <- join_by(AphiaID == AphiaID)
 master_worms <- left_join(filt_tax, joined4, by)
@@ -225,6 +226,9 @@ saveRDS(master_worms, file = "c:/rworking/deepseatools/indata/taxonomy_objects/2
 master_worms <- readRDS(file ="C:/rworking/deepseatools/indata/taxonomy_objects/20230918-0_master_worms.rds")
 
 ##### check #####
+
+names(master_worms)
+unique(filt$DatabaseVersion)
 
 filt %>%
   filter(ScientificName == 'Staurocalyptus pamelaturnerae') %>%
@@ -237,11 +241,21 @@ master_worms <- master_worms %>% mutate(ScientificName_DSCRTP =
                            as.character(ScientificName_DSCRTP)))
 yo <- master_worms %>%
   filter(grepl(" \\| ", ScientificName_DSCRTP)) %>%
-  group_by(AphiaID, valid_AphiaID, ScientificName_DSCRTP, scientificname, valid_name, status) %>%
+  group_by(AphiaID, ScientificName_DSCRTP, scientificname, valid_AphiaID, valid_name, status) %>%
   summarize(n=n())
-
 View(yo)
 
+yo <- master_worms %>%
+  filter(scientificname != ScientificName_DSCRTP) %>%
+  group_by(AphiaID, VerbatimScientificName_DSCRTP, ScientificName_DSCRTP, scientificname, valid_AphiaID, valid_name, status) %>%
+  summarize(n=n())
+View(yo)
+
+yo <- master_worms %>%
+  filter(AphiaID != valid_AphiaID) %>%
+  group_by(AphiaID, VerbatimScientificName_DSCRTP, ScientificName_DSCRTP, scientificname, valid_AphiaID, valid_name, status, genus) %>%
+  summarize(n=n())
+View(yo)
 
 filt$AphiaID
 joined4$AphiaID
@@ -255,9 +269,10 @@ notaccepted <- joined4 %>% filter(status != 'accepted') %>%
   summarize(n=n())
 View(notaccepted)
 
+##### export master_worms
+write_csv(master_worms, "c:/rworking/deepseatools/indata/20230927-0_master_worms.csv")
 
-##### export joined4
-write.xlsx(joined4, "c:/rworking/deepseatools/indata/taxonomy_list.xlsx")
+
 
 ##### add taxonomy to sub #####
 by <- join_by(ScientificName == scientificname)
