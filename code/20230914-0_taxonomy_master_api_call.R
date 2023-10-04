@@ -11,7 +11,7 @@ library(taxize)
 
 ##### load NDB from local file (manual)#####
 setwd("C:/rworking/deepseatools/indata")
-filename <- "DSCRTP_NatDB_20230828-0.csv"
+filename <- "DSCRTP_NatDB_20230928-0.csv"
 indata <- read.csv(filename,
                    encoding = "latin9",
                    header = TRUE,
@@ -222,8 +222,8 @@ by <- join_by(AphiaID == AphiaID)
 master_worms <- left_join(filt_tax, joined4, by)
 
 ##### save or reload the master_worms file #####
-saveRDS(master_worms, file = "c:/rworking/deepseatools/indata/taxonomy_objects/20230918-0_master_worms.rds")
-master_worms <- readRDS(file ="C:/rworking/deepseatools/indata/taxonomy_objects/20230918-0_master_worms.rds")
+saveRDS(master_worms, file = "c:/rworking/deepseatools/indata/taxonomy_objects/20230928-0_master_worms.rds")
+master_worms <- readRDS(file ="C:/rworking/deepseatools/indata/taxonomy_objects/20230928-0_master_worms.rds")
 
 ##### check #####
 
@@ -247,7 +247,7 @@ View(yo)
 
 yo <- master_worms %>%
   filter(scientificname != ScientificName_DSCRTP) %>%
-  group_by(AphiaID, VerbatimScientificName_DSCRTP, ScientificName_DSCRTP, scientificname, valid_AphiaID, valid_name, status) %>%
+  group_by(AphiaID, ScientificName_DSCRTP, scientificname, valid_AphiaID, valid_name, status) %>%
   summarize(n=n())
 View(yo)
 

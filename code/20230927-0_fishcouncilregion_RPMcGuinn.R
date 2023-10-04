@@ -5,9 +5,9 @@
 
 ##### packages ######
 library(sf)
-library(st)
+library(tidyverse)
 
-###### load shapefile of fish council region ######
+##### load shapefile of fish council region ######
 fcr <- sf::st_read("C:/rworking/deepseatools/indata/fishery_management_council_regions_20210609/20210609_fishery_management_council_regions.shp")
 
 ##### subset NDB by bounding box variables #####

@@ -1,7 +1,7 @@
 ---
 title: "NOAA National Database for Deep-sea Corals and Sponges: Quarterly Data Update Announcement"
 author: "NOAA-NFMS-OHC-DSCRTP"
-date: 'Robert.McGuinn@NOAA.gov; 843-460-9696. Report last ran: `r Sys.Date()`'
+date: 'Contact: Robert.McGuinn@NOAA.gov; Report last ran: `r Sys.Date()`'
 output: word_document
 editor_options: 
   chunk_output_type: console
@@ -10,70 +10,49 @@ editor_options:
 
 ```{r manual_set_variables, echo=FALSE}
 ## [Manual]
-quarter <- 'Q3, FY-2022'
-version <- 'DSCRTP_NatDB_20220801-0'
-releasedate <- '2022-08-23'
-corrections <- 65894
-new_records <- 17666
+quarter <- 'Q4, FY-2023'
+version <- 'DSCRTP_NatDB_20230828-0'
+releasedate <- '2023-09-15'
+corrections <- 669411
 ```
 
 ```{r packages, echo=F, warning=F, message=F}
 library(openxlsx)
 library(sp)
 library(tidyverse)
-# library(rerddap)
-#install.packages('leaflet')
 library(leaflet)
-# install.packages('extrafont')
 library(extrafont)
-# install.packages('RColorBrewer')
+# font_import()
 library(RColorBrewer)
-# install.packages('googlesheets')
-
-# install.packages('googledrive')
 library(googledrive)
 library(rmarkdown)
 library(knitr)
-#install.packages("maps")
 library(maps)
-#install.packages("rgdal")
 library(rgdal)
-#install('raster')
 library(raster)
-#install.packages("spocc")
-#library(spocc)
-# install.packages('arcgisbinding')
-# library(arcgisbinding)
-# arc.check_product()
-#install.packages('refinr')
-#library(refinr)
-# install.packages('marmap')
-# library(marmap) #yo
-# nstall.packages('prettydoc')
 library(prettydoc)
-#install.packages('robis')
-#library(robis)
-#install.packages('devtools')
-#library(devtools)
-# library(httr)
-# library(jsonlite)
+
 ```
 
-```{r load_both_db, echo=FALSE, cache=T, eval=T}
+```{r load_both_db, echo=FALSE, cache=T, eval=F}
 ##### [Manual] bring last two databases (old one first)
 setwd("C:/rworking/deepseatools/indata")
-indata1<-read.csv("DSCRTP_NatDB_20220426-0.csv", header = T)
+indata1<-read.csv("DSCRTP_NatDB_20230620-0.csv", 
+                  header = T, 
+                  encoding = 'latin9')
 filt1 <- indata1 %>%
   filter(Flag == "0")
 
 ##### bring new db in #####
 setwd("C:/rworking/deepseatools/indata")
-indata2<-read.csv("DSCRTP_NatDB_20220801-0.csv", header = T)
+indata2<-read.csv("DSCRTP_NatDB_20230928-0.csv", 
+                  header = T, 
+                  encoding = 'latin9')
 filt <- indata2 %>%
   filter(Flag == "0")
 ```
 
-```{r load_test, echo=FALSE, cache=T}
+```{r load_test, echo=FALSE, cache=F}
 # rm(indata1)
 # rm(indata2)
 
@@ -81,17 +60,29 @@ filt <- indata2 %>%
 z <- max(as.numeric(filt1$CatalogNumber))
 # y <- max(as.numeric(filt2$CatalogNumber))
 
-# calc number of of new datasets added this round 
-a <- length(setdiff(unique(filt$DatasetID), unique(filt1$DatasetID)))
+## pick out the new and 
+newdatasetIDs <- filt %>% 
+  filter(as.Date(EntryDate) > as.Date('2023-08-01')) %>%  
+  pull(DatasetID) %>% 
+  unique()
 
-# find new datasetIDs
-# newdatasetIDs <- setdiff(unique(filt$DatasetID), unique(filt1$DatasetID))
-newdatasetIDs <- c("NOAA_HB-19-03","OET_NA114")
+## calc number new datasets added this round 
+a <- length(newdatasetIDs)
 
 ##### make a subset of just those new CatalogNumber(s)
 x <- filt %>% 
-  filter(DatasetID %in% newdatasetIDs)
+  filter(as.Date(EntryDate) > as.Date('2023-08-01'))
 
+##### make all -999 values in InvidualCount = 1.  This is a simplifying measure 
+## for ease of counting individual observations
+x <- x %>%  mutate(IndividualCount = ifelse(IndividualCount == -999,
+                                           yes = 1,
+                                           no = IndividualCount))
+
+## check 
+# table(x$IndividualCount, useNA = 'always')
+  
+new_records <- length(x$CatalogNumber)
 # length(x$CatalogNumber)
 ```
 
@@ -110,7 +101,7 @@ TrimAll <- function(x){
 # Quarterly update for: `r quarter`
 ## Database Version: `r version`
 
-The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(a, big.mark = ',')`** new datasets were added with a total of **`r prettyNum(new_records, big.mark = ',')`** new records. There is now a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
+The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(a, big.mark = ',')`** new datasets were either added or augmented with a total of **`r prettyNum(new_records, big.mark = ',')`** updated and improved records. There is now a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
 
 Go here to view and download custom data subsets of your choosing:
 https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm
@@ -123,7 +114,7 @@ Please see the following tables and figures for additional detail regarding this
 
 * Total number of records now in database: **`r  prettyNum(length(filt$CatalogNumber), big.mark=",")`**
 
-* Number of new database records added this quarter: **`r  prettyNum(new_records, big.mark=",")`**
+* Number of new database records added this quarter: **`r  prettyNum(length(x$CatalogNumber), big.mark=",")`**
 
 * Individual coral and sponge observations added: **`r prettyNum(sum(x$IndividualCount[x$IndividualCount != "-999"]), big.mark = ',')`**
 
@@ -237,21 +228,23 @@ sum_tbl
 
 -----
 
-# Corals vs. sponges
+# Corals vs. Sponges vs. Fishes
 
 ```{r corals_sponges, echo=FALSE, cache = FALSE, dpi=300, fig.height=3, fig.width=8}
 #library(extrafont)
 #loadfonts(device = "win")
+
+x$Phylum <- factor(x$Phylum, levels=c('Cnidaria','Porifera','Chordata'))
 
 g <- ggplot(x, aes(Phylum, fill = Phylum)) +
   geom_bar() + 
  # coord_flip() + 
   theme(text = element_text(size=20)) + 
   ylab("Number of Records") + 
-  theme_bw(base_size = 15, base_family = "Cambria")
+  theme_bw(base_size = 15)
 
 #display.brewer.all(colorblindFriendly=TRUE)
-g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(8,7)])
+g + scale_fill_manual(values = brewer.pal(12, "Paired")[c(8,7,6)])
 
 ```
 
@@ -285,7 +278,7 @@ g <- ggplot(x, aes(Order)) +
   theme_bw(base_size = 15, base_family = "Cambria")
 
 set.seed(7)
-g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.05, size = 15))
+g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.05, size = 7))
 
 ```
 
@@ -307,7 +300,7 @@ g + scale_fill_manual(values = sample(big_palette)) + theme(axis.text.x=element_
 # table(factor(x$DataProvider))
 # table(factor(x$PI))
 # table(factor(x$DataContact))
-x$url <- paste0('https://deepseacoraldata.noaa.gov/Dataset%20Summaries/',
+x$url <- paste0('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/',
                       x$DatasetID, 
                       '.html', 
                       sep = '')
@@ -347,7 +340,7 @@ sum_tbl <-
             n = prettyNum(n(),big.mark = ',')) %>% 
   arrange(desc(DatasetID))
 
-sum_tbl$url <- paste0('https://deepseacoraldata.noaa.gov/Dataset%20Summaries/',
+sum_tbl$url <- paste0('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/',
                       sum_tbl$DatasetID, 
                       '.html', 
                       sep = '')

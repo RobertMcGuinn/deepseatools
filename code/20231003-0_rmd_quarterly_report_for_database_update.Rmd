@@ -10,53 +10,28 @@ editor_options:
 
 ```{r manual_set_variables, echo=FALSE}
 ## [Manual]
-quarter <- 'Q3, FY-2022'
-version <- 'DSCRTP_NatDB_20220801-0'
-releasedate <- '2022-08-23'
-corrections <- 65894
-new_records <- 17666
+quarter <- 'Q4, FY-2023'
+version <- 'DSCRTP_NatDB_20230828-0'
+releasedate <- '2023-09-15'
+corrections <- 669411
+new_records <- 36810
 ```
 
 ```{r packages, echo=F, warning=F, message=F}
 library(openxlsx)
 library(sp)
 library(tidyverse)
-# library(rerddap)
-#install.packages('leaflet')
 library(leaflet)
-# install.packages('extrafont')
 library(extrafont)
-# install.packages('RColorBrewer')
 library(RColorBrewer)
-# install.packages('googlesheets')
-
-# install.packages('googledrive')
 library(googledrive)
 library(rmarkdown)
 library(knitr)
-#install.packages("maps")
 library(maps)
-#install.packages("rgdal")
 library(rgdal)
-#install('raster')
 library(raster)
-#install.packages("spocc")
-#library(spocc)
-# install.packages('arcgisbinding')
-# library(arcgisbinding)
-# arc.check_product()
-#install.packages('refinr')
-#library(refinr)
-# install.packages('marmap')
-# library(marmap) #yo
-# nstall.packages('prettydoc')
 library(prettydoc)
-#install.packages('robis')
-#library(robis)
-#install.packages('devtools')
-#library(devtools)
-# library(httr)
-# library(jsonlite)
+
 ```
 
 ```{r load_both_db, echo=FALSE, cache=T, eval=T}

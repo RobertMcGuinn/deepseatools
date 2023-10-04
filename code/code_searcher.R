@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'mod_load_current_ndb'
+x <- 'database_update'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -18,5 +18,5 @@ file.edit(path)
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
 
-
+rm(filt)
 
