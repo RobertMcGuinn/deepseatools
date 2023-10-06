@@ -12,7 +12,7 @@ digits = 12
 
 ##### load national database (manual) #####
 path <- "C:/rworking/deepseatools/indata"
-csv <- 'DSCRTP_NatDB_20230828-0.csv'
+csv <- 'DSCRTP_NatDB_20230928-0.csv'
 # "DSCRTP_NatDB_20230620-0.csv"
 # "DSCRTP_NatDB_20230620-0_published.csv"
 # "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"

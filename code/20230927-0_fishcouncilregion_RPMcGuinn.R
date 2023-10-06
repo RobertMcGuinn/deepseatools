@@ -1,7 +1,7 @@
 ##### header #####
 ## author: Robert McGuinn | robert.mcguinn@noaa.gov | rpm@alumni.duke.edu
 ## file_start: 20230927
-## purpose: map graphic production work for million record announcement
+## purpose: map graphic production work for million record announcement for Dani
 
 ##### packages ######
 library(sf)
@@ -9,8 +9,12 @@ library(tidyverse)
 
 ##### load shapefile of fish council region ######
 fcr <- sf::st_read("C:/rworking/deepseatools/indata/fishery_management_council_regions_20210609/20210609_fishery_management_council_regions.shp")
+##check
+plot(fcr)
+table(fcr$FishRegion)
+View(fcr)
 
-##### subset NDB by bounding box variables #####
+##### create sf object from database #####
 filt_geo <- st_as_sf(filt,
                       coords = c("Longitude", "Latitude"),
                       crs = 4326)
@@ -18,16 +22,20 @@ filt_geo <- st_as_sf(filt,
 ##### intersect points #####
 filt_geo_fcr <- st_intersection(filt_geo, fcr)
 
-##### fix_data #####
-## correction from Tom Hourigan
-catlist <- c(1138122,1138471,1138520,1139150, 1139153, 1139157, 1139200, 1139303, 1139348, 1139447, 1142884)
-filt <- filt %>% mutate(VernacularNameCategory = ifelse(as.numeric(CatalogNumber) %in% catlist,
-                                                        'gorgonian coral',
-                                                        VernacularNameCategory))
+
+
+
+
+
+
+
+
+
+##### check #####
+table(filt$FishCouncilRegion, useNA = 'always')
 ##### make depth box-plots #####
 ylower <- 0
 yupper <- 3500
-
 
 sub <- filt %>% filter(is.na(FishCouncilRegion) == F,
                        as.numeric(DepthInMeters) < yupper,

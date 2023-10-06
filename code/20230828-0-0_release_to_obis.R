@@ -50,8 +50,31 @@ filt$MaximumDepthInMeters <- ifelse(test = is.na(filt$MaximumDepthInMeters) == T
                                     no = filt$MaximumDepthInMeters)
 
 ##### OPTIONAL: fix species issues #####
-# filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932164', yes = "Narella", no = filt$ScientificName)
-# filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932389', yes = "Narella", no = filt$ScientificName)
+filt$AphiaID <- ifelse(test = filt$AphiaID == '602367', yes = "125286", no = filt$AphiaID)
+filt$AphiaID <- ifelse(test = filt$AphiaID == '1287836', yes = "1287835", no = filt$AphiaID)
+filt$AphiaID <- ifelse(test = filt$AphiaID == '169028', yes = "133874", no = filt$AphiaID)
+filt$AphiaID <- ifelse(test = filt$AphiaID == '288491', yes = "209983", no = filt$AphiaID)
+
+##### check #####
+# oldaphiaid <- '602367'
+# newaphiaid <- '125286'
+#
+# oldaphiaid <- '1287836'
+# newaphiaid <- '1287835'
+#
+# oldaphiaid <- '169028'
+# newaphiaid <- '133874'
+#
+# oldaphiaid <- '288491'
+# newaphiaid <- '209983'
+
+# yo <- filt %>% filter(AphiaID == oldaphiaid) %>% pull(ScientificName)
+# length(yo)
+# unique(yo)
+#
+# yo <- filt %>% filter(AphiaID == newaphiaid) %>% pull(ScientificName)
+# length(yo)
+# unique(yo)
 
 ##### get rid of records with missing ObservationDate #####
 filt <- filt %>% filter(is.na(ObservationDate) == F)
@@ -131,7 +154,7 @@ obis$coordinateUncertaintyInMeters <- gsub("[^[:digit:]., ]", "", obis$coordinat
 obis %>% pull(coordinateUncertaintyInMeters) %>% table(useNA = 'always')
 
 ##### write out file for submission #####
-today <- '20231002-0'
+today <- '20231006-0'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
@@ -139,52 +162,52 @@ obis %>%
             row.names = FALSE)
 
 ##### checking #####
-library(dplyr)
+# library(dplyr)
+# names(obis)
+# unique(obis$scientificNameID)
+# obis %>% grepl('288491',obis$scientificNameID) %>% pull(scientificName)
 
-# this checks for records with duplicate CatalogNumbers.
-# There should be none. If you find any, alert the entire team immediately.
+## this checks for records with duplicate CatalogNumbers.
+## There should be none. If you find any, alert the entire team immediately.
 
-x <- filt %>%
-  group_by(CatalogNumber) %>%
-  filter(n()>1) %>% pull(CatalogNumber) %>% length()
-
-write.csv(x, "c:/rworking/deepseatools/indata/dups.csv")
-
-names(obis)
-
-x <- filt %>% pull(CatalogNumber) %>% length()
-y <- obis %>% pull(occurrenceID) %>% length()
-x-y
-
-
-obis %>% pull(DatabaseVersion) %>% table(useNA = 'always')
-obis %>% pull(datasetID) %>% table(useNA = 'always')
-obis %>%
-  filter(is.na(scientificName) == T) %>%
-  pull(scientificName) %>%
-  table(useNA = 'always')
-obis %>% pull(individualCount) %>% table(useNA = 'always')
-head(obis$individualCount)
-plot(obis$individualCount)
-filt %>%
-  filter(IndividualCount == '21895') %>%
-  pull(RecordType)
-obis %>%
-  filter(is.na(scientificNameID) == F) %>%
-  pull(scientificNameID) %>%
-  table(useNA = 'always')
-head(obis$scientificName)
-head(obis$occurrenceID)
-head(obis$eventDate)
-head(obis$minimumDepthInMeters)
-head(obis$maximumDepthInMeters)
-table(obis$basisOfRecord)
-obis %>%
-  filter(is.na(associatedMedia) == T) %>%
-  pull(associatedMedia) %>%
-  table(useNA = 'always')
-head(obis$references)
-table(obis$occurrenceStatus)
+# x <- filt %>%
+#   group_by(CatalogNumber) %>%
+#   filter(n()>1) %>% pull(CatalogNumber) %>% length()
+#
+# names(obis)
+#
+# x <- filt %>% pull(CatalogNumber) %>% length()
+# y <- obis %>% pull(occurrenceID) %>% length()
+# x-y
+#
+# obis %>% pull(DatabaseVersion) %>% table(useNA = 'always')
+# obis %>% pull(datasetID) %>% table(useNA = 'always')
+# obis %>%
+#   filter(is.na(scientificName) == T) %>%
+#   pull(scientificName) %>%
+#   table(useNA = 'always')
+# obis %>% pull(individualCount) %>% table(useNA = 'always')
+# head(obis$individualCount)
+# plot(obis$individualCount)
+# filt %>%
+#   filter(IndividualCount == '21895') %>%
+#   pull(RecordType)
+# obis %>%
+#   filter(is.na(scientificNameID) == F) %>%
+#   pull(scientificNameID) %>%
+#   table(useNA = 'always')
+# head(obis$scientificName)
+# head(obis$occurrenceID)
+# head(obis$eventDate)
+# head(obis$minimumDepthInMeters)
+# head(obis$maximumDepthInMeters)
+# table(obis$basisOfRecord)
+# obis %>%
+#   filter(is.na(associatedMedia) == T) %>%
+#   pull(associatedMedia) %>%
+#   table(useNA = 'always')
+# head(obis$references)
+# table(obis$occurrenceStatus)
 
 
 ##### DarwinCore crosswalk for other fields we might use later on #####
