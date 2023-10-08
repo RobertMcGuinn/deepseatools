@@ -13,41 +13,76 @@ library(h3jsr)
 options(stringsAsFactors = FALSE)
 
 
-##### working #####
-# This is the location of the Brisbane Town Hall:
+##### lat/long point to sfc_point #####
 bth <- sf::st_sfc(sf::st_point(c(153.023503, -27.468920)), crs = 4326)
 
-# where is the Brisbane Town Hall at resolution 15?
-point_to_cell(bth, res = 15)
-#> [1] "8fbe8d12acad2f3"
+##### check #####
+bth
+class(bth)
 
+##### find H3 index at a particular resolution
+point_to_cell(bth, res = 15)
+
+
+##### bring in polygon shapefile to sf dataframe #####
 nc <- st_read(system.file("shape/nc.shp", package="sf"), quiet = TRUE)
+
+##### check #####
+class(nc)
+dim(nc)
+
+##### find the centroid of the polygons #####
 nc_pts <- st_centroid(nc)
+
+##### set the coordinate reference system #####
 nc_pts <- st_transform(nc_pts, crs = 4326)
+
+###### whittle down the columns #####
 nc_pts <- dplyr::select(nc_pts, CNTY_ID, NAME)
 
-# Give me the address for the center of each NC county at every resolution
+##### check #####
+nc
+dim(nc_pts)
+summary(nc_pts)
+
+##### get h3 index at all resolutions for every point #####
 nc_all_res <- point_to_cell(nc_pts,
                             res = seq(0, 15),
                             simple = FALSE)
-head(nc_all_res[, c(1:5)])
 
-#>   CNTY_ID        NAME h3_resolution_0 h3_resolution_1 h3_resolution_2
-#> 1    1825        Ashe 802bfffffffffff 812abffffffffff 8244dffffffffff
-#> 2    1827   Alleghany 802bfffffffffff 812abffffffffff 8244dffffffffff
-#> 3    1828       Surry 802bfffffffffff 812abffffffffff 822a8ffffffffff
-#> 4    1831   Currituck 802bfffffffffff 812afffffffffff 822af7fffffffff
-#> 5    1832 Northampton 802bfffffffffff 812afffffffffff 822af7fffffffff
-#> 6    1833    Hertford 802bfffffffffff 812afffffffffff 822af7fffffffff
+##### check result #####
+head(nc_all_res[, c(1:10)])
+dim(nc_all_res)
 
+##### unlist hexes to character string for single row and selected columns#####
+x <- nc_all_res %>%
+  filter(NAME == "Buncombe") %>%
+  select(c('h3_resolution_4','h3_resolution_5', 'h3_resolution_7'))
 
-# plot a few
-ashe_hexes <- unlist(nc_all_res[1, c(6,7,8,9,10)], use.names = FALSE)
-ashe_hexes <- cell_to_polygon(ashe_hexes, simple = FALSE)
-ggplot(nc[1,]) +
+hexes <- unlist(x, use.names = FALSE)
+
+##### check ######
+class(hexes)
+
+##### create polygons from hexes ######
+hexes <- cell_to_polygon(hexes, simple = FALSE)
+
+##### check #####
+class(hexes)
+
+##### plot the map #####
+nc %>%
+  filter(NAME == "Buncombe") %>%
+  ggplot() +
   geom_sf(fill = NA, colour = 'black') +
-  geom_sf(data = ashe_hexes, aes(fill = h3_address), alpha = 0.5) +
+  geom_sf(data = hexes, aes(fill = h3_address), alpha = 0.5) +
   scale_fill_viridis_d() +
-  ggtitle('H3 hexagons over County Ashe, NC', subtitle = 'Resolutions 6-10') +
+  ggtitle('H3 hexagons NC Counties', subtitle = 'Resolution XX') +
   theme_minimal() +
   coord_sf()
+
+
+
+
+
+
