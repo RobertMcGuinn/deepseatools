@@ -1,8 +1,8 @@
 ##### header #####
 ## author:Robert McGuinn | robert.mcguinn@noaa.gov | rpm@lumni.duke.edu
-## start_date: 20230922
+## start_date: 20231009
 ## forked_from: https://cran.r-project.org/web/packages/h3jsr/vignettes/intro-to-h3jsr.html
-## purpose: experimentation with 'h3jsr'package
+## purpose: experimentation with 'h3jsr'package and the NDB
 
 ##### packages #####
 local_options <- options()
