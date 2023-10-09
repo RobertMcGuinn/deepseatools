@@ -57,7 +57,7 @@ dim(nc_all_res)
 ##### unlist hexes to character string for single row and selected columns#####
 x <- nc_all_res %>%
   filter(NAME == "Buncombe") %>%
-  select(c('h3_resolution_4','h3_resolution_5', 'h3_resolution_7'))
+  select(c('h3_resolution_4','h3_resolution_5', 'h3_resolution_15'))
 
 hexes <- unlist(x, use.names = FALSE)
 
@@ -69,6 +69,7 @@ hexes <- cell_to_polygon(hexes, simple = FALSE)
 
 ##### check #####
 class(hexes)
+st_crs(hexes)
 
 ##### plot the map #####
 nc %>%
@@ -80,6 +81,28 @@ nc %>%
   ggtitle('H3 hexagons NC Counties', subtitle = 'Resolution XX') +
   theme_minimal() +
   coord_sf()
+
+##### get area of hexagons #####
+
+##### Convert the CRS to a suitable projection for your area of interest #####
+hexes_transform <- st_transform(hexes, crs = 32119)  # Example CRS (UTM Zone 33N)
+
+##### Calculate the area in square kilometers #####
+area_km2 <- st_area(hexes_transform) / 1e6  # Convert square meters to square kilometers
+
+##### transform from 'units' object to character string #####
+area_km2_char <- as.character(area_km2)
+
+##### add area back to original hexes file #####
+hexes_area <- hexes %>%
+  mutate(area_km2 = area_km2_char)
+
+##### check #####
+hexes_area
+hexes_area$area_km2
+class(hexes_area$area_km2)
+
+
 
 
 
