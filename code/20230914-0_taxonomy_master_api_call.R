@@ -23,6 +23,8 @@ rm(indata)
 rm(filename)
 
 ##### check #####
+filt %>% filter(grepl('cf.', ScientificName)) %>% pull(ScientificName) %>% unique()
+
 ##### create vector from valid AphiaIDs #####
 my_vector <- unique(filt$AphiaID)
 # my_vector <- my_vector[0:100]

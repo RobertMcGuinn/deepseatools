@@ -8,7 +8,7 @@
 library(tidyverse)
 
 ##### options #####
-digits = 12
+digits = 121
 
 ##### load national database (manual) #####
 path <- "C:/rworking/deepseatools/indata"
@@ -24,5 +24,8 @@ filt <- indata %>%
 
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
+
+##### check #####
+filt %>% filter(grepl('Rooper', PI)) %>% pull(DatasetID) %>% unique()
 
 

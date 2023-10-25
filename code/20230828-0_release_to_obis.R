@@ -3,7 +3,7 @@
 # date started: 20190121
 # purpose: create a Minimum Viable Product (MVP) for export from the
 #       NOAA National Database for Deep Sea Corals and Sponges
-#       to Abby Benson for ingest to OBIS / GBIF
+#       to Abby Benson and Steve Formel for ingest to OBIS / GBIF
 
 ##### packages #####
 library(tidyverse)
@@ -16,7 +16,6 @@ library(googledrive)
 library(openxlsx)
 library(scales)
 library(extrafont)
-#loadfonts()
 library(RColorBrewer)
 library(naniar)
 
