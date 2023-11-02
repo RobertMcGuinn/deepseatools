@@ -18,7 +18,7 @@ csv <- 'DSCRTP_NatDB_20230928-0.csv'
 # "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
 
 setwd(path)
-indata <- read.csv(csv, header = T, encoding = 'latin9')
+indata <- read.csv(csv, header = T)
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
@@ -27,5 +27,8 @@ rm(list=setdiff(ls(), c("filt")))
 
 ##### check #####
 filt %>% filter(grepl('Rooper', PI)) %>% pull(DatasetID) %>% unique()
+table(filt$PI)
+
+
 
 
