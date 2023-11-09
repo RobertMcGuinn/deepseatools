@@ -1,8 +1,7 @@
-##### mod_load_current #####
 ##### header #####
-## author: Robert P. McGuinn | rpm@alumni.duke.edu
-## purpose: modular: load current NDB file and filter out flagged
-## output: [filt]
+## author: robert.mcguinn@noaa.gov | rpm@alumni.duke.edu
+## date_started: 20231109
+## purpose: summary query for AK drop camera datasets for roundup for Pam and Arvind
 
 ##### packages #####
 library(tidyverse)
@@ -25,17 +24,9 @@ indata <- read.csv(csv, header = T, encoding = 'latin1')
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
-##### clean up everything except core objects ######
-rm(list=setdiff(ls(), c("filt")))
-
-##### check #####
-filt %>%
-  filter(grepl('drop camera', SamplingEquipment),
-         FishCouncilRegion == 'North Pacific') %>%
-  pull(DatasetID) %>% unique()
-
+##### create summary #####
 filt$dashlink <- paste('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/',
-                       filt$DatasetID, sep = '')
+filt$DatasetID, sep = '')
 
 filt$no_images <- is.na(filt$ImageURL)
 
@@ -51,16 +42,7 @@ filt %>% filter(grepl('drop camera', SamplingEquipment),
            VehicleName,
            dashlink,
            no_images
-           ) %>%
+  ) %>%
   summarize(n=n()) %>%
   write.csv('c:/rworking/deepseatools/reports/20231109-0_summary_of_drop_camera_work_in_AK_RPMcGuinn.csv')
-
-
-
-
-
-
-
-
-
 

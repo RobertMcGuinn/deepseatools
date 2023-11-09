@@ -16,7 +16,7 @@ c(eventID,
   samplingProtocol,
   institutionID)
 
-## Location table
+## Location table (essent)
   c(
     locationID, ## H3
     footprintWKT,## should be polygons
@@ -25,26 +25,11 @@ c(eventID,
     minimumDepthInMeters,
     maximumDepthInMeters)
 
-## Occurrence table
+## Occurrence ()
 c(eventID,
   ## eventType MUST result in an artifact (image or sample)
   ## we are inside of an event that led to the artifact
   occurrenceID,
-  ## occurrenceID must be carefully defined and bounded
-  ## example: In the case of a still image we define a single 'occurrence'
-  ## as all of individuals or occurrences of a single taxon within the
-  ## viewing frame.This observational framing is key.
-  ## The rules are different for video, depending on whether
-  ## you break the video into discrete segments, that you then
-  ## annotate in turn, or you only analyze a subset of stills
-  ## taken from the video.  In the latter case you are dealing with
-  ## a particular artifact from the EventType [video]. Video can
-  ## involve large swaths of space and time.  It may also be very
-  ## difficult to compute the view frame of the video without
-  ## specialized positional information from the video platform (ROV/TowCam/Lander).
-  ## The footPrint WKT polygon for a video segment may be hard to get accurate,
-  ## depending on how the survey was conducted.
-
   taxonID,
   scientificName,
   basisOfRecord,
@@ -59,8 +44,9 @@ c(eventID,
   )
 
 ## MeasurementOrFact table
-c(measurementID, # unique
+c(measurementID, ## unique
   occurrenceID,
+  eventID, ## you could have a measurement associated
   measurementType,
   measurementValue,
   measurementAccuracy,
@@ -70,11 +56,24 @@ c(measurementID, # unique
   measurementMethod,
   measurementRemarks)
 
+############ NOTES ##########
+## occurrenceID must be carefully defined and bounded
+## example: In the case of a still image we define a single 'occurrence'
+## as all of individuals or occurrences of a single taxon within the
+## viewing frame.This observational framing is key.
+## The rules are different for video, depending on whether
+## you break the video into discrete segments, that you then
+## annotate in turn, or you only analyze a subset of stills
+## taken from the video.  In the latter case you are dealing with
+## a particular artifact from the EventType [video]. Video can
+## involve large swaths of space and time.  It may also be very
+## difficult to compute the view frame of the video without
+## specialized positional information from the video platform (ROV/TowCam/Lander).
+## The footPrint WKT polygon for a video segment may be hard to get accurate,
+## depending on how the survey was conducted.
 
-
-
-
-
+filt %>% filter(grepl("FRAM", DatasetID)) %>% pull(ObservationYear) %>% unique()
+filt %>% filter(grepl("Observer", Citation)) %>% pull(ObservationYear) %>% unique()
 
 
 
