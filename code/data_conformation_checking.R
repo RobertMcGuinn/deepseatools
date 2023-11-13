@@ -2,7 +2,7 @@
 # Original Code Author: Robert McGuinn (rpm@alumni.duke.edu, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu)
 # Latest Status: working with new datasets.
 
-##### Installation/Loading of Packages #####
+##### packages#####
 # install.packages('xlsx')
 #install.packages('openxlsx')
 library(openxlsx)
@@ -33,7 +33,7 @@ library(spocc)
 library(arcgisbinding)
 arc.check_product()
 #install.packages('refinr')
-library(refinr)
+#library(refinr)
 # install.packages('marmap')
 library(marmap) #yo
 #install.packages('prettydoc')
@@ -44,15 +44,51 @@ library(robis)
 library(devtools)
 library(httr)
 library(jsonlite)
+library(googledrive)
+
+
+## google drive authorization
+## drive_auth()
+
+##### authorizations #####
+drive_auth(email = "robert.mcguinn@noaa.gov")
+gs4_auth(email = "robert.mcguinn@noaa.gov")
+
+##### load zip file from Google Drive by providing file name #####
+filename <- 'DSCRTP_NatDB_20230928-0'
+x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
+## getting the id as a character string
+y <- x$id
+
+## download the zip file
+dl <- drive_download(as_id(y),
+                     path = "C:/rworking/deepseatools/indata/file.zip",
+                     overwrite = TRUE)
+
+##### extract csv from zip file (this takes a sec) #####
+sub <- read.csv(unz(dl$local_path,
+                    paste(filename,
+                          ".csv",
+                          sep = '')),
+                fileEncoding="latin1",
+                header = T,
+                stringsAsFactors = F)
+
+##### get only records #####
+flagged <- sub %>%  filter(Flag == "1")
+
+##### get only the unflagged records
+filt <- sub %>% filter(Flag == "0")
 
 
 ##### read in schema using googlesheets4 #####
+## manual edit required for id
 sheetid <- "1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI"
 s <- read_sheet(sheetid)
-sheets_browse(sheetid)
 ## checking
 names(s)
 s %>% filter(FieldName == 'LocationAccuracy') %>% pull(ValidValues)
+s %>% pull(FieldName)
 
 ##### load dataset from CSV #####
 DatasetID <- "20200629-0_NSU_Kraken_II_Messing_2011_2011"
@@ -176,10 +212,10 @@ TMPL_DesiredFields <- schemafilt$FieldName
 TMPL_DesiredFields <- as.character(TMPL_DesiredFields)
 TMPL_DesiredFields <- Trim(TMPL_DesiredFields)
 
-##### Remove Unnecessary "GIS" Variables #####
+##### remove Unnecessary "GIS" Variables #####
 d <- d[,grepl("gis", names(d)) == F]
 
-##### Correct "Commonly Misspelled" Variables #####
+##### correct "Commonly Misspelled" Variables #####
 x <-which(colnames(indata) == "OccurrenceComments.1")
 colnames(indata)[x] <- "OccurrenceComments"
 
@@ -387,7 +423,7 @@ colnames(indata)[x] <- "Longitude"
 x <-which(colnames(indata) == "LocationComment")
 colnames(indata)[x] <- "LocationComments"
 
-##### Check schema matching #####
+##### check schema matching #####
 setdiff(names(d), TMPL_FullVariables)
 setdiff(TMPL_FullVariables, names(d))
 
@@ -397,30 +433,30 @@ setdiff(names(d),TMPL_RequiredFields)
 setdiff(names(d),TMPL_DesiredFields)
 setdiff(TMPL_DesiredFields, names(d))
 
-##### Add Remaining Template Variables #####
+##### add Remaining Template Variables #####
 namevector<-setdiff(TMPL_FullVariables, names(indata))
 for(i in namevector)
   indata[,i] <- NA
 
-##### Any interactive changes to infomration #####
+##### any interactive changes to information #####
 # indata$OccurrenceComments <- paste("VARS_RecordType", indata$VARS, "Mega.Habitat",
 #                                    indata$Mega.Habitat, "Habitat2", indata$Habitat2, sep = ": ")
 
-##### Match Template Column Order #####
+##### match Template Column Order #####
 indata<-indata[,c(TMPL_FullVariables)]
 
-##### Add DatasetID and Modified Date #####
+##### add DatasetID and Modified Date #####
 indata$DatasetID <- substring(DatasetID, 12)
 indata$Modified <- substring(DatasetID, 1, 8)
 
 # assign a particular Modified date
 indata$Modified <- "2017-04-06"
 
-##### Check schema matching #####
+##### check schema matching #####
 setdiff(names(indata), TMPL_FullVariables)
 setdiff(TMPL_FullVariables, names(indata))
 
-##### Null Assignment #####
+##### null Assignment #####
 
 ## Run TrimAll on Raw Data
 ### This function is designed to remove blank spaces.
@@ -433,7 +469,7 @@ lapply(TMPL_NumVariables, FUN = NumericNull)
 ## Apply "NA" null to Character Variables
 lapply(TMPL_CharVariables, FUN = FactorNull)
 
-##### Additional Custom changes that you may want to turn on or off #####
+##### additional Custom changes that you may want to turn on or off #####
 
 # set flags to zero or 1 for new dataset
 #table(indata$Flag)
@@ -456,7 +492,7 @@ if(indata$Flag == "-999") {
 # indata$DepthInMeters <- (indata$MaximumDepthInMeters + indata$MinimumDepthInMeters)/2
 # indata$DepthComments <- "averaged maximum and minimum depth values"
 
-##### Save output with automated naming #####
+##### save output with automated naming #####
 setwd("c:/rworking/digs/outdata")
 #create a version iteration number
 z<-as.character(as.numeric(substring(DatasetID, 10, 10))+1)
@@ -469,12 +505,12 @@ save(indata, file = paste(x, ".R", sep = ""))
 write.csv(indata, paste(x, ".csv", sep = ""), row.names = F, eol = "\r")
 #write.table(indata, paste(x, ".txt", sep = ""), sep="\t", eol = "\r")
 
-##### Alternative: Write custom name for output  #####
+##### alternative: Write custom name for output  #####
 # setwd("c:/rworking/digs/outdata")
 # write.csv(indata, "20160818-0_taxmatch_NOAA_OER_EX1504_2015_2015.csv", row.names = F, eol = "\r")
 
 
-##### Checking #####
+##### checking #####
 TMPL_RequiredFields
 
 x <- schema %>%
