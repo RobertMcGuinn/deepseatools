@@ -54,37 +54,52 @@ library(googledrive)
 drive_auth(email = "robert.mcguinn@noaa.gov")
 gs4_auth(email = "robert.mcguinn@noaa.gov")
 
-##### load zip file from Google Drive by providing file name #####
-filename <- 'DSCRTP_NatDB_20230928-0'
-x <- drive_find(q = paste("name contains ", "'", filename,".zip", "'", sep = ''))
-## getting the id as a character string
-y <- x$id
+##### load national database (manual) #####
+path <- "C:/rworking/deepseatools/indata"
+csv <- 'DSCRTP_NatDB_20230928-0.csv'
+# "DSCRTP_NatDB_20230620-0.csv"
+# "DSCRTP_NatDB_20230620-0_published.csv"
+# "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
 
-## download the zip file
-dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/file.zip",
-                     overwrite = TRUE)
+setwd(path)
+indata <- read.csv(csv, header = T, encoding = 'latin1')
+## encoding choice is either latin1 or UTF-8. Depends on incoming.
+## this does not define encoding, it simply tells the importer
+## which encoding is in the incoming file.
+filt <- indata %>%
+  filter(Flag == "0", is.na(Phylum) == F)
 
-##### extract csv from zip file (this takes a sec) #####
-sub <- read.csv(unz(dl$local_path,
-                    paste(filename,
-                          ".csv",
-                          sep = '')),
-                fileEncoding="latin1",
-                header = T,
-                stringsAsFactors = F)
+##### add a link to dashboard #####
+filt$dashlink <- paste('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/',
+                       filt$DatasetID,'.html', sep = '')
+##### checking #####
+filt %>% filter(grepl('2013', ObservationYear)) %>%
+  group_by(DatasetID, Vessel, SamplingEquipment, ObservationYear, PI) %>%
+  arrange(SamplingEquipment) %>%
+  summarise(n=n()) %>% View()
 
-##### get only records #####
-flagged <- sub %>%  filter(Flag == "1")
+filt %>% filter(grepl('Alaska Provider', Vessel) |
+                  DatasetID == 'NOAA_MD-13-08') %>%
+  group_by(DatasetID, Vessel, SamplingEquipment, ObservationYear, PI, dashlink) %>%
+  arrange(SamplingEquipment) %>%
+  summarise(n=n()) %>% View()
 
-##### get only the unflagged records
-filt <- sub %>% filter(Flag == "0")
+filt %>% filter(DatasetID == 'NOAA_MD-13-08') %>%
+  group_by(ObservationYear, Vessel, VehicleName,
+           SamplingEquipment, PI, Reporter, DataContact, dashlink) %>%
+  summarize(n=n()) %>% View()
+
+filt %>% filter(grepl('Delta',VehicleName)) %>%
+  group_by(DatasetID, ObservationYear, Vessel, VehicleName,
+           SamplingEquipment, PI, Reporter, DataContact, Locality, dashlink) %>%
+  summarize(n=n()) %>% View()
 
 
 ##### read in schema using googlesheets4 #####
 ## manual edit required for id
 sheetid <- "1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI"
 s <- read_sheet(sheetid)
+
 ## checking
 names(s)
 s %>% filter(FieldName == 'LocationAccuracy') %>% pull(ValidValues)

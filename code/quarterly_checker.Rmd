@@ -56,7 +56,7 @@ sub <- read.csv(unz(dl$local_path, paste(filename, ".csv", sep = '')))
 
 # gis inspection and export
 
-```{r}
+```{r}o
 
 ##### create x from sub #####
 x <- sub
