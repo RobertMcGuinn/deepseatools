@@ -47,4 +47,3 @@ filt %>% filter(grepl('drop camera', SamplingEquipment),
   write.csv('c:/rworking/deepseatools/reports/20231109-0_summary_of_drop_camera_work_in_AK_RPMcGuinn.csv')
 
 browseURL('https://github.com/RobertMcGuinn/deepseatools/blob/master/code/20231109-0_summary_of_drop_camera_work_in_AK_RPMcGuinn.R')
-
