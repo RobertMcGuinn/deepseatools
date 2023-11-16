@@ -1,8 +1,14 @@
 ##### Header #####
 ## author: Robert P. McGuinn
 ## startdate: 20231115
-## filename: 20231115-0_data_inventory_RPMcGuinn
+## filename: 20231115-0_data_inventory_RPMcGuinn.R
 ## purpose: working with the data inventory for the deep sea coral project
+
+##### create github link to this code #####
+filename <- '20231115-0_data_inventory_RPMcGuinn.R'
+url_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
+github_link <- paste(url_path, filename, sep = '')
+github_link
 
 ##### packages #####
 library(tidyverse)
@@ -34,7 +40,7 @@ filt %>% filter(grepl('Shearwater', Vessel)) %>%
   group_by(DatasetID, Vessel, PI,Reporter,DataContact, ObservationYear, dashlink) %>%
   summarize(n=n()) %>% View()
 
-##### Results #####
+##### results #####
 
 c('2012_MarthaNizinski_Northeast_Cruise_Henry Bigelow_HB1204',
  'https://www.ncei.noaa.gov/waf/dsc-data/dashboards/NOAA_HB-12-04.html',
@@ -109,93 +115,5 @@ c('2013_DavePacker/SteveAuster_Northeast_Cruise_Connecticut_1307Auster',
 c('2013_Katz/Caldow_Pacific_Shearwater_Cruise',
   'https://www.ncei.noaa.gov/waf/dsc-data/dashboards/NOAA_SW-13-06.html',
   'https://vlab.noaa.gov/redmine/issues/37562')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  '
-'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
