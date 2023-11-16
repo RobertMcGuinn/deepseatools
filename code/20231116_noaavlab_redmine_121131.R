@@ -3,6 +3,9 @@
 ## startdate:
 ## purpose: see redmine issue
 
+##### packages #####
+library(tidyverse)
+library(sf)
 ##### linkage #####
 ## manual input here
 filename <- '20231116_noaavlab_redmine_121131.R' ## for this code .R
@@ -15,9 +18,6 @@ issuenumber <- '121131'
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
 browseURL(redmine_link)
 
-##### packages #####
-library(tidyverse)
-library(sf)
 
 
 
