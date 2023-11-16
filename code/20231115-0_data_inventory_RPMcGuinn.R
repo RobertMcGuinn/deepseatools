@@ -1,11 +1,8 @@
 ##### Header #####
 ## author: Robert P. McGuinn
 ## startdate: 20231115
-## filename: 20231115-0_data_inventory_RPMcGuinn.R
 ## purpose: working with the data inventory for the deep sea coral project
-
-##### create github link to this code #####
-filename <- '20231115-0_data_inventory_RPMcGuinn.R'
+filename <- '20231115-0_data_inventory_RPMcGuinn.R' ## see header, should match
 url_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(url_path, filename, sep = '')
 github_link
@@ -15,6 +12,8 @@ library(tidyverse)
 library(googledrive)
 library(googlesheets4)
 
+##### load national database #####
+source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
 ##### authorizations #####
 drive_auth(email = "robert.mcguinn@noaa.gov")
 gs4_auth(email = "robert.mcguinn@noaa.gov")

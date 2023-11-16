@@ -29,33 +29,33 @@ filt <- indata %>%
 rm(list=setdiff(ls(), c("filt")))
 
 ##### check #####
-filt %>%
-  filter(grepl('drop camera', SamplingEquipment),
-         FishCouncilRegion == 'North Pacific') %>%
-  pull(DatasetID) %>% unique()
-
-filt$dashlink <- paste('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/',
-                       filt$DatasetID, sep = '')
-
-filt$no_images <- is.na(filt$ImageURL)
-
-filt %>% filter(grepl('drop camera', SamplingEquipment),
-                FishCouncilRegion == 'North Pacific') %>%
-  group_by(DatasetID,
-           PI,
-           DataContact,
-           Reporter,
-           Vessel,
-           ObservationYear,
-           SamplingEquipment,
-           VehicleName,
-           dashlink,
-           no_images
-           ) %>%
-  summarize(n=n()) %>%
-  write.csv('c:/rworking/deepseatools/reports/20231109-0_summary_of_drop_camera_work_in_AK_RPMcGuinn.csv')
-
-
+# filt %>%
+#   filter(grepl('drop camera', SamplingEquipment),
+#          FishCouncilRegion == 'North Pacific') %>%
+#   pull(DatasetID) %>% unique()
+#
+# filt$dashlink <- paste('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/',
+#                        filt$DatasetID, sep = '')
+#
+# filt$no_images <- is.na(filt$ImageURL)
+#
+# filt %>% filter(grepl('drop camera', SamplingEquipment),
+#                 FishCouncilRegion == 'North Pacific') %>%
+#   group_by(DatasetID,
+#            PI,
+#            DataContact,
+#            Reporter,
+#            Vessel,
+#            ObservationYear,
+#            SamplingEquipment,
+#            VehicleName,
+#            dashlink,
+#            no_images
+#            ) %>%
+#   summarize(n=n()) %>%
+#   write.csv('c:/rworking/deepseatools/reports/20231109-0_summary_of_drop_camera_work_in_AK_RPMcGuinn.csv')
+#
+#
 
 
 
