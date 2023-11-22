@@ -34,7 +34,7 @@ sub2 <- sub %>%
                values_to = "IndividualCount")
 
 ##### check #####
-View(sub2)
+# View(sub2)
 
 ##### fix data #####
 ## for a certain subset, the lat and long has been switched
