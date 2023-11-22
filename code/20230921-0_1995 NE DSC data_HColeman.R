@@ -22,3 +22,30 @@ library(sf)
 
 
 
+
+
+
+##### import database #####
+source("C:/rworking/deepseatools/code/mod_load_current_ndb.R")
+
+##### import dataset #####
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20230921-0_1995 NE DSC data_HColeman.csv'
+sub <- read.csv(filename, header = T)
+
+##### check #####
+x <- filt %>% filter(grepl("Edwin", Vessel), ObservationYear == '1995') %>%
+  group_by(Vessel, VehicleName, SurveyID,  ObservationYear, ObservationDate, PI, EventID, Latitude, Longitude) %>%
+  summarize(n=n())
+View(x)
+
+x <- filt %>% filter(grepl("JSL-II", EventID)) %>%
+  group_by(ScientificName, Vessel, VehicleName, SurveyID, ObservationYear, ObservationDate, PI, EventID, Latitude, Longitude) %>%
+  summarize(n=n())
+View(x)
+
+View(sub)
+setdiff(sub$System.Dive.No., )
+
+
+
