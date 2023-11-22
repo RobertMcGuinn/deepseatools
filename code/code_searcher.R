@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'obis'
+x <- 'header'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -15,9 +15,9 @@ y <- c(5)
 path <- files[y]
 file.edit(path)
 
-##### clean up everything except core objects ######
+##### clean up everything except filt ######
 rm(list=setdiff(ls(), c("filt")))
-rm(filt)
+## rm(filt)
 
 
 
