@@ -5,7 +5,7 @@
 
 ##### linkage #####
 ## manual input here
-filename <- '20230921-0_1995 NE DSC data_HColeman' ## for this code .R
+filename <- '20230921-0_1995 NE DSC data_HColeman.R' ## for this code .R
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
 browseURL(github_link)
@@ -40,12 +40,18 @@ x <- filt %>% filter(grepl("Edwin", Vessel), ObservationYear == '1995') %>%
 View(x)
 
 x <- filt %>% filter(grepl("JSL-II", EventID)) %>%
-  group_by(ScientificName, Vessel, VehicleName, SurveyID, ObservationYear, ObservationDate, PI, EventID, Latitude, Longitude) %>%
+  group_by(ScientificName, Vessel, VehicleName, DatasetID, SurveyID, ObservationYear, ObservationDate, PI, EventID, Latitude, Longitude) %>%
   summarize(n=n())
 View(x)
 
 View(sub)
 setdiff(sub$System.Dive.No., )
+
+x <- filt %>% filter(DatasetID == 'NURC') %>%
+  group_by(ScientificName, Vessel, VehicleName, DatasetID, SurveyID, ObservationYear, ObservationDate, PI, EventID, Latitude, Longitude) %>%
+  summarize(n=n())
+View(x)
+
 
 
 
