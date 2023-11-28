@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'mod'
+x <- 'redmine'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -17,6 +17,7 @@ file.edit(path)
 
 ##### clean up everything except filt ######
 rm(list=setdiff(ls(), c("filt")))
+
 ## rm(filt)
 
 
