@@ -1,11 +1,11 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate:
+## startdate: 20231129
 ## purpose: see redmine issue
 
 ##### linkage #####
 ## manual input here
-filename <- '120206' ## for this code .R
+filename <- '120205' ## for this code .R
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
 browseURL(github_link)
@@ -23,7 +23,7 @@ library(redmineR)
 
 ##### load data #####
 setwd('c:/rworking/deepseatools/indata')
-sub <- read.csv('20230823_Clarke_SH-18-12.csv')
+sub <- read.csv('20230823_Clarke_RL-19-05.csv')
 ## exported from original Excel file to (CSV UTF-8)
 
 ##### explore #####
