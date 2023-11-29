@@ -11,7 +11,7 @@ github_link <- paste(github_path, filename, sep = '')
 browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 ## manual input here
-issuenumber <- ''
+issuenumber <- filename
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
 browseURL(redmine_link)
 
