@@ -1,37 +1,24 @@
-##### Header #####
-## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate: 20231129
-## purpose: see redmine issue
-
-##### linkage #####
-## manual input here
-filename <- '121717' ## for this code .R
-github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
-github_link <- paste(github_path, filename, ".R", sep = '')
-browseURL(github_link)
-redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
-## manual input here
-issuenumber <- filename
-redmine_link <- paste(redmine_path, issuenumber, sep = '')
-browseURL(redmine_link)
+##### header #####
+## Author: Robert McGuinn
+## Started on: 20230415
+## Purpose: Adding taxonomy to incoming dataset using WoRMS API calls
 
 ##### packages #####
 library(tidyverse)
-library(sf)
-library(remotes)
-library(redmineR)
 library(worrms)
 library(openxlsx)
 library(taxize)
 
-##### load data #####
-setwd('c:/rworking/deepseatools/indata')
-sub <- read.csv('20231128-3_NewRecords-NMNH-Q1-2024_THourigan.csv')
-
-
-
 ##### load the taxonomy table from CSV #####
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
+
+##### load dataset of interest ('sub') from local file #####
+setwd("C:/rworking/deepseatools/indata")
+filename <- "20230804120029_SH-18-12_dscrtp_submission_nearly_final.csv"
+sub <- read.csv(filename,
+                encoding = "latin9",
+                header = TRUE,
+                stringsAsFactors = FALSE)
 
 ##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
 ## flag these taxa
@@ -39,7 +26,7 @@ sub1 <- sub # %>% filter(ScientificName != 'Vertebrata')
 
 ## change these
 sub2 <- sub1 %>%
-  mutate(ScientificName = str_replace(ScientificName, "Deltocyathus vaughani", "Macrouridae"))
+  mutate(ScientificName = str_replace(ScientificName, "Macrouridaev", "Macrouridae"))
 #  mutate(ScientificName = str_replace(ScientificName, "Cottunculus sp.", "Cottunculus" )) %>%
 #  mutate(ScientificName = str_replace(ScientificName, "Hydrolagus sp.", "Hydrolagus")) %>%
 #  mutate(ScientificName = str_replace(ScientificName, "Lophius sp.", "Lophius")) %>%
@@ -47,8 +34,8 @@ sub2 <- sub1 %>%
 #  mutate(ScientificName = str_replace(ScientificName, "Lycodes sp.", "Lycodes")) %>%
 #  mutate(ScientificName = str_replace(ScientificName, "Merluccius sp.", "Merluccius")) %>%
 #  mutate(ScientificName = str_replace(ScientificName, "Urophycis sp.", "Urophycis"))
-# mutate(ScientificName = str_replace(ScientificName, "Nezumia sp.", "Nezumia")) %>%
-# mutate(ScientificName = str_replace(ScientificName, "Urophycis sp.", "Urophycis"))
+ # mutate(ScientificName = str_replace(ScientificName, "Nezumia sp.", "Nezumia")) %>%
+ # mutate(ScientificName = str_replace(ScientificName, "Urophycis sp.", "Urophycis"))
 #   mutate(ScientificName = str_replace(ScientificName, "Scyliorhinidae egg cases", "Scyliorhinidae")) %>%
 #   mutate(ScientificName = str_replace(ScientificName, "Sebastes spp.", "Sebastes")) %>%
 #   mutate(ScientificName = str_replace(ScientificName, "Sebastes spp. YOY", "Sebastes")) %>%
@@ -96,7 +83,7 @@ for (i in seq_along(my_groups)){
                                    fuzzy = F,
                                    marine_only = T,
 
-  )
+                                   )
   species_list <- do.call("rbind", species_list)
   df <- rbind(df, species_list)
 }
@@ -110,12 +97,7 @@ species_list <- species_list %>%
 ## get just the data that are distinct
 species_list <- distinct(species_list)
 
-## IMPORTANT: Check for dups and get rid of the one that is not correct (manual)
-species_list %>%  filter(duplicated(species_list$scientificname) == T) %>% pull(scientificname) %>% unique()
-
 ##### check #####
-
-
 # dim(species_list)
 # View(species_list)
 
@@ -434,11 +416,6 @@ write.csv(sub_enhanced3,
 
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
-
-
-
-
-
 
 
 
