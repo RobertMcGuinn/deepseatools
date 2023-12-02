@@ -5,7 +5,7 @@
 
 ##### linkage #####
 ## manual input here
-filename <- '123176' ## for this code .R
+filename <- '122876' ## for this code .R
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
 browseURL(github_link)
@@ -23,4 +23,7 @@ library(redmineR)
 
 ##### load data #####
 setwd('c:/rworking/deepseatools/indata')
-sub <- read.csv('OET_NA138_2022_2022_123176.csv')
+sub <- read.csv('20231122-2_National_Oceanography_Centre_James_Cook_JC073_2012.csv')
+
+##### check #####
+
