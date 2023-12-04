@@ -28,6 +28,13 @@ library(taxize)
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv('20231128-3_NewRecords-NMNH-Q1-2024_THourigan.csv')
 
+##### make any corrections #####
+sub$AphiaID <- replace(sub$AphiaID, sub$AphiaID == 286809, 286810)
+# sub$AphiaID <- replace(sub$AphiaID, sub$AphiaID == 125274, 520681)
+
+286809 %in% sub$AphiaID
+286810 %in% sub$AphiaID
+
 ##### load the taxonomy table from CSV #####
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 
@@ -58,7 +65,8 @@ species_list_original %>% filter(status != 'accepted') %>% View()
 species_list_original <- species_list_original %>%
   mutate(valid_AphiaID_complete = ifelse(is.na(valid_AphiaID) == T,
                                          AphiaID,
-                                         valid_AphiaID))
+                                       valid_AphiaID))
+
 ##### check #####
 # species_list_original %>% filter(status != 'accepted') %>%
 #   group_by(AphiaID, valid_AphiaID, valid_AphiaID_complete) %>%
@@ -81,9 +89,10 @@ for (i in seq_along(my_groups)){
 species_list <- df
 
 ##### check #####
-View(species_list)
-table(is.na(species_list$AphiaID))
-table(species_list$status)
+# View(species_list)
+# table(is.na(species_list$AphiaID))
+# table(species_list$status)
+# dim(species_list)
 
 ##### loop to get classification #####
 df <- data.frame(
@@ -224,26 +233,35 @@ joined4 <- left_join(joined3, synonyms, by)
 
 ##### check #####
 # names(joined4)
+# setdiff(joined4$AphiaID, species_list_original$valid_AphiaID_complete)
+# setdiff(species_list_original$valid_AphiaID_complete, joined4$AphiaID)
 
-###### create a crosswalk table from original AphiaIDs
-sub$AphiaID
+###### join original table with the new table #####
+joined4$AphiaID2 <- joined4$AphiaID
+by <- join_by(valid_AphiaID_complete == AphiaID2)
+taxonomy_table <- left_join(species_list_original, joined4, by)
+# View(taxonomy_table)
+# names(taxonomy_table)
 
 ##### add taxonomy to sub #####
-by <- join_by(ScientificName == scientificname)
-sub_enhanced <- left_join(sub2, joined4, by)
+by <- join_by(AphiaID == AphiaID.x)
+sub_enhanced <- left_join(sub, taxonomy_table, by)
 
 ##### check #####
-# sub_enhanced %>% filter(is.na(phylum) == T) %>%
+# sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
 #   pull(ScientificName) %>%
 #   unique()
+#
+# dim(sub)
+# dim(sub_enhanced)
 
 ##### gather information into proper variables #####
-sub_enhanced$VerbatimScientificName <- sub1$ScientificName
-sub_enhanced$ScientificName <- sub_enhanced$valid_name
+sub_enhanced$VerbatimScientificName <- sub$ScientificName
+sub_enhanced$ScientificName <- sub_enhanced$scientificname.y
 sub_enhanced$VernacularName <- sub_enhanced$vernaculars_list
-sub_enhanced$TaxonRank <- sub_enhanced$rank
-sub_enhanced$AphiaID <- sub_enhanced$valid_AphiaID
-sub_enhanced$Phylum <- sub_enhanced$phylum
+sub_enhanced$TaxonRank <- sub_enhanced$rank.y
+sub_enhanced$AphiaID <- sub_enhanced$valid_AphiaID_complete
+sub_enhanced$Phylum <- sub_enhanced$phylum.y
 sub_enhanced$Class <- sub_enhanced$Class.y
 sub_enhanced$Subclass <- sub_enhanced$Subclass.y
 sub_enhanced$Order <- sub_enhanced$Order.y
@@ -254,7 +272,7 @@ sub_enhanced$Genus <- sub_enhanced$Genus.y
 sub_enhanced$Subgenus <- sub_enhanced$Subgenus.y
 sub_enhanced$Species <- word(sub_enhanced$Species.y, -1)
 sub_enhanced$Subspecies <- sub_enhanced$Subspecies.y
-sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority
+sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority.y
 sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
 
 ##### assign VernacularNameCategory #####
@@ -275,7 +293,6 @@ softfamilies <- c("Alcyoniidae","Aquaumbridae", "Ifalukellidae",
                   "Xeniidae", "Taiaroidae")
 
 othercorallikehydrozoanfamilies <- c("Solanderiidae", "Haleciidae")
-
 
 stonycoralbranching <- tax %>%
   filter(VernacularNameCategory == 'stony coral (branching)') %>%
@@ -308,8 +325,20 @@ sub_enhanced2 <- sub_enhanced %>%
     Order %in% c('Scleractinia') &
       TaxonRank %in% c('Order')  ~ 'stony coral (unspecified)',
     ScientificName %in% stonycoralbranching ~ 'stony coral (branching)',
-    ScientificName %in% stonycoralcupcoral ~ 'stony coral (branching)',
+    ScientificName %in% stonycoralcupcoral ~ 'stony coral (cup)',
+    Genus %in% c('Acanthogorgia') ~ 'gorgonian coral',
     TRUE ~ ''))
+
+##### check #####
+table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
+
+sub_enhanced2 %>%
+  filter(VernacularNameCategory == 'stony coral (cup)') %>%
+  pull(ScientificName) %>% unique()
+
+sub_enhanced2 %>%
+  filter(VernacularNameCategory == 'stony coral (cup)') %>%
+  pull(VernacularNameCategory) %>% unique()
 
 ##### get rid of unneeded column names #####
 names_list <- names(sub)
@@ -347,9 +376,22 @@ sub_enhanced3<- sub_enhanced2 %>%
 
 ##### check #####
 View(sub_enhanced3)
+dim(sub_enhanced3)
+sub %>% filter(ScientificName == 'Dichotella gemmacea') %>% pull(AphiaID)
+'Dichotella gemmacea'
+
+x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
+sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
+  group_by(VerbatimScientificName, ScientificName) %>%
+  summarize(n=n()) %>% View()
+
+x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID)
+
+table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
 
 ##### export result to csv (export to CSV) #####
-filename <- "20221021-0_NOAA_HB1504_TowCam_Fishes_MRhode_taxonomy_patch.csv"
+filename <- "20231128-3_NMNH-IZ_THourigan_1890_2022_121717_taxonomy_patch.csv"
 write.csv(sub_enhanced3,
           paste("c:/rworking/deepseatools/indata/",
                 filename, sep=''),
