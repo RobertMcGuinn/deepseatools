@@ -1,11 +1,11 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate: 20231129
+## startdate: 20231201
 ## purpose: see redmine issue
 
 ##### linkage #####
 ## manual input here
-filename <- '120205' ## for this code .R
+filename <- '123176' ## for this code .R
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
 browseURL(github_link)
@@ -20,8 +20,16 @@ library(tidyverse)
 library(sf)
 library(remotes)
 library(redmineR)
+library(worrms)
+library(openxlsx)
+library(taxize)
 
-##### load data #####
+##### load data original #####
+setwd('c:/rworking/deepseatools/indata')
+sub <- read.csv('OET_NA138_2022_2022_123176.csv')
+
+##### BREAK AT VERSION #####
+###### load data #####
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv('20230823_Clarke_RL-19-05.csv')
 
@@ -364,7 +372,7 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
            Phylum == 'Chordata' |
            Phylum == 'Porifera' |
            Order == 'Malacalcyonacea'
-           )
+  )
 
 
 ##### check #####
