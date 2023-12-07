@@ -315,7 +315,7 @@ sub_enhanced <- left_join(sub, taxonomy_table, by)
 # dim(sub_enhanced)
 
 ##### gather information into proper variables #####
-sub_enhanced$VerbatimScientificName <- sub$ScientificName
+sub_enhanced$VerbatimScientificName <- sub$VerbatimScientificName
 sub_enhanced$ScientificName <- sub_enhanced$scientificname.y
 sub_enhanced$VernacularName <- sub_enhanced$vernaculars_list
 sub_enhanced$TaxonRank <- sub_enhanced$rank.y
@@ -387,7 +387,7 @@ sub_enhanced_filter %>%
 ## define not in
 `%notin%` <- Negate(`%in%`)
 
-gorgfamilies <- c("Chrysogorgiidae","Dendrobrachiidae",
+gorgfamilies <- c("Paramuriceidae","Chrysogorgiidae","Dendrobrachiidae",
                   "Ellisellidae", "Isididae",
                   "Pleurogorgiidae", "Primnoidae",
                   "Acanthogorgiidae", "Gorgoniidae","Keroeididae",
@@ -423,6 +423,7 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     Family %in% c('Parazoanthidae') ~ 'gold coral',
     Family %in% gorgfamilies ~ 'gorgonian coral',
     Family %in% softfamilies ~ 'soft coral',
+    Order %in% c('Malacalcyonacea') ~ 'soft coral)',
     Order %in% c('Anthoathecata') &
       Family %notin%  c('Solanderiidae') ~ 'lace coral',
     Family %in% c('Lithotelestidae') ~ 'lithotelestid coral',
@@ -430,11 +431,12 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     Superfamily %in% c('Pennatuloidea') ~ 'sea pen',
     ScientificName %in% c('Porifera') ~ 'sponge',
     Suborder %in% c('Stolonifera') ~ 'stoloniferan coral',
+    Family %in% c('Clavulariidae') ~ 'stoloniferan coral',
     Genus %in% c('Clavularia') ~ 'stoloniferan coral',
     Order %in% c('Scleractinia') &
       TaxonRank %in% c('Order')  ~ 'stony coral (unspecified)',
     ScientificName %in% stonycoralbranching ~ 'stony coral (branching)',
-    ScientificName %in% stonycoralcupcoral ~ 'stony coral (cup)',
+    ScientificName %in% stonycoralcupcoral ~ 'stony coral (cup coral)',
     Genus %in% c('Acanthogorgia') ~ 'gorgonian coral',
     Genus %in% c('Hydrodendron') ~ 'other coral-like hydrozoan',
     Genus %in% c('Caryophyllia') ~ 'stony coral (cup coral)',

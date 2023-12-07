@@ -28,7 +28,7 @@ library(taxize)
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv('OET_NA138_2022_2022_123176.csv')
 
-##### BREAK AT VERSION #####
+##### NEW VERSION #####
 ##### load data #####
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv('20231204-1_OET_NA138_2022_2022_123176.csv')
@@ -37,7 +37,7 @@ sub <- read.csv('20231204-1_OET_NA138_2022_2022_123176.csv')
 sub <- sub %>% filter(AphiaID != -999)
 
 ##### check #####
-dim(sub)
+# dim(sub)
 
 ##### load the taxonomy table from CSV #####
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
@@ -59,23 +59,23 @@ for (i in seq_along(my_groups)){
 species_list_original <- df
 
 ##### check #####
-dim(species_list_original)
-View(sub)
-
-table(species_list_original$AphiaID, useNA = 'always')
-
-table(sub$AphiaID, useNA = 'always')
-
-sub %>% filter(AphiaID == -999) %>% pull(ScientificName)
-
-species_list_original %>% filter(is.na(AphiaID) == T) %>%
-  pull(scientificname)
-table(sub$AphiaID, useNA = 'always')
-setdiff(species_list_original$AphiaID, sub$AphiaID)
-setdiff(sub$AphiaID, species_list_original$AphiaID)
-View(species_list_original)
-table(species_list$status)
-species_list_original %>% filter(status != 'accepted') %>% View()
+# dim(species_list_original)
+# View(sub)
+#
+# table(species_list_original$AphiaID, useNA = 'always')
+#
+# table(sub$AphiaID, useNA = 'always')
+#
+# sub %>% filter(AphiaID == -999) %>% pull(ScientificName)
+#
+# species_list_original %>% filter(is.na(AphiaID) == T) %>%
+#   pull(scientificname)
+# table(sub$AphiaID, useNA = 'always')
+# setdiff(species_list_original$AphiaID, sub$AphiaID)
+# setdiff(sub$AphiaID, species_list_original$AphiaID)
+# View(species_list_original)
+# table(species_list$status)
+# species_list_original %>% filter(status != 'accepted') %>% View()
 
 ##### create a complete valid AphiaID list #####
 species_list_original <- species_list_original %>%
@@ -84,9 +84,9 @@ species_list_original <- species_list_original %>%
                                          valid_AphiaID))
 
 ##### check #####
-species_list_original %>% filter(status != 'accepted') %>%
-  group_by(AphiaID, valid_AphiaID, valid_AphiaID_complete) %>%
-  summarize(n=n()) %>% View()
+# species_list_original %>% filter(status != 'accepted') %>%
+#   group_by(AphiaID, valid_AphiaID, valid_AphiaID_complete) %>%
+#   summarize(n=n()) %>% View()
 
 ##### create vector from valid AphiaIDs #####
 my_vector <- unique(species_list_original$valid_AphiaID_complete)
@@ -292,7 +292,7 @@ sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority.y
 sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
 
 ##### check #####
-# table(sub_enhanced$Phylum, useNA = 'always')
+table(sub_enhanced$VerbatimScientificName, useNA = 'always')
 # table(x$Phylum, useNA = 'always')
 # table(sub_enhanced_filter$Class, useNA = 'always')
 # sub_enhanced_filter %>% filter(Class == 'Hydrozoa') %>%
@@ -327,7 +327,9 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
            Genus == 'Hydrocorella' |
            Genus == 'Hydrodendron' |
            Phylum == 'Chordata' |
-           Phylum == 'Porifera')
+           Phylum == 'Porifera' |
+           Order == 'Malacalcyonacea'
+  )
 
 
 ##### check #####
@@ -342,7 +344,7 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
 ## define not in
 `%notin%` <- Negate(`%in%`)
 
-gorgfamilies <- c("Chrysogorgiidae","Dendrobrachiidae",
+gorgfamilies <- c("Paramuriceidae","Chrysogorgiidae","Dendrobrachiidae",
                   "Ellisellidae", "Isididae",
                   "Pleurogorgiidae", "Primnoidae",
                   "Acanthogorgiidae", "Gorgoniidae","Keroeididae",
@@ -378,6 +380,7 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     Family %in% c('Parazoanthidae') ~ 'gold coral',
     Family %in% gorgfamilies ~ 'gorgonian coral',
     Family %in% softfamilies ~ 'soft coral',
+    Order %in% c('Malacalcyonacea') ~ 'soft coral)',
     Order %in% c('Anthoathecata') &
       Family %notin%  c('Solanderiidae') ~ 'lace coral',
     Family %in% c('Lithotelestidae') ~ 'lithotelestid coral',
@@ -385,10 +388,12 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     Superfamily %in% c('Pennatuloidea') ~ 'sea pen',
     ScientificName %in% c('Porifera') ~ 'sponge',
     Suborder %in% c('Stolonifera') ~ 'stoloniferan coral',
+    Family %in% c('Clavulariidae') ~ 'stoloniferan coral',
+    Genus %in% c('Clavularia') ~ 'stoloniferan coral',
     Order %in% c('Scleractinia') &
       TaxonRank %in% c('Order')  ~ 'stony coral (unspecified)',
     ScientificName %in% stonycoralbranching ~ 'stony coral (branching)',
-    ScientificName %in% stonycoralcupcoral ~ 'stony coral (cup)',
+    ScientificName %in% stonycoralcupcoral ~ 'stony coral (cup coral)',
     Genus %in% c('Acanthogorgia') ~ 'gorgonian coral',
     Genus %in% c('Hydrodendron') ~ 'other coral-like hydrozoan',
     Genus %in% c('Caryophyllia') ~ 'stony coral (cup coral)',
@@ -444,19 +449,21 @@ sub_enhanced3<- sub_enhanced2 %>%
 #
 # x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
 # sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
-#   group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
-#   summarize(n=n()) %>% View()
+  group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
+  summarize(n=n()) %>% View()
 #
-# x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-# sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID)
+x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+sub %>% filter(CatalogNumber %in% x) %>%
+  group_by(AphiaID, Phylum, Class, Subclass, Order, Family, Genus) %>%
+  summarize(n=n()) %>% View()
 #
 # table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
 #
 # sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(Order) %>% unique()
 #
-# sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
-#   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
-#   summarize(n=n()) %>% View()
+sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
+  group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
+  summarize(n=n()) %>% View()
 
 ##### export result to csv (export to CSV) #####
 filename <- "20231204-1_OET_NA138_2022_2022_123176_taxonomy_patch.csv"
