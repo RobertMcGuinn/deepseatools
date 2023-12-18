@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'Cook'
+x <- 'mod'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -11,14 +11,13 @@ files
 
 ##### choose and open #####
 ## manual input required: pick the number or number you want from the list presented
-y <- c(2)
+y <- c(8)
 path <- files[y]
 file.edit(path)
 
 ##### clean up everything except filt ######
 rm(list=setdiff(ls(), c("filt")))
 
-## rm(filt)
 
 
 

@@ -423,7 +423,7 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     Family %in% c('Parazoanthidae') ~ 'gold coral',
     Family %in% gorgfamilies ~ 'gorgonian coral',
     Family %in% softfamilies ~ 'soft coral',
-    Order %in% c('Malacalcyonacea') ~ 'soft coral)',
+    Order %in% c('Malacalcyonacea') ~ 'soft coral',
     Order %in% c('Anthoathecata') &
       Family %notin%  c('Solanderiidae') ~ 'lace coral',
     Family %in% c('Lithotelestidae') ~ 'lithotelestid coral',
