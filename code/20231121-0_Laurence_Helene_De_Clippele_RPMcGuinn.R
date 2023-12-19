@@ -14,6 +14,7 @@ redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- '122876'
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
 browseURL(redmine_link)
+othercode <- c('C:/rworking/deepseatools/code/122876.R')
 
 ##### packages #####
 library(tidyverse)
@@ -23,13 +24,16 @@ library(googlesheets4)
 ##### authorizations #####
 gs4_auth(email = "robert.mcguinn@noaa.gov")
 
-##### import dataset #####
+##### ORIGINAL #####
 setwd('c:/rworking/deepseatools/indata')
 filename <- 'JC073_ROV_species_enviromental_variables_40m.tab'
 sub <- read.delim(filename,
            sep='\t',
            header = T,
            skip = 50)
+
+###### check #####
+names(sub)
 
 ##### import schema from google drive #####
 s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')

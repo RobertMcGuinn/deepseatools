@@ -7,7 +7,7 @@
 ## manual input here
 filename <- '122876' ## for this code .R
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
-github_link <- paste(github_path, filename, sep = '')
+github_link <- paste(github_path, filename,'.R', sep = '')
 browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 ## manual input here
@@ -23,13 +23,194 @@ library(redmineR)
 library(worrms)
 library(taxize)
 
+##### Header #####
+## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
+## startdate: 20231121
+## purpose: see redmine issue
+
+##### linkage #####
+## manual input here
+filename <- '20231121-0_Laurence_Helene_De_Clippele_RPMcGuinn.R' ## for this code .R
+github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
+github_link <- paste(github_path, filename, sep = '')
+browseURL(github_link)
+redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
+## manual input here
+issuenumber <- '122876'
+redmine_link <- paste(redmine_path, issuenumber, sep = '')
+browseURL(redmine_link)
+othercode <- c('C:/rworking/deepseatools/code/20231121-0_Laurence_Helene_De_Clippele_RPMcGuinn.R')
+
+##### packages #####
+library(tidyverse)
+library(sf)
+library(googlesheets4)
+
+##### authorizations #####
+gs4_auth(email = "robert.mcguinn@noaa.gov")
+
+##### *** ORIGINAL *** #####
+setwd('c:/rworking/deepseatools/indata')
+filename <- 'JC073_ROV_species_enviromental_variables_40m.tab'
+sub <- read.delim(filename,
+                  sep='\t',
+                  header = T,
+                  skip = 50)
+
+##### check #####
+names(sub)
+
+##### import schema from google drive #####
+s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+
+##### transform data set #####
+sub2 <- sub %>%
+  pivot_longer(cols = Antipatharia.sp.......Antipatharia.sp..1.:Bathynectes.sp.....,
+               names_to = "ScientificName",
+               values_to = "IndividualCount")
+
+##### check #####
+# View(sub2)
+
+##### fix data #####
+## for a certain subset, the lat and long has been switched
+## identify records where latitude and longitude are flipped
+flipped_records <- sub2$Latitude < 55
+
+# Swap latitude and longitude for flipped records
+sub2[flipped_records, c("Latitude", "Longitude")] <- sub2[flipped_records, c("Longitude", "Latitude")]
+
+##### create sf object #####
+points <- st_as_sf(sub2, coords = c("Longitude", "Latitude"), crs = 4326)
+
+##### export shapefile #####
+st_write(points,
+         "C:/rworking/deepseatools/indata/geo3.shp",
+         append = F)
+
+##### check #####
+# filt %>% filter(grepl('James Cook', Vessel)) %>%
+#   pull(Vessel) %>% table()
+#
+# filt %>% filter(grepl('James Cook', Vessel)) %>%
+#   pull(SurveyID) %>% table()
+#
+# filt %>% filter(grepl('Roberts', PI)) %>%
+#   pull(PI) %>% table()
+#
+# filt %>% filter(RecordType == 'literature') %>%
+#   pull(DataProvider) %>% unique()
+#
+# filt %>% filter(RecordType == 'literature') %>%
+#   pull(DatasetID) %>% unique()
+
+##### add information from DSCRTP schema #####
+sub2$Vessel <- "James Cook R/V"
+sub2$SurveyID <- "JC073"
+sub2$VehicleName <- "Holland 1"
+sub2$SamplingEquipment <- "ROV"
+sub2$Citation <- "https://www.frontiersin.org/articles/10.3389/fmars.2019.00184/full | https://www.bodc.ac.uk/resources/inventories/cruise_inventory/reports/jc073.pdf"
+sub2$WebSite <- "https://www.frontiersin.org/articles/10.3389/fmars.2019.00184/full | https://www.bodc.ac.uk/resources/inventories/cruise_inventory/reports/jc073.pdf | https://www.bodc.ac.uk/resources/inventories/cruise_inventory/report/11421/ | | http://rvinfobase.eurocean.org/spec/vessel.jsp?id=4140 | https://doi.pangaea.de/10.1594/PANGAEA.909118"
+sub2$RecordType <- "video observation"
+sub2$NavType <- "USBL"
+sub2$LocationAccuracy <- "20m"
+sub2$ObservationDate <- "2012-05-18" ## May 18–June 15, 2012
+sub2$Locality <- "Logachev Mound Province"
+sub2$Habitat <- sub2$Stones......Dropstone.
+sub2$DepthInMeters <- sub2$Depth.water..m.
+sub2$MinimumDepthInMeters <- sub2$Depth.water..m.
+sub2$MaximumDepthInMeters <- sub2$Depth.water..m.
+sub2$PI <- "De Clippele, Laurence Helene"
+sub2$PIAffiliation <- "University of Edinburgh, Edinburgh, United Kingdom"
+sub2$DataProvider <- "De Clippele et al. 2019"
+sub2$DatasetID <- "De_Clippele_etal_2019"
+sub2$DataContact <- "De Clippele, Laurence Helene"
+sub2$Repository <- "National Oceanography Centre, British Oceanographic Data Centre"
+sub2 <- sub2 %>% mutate(CategoricalAbundance = ifelse(IndividualCount == 0, 'absent', 'present'))
+sub2$VerbatimScientificName <- sub2$ScientificName
+sub2$ScientificName <- 'NA'
+sub2$SampleID <- 'NA'
+sub2$DepthMethod <- 'reported'
+sub2$IdentifiedBy <- 'De Clippele, Laurence Helene'
+sub2$EventID <- 'NA'
+sub2$Modified <- '2023-11-22'
+sub2$Reporter <- 'McGuinn, Robert P.'
+sub2$ReporterEmail <- 'robert.mcguinn@noaa.gov'
+sub2$AccessionID <- 'National_Oceanography_Centre_James_Cook_JC073_2012'
+
+##### add AphiaID #####
+sub2 <- sub2 %>%
+  mutate(
+    AphiaID = case_when(
+      ScientificName == "Antipatharia.sp.......Antipatharia.sp..1." ~ "22549",
+      ScientificName == "Antipatharia.sp.......Antipatharia.sp..2." ~ "22549",
+      ScientificName == "Paramuricea.sp....." ~ "125311",
+      ScientificName == "Trissopathes.sp.......Trissopathes.sp..1." ~ "267926",
+      ScientificName == "Acanella.sp....." ~ "125303",
+      ScientificName == "Leiopathes.sp.......small." ~ "103305",
+      ScientificName == "Leiopathes.sp.......medium." ~ "103305",
+      ScientificName == "Leiopathes.sp.......large." ~ "103305",
+      ScientificName == "Bathypathes.sp....." ~ "103304",
+      ScientificName == "Stichopathes......Stichopathes.cf..Gravieri." ~ "103308",
+      ScientificName == "Parantipathes.sp.......Parantipathes.sp..1." ~ "103306",
+      ScientificName == "Parantipathes.sp.......Parantipathes.sp..2." ~ "103306",
+      ScientificName == "Shrimps...." ~ "106674",
+      ScientificName == "Hydrozoa...." ~ "1337",
+      ScientificName == "Gastroptyctus.sp....." ~ "106832",
+      ScientificName == "Shark.egg...." ~ "1517375",
+      ScientificName == "Asteroidea.sp....." ~ "123080",
+      ScientificName == "P..cuvieri...." ~ "107264",
+      ScientificName == "Ophiuroidea...." ~ "123084",
+      ScientificName == "Sponge.r......Massive.red.sponge." ~ "558",
+      ScientificName == "Crinoidea......Crinoidea.sp..1." ~ "123081",
+      ScientificName == "Crinoidea......Crinoidea.sp..2." ~ "123081",
+      ScientificName == "Crinoidea......Crinoidea.sp..3." ~ "123081",
+      ScientificName == "C..cidaris...." ~ "124257",
+      ScientificName == "Munida.sp....." ~ "106835",
+      ScientificName == "C..affinis...." ~ "107369",
+      ScientificName == "Bathynectes.sp....." ~ "106920",
+      TRUE ~ ""  # default case, if none of the above conditions are met
+    )
+  )
+
+##### check #####
+# table(sub2$AphiaID, useNA = 'always')
+# setdiff(names(sub2), s$FieldName)
+# x <- s %>% filter(PointNew == "R") %>% pull(FieldName)
+# setdiff(x, names(sub2))
+
+##### get rid of un-wanted variables #####
+sub2 <- sub2 %>%
+  select(-c(
+    "BPI...i6xo9..",
+    "BPI...i3xo6..",
+    "Rugosity...i9xo9..",
+    "Rugosity...i3xo3..",
+    "Aspect..arbitrary.units...Northness.",
+    "Aspect..arbitrary.units...Eastness.",
+    "Aspect..arbitrary.units.",
+    "Backsc",
+    "Depth.water..m.",
+    "Stones......Dropstone."
+  ))
+
+##### check ####
+# setdiff(s$FieldName, names(sub2))
+# setdiff(names(sub2),s$FieldName)
+
+##### write CSV #####
+write.csv(sub2,
+          "c:/rworking/deepseatools/indata/20231122-0_National_Oceanography_Centre_James_Cook_JC073_2012.csv")
+
+
+
 ##### load original data #####
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv('20231122-2_National_Oceanography_Centre_James_Cook_JC073_2012.csv')
 ##### check #####
 
-##### BREAK AT VERSION #####
-###### load data #####
+##### *** NEW VERSION *** #####
+##### load data #####
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv('20231122-2_National_Oceanography_Centre_James_Cook_JC073_2012.csv')
 
@@ -79,7 +260,7 @@ sub <- sub %>%
 
 sub$AphiaID <- as.numeric(sub$AphiaID)
 
-###### check #####
+##### check #####
 # sub %>% pull(AphiaID) %>% table(useNA = 'always')
 # length(unique(sub$AphiaID))
 # length(unique(sub$VerbatimScientificName))
@@ -311,7 +492,7 @@ joined4 <- left_join(joined3, synonyms, by)
 # setdiff(joined4$AphiaID, species_list_original$valid_AphiaID_complete)
 # setdiff(species_list_original$valid_AphiaID_complete, joined4$AphiaID)
 
-###### join original table with the new table #####
+##### join original table with the new table #####
 joined4$AphiaID2 <- joined4$AphiaID
 by <- join_by(valid_AphiaID_complete == AphiaID2)
 taxonomy_table <- left_join(species_list_original, joined4, by)
@@ -573,6 +754,522 @@ rm(list=setdiff(ls(), c("filt")))
 
 
 
+
+
+
+
+
+
+
+
+
+##### *** NEW VERSION (post-checker) *** #####
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20231218-1_National_Oceanography_Centre_James_Cook_JC073_2012_2012_122876'
+sub <- read.csv(paste(filename, '.csv', sep = ''))
+
+##### packages #####
+library(tidyverse)
+library(curl)
+library(rmarkdown)
+library(googledrive)
+library(googlesheets4)
+
+##### authorizations #####
+## Set authentication token to be stored in a folder called \.secrets``
+options(gargle_oauth_cache = ".secrets")
+
+## Authenticate manually
+gs4_auth()
+
+# If successful, the previous step stores a token file.
+# Check that a file has been created with:
+
+list.files(".secrets/")
+
+## Check that the non-interactive authentication works by first deauthorizing:
+gs4_deauth()
+
+## Authenticate using token. If no browser opens, the authentication works.
+gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+
+##### render the QA dashboard #####
+## MANUAL CHANGE: add the 'AccessionID' of the data set you want to report on as 'x'
+knitr::opts_knit$set(resource.path = "c:/rworking/deepseatools/code")
+setwd('c:/rworking/deepseatools/code')
+
+## render
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20230731-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+##### check #####
+# sub %>% filter(grepl('Invalid latitude', FlagReason)) %>% pull(Longitude)
+#
+# sub %>%
+#   # filter(ScientificName == "Keratoisis magnifica") %>%
+#   group_by(Flag,
+#            FlagReason,
+#            ScientificName,
+#            Phylum,
+#            Class,
+#            Order,
+#            Family,
+#            Genus,
+#            Species,
+#            VernacularNameCategory
+#   ) %>% summarize (n=n()) %>%
+#   View()
+#
+# sub %>% pull(DepthInMeters) %>% median()
+# sub %>% filter(DepthInMeters == "68523") %>% pull(SampleID)
+# sub %>% pull(SurveyID) %>% table()
+# sub %>% pull(RecordType) %>% table()
+# s %>% filter(FieldName == "DataContact") %>% pull(FieldDescription)
+# sub %>% filter(grepl('>100', VerbatimSize)) %>% pull(MaximumSize)
+# sub %>% filter(is.na(LocationAccuracy) == T) %>% rownames()
+# sub %>% filter(grepl('>100', VerbatimSize)) %>% rownames()
+# rownames(sub %>% filter(grepl('>100', VerbatimSize)))
+# sub$row <- rownames(sub)
+# sub %>% filter(is.na(LocationAccuracy) == T) %>% pull(row)
+# sub %>% filter(row == "246") %>% pull(LocationAccuracy)
+# sub %>% filter(row == "247") %>% pull(LocationAccuracy)
+# sub %>% filter(row == "248") %>% pull(LocationAccuracy)
+# sub %>% slice(246:248) %>% pull(SampleID)
+# sub %>% filter(DepthInMeters > 30000) %>% pull(SampleID)
+#
+# x <- paste(sub$SampleID, sub$ScientificName, sub$VerbatimScientificName)
+# table(duplicated(x))
+#
+# filt %>% filter(grepl("NOAA", DataProvider)) %>% pull(DatasetID) %>% unique()
+#
+# sub %>% filter(DepthInMeters>500) %>% select(CatalogNumber, DepthInMeters)
+#
+# yo <- read.delim('c:/rworking/deepseatools/indata/20221031-0_NOAA_EX1304_Northeast_US_SBingo_2013.txt', sep = '\t')
+#
+# yo %>% filter(DepthInMeters > 7000) %>% select(TrackingID, DepthInMeters)
+# sub %>% filter(DepthInMeters > 7000) %>% select(TrackingID, DepthInMeters)
+#
+# filt %>% filter(grepl("HB-12", DatasetID)) %>% pull(DatasetID) %>% table()
+# sub %>% filter(grepl("HB-17", DatasetID)) %>% pull(ImageFilePath) %>% table()
+#
+# filt %>%
+#   filter(grepl("Smithsonian", Repository)) %>%
+#   pull(Repository) %>%
+#   table()
+
+
+# Acanthogorgia spissa (N=4)
+# Anthomastus gyratus (N=1)
+# Anthoptilum gowlettholmesae (N=4)
+# Anthothela vickersi (N=5)
+# Aphanostichopathes paucispina (N=1)
+# Calibelemnon francei (N=1)
+# Cladarisis nouvianae (N=2)
+# Cornulariidae (N=1)
+# Distichopathes hickersonae (N=2)
+
+## manual change: make sure your target RMD in the render function step is correct.
+##### MANUAL inspection of QA report in Word #####
+## manual: then Develop Redmine Checklist
+## manual: then SAVE to PDF
+##### upload PDF report to specific folder on Google Drive #####
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1vQaw36d8MCIWDfS11fCwdVLWmj-XWA2H"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".PDF", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".PDF", sep=''),
+             overwrite = T)
+##### checking #####
+sub %>% filter(Flag == 1) %>% pull(ScientificName) %>% table(useNA = 'always')
+
+x <- sub %>% filter(DepthInMeters != '-999', Oxygen != '-999', DepthInMeters > 40)
+plot(x$DepthInMeters, x$Oxygen)
+
+x <- sub %>% filter(DepthInMeters != '-999', Oxygen != '-999', DepthInMeters > 40, Temperature < 6)
+plot(x$DepthInMeters, x$Temperature)
+
+sub %>% filter(Temperature > 10) %>% pull(ScientificName)
+
+sub %>% filter(DepthInMeters < 30, Latitude != -999) %>% pull(ScientificName)
+
+sub %>% filter(Flag == 1, grepl('Invalid', FlagReason)) %>% pull(Longitude)
+
+unique(sub$DatasetID)
+filt %>% filter(grepl("HB", DatasetID)) %>% pull(DatasetID) %>% table()
+unique(sub$SurveyID)
+filt %>% filter(grepl("HB", SurveyID)) %>% pull(SurveyID) %>% table()
+unique(sub$EventID)
+unique(sub$Citation)
+unique(sub$Repository)
+
+x <- filt %>%
+  filter(DatasetID == 'MBARI') %>%
+  group_by(DataContact, DataProvider, ImageURL) %>%
+  summarize(n=n())
+View(x)
+
+x <- filt %>%
+  filter(FishCouncilRegion == "Caribbean" |
+           FishCouncilRegion == "South Atlantic" |
+           FishCouncilRegion == "Caribbean") %>%
+  group_by(FishCouncilRegion, Vessel, EntryDate, ObservationYear) %>%
+  summarize(n=n())
+View(x)
+
+x <- filt %>%
+  filter(grepl("NOAA", DatasetID)) %>%
+  group_by(DatasetID) %>%
+  summarize(n=n())
+View(x)
+
+x <- sub %>%
+  group_by(Locality) %>%
+  summarize(n=n())
+View(x)
+
+setwd("C:/rworking/deepseatools/indata")
+sub <- read.csv("dsc_natdb.csv", header = TRUE)
+filt <- indata %>%
+  filter(Flag == "0", is.na(Phylum) == F)
+
+x <- filt %>%
+  filter(FishCouncilRegion == "Caribbean" |
+           FishCouncilRegion == "South Atlantic" |
+           FishCouncilRegion == "Gulf of Mexico",
+         as.Date(EntryDate) > "2019-10-01") %>%
+  group_by(FishCouncilRegion, Vessel, VehicleName, EntryDate, ObservationYear) %>%
+  summarize(n=n())
+View(x)
+length(x$CatalogNumber)
+
+x <- filt %>%
+  filter(grepl("NA", DatasetID)) %>%
+  group_by(Vessel, DatasetID, DataProvider) %>%
+  summarize(n=n())
+View(x)
+
+x <- sub %>%
+  filter(CategoricalAbundance == 'minimum count') %>%
+  group_by(ScientificName, FlagReason, IndividualCount) %>%
+  summarize(n=n())
+View(x)
+
+x <- sub %>%
+  filter() %>%
+  group_by() %>%
+  summarize(n=n())
+View(x)
+
+filt %>%
+  filter(grepl("Deep Sea Coral", Repository)) %>%
+  group_by(Repository, DatasetID) %>%
+  summarize(n=n()) %>% View()
+
+filt %>%
+  filter(grepl("YOGI", VehicleName)) %>%
+  group_by(DataProvider, VehicleName) %>%
+  summarize(n=n()) %>% View()
+
+x <- sub %>%
+  filter(DepthInMeters < 50) %>%
+  group_by(ScientificName, FlagReason, DepthInMeters, DepthMethod, ShallowFlag) %>%
+  summarize(n=n())
+View(x)
+
+x <- sub %>%
+  group_by(CategoricalAbundance, IndividualCount) %>%
+  summarize(n=n())
+View(x)
+
+x <- sub %>%
+  filter(VernacularNameCategory == "nipple foliose sponge (yellow)") %>%
+  group_by(Flag, FlagReason, ScientificName) %>%
+  summarize(n=n())
+View(x)
+
+s %>% filter(FieldName == "Modified") %>% pull(ValidValues)
+s %>% filter(FieldName == "IdentificationVerificationStatus") %>% pull(ValidValues)
+s %>% filter(FieldName == "IdentificationVerificationStatus") %>% pull(FieldDescription)
+s %>% filter(FieldName == "TaxonRank") %>% pull(ValidValues)
+
+##### checking #####
+sub %>%
+  filter(FlagReason == "Insufficient taxonomic information") %>%
+  group_by(ScientificName, VernacularNameCategory, AphiaID, Phylum, Class, Order, Family, Genus, TaxonRank) %>%
+  summarize(n=n()) %>%
+  View()
+
+sub %>%
+  # filter(FlagReason == "Insufficient taxonomic resolution") %>%
+  group_by(IndividualCount, CategoricalAbundance) %>%
+  summarize(n=n()) %>%
+  View()
+
+filt$DatasetURL <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Summaries/", filt$DatasetID, ".html", sep = "")
+#head(filt$DatasetURL)
+
+x <- "Yoklavich"
+yo <- filt %>%
+  filter(grepl(x, DataContact)|
+           grepl(x, Reporter)|
+           grepl(x, PI)|
+           grepl(x, DatasetID) |
+           grepl(x, Repository))
+
+unique(yo$DatasetURL)
+
+
+filt %>%
+  filter(grepl("Southwest Fisheries", DataProvider)) %>%
+  group_by(DatasetID, SurveyID, SamplingEquipment, DataContact, PI, Reporter) %>%
+  summarize(n=n()) %>%
+  View()
+
+x <- filt %>%
+  filter(grepl("Southwest Fisheries", DataProvider) |
+           grepl("Northwest Fisheries", DataProvider))
+
+sub %>%
+  # filter(FlagReason == "Insufficient taxonomic resolution") %>%
+  group_by(ObservationDate) %>%
+  summarize(n=n()) %>%
+  View()
+
+sub %>%
+  filter(grepl("Desmophyllum", ScientificName)) %>%
+  group_by(ScientificName) %>%
+  summarize(n=n()) %>%
+  View()
+
+filt %>%
+  filter(grepl("140", SurveyID)) %>%
+  group_by(Vessel, SurveyID, AccessionID, DatasetID, DataProvider, SamplingEquipment ) %>%
+  summarize(n=n()) %>%
+  View()
+
+filt %>%
+  filter(grepl("ftp:", WebSite)) %>%
+  group_by(WebSite, Citation, DatasetID, SurveyID, ObservationDate) %>%
+  summarize(n=n()) %>%
+  View()
+
+x <- s %>%
+  filter(FieldName == 'LocationAccuracy') %>%
+  pull(ValidValues) %>%
+  View()
+
+x <- s %>%
+  filter(FieldName == 'OtherData') %>%
+  pull(FieldDescription) %>%
+  View()
+
+##### mapit using leaflet #####
+## optional create new 'sub' ##
+sub2 <- sub
+# sub2$Longitude <- as.numeric(sub$Longitude)-6
+sub2 <- sub2 %>% filter(Latitude != -999 |
+                          Longitude != -999)
+
+# filter(CatalogNumber == "1178074")
+m <- leaflet()
+m <- addProviderTiles(m, "Esri.NatGeoWorldMap")
+m <- addCircleMarkers(m, data=sub2,
+                      radius=2,
+                      weight=0,
+                      fillColor= "red",
+                      fillOpacity=.5,
+                      popup = paste(
+                        "<b><em>","Flag:","</b></em>", sub2$Flag, "<br>",
+                        "<b><em>","Catalog Number:","</b></em>", sub2$CatalogNumber, "<br>",
+                        "<b><em>","Record Type:","</b></em>", sub2$RecordType, "<br>",
+                        "<b><em>","DatasetID:","</b></em>", sub2$DatasetID, "<br>",
+                        "<b><em>","AccessionID:","</b></em>", sub2$AccessionID, "<br>",
+                        "<b><em>","DataProvider:","</b></em>", sub2$DataProvider, "<br>",
+                        "<b><em>","ObservationYear:","</b></em>", sub2$ObservationYear, "<br>",
+                        "<b><em>","Vessel:","</b></em>", sub2$Vessel, "<br>",
+                        "<b><em>","Locality:","</b></em>", sub2$Locality, "<br>",
+                        "<b><em>","Scientific Name:","</b></em>", sub2$ScientificName, "<br>",
+                        "<b><em>","Depth (meters):","</b></em>", sub2$DepthInMeters, "<br>",
+                        "<b><em>","Survey ID:","</b></em>", sub2$SurveyID, "<br>",
+                        "<b><em>","Event ID:","</b></em>", sub2$EventID, "<br>",
+                        "<b><em>","Latitude:","</b></em>", sub2$Latitude, "<br>",
+                        "<b><em>","Longitude:","</b></em>", sub2$Longitude, "<br>",
+                        "<b><em>","Image:","</b></em>",sub2$ImageURL))
+
+m
+
+##### export points and dive centers to GIS #####
+# install.packages("arcgisbinding")
+library(arcgisbinding)
+arc.check_product()
+
+## create x from sub
+sub2 <- sub
+sub2$Longitude <- as.numeric(sub$Longitude)
+x <- sub2 # %>% filter(Temperature > 13)
+
+## filter data
+# get rid of any missing Latitudes or Longitudes
+x <- x %>% filter(Latitude != -999 |
+                    Longitude != -999)
+
+# make copy to turn into spatial points data frame.
+x_geo <- x
+
+## create spatial points data frame
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+## create feature-class
+fgdb_path <- 'C:/rworking/deepseatools/gis/gis.gdb'
+arc.write(file.path(fgdb_path, 'x_geo2'), data=x_geo, overwrite = TRUE)
+
+##### exportive points #####
+## create summary by EventID
+x <- sub %>% filter(Flag == 0,
+                    Latitude != -999 |
+                      Longitude != -999) %>%
+  group_by(EventID) %>%
+  summarise(Latitude = mean(Latitude),
+            Longitude = mean(Longitude)
+  )
+
+## get rid of any missing Latitudes or Longitudes
+x <- x %>% filter(Latitude != -999 |
+                    Longitude != -999)
+
+## make copy to turn into spatial points data frame.
+x_geo <- x
+
+## create spatial points data frame
+coordinates(x_geo) <- c("Longitude", "Latitude")
+proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
+
+## create feature-class
+
+fgdb_path <- 'C:/rworking/gis/gis.gdb'
+arc.write(file.path(fgdb_path, 'x_geo_dives'), data=x_geo, overwrite = TRUE)
+
+##### checking #####f
+
+filt %>% filter(grepl("AUV", VehicleName) | VehicleName == 'AUV') %>% pull(VehicleName) %>% unique()
+
+filt %>% filter(grepl("SH1812", SurveyID)) %>% pull(DatasetID) %>% unique()
+filt %>% filter(grepl("RL1905", SurveyID)) %>% pull(DatasetID) %>% unique()
+
+yo <- filt %>% filter(grepl("Henry", Vessel)) %>%
+  group_by(DatasetID, DataProvider, SamplingEquipment, Vessel, VehicleName) %>%
+  summarize(n=n())
+View(yo)
+
+x <- filt %>%
+  filter(grepl("NOAA_SWFSC_AST", DatasetID)) %>%
+  #  ObservationYear == 2019) %>%
+  group_by(DatasetID,
+           PI,
+           PIAffiliation,
+           NavType,
+           Vessel,
+           ObservationYear,
+           SurveyID,
+           VehicleName,
+           SamplingEquipment,
+           DataContact,
+           Reporter,
+           ReporterEmail) %>%
+  summarize(n=n())
+View(x)
+
+write.csv(x, "c:/rworking/deepseatools/indata/20221027_pacific_cruises_post_2016_RPMcGuinn.csv")
+
+sub %>%
+  group_by(SampleID, EventID) %>%
+  summarize(n=n()) %>% View()
+
+filt %>%
+  filter(grepl("West Coast", FishCouncilRegion)) %>%
+  group_by(Vessel,IdentificationQualifier, IdentificationVerificationStatus, DataProvider, RecordType, VehicleName, SamplingEquipment, Repository, PI, Reporter, ReporterEmail) %>%
+  summarize(n=n()) %>% View()
+
+filt %>%
+  filter(grepl("Alaska", DataProvider)) %>%
+  group_by(DatasetID, Vessel, SurveyID, ObservationYear) %>%  summarize(n=n()) %>% View()
+
+sub %>%
+  #filter(grepl("Alaska", DataProvider)) %>%
+  group_by(SurveyID, EventID, Station, Locality, ObservationYear) %>%
+  summarize(n=n()) %>% View()
+
+sub %>%
+  #filter(FlagReason == "Invalid latitude | Invalid longitude") %>%
+  group_by(Flag, Latitude, Longitude, EndLatitude, StartLatitude, EndLongitude, StartLongitude) %>%
+  summarize(n=n()) %>% View()
+
+
+sub %>%
+  filter(FlagReason == "Possible intersection with land") %>%
+  group_by(Flag, Latitude, Longitude) %>%
+  summarize(n=n()) %>% View()
+
+##### check side by side #####
+x <- filt %>%
+
+  filter(grepl("Pacific", FishCouncilRegion)) %>%
+  group_by(DatasetID,
+           PIAffiliation,
+           NavType,
+           LocationAccuracy,
+           Vessel,
+           ObservationYear,
+           EventID,
+           SurveyID,
+           IdentificationQualifier,
+           IdentificationVerificationStatus,
+           DataProvider,
+           RecordType,
+           VehicleName,
+           SamplingEquipment,
+           Repository,
+           PI,
+           Reporter,
+           ReporterEmail) %>%
+  summarize(n=n())
+
+View(x)
+
+y <- sub %>%
+  # filter(grepl("AFSC", DatasetID)) %>%
+  group_by(DatasetID,
+           PIAffiliation,
+           NavType,
+           LocationAccuracy,
+           Vessel,
+           EventID,
+           SurveyID,
+           IdentificationQualifier,
+           IdentificationVerificationStatus,
+           DataProvider,
+           RecordType,
+           VehicleName,
+           SamplingEquipment,
+           Repository,
+           PI,
+           Reporter,
+           ReporterEmail) %>%
+  summarize(n=n())
+View(x)
+View(y)
+
+##### check #####
+filt %>%
+  filter(grepl('1202', DatasetID)) %>%
+  group_by(DatasetID, SurveyID) %>%
+  summarize(n=n())
+
+filt %>%
 
 
 
