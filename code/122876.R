@@ -1127,7 +1127,7 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 fgdb_path <- 'C:/rworking/deepseatools/gis/gis.gdb'
 arc.write(file.path(fgdb_path, 'x_geo2'), data=x_geo, overwrite = TRUE)
 
-##### exportive points #####
+##### export dive points #####
 ## create summary by EventID
 x <- sub %>% filter(Flag == 0,
                     Latitude != -999 |

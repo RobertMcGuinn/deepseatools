@@ -430,3 +430,32 @@ rm(list=setdiff(ls(), c("filt")))
 
 
 
+
+##### *** NEW VERSION: 20231204-1 (post-checker) #####
+##### packages #####
+library(tidyverse)
+library(sf)
+library(remotes)
+library(redmineR)
+library(worrms)
+library(openxlsx)
+library(taxize)
+
+
+##### load data #####
+setwd('c:/rworking/deepseatools/indata')
+sub <- read.csv('20231204-1_NMNH-IZ_THourigan_1890_2022_121717.csv')
+
+##### check #####
+table(sub$VernacularNameCategory, useNA = 'always')
+
+sub %>%
+  filter(is.na(VernacularNameCategory) == T) %>%
+  group_by(ScientificName, Phylum, Class, Order, Family, Genus, VernacularNameCategory) %>%
+  summarize(n=n()) %>% View
+
+sub_enhanced2 %>%
+  filter(VernacularNameCategory == 'stony coral (cup)') %>%
+  pull(VernacularNameCategory) %>% unique()
+
+
