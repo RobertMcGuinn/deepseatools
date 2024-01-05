@@ -66,6 +66,7 @@ filt_fixed <- filt %>%
 # -999 # [12] "Neopelta aberrans"
 # -999 # [13] "Acromuricea hirtella"
 # -999 # [14] "Acromuricea alatispina"
+
 ##### cleanup #####
 ##### check #####
 filt_fixed %>% filter(AphiaID == -999) %>%
@@ -116,9 +117,29 @@ species_list_original <- df
 dim(species_list_original)
 View(species_list_original)
 
+## view any duplicated entries in the table
+yo <- species_list_original %>% filter(duplicated(scientificname) == T) %>%
+  pull(scientificname)
+yo <- na.omit(yo)
+
+species_list_original %>% filter(scientificname %in% yo) %>%
+  group_by(scientificname, AphiaID, valid_AphiaID, valid_name, isExtinct, isMarine) %>%
+  summarize(n=n()) %>%
+  View()
+
 species_list_original %>%
   filter(AphiaID == '-999') %>%
   View()
+
+##### deal with duplicates in filt_fixed (breaks join operations otherwise) #####
+filt_fixed <- filt_fixed %>%
+  mutate(AphiaID = ifelse(AphiaID == 602367, 125286, AphiaID)) %>%
+  mutate(AphiaID = ifelse(AphiaID == 246100, 170653, AphiaID)) %>%
+  mutate(AphiaID = ifelse(AphiaID == 286696, 1393629, AphiaID))
+
+# 602367 125286 # Clavularia
+# 246100 170653 # Polymastia pacifica
+# 286696 1393629 # Stylatula gracilis
 
 ##### create a complete valid AphiaID list #####
 species_list_original <- species_list_original %>%
@@ -138,6 +159,7 @@ species_list_original %>% filter(status != 'accepted') %>%
 ##### ***** #####
 ##### create vector from valid AphiaIDs #####
 my_vector <- unique(species_list_original$valid_AphiaID_complete)
+
 ## get rid of any NA values.
 my_vector <- na.omit(my_vector)
 
@@ -334,6 +356,12 @@ joined4 <- left_join(joined3, synonyms, by)
 # names(joined4)
 # setdiff(joined4$AphiaID, species_list_original$valid_AphiaID_complete)
 # setdiff(species_list_original$valid_AphiaID_complete, joined4$AphiaID)
+View(species_list_original)
+
+species_list_original %>%
+  filter(species_list_original$scientificname == 'Clavularia') %>%
+  pull(AphiaID) %>%
+  unique
 
 ##### join original table with the new table #####
 joined4$AphiaID2 <- joined4$AphiaID
@@ -454,30 +482,61 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
            Genus == 'Hydrodendron' |
            Phylum == 'Chordata' |
            Phylum == 'Porifera' |
-           Order == 'Malacalcyonacea'
-  )
-
+           Order == 'Malacalcyonacea' |
+           Order == 'Octocorallia incertae sedis' |
+           ScientificName == 'Octocorallia'
+)
 
 ##### check #####
-# dim(sub_enhanced) - dim(sub_enhanced_filter)
-# setdiff(sub_enhanced$ScientificName, sub_enhanced_filter$ScientificName)
-#
-# table(sub_enhanced_filter$Phylum, useNA = 'always')
-# table(sub_enhanced_filter$Subphylum, useNA = 'always')
-#
-# sub_enhanced_filter %>%
-#   group_by(VernacularName, AphiaID, Phylum, Subphylum, Class, Order, Family, Genus, Species) %>%
-#   summarize(n=n()) %>% View()
-#
-# filt %>%
-#   filter(Family == 'Corallimorphidae') %>%
-#   group_by(VernacularName, AphiaID, ScientificName) %>%
-#   summarize(n=n()) %>% View()
+dim(sub_enhanced) - dim(sub_enhanced_filter)
+setdiff(sub_enhanced$ScientificName, sub_enhanced_filter$ScientificName)
+
+## check on records that were excluded by the filtering criteria
+excluded_cats <- setdiff(sub_enhanced$CatalogNumber, sub_enhanced_filter$CatalogNumber)
+
+sub_enhanced %>% filter(CatalogNumber %in% excluded_cats) %>%
+  group_by(status.x, status.y, VerbatimScientificName, TaxonRank, ScientificName, AphiaID, AphiaID.y, Phylum, Class, Order, Family, Genus) %>%
+  summarize(n=n()) %>% View
+
+species_list_original %>% filter(scientificname == 'Verseveldtia granulosa') %>%
+  group_by(genus, scientificname) %>%
+  summarize(n=n()) %>% View
+
+
+sub_enhanced %>% filter(ScientificName == 'Octocorallia') %>%
+  group_by(ScientificName, AphiaID, VernacularNameCategory) %>%
+  summarize(n=n()) %>% View
+
+dim(species_list_original)
+summary(species_list_original)
+
+filt %>% filter(ScientificName == "Clavularia") %>%
+  group_by(ScientificName, VerbatimScientificName, AphiaID) %>%
+  summarize(n=n())
+
+table(sub_enhanced_filter$Phylum, useNA = 'always')
+table(sub_enhanced_filter$Subphylum, useNA = 'always')
+
+sub_enhanced_filter %>%
+  group_by(VernacularName, AphiaID, Phylum, Subphylum, Class, Order, Family, Genus, Species) %>%
+  summarize(n=n()) %>% View()
+
+filt %>%
+  filter(Family == 'Corallimorphidae') %>%
+  group_by(VernacularName, AphiaID, ScientificName) %>%
+  summarize(n=n()) %>% View()
 
 sub_enhanced_filter %>% filter(Phylum == 'Cnidaria') %>%
   group_by(ScientificName, VernacularName) %>%
   summarize(n=n()) %>% View()
 
+sub_enhanced_filter %>% filter(Phylum == 'Porifera') %>%
+  group_by(ScientificName, VernacularName) %>%
+  summarize(n=n()) %>% View()
+
+sub_enhanced_filter %>% filter(Phylum == 'Chordata') %>%
+  group_by(ScientificName, VernacularName) %>%
+  summarize(n=n()) %>% View()
 
 ##### ***** #####
 ##### assign VernacularNameCategory #####
