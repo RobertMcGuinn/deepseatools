@@ -331,12 +331,25 @@ by <- join_by(AphiaID == AphiaID.x)
 sub_enhanced <- left_join(sub, taxonomy_table, by)
 
 ##### check #####
-# sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
-#   pull(ScientificName) %>%
-#   unique()
-#
-# dim(sub)
-# dim(sub_enhanced)
+sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
+  pull(ScientificName) %>%
+  unique()
+
+##### exclude taxa where AphiaID is -999 #####
+null_aphiaIDs <- sub_enhanced %>% filter(AphiaID == -999) %>%
+  pull(CatalogNumber) %>%
+  unique()
+
+## define not in
+`%notin%` <- Negate(`%in%`)
+
+sub_enhanced <-
+  sub_enhanced %>%
+  filter(CatalogNumber %notin% null_aphiaIDs)
+
+##### check #####
+sub_enhanced %>% filter(AphiaID == -999) %>% pull(CatalogNumber)
+filt_fixed %>% filter(AphiaID == -999) %>% pull(CatalogNumber)
 
 ##### gather information into proper variables #####
 sub_enhanced$VerbatimScientificName <- sub$VerbatimScientificName

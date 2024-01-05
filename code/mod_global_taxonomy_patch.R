@@ -308,12 +308,13 @@ save(species_list_original,
      synonyms,
      file = 'c:/rworking/deepseatools/indata/taxonomy_objects.Rdata')
 
-## remove the files
+## clean up everything except filt
+# rm(list=setdiff(ls(), c("filt")))
+
 # rm(species_list_original,
 #    species_list,
 #    classification,
 #    vernaculars,synonyms)
-
 
 ## load the objects back
 load('c:/rworking/deepseatools/indata/taxonomy_objects.Rdata')
@@ -341,20 +342,40 @@ taxonomy_table <- left_join(species_list_original, joined4, by)
 # View(taxonomy_table)
 # names(taxonomy_table)
 
-##### add taxonomy to sub #####
+##### add taxonomy to filt #####
 by <- join_by(AphiaID == AphiaID.x)
-sub_enhanced <- left_join(sub, taxonomy_table, by)
+sub_enhanced <- left_join(filt_fixed, taxonomy_table, by)
+
+##### exclude where AphiaID is -999 #####
+null_aphiaIDs <- sub_enhanced %>% filter(AphiaID == -999) %>%
+  pull(CatalogNumber) %>%
+  unique()
+
+## define not in
+`%notin%` <- Negate(`%in%`)
+
+sub_enhanced <-
+  sub_enhanced %>%
+  filter(CatalogNumber %notin% null_aphiaIDs)
 
 ##### check #####
 # sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
 #   pull(ScientificName) %>%
 #   unique()
 #
-# dim(sub)
+# dim(filt)
+# dim(filt_fixed)
 # dim(sub_enhanced)
 
 ##### gather information into proper variables #####
-sub_enhanced$VerbatimScientificName <- sub$VerbatimScientificName
+sub_enhanced$IdentificationComments <-
+  paste('DSCRTP_og_scientificname:',
+        ' ',
+        sub_enhanced$ScientificName,
+        ' | ',
+        sub_enhanced$IdentificationComments,
+        sep = '')
+# sub_enhanced$VerbatimScientificName <- filt$VerbatimScientificName
 sub_enhanced$ScientificName <- sub_enhanced$scientificname.y
 sub_enhanced$VernacularName <- sub_enhanced$vernaculars_list
 sub_enhanced$TaxonRank <- sub_enhanced$rank.y
@@ -374,12 +395,29 @@ sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority.y
 sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
 
 ##### check #####
+# head(sub_enhanced$IdentificationComments)
+#
 # table(sub_enhanced$Phylum, useNA = 'always')
+#
+# x <- sub_enhanced %>% filter(is.na(sub_enhanced$phylum.y) == T) %>%
+#   group_by(ScientificName, status.x, status.y, AphiaID) %>%
+#   summarize(n=n())
+# View(x)
+#
+# filt %>% filter(CatalogNumber == 249815) %>% pull(AphiaID)
+#
+#
 # table(x$Phylum, useNA = 'always')
 # table(sub_enhanced$Class, useNA = 'always')
 # sub_enhanced_filter %>% filter(Class == 'Hydrozoa') %>%
 #   group_by(Class, Order, Family, Genus, Species) %>%
 #   summarize(n=n()) %>% View()
+#
+# length(sub_enhanced$CatalogNumber)
+# length(filt$CatalogNumber)
+# setdiff(filt$CatalogNumber, sub_enhanced$CatalogNumber)
+# setdiff(sub_enhanced$CatalogNumber, filt$CatalogNumber)
+
 
 ##### apply taxonomic filter #####
 sub_enhanced_filter <- sub_enhanced %>%
@@ -436,6 +474,12 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
 #   group_by(VernacularName, AphiaID, ScientificName) %>%
 #   summarize(n=n()) %>% View()
 
+sub_enhanced_filter %>% filter(Phylum == 'Cnidaria') %>%
+  group_by(ScientificName, VernacularName) %>%
+  summarize(n=n()) %>% View()
+
+
+##### ***** #####
 ##### assign VernacularNameCategory #####
 ## define not in
 `%notin%` <- Negate(`%in%`)
@@ -567,7 +611,8 @@ sub_enhanced3<- sub_enhanced2 %>%
          Species,
          Subspecies,
          ScientificNameAuthorship,
-         Synonyms)
+         Synonyms,
+         IdentificationComments)
 
 ##### check #####
 dim(sub_enhanced3)
