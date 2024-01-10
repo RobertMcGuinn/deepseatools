@@ -768,7 +768,7 @@ sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
   summarize(n=n()) %>% View()
 
 ##### export result to csv (export to CSV) #####
-filename <- "20240110-0_global_taxonomy_patch_NDB_20230828-0_.csv"
+filename <- "20240110-0_global_taxonomy_patch_NDB_20230828-0_125104.csv"
 write.csv(sub_enhanced3,
           paste("c:/rworking/deepseatools/indata/",
                 filename, sep=''),

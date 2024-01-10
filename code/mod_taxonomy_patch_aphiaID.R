@@ -445,7 +445,7 @@ gorgfamilies <- c("Paramuriceidae","Chrysogorgiidae","Dendrobrachiidae",
                   "Plexauridae", "Anthothelidae",
                   "Coralliidae", "Melithaeidae",
                   "Paragorgiidae", "Parisididae","Spongiodermidae", "Subergorgiidae",
-                  "Victorgorgiidae", "Keratoisididae", "Malacalcyonacea incertae sedis")
+                  "Victorgorgiidae", "Keratoisididae", "Malacalcyonacea incertae sedis", 'Chelidonisididae')
 
 softfamilies <- c("Alcyoniidae","Aquaumbridae", "Ifalukellidae",
                   "Nephtheidae","Nidaliidae", "Paralcyoniidae",
