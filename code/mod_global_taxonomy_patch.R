@@ -67,6 +67,16 @@ filt_fixed <- filt %>%
 # -999 # [13] "Acromuricea hirtella"
 # -999 # [14] "Acromuricea alatispina"
 
+##### deal with duplicates in filt_fixed (breaks join operations otherwise) #####
+filt_fixed <- filt_fixed %>%
+  mutate(AphiaID = ifelse(AphiaID == 602367, 125286, AphiaID)) %>%
+  mutate(AphiaID = ifelse(AphiaID == 246100, 170653, AphiaID)) %>%
+  mutate(AphiaID = ifelse(AphiaID == 286696, 1393629, AphiaID))
+
+# 602367 125286 # Clavularia
+# 246100 170653 # Polymastia pacifica
+# 286696 1393629 # Stylatula gracilis
+
 ##### cleanup #####
 ##### check #####
 filt_fixed %>% filter(AphiaID == -999) %>%
@@ -131,16 +141,6 @@ species_list_original %>%
   filter(AphiaID == '-999') %>%
   View()
 
-##### deal with duplicates in filt_fixed (breaks join operations otherwise) #####
-filt_fixed <- filt_fixed %>%
-  mutate(AphiaID = ifelse(AphiaID == 602367, 125286, AphiaID)) %>%
-  mutate(AphiaID = ifelse(AphiaID == 246100, 170653, AphiaID)) %>%
-  mutate(AphiaID = ifelse(AphiaID == 286696, 1393629, AphiaID))
-
-# 602367 125286 # Clavularia
-# 246100 170653 # Polymastia pacifica
-# 286696 1393629 # Stylatula gracilis
-
 ##### create a complete valid AphiaID list #####
 species_list_original <- species_list_original %>%
   mutate(valid_AphiaID_complete = ifelse(is.na(valid_AphiaID) == T,
@@ -155,6 +155,9 @@ length(species_list_original$AphiaID)
 species_list_original %>% filter(status != 'accepted') %>%
   group_by(AphiaID, valid_AphiaID, valid_AphiaID_complete) %>%
   summarize(n=n()) %>% View()
+
+table(is.na(species_list_original$valid_AphiaID_complete))
+
 
 ##### ***** #####
 ##### create vector from valid AphiaIDs #####
@@ -323,12 +326,12 @@ dim(synonyms)
 
 ##### save and load objects for future use #####
 ## save multiple objects
-save(species_list_original,
-     species_list,
-     classification,
-     vernaculars,
-     synonyms,
-     file = 'c:/rworking/deepseatools/indata/taxonomy_objects.Rdata')
+# save(species_list_original,
+#      species_list,
+#      classification,
+#      vernaculars,
+#      synonyms,
+#      file = 'c:/rworking/deepseatools/indata/taxonomy_objects.Rdata')
 
 ## clean up everything except filt
 # rm(list=setdiff(ls(), c("filt")))
@@ -343,25 +346,37 @@ load('c:/rworking/deepseatools/indata/taxonomy_objects.Rdata')
 
 ##### ***** #####
 ##### left join the species list from above with all of the other API tables #####
-by <- join_by(valid_AphiaID == AphiaID)
+## joining species_list, classification, vernaculars, and synonyms
+by <- join_by(AphiaID == AphiaID)
 joined2 <- left_join(species_list, classification, by)
 
-by <- join_by(valid_AphiaID == AphiaID)
+by <- join_by(AphiaID == AphiaID)
 joined3 <- left_join(joined2, vernaculars, by)
 
-by <- join_by(valid_AphiaID == AphiaID)
+by <- join_by(AphiaID == AphiaID)
 joined4 <- left_join(joined3, synonyms, by)
 
 ##### check #####
+joined2 %>% filter(scientificname == 'Distichoptilum rigidum') %>%
+  group_by(AphiaID, Genus) %>%
+  summarize(n=n())
+
+i <- 1392554
+wm_classification(i)
+
+classification %>% filter(AphiaID == i)
+
+species_list %>% filter(AphiaID == i) %>%
+  group_by(AphiaID,valid_AphiaID) %>%
+  summarize(n=n())
+
 # names(joined4)
 # setdiff(joined4$AphiaID, species_list_original$valid_AphiaID_complete)
 # setdiff(species_list_original$valid_AphiaID_complete, joined4$AphiaID)
-View(species_list_original)
+# View(species_list_original)
+#
 
-species_list_original %>%
-  filter(species_list_original$scientificname == 'Clavularia') %>%
-  pull(AphiaID) %>%
-  unique
+joined4 %>% names()
 
 ##### join original table with the new table #####
 joined4$AphiaID2 <- joined4$AphiaID
@@ -387,9 +402,9 @@ sub_enhanced <-
   filter(CatalogNumber %notin% null_aphiaIDs)
 
 ##### check #####
-# sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
-#   pull(ScientificName) %>%
-#   unique()
+sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
+  pull(ScientificName) %>%
+  unique()
 #
 # dim(filt)
 # dim(filt_fixed)
@@ -498,10 +513,10 @@ sub_enhanced %>% filter(CatalogNumber %in% excluded_cats) %>%
   group_by(status.x, status.y, VerbatimScientificName, TaxonRank, ScientificName, AphiaID, AphiaID.y, Phylum, Class, Order, Family, Genus) %>%
   summarize(n=n()) %>% View
 
-species_list_original %>% filter(scientificname == 'Verseveldtia granulosa') %>%
-  group_by(genus, scientificname) %>%
-  summarize(n=n()) %>% View
-
+## *****
+sub_enhanced %>% filter(ScientificName == 'Distichoptilum rigidum') %>%
+  group_by(Genus, Genus.y, genus.x, genus.y, ScientificName, scientificname.x, scientificname.y) %>%
+  summarize(n=n()) %>% View()
 
 sub_enhanced %>% filter(ScientificName == 'Octocorallia') %>%
   group_by(ScientificName, AphiaID, VernacularNameCategory) %>%
