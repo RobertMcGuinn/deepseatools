@@ -1,7 +1,7 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate: 20240103
-## purpose: crosswalk between AphiaIDs and VernacularNameCategory
+## purpose: global taxonomy patch
 
 ##### linkage #####
 ## manual input here
@@ -68,6 +68,9 @@ filt_fixed <- filt %>%
 # -999 # [13] "Acromuricea hirtella"
 # -999 # [14] "Acromuricea alatispina"
 
+##### check #####
+# filt_fixed %>% filter(AphiaID == -999) %>% pull(CatalogNumber)
+
 ##### deal with duplicates in filt_fixed (breaks join operations otherwise) #####
 filt_fixed <- filt_fixed %>%
   mutate(AphiaID = ifelse(AphiaID == 602367, 125286, AphiaID)) %>%
@@ -78,32 +81,32 @@ filt_fixed <- filt_fixed %>%
 # 246100 170653 # Polymastia pacifica
 # 286696 1393629 # Stylatula gracilis
 
+##### load the taxonomy table from CSV #####
+tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 ##### cleanup #####
 ##### check #####
-filt_fixed %>% filter(AphiaID == -999) %>%
-  pull(ScientificName) %>%
-  unique()
+# filt_fixed %>% filter(AphiaID == -999) %>%
+#   pull(ScientificName) %>%
+#   unique()
+#
+# filt_fixed %>%
+#   filter(ScientificName == 'Callogorgia cracentis') %>%
+#   pull(AphiaID)
 
-filt_fixed %>%
-  filter(ScientificName == 'Callogorgia cracentis') %>%
-  pull(AphiaID)
-
+##### ***** #####
 ##### grab all AphiaIDs #####
 aphiaIDs <- unique(filt_fixed$AphiaID)
 
 ##### check #####
-x <- filt_fixed %>%
-  filter(AphiaID < 1) %>%
-  pull(ScientificName) %>%
-  unique()
-x
-
-length(aphiaIDs)
-summary(aphiaIDs)
-table(aphiaIDs < 1)
-
-##### load the taxonomy table from CSV #####
-tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
+# x <- filt_fixed %>%
+#   filter(AphiaID < 1) %>%
+#   pull(ScientificName) %>%
+#   unique()
+# x
+#
+# length(aphiaIDs)
+# summary(aphiaIDs)
+# table(aphiaIDs < 1)
 
 ##### create vector from incoming AphiaIDs #####
 my_vector <- aphiaIDs
@@ -125,22 +128,22 @@ for (i in seq_along(my_groups)){
 species_list_original <- df
 
 ##### check #####
-dim(species_list_original)
-View(species_list_original)
-
-## view any duplicated entries in the table
-yo <- species_list_original %>% filter(duplicated(scientificname) == T) %>%
-  pull(scientificname)
-yo <- na.omit(yo)
-
-species_list_original %>% filter(scientificname %in% yo) %>%
-  group_by(scientificname, AphiaID, valid_AphiaID, valid_name, isExtinct, isMarine) %>%
-  summarize(n=n()) %>%
-  View()
-
-species_list_original %>%
-  filter(AphiaID == '-999') %>%
-  View()
+# dim(species_list_original)
+# View(species_list_original)
+#
+# ## view any duplicated entries in the table
+# yo <- species_list_original %>% filter(duplicated(scientificname) == T) %>%
+#   pull(scientificname)
+# yo <- na.omit(yo)
+#
+# species_list_original %>% filter(scientificname %in% yo) %>%
+#   group_by(scientificname, AphiaID, valid_AphiaID, valid_name, isExtinct, isMarine) %>%
+#   summarize(n=n()) %>%
+#   View()
+#
+# species_list_original %>%
+#   filter(AphiaID == '-999') %>%
+#   View()
 
 ##### create a complete valid AphiaID list #####
 species_list_original <- species_list_original %>%
@@ -149,15 +152,15 @@ species_list_original <- species_list_original %>%
                                          valid_AphiaID))
 
 ##### check #####
-length(aphiaIDs)
-
-length(species_list_original$AphiaID)
-
-species_list_original %>% filter(status != 'accepted') %>%
-  group_by(AphiaID, valid_AphiaID, valid_AphiaID_complete) %>%
-  summarize(n=n()) %>% View()
-
-table(is.na(species_list_original$valid_AphiaID_complete))
+# length(aphiaIDs)
+#
+# length(species_list_original$AphiaID)
+#
+# species_list_original %>% filter(status != 'accepted') %>%
+#   group_by(AphiaID, valid_AphiaID, valid_AphiaID_complete) %>%
+#   summarize(n=n()) %>% View()
+#
+# table(is.na(species_list_original$valid_AphiaID_complete))
 
 
 ##### ***** #####
@@ -172,28 +175,28 @@ my_vector <- na.omit(my_vector)
 # View(my_vector)
 # summary(my_vector)
 
-## make groups of 50 (because the API limit is 50)
+##### make groups of 50 (because the API limit is 50) #####
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
 
 ##### loop to get records by the valid AphiaID #####
-species_list <- wm_records_name("Caryophyllia corrugata", fuzzy = FALSE)
-df <- species_list[0,]
-
-for (i in seq_along(my_groups)){
-  species_list <- wm_record(my_groups[[i]])
-  df <- rbind(df, species_list)
-}
-species_list <- df
-
-## get rid of any NA rows
-species_list <-
-  species_list %>% filter(is.na(AphiaID) == F)
+# species_list <- wm_records_name("Caryophyllia corrugata", fuzzy = FALSE)
+# df <- species_list[0,]
+#
+# for (i in seq_along(my_groups)){
+#   species_list <- wm_record(my_groups[[i]])
+#   df <- rbind(df, species_list)
+# }
+# species_list <- df
+#
+# ## get rid of any NA rows
+# species_list <-
+#   species_list %>% filter(is.na(AphiaID) == F)
 
 ##### check #####
-View(species_list)
-table(is.na(species_list$AphiaID))
-table(species_list$status)
-dim(species_list)
+# View(species_list)
+# table(is.na(species_list$AphiaID))
+# table(species_list$status)
+# dim(species_list)
 
 
 ##### loop to get classification #####
@@ -299,10 +302,10 @@ synonyms <- df
 # View(classification)
 # View(synonyms)
 
-dim(species_list)
-dim(classification)
-dim(vernaculars)
-dim(synonyms)
+# dim(species_list)
+# dim(classification)
+# dim(vernaculars)
+# dim(synonyms)
 
 #
 # names(species_list)
@@ -358,18 +361,18 @@ by <- join_by(AphiaID == AphiaID)
 joined4 <- left_join(joined3, synonyms, by)
 
 ##### check #####
-joined2 %>% filter(scientificname == 'Distichoptilum rigidum') %>%
-  group_by(AphiaID, Genus) %>%
-  summarize(n=n())
-
-i <- 1392554
-wm_classification(i)
-
-classification %>% filter(AphiaID == i)
-
-species_list %>% filter(AphiaID == i) %>%
-  group_by(AphiaID,valid_AphiaID) %>%
-  summarize(n=n())
+# joined2 %>% filter(scientificname == 'Distichoptilum rigidum') %>%
+#   group_by(AphiaID, Genus) %>%
+#   summarize(n=n())
+#
+# i <- 1392554
+# wm_classification(i)
+#
+# classification %>% filter(AphiaID == i)
+#
+# species_list %>% filter(AphiaID == i) %>%
+#   group_by(AphiaID,valid_AphiaID) %>%
+#   summarize(n=n())
 
 # names(joined4)
 # setdiff(joined4$AphiaID, species_list_original$valid_AphiaID_complete)
@@ -403,10 +406,10 @@ sub_enhanced <-
   filter(CatalogNumber %notin% null_aphiaIDs)
 
 ##### check #####
-sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
-  pull(ScientificName) %>%
-  unique()
-#
+# sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
+#   pull(ScientificName) %>%
+#   unique()
+# #
 # dim(filt)
 # dim(filt_fixed)
 # dim(sub_enhanced)
@@ -504,15 +507,15 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
 )
 
 ##### check #####
-dim(sub_enhanced) - dim(sub_enhanced_filter)
-setdiff(sub_enhanced$ScientificName, sub_enhanced_filter$ScientificName)
+# dim(sub_enhanced) - dim(sub_enhanced_filter)
+# setdiff(sub_enhanced$ScientificName, sub_enhanced_filter$ScientificName)
 
 ## check on records that were excluded by the filtering criteria
-excluded_cats <- setdiff(sub_enhanced$CatalogNumber, sub_enhanced_filter$CatalogNumber)
-
-sub_enhanced %>% filter(CatalogNumber %in% excluded_cats) %>%
-  group_by(status.x, status.y, VerbatimScientificName, TaxonRank, ScientificName, AphiaID, AphiaID.y, Phylum, Class, Order, Family, Genus) %>%
-  summarize(n=n()) %>% View
+# excluded_cats <- setdiff(sub_enhanced$CatalogNumber, sub_enhanced_filter$CatalogNumber)
+#
+# sub_enhanced %>% filter(CatalogNumber %in% excluded_cats) %>%
+#   group_by(status.x, status.y, VerbatimScientificName, TaxonRank, ScientificName, AphiaID, AphiaID.y, Phylum, Class, Order, Family, Genus) %>%
+#   summarize(n=n()) %>% View
 
 ## *****
 sub_enhanced %>% filter(ScientificName == 'Distichoptilum rigidum') %>%
@@ -633,33 +636,33 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     TRUE ~ ''))
 
 ##### check #####
-sub_enhanced2 %>%
-  filter(VernacularNameCategory == '') %>%
-  group_by(AphiaID, Class, Order, Family, Genus, ScientificName) %>%
-  summarize(n=n()) %>% View()
-
-filt_fixed %>% filter(Genus == 'Flagelligorgia') %>%
-  group_by(VernacularNameCategory, Genus, ScientificName) %>%
-  summarize(n=n())
-
-filt_fixed %>% filter(Family == 'Dendrophylliidae') %>%
-  group_by(VernacularNameCategory, Genus, ScientificName) %>%
-  summarize(n=n()) %>% pull(VernacularNameCategory) %>% unique
-
-filt_fixed %>% filter(Order == 'Scleralcyonacea') %>%
-  group_by(VernacularNameCategory, Genus, ScientificName) %>%
-  summarize(n=n()) %>% pull(VernacularNameCategory) %>% table(useNA = 'always')
-
-sub_enhanced2 %>% filter(Order == 'Octocorallia incertae sedis') %>%
-  group_by(AphiaID, Class, Order, Family , Genus, Species) %>%
-  summarize(n=n()) %>% View
-
-sub_enhanced2 %>% filter(ScientificName == 'Hypnogorgia pendula') %>%
-  group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species, ScientificName) %>%
-  summarize(n=n()) %>% View
-
 # table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
+# sub_enhanced2 %>%
+#   filter(VernacularNameCategory == '') %>%
+#   group_by(AphiaID, Class, Order, Family, Genus, ScientificName) %>%
+#   summarize(n=n()) %>% View()
 #
+# filt_fixed %>% filter(Genus == 'Flagelligorgia') %>%
+#   group_by(VernacularNameCategory, Genus, ScientificName) %>%
+#   summarize(n=n())
+#
+# filt_fixed %>% filter(Family == 'Dendrophylliidae') %>%
+#   group_by(VernacularNameCategory, Genus, ScientificName) %>%
+#   summarize(n=n()) %>% pull(VernacularNameCategory) %>% unique
+#
+# filt_fixed %>% filter(Order == 'Scleralcyonacea') %>%
+#   group_by(VernacularNameCategory, Genus, ScientificName) %>%
+#   summarize(n=n()) %>% pull(VernacularNameCategory) %>% table(useNA = 'always')
+#
+# sub_enhanced2 %>% filter(Order == 'Octocorallia incertae sedis') %>%
+#   group_by(AphiaID, Class, Order, Family , Genus, Species) %>%
+#   summarize(n=n()) %>% View
+#
+# sub_enhanced2 %>% filter(ScientificName == 'Hypnogorgia pendula') %>%
+#   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species, ScientificName) %>%
+#   summarize(n=n()) %>% View
+#
+# x <- sub_enhanced
 
 #
 # x <- sub_enhanced2 %>%
@@ -694,18 +697,18 @@ sub_enhanced2 %>% filter(ScientificName == 'Hypnogorgia pendula') %>%
 #   filter(VernacularNameCategory == 'stony coral (cup)') %>%
 #   pull(VernacularNameCategory) %>% unique()
 
-length(sub_enhanced$CatalogNumber)
-length(filt$CatalogNumber)
-
-x <- setdiff(filt$CatalogNumber, sub_enhanced$CatalogNumber)
-filt %>% filter(CatalogNumber %in% x) %>%
-  group_by(AphiaID, Class, Order, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View
-
-x <- setdiff(sub_enhanced$CatalogNumber, sub_enhanced2$CatalogNumber)
-filt %>% filter(CatalogNumber %in% x) %>%
-  group_by(AphiaID, Class, Order, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View
+# length(sub_enhanced$CatalogNumber)
+# length(filt$CatalogNumber)
+#
+# x <- setdiff(filt$CatalogNumber, sub_enhanced$CatalogNumber)
+# filt %>% filter(CatalogNumber %in% x) %>%
+#   group_by(AphiaID, Class, Order, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View
+#
+# x <- setdiff(sub_enhanced$CatalogNumber, sub_enhanced2$CatalogNumber)
+# filt %>% filter(CatalogNumber %in% x) %>%
+#   group_by(AphiaID, Class, Order, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View
 
 
 ##### get rid of unneeded column names #####
@@ -738,35 +741,42 @@ sub_enhanced3<- sub_enhanced2 %>%
          IdentificationComments)
 
 ##### check #####
-dim(sub_enhanced3)
-dim(filt)
-length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
-
-x <- setdiff(filt_fixed$CatalogNumber, sub_enhanced3$CatalogNumber)
-sub_enhanced %>% filter(CatalogNumber %in% x) %>%
-  group_by(AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View()
-
-table(is.na(sub$CatalogNumber))
-table(is.na(sub_enhanced3$CatalogNumber))
-sub %>% filter(ScientificName == 'Dichotella gemmacea') %>% pull(AphiaID)
-'Dichotella gemmacea'
-
-x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
-sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
-  group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
-  summarize(n=n()) %>% View()
-
-x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID) %>% unique()
-
-table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
-
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(Order) %>% unique()
-
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
-  group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View()
+# dim(sub_enhanced3)
+# dim(filt)
+# length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
+#
+# x <- setdiff(filt_fixed$CatalogNumber, sub_enhanced2$CatalogNumber)
+# sub_enhanced %>% filter(CatalogNumber %in% x) %>%
+#   group_by(CatalogNumber, AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
+#
+#
+# table(is.na(sub$CatalogNumber))
+# table(is.na(sub_enhanced3$CatalogNumber))
+# sub %>% filter(ScientificName == 'Dichotella gemmacea') %>% pull(AphiaID)
+# 'Dichotella gemmacea'
+#
+# x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
+# sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
+#   group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
+#   summarize(n=n()) %>% View()
+#
+# x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+# sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID) %>% unique()
+#
+# table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
+#
+# sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(Order) %>% unique()
+#
+# sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
+#   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
+#
+# sub_enhanced3 %>% filter(VernacularNameCategory == 'stoloniferan coral') %>%
+#   group_by(AphiaID, ScientificName, VerbatimScientificName, Phylum, Class, Order, Family, Genus, Species, VernacularName) %>%
+#   summarize(n=n()) %>% View()
+#
+# table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
 
 ##### export result to csv (export to CSV) #####
 filename <- "20240110-0_global_taxonomy_patch_NDB_20230828-0_125104.csv"
