@@ -268,7 +268,13 @@ df <- do.call(rbind, result_list)
 vernaculars <- df
 
 ##### check #####
-# wm_common_id(1567760)
+wm_common_id(135161)
+wm_common_id(1245747)
+wm_common_id(395098)
+wm_common_id(1116761)
+
+filt_fixed %>% filter(VernacularName == 'snowflake coral') %>%
+  pull(ScientificName)
 
 ##### loop to get synonyms #####
 ## initialize a results list
@@ -741,6 +747,28 @@ sub_enhanced3<- sub_enhanced2 %>%
          IdentificationComments)
 
 ##### check #####
+x <- sub_enhanced3 %>% filter( grepl('Cirrhipathes', ScientificName)) %>%
+    group_by(CatalogNumber, ScientificName, VerbatimScientificName, IdentificationComments, AphiaID, Phylum,
+             Class, Order, Suborder,
+             Family, Genus, Species) %>%
+    summarize(n=n()) %>% pull(CatalogNumber)
+
+y <- filt_fixed %>% filter(CatalogNumber %in% x,
+                      FishCouncilRegion == 'Gulf of Mexico') %>%
+  pull(DatasetID)
+
+sub_enhanced3 %>% filter(CatalogNumber %in% y) %>%
+  group_by(CatalogNumber, ScientificName, VerbatimScientificName, IdentificationComments, AphiaID, Phylum,
+           Class, Order, Suborder,
+           Family, Genus, Species) %>%
+  summarize(n=n()) %>% View()
+
+
+
+
+
+
+
 # dim(sub_enhanced3)
 # dim(filt)
 # length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
@@ -772,11 +800,11 @@ sub_enhanced3<- sub_enhanced2 %>%
 #   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
 #   summarize(n=n()) %>% View()
 #
-# sub_enhanced3 %>% filter(VernacularNameCategory == 'stoloniferan coral') %>%
-#   group_by(AphiaID, ScientificName, VerbatimScientificName, Phylum, Class, Order, Family, Genus, Species, VernacularName) %>%
-#   summarize(n=n()) %>% View()
-#
-# table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
+sub_enhanced3 %>% filter(VernacularNameCategory == 'stony coral (branching)') %>%
+  group_by(AphiaID, ScientificName, VerbatimScientificName, Phylum, Class, Order, Family, Genus, Species, VernacularName) %>%
+  summarize(n=n()) %>% View()
+
+table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
 
 ##### export result to csv (export to CSV) #####
 filename <- "20240110-0_global_taxonomy_patch_NDB_20230828-0_125104.csv"
