@@ -3,7 +3,7 @@
 # Date started: 2018-08-14
 # Purpose: Execute RMarkdown documents on dashboards for each DatasetID.
 #   4 groups: Cruise, Literature, Program, Repository, and then Repository-MBARI
-#(because it is so huge it can't have an interactive map)
+# (because it is so huge it can't have an interactive map)
 
 ##### install packages #####
 library(sf)
@@ -95,7 +95,7 @@ version <- unique(filt$DatabaseVersion)
 version <- as.character(version)
 
 ##### bring in datasetID key from local path #####
-key <- read.xlsx("C:/rworking/deepseatools/indata/20230804-3_DatasetID_Key_DSCRTP.xlsx")
+key <- read.xlsx("C:/rworking/deepseatools/indata/20230918-1_DatasetID_Key_DSCRTP.xlsx")
 
 ##### checking #####
 setdiff(filt$DatasetID, key$DatasetID)
@@ -107,7 +107,7 @@ x <- filt %>% filter(DatasetID %in% x) %>%
   summarize(n=n())
 View(x)
 #
-filt %>% filter(grepl("NOAA_SH-18-12", DatasetID)) %>% pull(DatasetID) %>% table()
+key %>% filter(grepl("EX-19-05", DatasetID)) %>% pull(DatasetID) %>% table()
 #
 # key %>%
 #   filter(DatasetID == "NOAA_PC-11-05-L1") %>%
@@ -146,7 +146,7 @@ filt %>% filter(grepl("NOAA_SH-18-12", DatasetID)) %>% pull(DatasetID) %>% table
 # setdiff(indata$DatasetID, key$DatasetID)
 # setdiff(key$DatasetID, indata$DatasetID)
 
-##### MANUAL STEP: go update the DatasetID key with the new values #####
+##### MANUAL STEP (in Google Drive) : go update the DatasetID key with the new values #####
 # setdiff(filt$DatasetID, key$DatasetID)
 
 ##### checking #####
@@ -198,28 +198,28 @@ filt$CitationMaker <- paste(filt$DataProvider,'. ',
 # [11] "Shen2019"
 # [12] "TMAG"
 
-# x <- "Shen2019"
-#
-# y <- filt %>% filter(DatasetID == x) %>%
-#   group_by(VernacularNameCategory,
-#            gisMEOW,
-#            RecordType,
-#            Phylum,
-#            Vessel,
-#            VehicleName,
-#            SurveyID,
-#            ObservationYear,
-#            ObservationDate,
-#            Locality,
-#            DataProvider,
-#            Repository,
-#            Citation,
-#            IdentifiedBy, PI) %>%
-#   summarize(n=n()) %>%  View()
-#
-# filt %>% filter(DatasetID == x) %>%
-#   pull(Locality) %>%
-#   unique()
+x <- "De_Clippele_etal_2019"
+
+y <- filt %>% filter(DatasetID == x) %>%
+  group_by(VernacularNameCategory,
+           gisMEOW,
+           RecordType,
+           Phylum,
+           Vessel,
+           VehicleName,
+           SurveyID,
+           ObservationYear,
+           ObservationDate,
+           Locality,
+           DataProvider,
+           Repository,
+           Citation,
+           IdentifiedBy, PI) %>%
+  summarize(n=n()) %>%  View()
+
+filt %>% filter(DatasetID == x) %>%
+  pull(CitationMaker) %>%
+  unique()
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from local path #####
 key <- read.xlsx("C:/rworking/deepseatools/indata/20230918-1_DatasetID_Key_DSCRTP.xlsx")
@@ -227,7 +227,7 @@ key <- read.xlsx("C:/rworking/deepseatools/indata/20230918-1_DatasetID_Key_DSCRT
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from Google Drive #####
 ## create a list of files (or single file) that meets title query (Manual change)
 
-x <- drive_find(q = "name contains '20230428-0_DatasetID_Key_DSCRTP'") #
+x <- drive_find(q = "name contains '20240115-0_DatasetID_Key_DSCRTP'") #
 
 ## browse to it
 x %>% drive_browse()
@@ -237,7 +237,7 @@ y <- x$id
 
 # this downloads the file to the specified path (manual change required)
 dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/20230428-0_DatasetID_Key_DSCRTP.xlsx",
+                     path = "C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx",
                      overwrite = TRUE)
 
 ## read the file into R as a data frame
@@ -250,13 +250,24 @@ x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
 # strip 'n' from existing key
 names(key)
 y <- key[,1:8]
+
+x$DatasetID <- as.character(x$DatasetID)
+y$DatasetID <- as.character(y$DatasetID)
+
+## check
 names(y)
+View(y)
+
 
 ## merge new numbers to create old key + new counts
-z <- merge(y,x)
+z <- left_join(y,x)
+
+##### check #####
+View(z)
+
 
 ## write out result (manual change to file name)
-write.xlsx(z, "C:/rworking/deepseatools/indata/20230918-1_DatasetID_Key_DSCRTP.xlsx",
+write.xlsx(z, "C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
 ##### manual upload new key to Google Drive (point and click stuff) #####
@@ -332,98 +343,100 @@ oneeighty <- intersect(yo, yo2)
 # View(x)
 
 ##### ***OPTIONAL*** Fixing DatasetID Problems (optional) #####
-d <- d %>% mutate(DatasetID =
-                    ifelse(DatasetID == "NOAA_SH-18-12_ROV-Transect",
-                           'NOAA_SH-18-12',
-                           as.character(DatasetID)))
+# d <- d %>% mutate(DatasetID =
+#                     ifelse(DatasetID == "NOAA_SH-18-12_ROV-Transect",
+#                            'NOAA_SH-18-12',
+#                            as.character(DatasetID)))
 
 ##### dealing with special character issues #####
 ## Install and load the stringi package if not already installed
 
-library(stringi)
-
-d$DataContact <- stri_trans_general(d$DataContact, "latin-ascii")
-unique(d$DataContact)
-
-contains_non_utf8 <- function(text) {
-  # Use stringi::stri_enc_detect to detect the encoding
-  encoding_info <- stringi::stri_enc_detect(text)
-
-  # Check if the detected encoding is not UTF-8
-  if (any(encoding_info$encoding != "UTF-8")) {
-    return(TRUE)
-  } else {
-    return(FALSE)
-  }
-}
-
-
-contains_non_utf8(unique(d$ScientificName))
-contains_non_utf8(unique(d$DataContact))
-
-
-d %>% filter(Encoding(ScientificName) == "UTF-8") %>% pull(ScientificName)
-d %>% filter(Encoding(ScientificName) == "UTF-8") %>% pull(ScientificName)
-d %>% filter(Encoding(Family) == "UTF-8") %>% pull(ScientificName)
-
-
-
-d <- d %>% mutate(ScientificName =
-                    ifelse(ScientificName == "Muriceides k\xfckenthali",
-                           'Muriceides kuekenthali',
-                           as.character(ScientificName)))
-d <- d %>% mutate(DataProvider =
-                    ifelse(DataProvider == "Due\xf1as et al. (2014)",
-                           'New Zealand National Institute of Water and Atmospheric Research (NIWA)',
-                           as.character(DataProvider)))
-d <- d %>% mutate(DataContact =
-                    ifelse(DataContact == "Due\xf1as, Luisa (lduenasm@unal.edu.co",
-                  'Dueñas, Luisa | duenasm@unal.edu',
-                  as.character(DataContact)))
-
-
-
-
-
-x <- unique(d$DataContact)
-
-
-
-table(x$DataContact, useNA = 'always')
-x$DataContact <- iconv(x$DataContact,to = "latin9")
-table(x$DataContact, useNA = 'always')
-missing <- x %>% filter(is.na(DataContact)==T) %>% pull(CatalogNumber)
-
-filt %>% filter(CatalogNumber %in% missing) %>% pull(DataContact)
-
-
-x <- d %>% filter(is.na(DataContact) == F) %>%
-  group_by(DatasetID, DataContact) %>%
-  summarize(n=n())
-View(x)
-
-missing <- x$DatasetID
-x <-filt %>% filter(DatasetID %in% missing) %>% group_by(DatasetID, DataContact, Citation) %>%
-  summarize(n=n())
-View(x)
-
-
-
-
-clean_utf8 <- function(text) {
-  iconv(text, to = "UTF-8", sub = "byte")
-}
-
-# Apply the clean_utf8 function to your data
-d$DataContact <-
-d$ScientificName <- sapply(d$ScientificName, clean_utf8)
-d$Order <- sapply(d$Order, clean_utf8)
-d$Family <- sapply(d$Family, clean_utf8)
+# library(stringi)
+#
+# d$DataContact <- stri_trans_general(d$DataContact, "latin-ascii")
+# unique(d$DataContact)
+#
+# contains_non_utf8 <- function(text) {
+#   # Use stringi::stri_enc_detect to detect the encoding
+#   encoding_info <- stringi::stri_enc_detect(text)
+#
+#   # Check if the detected encoding is not UTF-8
+#   if (any(encoding_info$encoding != "UTF-8")) {
+#     return(TRUE)
+#   } else {
+#     return(FALSE)
+#   }
+# }
+#
+#
+# contains_non_utf8(unique(d$ScientificName))
+# contains_non_utf8(unique(d$DataContact))
+#
+#
+# d %>% filter(Encoding(ScientificName) == "UTF-8") %>% pull(ScientificName)
+# d %>% filter(Encoding(ScientificName) == "UTF-8") %>% pull(ScientificName)
+# d %>% filter(Encoding(Family) == "UTF-8") %>% pull(ScientificName)
+#
+#
+#
+# d <- d %>% mutate(ScientificName =
+#                     ifelse(ScientificName == "Muriceides k\xfckenthali",
+#                            'Muriceides kuekenthali',
+#                            as.character(ScientificName)))
+# d <- d %>% mutate(DataProvider =
+#                     ifelse(DataProvider == "Due\xf1as et al. (2014)",
+#                            'New Zealand National Institute of Water and Atmospheric Research (NIWA)',
+#                            as.character(DataProvider)))
+# d <- d %>% mutate(DataContact =
+#                     ifelse(DataContact == "Due\xf1as, Luisa (lduenasm@unal.edu.co",
+#                   'Dueñas, Luisa | duenasm@unal.edu',
+#                   as.character(DataContact)))
+#
+#
+#
+#
+#
+# x <- unique(d$DataContact)
+#
+#
+#
+# table(x$DataContact, useNA = 'always')
+# x$DataContact <- iconv(x$DataContact,to = "latin9")
+# table(x$DataContact, useNA = 'always')
+# missing <- x %>% filter(is.na(DataContact)==T) %>% pull(CatalogNumber)
+#
+# filt %>% filter(CatalogNumber %in% missing) %>% pull(DataContact)
+#
+#
+# x <- d %>% filter(is.na(DataContact) == F) %>%
+#   group_by(DatasetID, DataContact) %>%
+#   summarize(n=n())
+# View(x)
+#
+# missing <- x$DatasetID
+# x <-filt %>% filter(DatasetID %in% missing) %>% group_by(DatasetID, DataContact, Citation) %>%
+#   summarize(n=n())
+# View(x)
+#
+#
+#
+#
+# clean_utf8 <- function(text) {
+#   iconv(text, to = "UTF-8", sub = "byte")
+# }
+#
+# # Apply the clean_utf8 function to your data
+# d$DataContact <-
+# d$ScientificName <- sapply(d$ScientificName, clean_utf8)
+# d$Order <- sapply(d$Order, clean_utf8)
+# d$Family <- sapply(d$Family, clean_utf8)
 
 
 ##### checking #####
 # setdiff(d$DatasetID, key$DatasetID)
 # setdiff(key$DatasetID, d$DatasetID)
+##### cleanup #####
+rm(filt)
 ##### important!! merge database with key  #####
 d <- merge(d, key, all.x = TRUE)
 

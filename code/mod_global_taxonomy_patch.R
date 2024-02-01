@@ -33,7 +33,7 @@ filt_fixed <- filt %>%
                           AphiaID)) %>%
   mutate(AphiaID = ifelse(ScientificName == "Parantipathes pluma",
                           1521953,
-                         AphiaID)) %>%
+                          AphiaID)) %>%
   mutate(AphiaID = ifelse(ScientificName == "Kophobelemnon biflorum",
                           1391784,
                           AphiaID)) %>%
@@ -70,17 +70,6 @@ filt_fixed <- filt %>%
 
 ##### check #####
 # filt_fixed %>% filter(AphiaID == -999) %>% pull(CatalogNumber)
-
-filt %>% filter(CatalogNumber == '589813') %>%
-  group_by(ScientificName, VerbatimScientificName,
-           VernacularNameCategory, IdentificationComments) %>%
-  summarize(n=n()) %>% View()
-
-filt %>% filter(grepl('cf.', ScientificName)) %>%
-  group_by(CatalogNumber, AphiaID, ScientificName,
-           VerbatimScientificName, VernacularNameCategory,
-           IdentificationComments) %>%
-  summarize(n=n()) %>% View()
 
 ##### deal with duplicates in filt_fixed (breaks join operations otherwise) #####
 filt_fixed <- filt_fixed %>%
@@ -279,7 +268,13 @@ df <- do.call(rbind, result_list)
 vernaculars <- df
 
 ##### check #####
-# wm_common_id(1567760)
+wm_common_id(135161)
+wm_common_id(1245747)
+wm_common_id(395098)
+wm_common_id(1116761)
+
+filt_fixed %>% filter(VernacularName == 'snowflake coral') %>%
+  pull(ScientificName)
 
 ##### loop to get synonyms #####
 ## initialize a results list
@@ -515,7 +510,7 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
            Order == 'Malacalcyonacea' |
            Order == 'Octocorallia incertae sedis' |
            ScientificName == 'Octocorallia'
-)
+  )
 
 ##### check #####
 # dim(sub_enhanced) - dim(sub_enhanced_filter)
@@ -752,6 +747,28 @@ sub_enhanced3<- sub_enhanced2 %>%
          IdentificationComments)
 
 ##### check #####
+x <- sub_enhanced3 %>% filter( grepl('Cirrhipathes', ScientificName)) %>%
+  group_by(CatalogNumber, ScientificName, VerbatimScientificName, IdentificationComments, AphiaID, Phylum,
+           Class, Order, Suborder,
+           Family, Genus, Species) %>%
+  summarize(n=n()) %>% pull(CatalogNumber)
+
+y <- filt_fixed %>% filter(CatalogNumber %in% x,
+                           FishCouncilRegion == 'Gulf of Mexico') %>%
+  pull(DatasetID)
+
+sub_enhanced3 %>% filter(CatalogNumber %in% y) %>%
+  group_by(CatalogNumber, ScientificName, VerbatimScientificName, IdentificationComments, AphiaID, Phylum,
+           Class, Order, Suborder,
+           Family, Genus, Species) %>%
+  summarize(n=n()) %>% View()
+
+
+
+
+
+
+
 # dim(sub_enhanced3)
 # dim(filt)
 # length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
