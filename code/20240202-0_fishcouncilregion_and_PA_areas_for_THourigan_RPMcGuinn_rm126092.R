@@ -63,11 +63,11 @@ se_area
 all
 
 ##### create a union of all of the selected EEZ#####
-atl_eez <- st_union(ca_t,
-                      go_t,
-                      ma_t,
-                      ne_t,
-                      se_t)
+atl_eez <- st_union(ca_t,go_t)
+atl_eez <- st_union(atl_eez, ma_t)
+atl_eez <- st_union(atl_eez, ne_t)
+atl_eez <- st_union(atl_eez, se_t)
+
 ##### check #####
 plot(atl_eez)
 
@@ -91,7 +91,11 @@ table(pa_in_EEZ$GearProhib, useNA = 'always')
 plot(pa_in_EEZ)
 
 ##### export shapefile #####
-st_write(points, "C:/Users/Robert.Mcguinn/Documents/ArcGIS/Projects/20230511-0_ISDSC8_Scotland_RPMcGuinn/shapefiles/sub_geo.shp", delete_dsn = T)
+atl_eez_map2 <- st_transform(atl_eez, crs = st_crs(pa))
+pa_in_eez_map <- st_transform(pa_in_EEZ, crs = st_crs(pa))
+
+st_write(atl_eez_map2, "C:/rworking/deepseatools/indata/atl_eez_map2.shp", delete_dsn = T)
+st_write(pa_in_eez_map, "C:/rworking/deepseatools/indata/pa_in_eez_map.shp", delete_dsn = T)
 
 
 
