@@ -1,7 +1,7 @@
 ##### header #####
 ## author: Robert McGuinn | robert.mcguinn@noaa.gov | rpm@alumni.duke.edu
 ## file_start: 20230927
-## purpose: map graphic production work for million record announcement for Dani
+## purpose: calculations of Atlantic EEZ area and no-trawl areas within that boundary for THourigan and HColeman
 
 ##### packages ######
 library(sf)
