@@ -95,17 +95,37 @@ version <- unique(filt$DatabaseVersion)
 version <- as.character(version)
 
 ##### bring in datasetID key from local path #####
-key <- read.xlsx("C:/rworking/deepseatools/indata/20230918-1_DatasetID_Key_DSCRTP.xlsx")
+key <- read.xlsx("C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx")
 
 ##### checking #####
 setdiff(filt$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, filt$DatasetID)
 #
+filt_old %>% filter(grepl('Carreiro', DatasetID)) %>%
+  pull(DatasetID) %>% unique() %>%
+  View
+
+key %>% filter(grepl('Carreiro', DatasetID)) %>%
+  pull(DatasetID) %>% unique() %>%
+  View
+
 x <- setdiff(filt$DatasetID, key$DatasetID)
 x <- filt %>% filter(DatasetID %in% x) %>%
   group_by(ObservationDate, DatasetID, RecordType, SamplingEquipment, VehicleName, DataProvider, Repository, Locality, SurveyComments, Citation, Vessel, WebSite) %>%
   summarize(n=n())
 View(x)
+
+
+x <- setdiff(filt_old$CatalogNumber, filt$CatalogNumber)
+x <- filt_old %>% filter(CatalogNumber %in% x) %>%
+  group_by(DatasetID) %>%
+  summarize(n=n())
+View(x)
+
+filt_old %>% filter(grepl('Carreiro', DatasetID)) %>%
+  group_by(DatasetID) %>% summarize(n=n()) %>%
+  View
+
 #
 key %>% filter(grepl("EX-19-05", DatasetID)) %>% pull(DatasetID) %>% table()
 #
@@ -265,20 +285,20 @@ z <- left_join(y,x)
 ##### check #####
 View(z)
 
-
-## write out result (manual change to file name)
+##### write out result (manual change to file name) #####
 write.xlsx(z, "C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
 ##### manual upload new key to Google Drive (point and click stuff) #####
 ##### ***OR*** full run set 'filt' to d #####
+rm(filt_old)
 d <- filt
 
 ##### ***OPTIONAL*** subsetting of indata to d (optional step for testing purposes) #####
-d <- d %>%
-  filter(
-    DatasetID == 'NIWA'
-  )
+# d <- d %>%
+#   filter(
+#     DatasetID == 'NIWA'
+#   )
 
 ##### cleanup #####
 rm(indata)
@@ -631,7 +651,7 @@ for (id in unique(yo$DatasetID)){
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/repository')
 }
 
-##### _checking #####
+##### check #####
 d %>% filter(class == 'Cruise') %>% pull(DatasetID) %>% unique() %>% length()
 d %>% filter(class == 'Literature') %>% pull(DatasetID) %>% unique() %>% length()
 d %>% filter(class == 'Program') %>% pull(DatasetID) %>% unique() %>% length()
@@ -656,6 +676,10 @@ length(unique(filt$DatasetID))
 length(biglist)
 
 ##### check #####
+filt %>% filter(grepl('EX-19-05', DatasetID)) %>%
+  group_by(DatasetID) %>%
+  summarize(n=n())
+
 extracted_strings <- sub("\\.html$", "", repository)
 x <- d %>% filter(class == 'Repository') %>% pull(DatasetID) %>% unique()
 setdiff(x, extracted_strings)
