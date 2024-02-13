@@ -7,7 +7,7 @@
 ## manual input here
 filename <- '120205' ## for this code .R
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
-github_link <- paste(github_path, filename, sep = '')
+github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 ## manual input here

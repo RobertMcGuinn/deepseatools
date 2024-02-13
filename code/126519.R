@@ -5,9 +5,9 @@
 
 ##### linkage #####
 ## manual input here
-filename <- '126519' ## for this code .R
+filename <- '126519' ## for this code, must include '.R'
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
-github_link <- paste(github_path, filename, sep = '')
+github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 ## manual input here
@@ -48,7 +48,7 @@ points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
 st_write(points, "C:/rworking/deepseatools/indata/sub_geo.shp", delete_dsn = T)
 
 ##### export result to csv (export to CSV) #####
-filename <- "20240213-0_subset_of_NDB_version_20240115-0_RPMcGuinn.csv"
+filename <- "20240213-0_South_Atlantic_subset_of_NDB_version_20240115-0_RPMcGuinn.csv"
 write.csv(points,
           paste("c:/rworking/deepseatools/indata/",
                 filename, sep=''),
