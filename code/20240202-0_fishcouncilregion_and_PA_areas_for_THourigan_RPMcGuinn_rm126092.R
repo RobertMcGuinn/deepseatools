@@ -57,6 +57,7 @@ se_area <- st_area(se_t) / 1e6
 fcr_area <- st_area(fcr_t) / 1e6
 pa_area <- st_area(pa_t) / 1e6
 
+##### sum areas for eez #####
 all <- ca_area + go_area + ma_area + ne_area + se_area
 
 ##### check #####
@@ -87,16 +88,16 @@ atl_eez <- st_union(atl_eez, se_t)
 plot(atl_eez)
 st_area(atl_eez)/1000000
 
-###### clip protected areas with selected eez #####
+##### clip protected areas with selected eez #####
 pa_in_EEZ <- st_intersection(pa_t, atl_eez)
 
-###### select only ones with bottom trawl listed in GearProhib #####
+##### select only ones with bottom trawl listed in GearProhib #####
 pa_in_EEZ_no_trawl <- pa_in_EEZ %>%
   filter(GearProhib != 'Pots, traps, bottom longlines, gillnets or trammel nets')
 pa_in_EEZ_no_trawl <- pa_in_EEZ_no_trawl %>%
   filter(GearProhib != 'Pots, traps, bottom longlines, gillnets or trammel nets, and anchoring by fishing vessels')
 
-###### calculate area #####
+##### calculate area #####
 pa_in_EEZ_no_trawl_area <- st_area(pa_in_EEZ_no_trawl) / 1e6
 total_area_in_no_trawl <- sum(pa_in_EEZ_no_trawl_area)
 

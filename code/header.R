@@ -5,7 +5,7 @@
 
 ##### linkage #####
 ## manual input here
-filename <- '' ## for this code .R
+filename <- '126248' ## for this code .R
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
 browseURL(github_link)
