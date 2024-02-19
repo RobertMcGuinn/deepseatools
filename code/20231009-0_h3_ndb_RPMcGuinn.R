@@ -12,76 +12,67 @@ library(ggplot2)
 library(h3jsr)
 options(stringsAsFactors = FALSE)
 
+##### load ndb #####
+source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
-##### lat/long point to sfc_point #####
-bth <- sf::st_sfc(sf::st_point(c(153.023503, -27.468920)), crs = 4326)
+##### create sf object from NDB #####
+filtgeo  <- st_as_sf(filt, coords = c("Longitude", "Latitude"), crs = 4326)
 
-##### check #####
-bth
-class(bth)
-
-##### find H3 index at a particular resolution
-point_to_cell(bth, res = 15)
-
-
-##### bring in polygon shapefile to sf dataframe #####
-nc <- st_read(system.file("shape/nc.shp", package="sf"), quiet = TRUE)
-
-##### check #####
-class(nc)
-dim(nc)
-st_crs(nc)
-
-##### find the centroid of each polygon and create sf point object #####
-nc_pts <- st_centroid(nc)
-
-##### set the coordinate reference system #####
-nc_pts <- st_transform(nc_pts, crs = 4326)
-
-###### whittle down the columns #####
-nc_pts <- dplyr::select(nc_pts, CNTY_ID, NAME)
-
-##### check #####
-nc
-dim(nc_pts)
-summary(nc_pts)
-
-##### get h3 index at all resolutions for every point #####
-nc_all_res <- point_to_cell(nc_pts,
-                            res = seq(0, 15),
+##### get hexagons for chosen resolutions #####
+filt_h3 <- point_to_cell(filtgeo,
+                            res = seq(5,6),
                             simple = FALSE)
 
-##### check result #####
-head(nc_all_res[, c(1:10)])
-dim(nc_all_res)
+##### check #####
+filt_h3 %>%
+  group_by(AphiaID, h3_resolution_5) %>%
+  summarize(n=n()) %>%
+  arrange(desc(n)) %>%
+  View
 
-##### unlist hexes to character string for single row and selected columns#####
-x <- nc_all_res %>%
-  filter(NAME == "Buncombe") %>%
-  select(c('h3_resolution_4','h3_resolution_5', 'h3_resolution_15'))
+filt_h3 %>% group_by(h3_resolution_6) %>%
+  summarize(mindepth_res5 = min(MinimumDepthInMeters),
+            maxdepth_res5 = max(MaximumDepthInMeters)) %>%
+  View
 
-hexes <- unlist(x, use.names = FALSE)
+##### look up hexagons that match a set of conditions #####
+cats <- filt_h3 %>%
+  filter(Locality == 'Straits Of Florida, East Of Key Largo') %>%
+  select(c('h3_resolution_5','h3_resolution_6'))
+
+## make a selection of points that match
+points <- filtgeo %>%
+  filter(Locality == 'Straits Of Florida, East Of Key Largo')
+
+##### unlist hexes to character string for single row and selected columns #####
+hexlist<- unlist(cats, use.names = FALSE)
 
 ##### check ######
-class(hexes)
+class(hexlist)
+length(hexlist)
+length(unique(hexlist))
 
 ##### create polygons from hexes ######
-hexes <- cell_to_polygon(hexes, simple = FALSE)
+hexes <- cell_to_polygon(unique(hexlist), simple = FALSE)
 
 ##### check #####
 class(hexes)
 st_crs(hexes)
 
 ##### plot the map #####
-nc %>%
-  filter(NAME == "Buncombe") %>%
+points %>%
   ggplot() +
   geom_sf(fill = NA, colour = 'black') +
-  geom_sf(data = hexes, aes(fill = h3_address), alpha = 0.5) +
+  geom_sf(data = hexes, aes(fill = NA), alpha = 0.5) +
   scale_fill_viridis_d() +
-  ggtitle('H3 hexagons NC Counties', subtitle = 'Resolution XX') +
+  ggtitle('Hex Relationships', subtitle = 'Neighboring Resolutions') +
   theme_minimal() +
-  coord_sf()
+  coord_sf(xlim = c(-159, -154), ylim = c(17, 22))
+
+##### export shapefiles for examination #####
+library(sf)
+st_write(hexes, "c:/rworking/deepseatools/indata/hexes.shp", append = F)
+st_write(points, "c:/rworking/deepseatools/indata/points.shp", append = F)
 
 ##### get area of hexagons #####
 

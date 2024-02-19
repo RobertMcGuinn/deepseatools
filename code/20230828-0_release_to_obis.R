@@ -3,7 +3,7 @@
 # date started: 20190121
 # purpose: create a Minimum Viable Product (MVP) for export from the
 #       NOAA National Database for Deep Sea Corals and Sponges
-#       to Abby Benson and Steve Formel for ingest to OBIS / GBIF
+#       to Abby Benson and for ingest to OBIS / GBIF
 
 ##### packages #####
 library(tidyverse)
@@ -20,22 +20,9 @@ library(RColorBrewer)
 library(naniar)
 
 ##### load NDB from local file (manual)#####
-## [manual]
-setwd("C:/rworking/deepseatools/indata")
-filename <- "DSCRTP_NatDB_20230928-0.csv" #
-indata<-read_csv(filename,
-                 col_types = cols(.default = "c"),
-                 locale = locale(encoding = 'latin9'),
-                 na = c("-999", "NA"))
+source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
 ##### check #####
-##### filter the NDB) #####
-flagged <- indata %>%  filter(Flag == "1")
-filt <- indata %>% filter(Flag == "0")
-
-## cleanup
-rm(indata)
-
 ##### creating errdap_link field #####
 filt$references <- paste('https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatasetID%2CCatalogNumber%2CSampleID%2CCitation%2CRepository%2CScientificName%2CVernacularNameCategory%2CTaxonRank%2CIdentificationQualifier%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CObservationDate%2CSurveyID%2CStation%2CEventID%2CSamplingEquipment%2CLocationAccuracy%2CRecordType%2CDataProvider&CatalogNumber=',
                           filt$CatalogNumber, sep = '')

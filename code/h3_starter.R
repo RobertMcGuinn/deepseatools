@@ -11,6 +11,7 @@ library(tidyverse)
 library(ggplot2)
 library(h3jsr)
 options(stringsAsFactors = FALSE)
+library(Hmisc)
 
 
 ##### lat/long point to sfc_point #####
@@ -20,9 +21,10 @@ bth <- sf::st_sfc(sf::st_point(c(153.023503, -27.468920)), crs = 4326)
 bth
 class(bth)
 
-##### find H3 index at a particular resolution
-point_to_cell(bth, res = 15)
-
+##### find hid index at a particular resolution
+hid <-point_to_cell(bth, res = 15) #res must range from 0-15
+hid
+class(hid)
 
 ##### bring in polygon shapefile to sf dataframe #####
 nc <- st_read(system.file("shape/nc.shp", package="sf"), quiet = TRUE)
@@ -31,9 +33,15 @@ nc <- st_read(system.file("shape/nc.shp", package="sf"), quiet = TRUE)
 class(nc)
 dim(nc)
 st_crs(nc)
+str(nc)
+structure(nc)
+dim(nc)
 
 ##### find the centroid of each polygon and create sf point object #####
 nc_pts <- st_centroid(nc)
+
+#####
+st_crs(nc_pts)
 
 ##### set the coordinate reference system #####
 nc_pts <- st_transform(nc_pts, crs = 4326)
@@ -45,6 +53,8 @@ nc_pts <- dplyr::select(nc_pts, CNTY_ID, NAME)
 nc
 dim(nc_pts)
 summary(nc_pts)
+str(nc_pts)
+str(nc)
 
 ##### get h3 index at all resolutions for every point #####
 nc_all_res <- point_to_cell(nc_pts,
