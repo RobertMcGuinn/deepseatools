@@ -30,22 +30,32 @@ filt_h3 %>%
   arrange(desc(n)) %>%
   View
 
+
+##### looking at depth distribution of coral and sponge occurrences summarized within hexes #####
 filt_h3 %>% group_by(h3_resolution_6) %>%
   summarize(mindepth_res5 = min(MinimumDepthInMeters),
             maxdepth_res5 = max(MaximumDepthInMeters)) %>%
-  View
+  View()
 
 ##### look up hexagons that match a set of conditions #####
+locality <- 'Davidson Seamount'
+
 cats <- filt_h3 %>%
-  filter(Locality == 'Straits Of Florida, East Of Key Largo') %>%
+  filter(grepl(locality, Locality)) %>%
   select(c('h3_resolution_5','h3_resolution_6'))
+hexlist <- unlist(cats, use.names = FALSE)
+hexlist <- unique(hexlist)
 
 ## make a selection of points that match
 points <- filtgeo %>%
-  filter(Locality == 'Straits Of Florida, East Of Key Largo')
+  filter(grepl(locality, Locality))
 
-##### unlist hexes to character string for single row and selected columns #####
-hexlist<- unlist(cats, use.names = FALSE)
+x <- filt_h3 %>%
+  filter(h3_resolution_5 %in% hexlist |
+           h3_resolution_6 %in% hexlist) %>%
+  pull(CatalogNumber) %>% unique()
+
+points2 <- filtgeo %>% filter(CatalogNumber %in% x)
 
 ##### check ######
 class(hexlist)
@@ -59,7 +69,15 @@ hexes <- cell_to_polygon(unique(hexlist), simple = FALSE)
 class(hexes)
 st_crs(hexes)
 
+##### export shapefiles for examination #####
+library(sf)
+st_write(hexes, "c:/rworking/deepseatools/indata/hexes.shp", append = F)
+st_write(points, "c:/rworking/deepseatools/indata/points.shp", append = F)
+st_write(points2, "c:/rworking/deepseatools/indata/points2.shp", append = F)
+
 ##### plot the map #####
+hex_bbox <- st_bbox(hexes)
+
 points %>%
   ggplot() +
   geom_sf(fill = NA, colour = 'black') +
@@ -67,12 +85,9 @@ points %>%
   scale_fill_viridis_d() +
   ggtitle('Hex Relationships', subtitle = 'Neighboring Resolutions') +
   theme_minimal() +
-  coord_sf(xlim = c(-159, -154), ylim = c(17, 22))
+  coord_sf(xlim = c(hex_bbox$xmin, hex_bbox$xmax), ylim = c(hex_bbox$ymin, hex_bbox$ymax))
 
-##### export shapefiles for examination #####
-library(sf)
-st_write(hexes, "c:/rworking/deepseatools/indata/hexes.shp", append = F)
-st_write(points, "c:/rworking/deepseatools/indata/points.shp", append = F)
+
 
 ##### get area of hexagons #####
 
