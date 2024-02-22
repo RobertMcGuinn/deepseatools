@@ -37,7 +37,7 @@ filt_h3 %>% group_by(h3_resolution_6) %>%
             maxdepth_res5 = max(MaximumDepthInMeters)) %>%
   View()
 
-##### look up hexagons that match a set of conditions #####
+##### look up hexagons and points that match a set of conditions #####
 locality <- 'Davidson Seamount'
 
 cats <- filt_h3 %>%
