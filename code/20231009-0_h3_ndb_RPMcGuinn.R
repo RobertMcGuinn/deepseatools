@@ -22,14 +22,12 @@ filtgeo  <- st_as_sf(filt, coords = c("Longitude", "Latitude"), crs = 4326)
 filt_h3 <- point_to_cell(filtgeo,
                             res = seq(5,6),
                             simple = FALSE)
-
 ##### check #####
 filt_h3 %>%
   group_by(AphiaID, h3_resolution_5) %>%
   summarize(n=n()) %>%
   arrange(desc(n)) %>%
   View
-
 
 ##### looking at depth distribution of coral and sponge occurrences summarized within hexes #####
 filt_h3 %>% group_by(h3_resolution_6) %>%
