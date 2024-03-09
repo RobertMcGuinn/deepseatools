@@ -1,6 +1,6 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate: 20230308
+## startdate: 20240308
 ## purpose: dscrtp crosswalk with tator exports
 ## issuename: 20240308_tator_dscrtp_crosswalk_MTaipan_RPMcGuinn
 
@@ -19,6 +19,70 @@ library(tidyverse)
 library(sf)
 library(remotes)
 library(redmineR)
+library(openxlsx)
+library(googlesheets4)
+library(googledrive)
+
+##### authorizations #####
+gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ##### load database #####
-source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
+# source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
+
+##### load schema from google drive #####
+sheetid <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
+s <- read_sheet(sheetid)
+
+##### load data #####
+
+mapping <- read.xlsx('c:/rworking/deepseatools/indata/DSCRTP_MDBC_Tator_Mapping.xlsx')
+
+## The workbook is the tailored / filtered-down version and contains data from multiple
+## tables (e.g. fish, corals, marine debris). I believe this is what NCEI is
+## using to ingest into their own database
+mdbc <- read.xlsx('c:/rworking/deepseatools/indata/NF2206_Forward_Videos_Annotations_dEqqYAtRJW.xlsx',
+                  sheet = 'corals_inverts')
+
+events <- read.xlsx('c:/rworking/deepseatools/indata/NF2206_Forward_Videos_Annotations_dEqqYAtRJW.xlsx',
+                    sheet = 'event_data')
+
+## The .csv is  a "raw" version of the corresponding corals/inverts database table.
+## You'll see "$*", those are built-in attributes/columns that come with every
+## annotation. Subsequently there are custom project-specific columns that may
+## or may not be filled in.
+corals <- read.csv('c:/rworking/deepseatools/indata/nf2206_corals_example.csv')
+
+##### check #####
+table(corals$Transect)
+table(events$EventType, useNA = 'always')
+names(events)
+View(corals)
+names(corals)
+table(corals$RecordType)
+table(corals$ScientificName)
+head(corals$X.x)
+head(corals$X.y)
+head(corals$X.x_pixels)
+head(corals$X.y_pixels)
+s %>% filter(FieldName == "RecordType") %>%
+  group_by(FieldDescription, ValidValues) %>%
+  summarize(n=n()) %>% View()
+table(corals$CruiseID, useNA = 'always')
+corals %>%
+  filter(CruiseID == '') %>%
+  pull(CruiseID)
+
+##### find names in common #####
+x <- intersect(names(mdbc), s$FieldName)
+y <- intersect(names(corals), s$FieldName)
+
+##### check #####
+setdiff(x,y)
+setdiff(y,x)
+table(corals$ScientificName, useNA = 'always')
+
+
+
+
+
