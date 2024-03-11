@@ -104,8 +104,7 @@ dscrtp_export <- corals %>%
     Cover = 'PercentCover',
     OccurrenceComments = 'Occurrence.Comments',
     TaxonRank = 'Taxon.Rank',
-    ObservationDate = 'Timestamp',
-    SampleID = 'Timestamp'
+    ObservationDate = 'Timestamp'
   )
 
 
@@ -118,6 +117,8 @@ dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrenceComments,
                                           'Type of injury: ', dscrtp_export$Type.Of.Injury, sep = ' | ')
 
 dscrtp_export$EventID <- paste(dscrtp_export$EventID, dscrtp_export$Transect, sep = '-')
+
+dscrtp_export$SampleID <- dscrtp_export$ObservationDate
 
 
 ## dealing with date and time
@@ -179,8 +180,12 @@ dscrtp_fields <- union(same, create)
 
 mdbc_fields <- union(same, needed)
 
+##### whittle down to the only the variables needed and create the export #####
+dscrtp_export_x <- dscrtp_export[,dscrtp_fields]
 
-
+##### check #####
+setdiff(names(dscrtp_export), dscrtp_fields)
+setdiff(dscrtp_fields, names(dscrtp_export))
 
 ##### notes #####
 # export of images from video?  stills from time stamp?
