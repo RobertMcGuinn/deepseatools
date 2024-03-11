@@ -93,21 +93,23 @@ table(corals$Color, useNA = 'always')
 ##### create export #####
 dscrtp_export <- corals %>%
   rename(
-    CommonName = 'VernacularName',
-    CruiseID = 'SurveyID',
-    DiveID = 'EventID',
-    MaximumSizeHeight = 'MaximumSize',
-    MinimumSizeHeight = 'MinimumSize',
-    Identified.By = 'IdentifiedBy',
-    Identified.Date = 'IdentificationDate',
-    Identification.Comments = 'IdentificationComments',
-    PercentCover = 'Cover',
-    Occurrence.Comments = 'OccurrenceComments',
-    Taxon.Rank = 'TaxonRank',
+    VernacularName = 'CommonName',
+    SurveyID = 'CruiseID',
+    EventID = 'DiveID',
+    MaximumSize = 'MaximumSizeHeight',
+    MinimumSize = 'MinimumSizeHeight',
+    IdentifiedBy = 'Identified.By',
+    IdentificationDate = 'Identification.Date',
+    IdentificationComments = 'Identification.Comments',
+    Cover = 'PercentCover',
+    OccurrenceComments = 'Occurrence.Comments',
+    TaxonRank = 'Taxon.Rank',
+    ObservationDate = 'Timestamp',
+    SampleID = 'Timestamp'
   )
 
 
-##### add information to export #####
+##### transformations and paste operations #####
 dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrencComments,
                                           'Heights measured using Tator software', sep = ' | ')
 
@@ -118,7 +120,80 @@ dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrenceComments,
 dscrtp_export$EventID <- paste(dscrtp_export$EventID, dscrtp_export$Transect, sep = '-')
 
 
+## dealing with date and time
+split_position = 10
+date <- substr(dscrtp_export$ObservationDate, 1, split_position)
+time <- substr(dscrtp_export$ObservationDate, split_position + 2, nchar(dscrtp_export$ObservationDate))
+dscrtp_export$ObservationDate <- date
+dscrtp_export$ObservationTime <- time
+
+##### check #####
+head(dscrtp_export$ObservationDate)
+head(date)
+tail(dscrtp_export$ObservationDate)
+tail(date)
+
+head(dscrtp_export$ObservationTime)
+head(time)
+tail(dscrtp_export$ObservationTime)
+tail(time)
+
+##### field lists #####
+##fields that already have the same name ##
+same <- intersect(names(corals), s$FieldName)
+
+## fields that needed to be created
+create <- c('VernacularName',
+            'SurveyID',
+            'EventID',
+            'MaximumSize',
+            'MinimumSize',
+            'IdentifiedBy',
+            'IdentificationDate',
+            'IdentificationComments',
+            'Cover',
+            'OccurrenceComments',
+            'TaxonRank',
+            'ObservationDate',
+            'ObservationTime',
+            'SampleID')
+
+## fields that needed a name transformation
+needed <- c('CommonName',
+            'CruiseID',
+            'DiveID',
+            'MaximumSizeHeight',
+            'MinimumSizeHeight',
+            'Identified.By',
+            'Identification.Date',
+            'Identification.Comments',
+            'PercentCover',
+            'OccurrenceComments',
+            'Taxon.Rank',
+            'Timestamp',
+            'Proportion.Of.Injury',
+            'Type.Of.Injury',
+            'Transect')
+
+dscrtp_fields <- union(same, create)
+
+mdbc_fields <- union(same, needed)
+
+
+
+
 ##### notes #####
+# export of images from video?  stills from time stamp?
+# what about image name associations?
+# [8] "X.media_name"
+# [9] "X.media_id"
+# [21] "X.x"
+# [22] "X.x_pixels"
+# [23] "X.y"
+# [24] "X.y_pixels"
+
+
+
 # LocationAccuracy?
 # what about completeness of ID? "Needs.Review" We only want things that have been reviewed.
 # Needs.Review.Comments
@@ -147,9 +222,9 @@ dscrtp_export$EventID <- paste(dscrtp_export$EventID, dscrtp_export$Transect, se
 
 # we want fish too!
 
-# [8] "X.media_name"
-# [9] "X.media_id"
 
+
+# are you capturing 'Locality" or named places?
 
 
 
