@@ -35,7 +35,6 @@ sheetid <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
 s <- read_sheet(sheetid)
 
 ##### load data #####
-
 mapping <- read.xlsx('c:/rworking/deepseatools/indata/DSCRTP_MDBC_Tator_Mapping.xlsx')
 
 ## The workbook is the tailored / filtered-down version and contains data from multiple
@@ -65,7 +64,7 @@ head(corals$X.x)
 head(corals$X.y)
 head(corals$X.x_pixels)
 head(corals$X.y_pixels)
-s %>% filter(FieldName == "RecordType") %>%
+s %>% filter(FieldName == "MaximumSize") %>%
   group_by(FieldDescription, ValidValues) %>%
   summarize(n=n()) %>% View()
 table(corals$CruiseID, useNA = 'always')
@@ -76,11 +75,86 @@ corals %>%
 ##### find names in common #####
 x <- intersect(names(mdbc), s$FieldName)
 y <- intersect(names(corals), s$FieldName)
+setdiff(y,x)
+setdiff(x,y)
 
 ##### check #####
 setdiff(x,y)
 setdiff(y,x)
 table(corals$ScientificName, useNA = 'always')
+
+# [1] "AssociatedTaxa"           "CategoricalAbundance"     "Condition"
+# [4] "Density"                  "DepthInMeters"            "IndividualCount"
+# [7] "Latitude"                 "Longitude"                "Morphospecies"
+# [10] "RecordType"               "SampleAreaInSquareMeters" "ScientificName"
+
+table(corals$Color, useNA = 'always')
+
+##### create export #####
+dscrtp_export <- corals %>%
+  rename(
+    CommonName = 'VernacularName',
+    CruiseID = 'SurveyID',
+    DiveID = 'EventID',
+    MaximumSizeHeight = 'MaximumSize',
+    MinimumSizeHeight = 'MinimumSize',
+    Identified.By = 'IdentifiedBy',
+    Identified.Date = 'IdentificationDate',
+    Identification.Comments = 'IdentificationComments',
+    PercentCover = 'Cover',
+    Occurrence.Comments = 'OccurrenceComments',
+    Taxon.Rank = 'TaxonRank',
+  )
+
+
+##### add information to export #####
+dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrencComments,
+                                          'Heights measured using Tator software', sep = ' | ')
+
+dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrenceComments,
+                                          'Proportion or injury: ', dscrtp_export$Proportion.Of.Injury,
+                                          'Type of injury: ', dscrtp_export$Type.Of.Injury, sep = ' | ')
+
+dscrtp_export$EventID <- paste(dscrtp_export$EventID, dscrtp_export$Transect, sep = '-')
+
+
+##### notes #####
+# LocationAccuracy?
+# what about completeness of ID? "Needs.Review" We only want things that have been reviewed.
+# Needs.Review.Comments
+# ReviewedBy, should this name go into IdentifiedBy?
+
+# AssociatedNavIdtator (we would like to get smoothed tracklines) Are these at the dive level?
+
+# AssociatedGeologyId
+# AttachmentSubstrate
+# DominantSubstrate
+# Bedrock
+# Moderately.Coarse.Unconsolidated
+# Fine.Unconsolidated
+# Shell.Substrate
+# Very.Coarse.Unconsolidated
+
+# Coral.Presence
+# Coral.Substrate
+# Sponge.Presence
+
+# AssociatedTransectId?
+
+# ID.Analyst vs Identified.By?
+
+# Color?
+
+# we want fish too!
+
+# [8] "X.media_name"
+# [9] "X.media_id"
+
+
+
+
+
+
 
 
 
