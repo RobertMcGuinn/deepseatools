@@ -28,7 +28,7 @@ gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ##### load database #####
-# source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
+source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
 ##### load schema from google drive #####
 sheetid <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
@@ -79,9 +79,9 @@ setdiff(y,x)
 setdiff(x,y)
 
 ##### check #####
-setdiff(x,y)
-setdiff(y,x)
-table(corals$ScientificName, useNA = 'always')
+# setdiff(x,y)
+# setdiff(y,x)
+# table(corals$ScientificName, useNA = 'always')
 
 # [1] "AssociatedTaxa"           "CategoricalAbundance"     "Condition"
 # [4] "Density"                  "DepthInMeters"            "IndividualCount"
@@ -129,15 +129,15 @@ dscrtp_export$ObservationDate <- date
 dscrtp_export$ObservationTime <- time
 
 ##### check #####
-head(dscrtp_export$ObservationDate)
-head(date)
-tail(dscrtp_export$ObservationDate)
-tail(date)
-
-head(dscrtp_export$ObservationTime)
-head(time)
-tail(dscrtp_export$ObservationTime)
-tail(time)
+# head(dscrtp_export$ObservationDate)
+# head(date)
+# tail(dscrtp_export$ObservationDate)
+# tail(date)
+#
+# head(dscrtp_export$ObservationTime)
+# head(time)
+# tail(dscrtp_export$ObservationTime)
+# tail(time)
 
 ##### field lists #####
 ##fields that already have the same name ##
@@ -184,10 +184,11 @@ mdbc_fields <- union(same, needed)
 dscrtp_export_x <- dscrtp_export[,dscrtp_fields]
 
 ##### check #####
-setdiff(names(dscrtp_export), dscrtp_fields)
-setdiff(dscrtp_fields, names(dscrtp_export))
+# setdiff(names(dscrtp_export), dscrtp_fields)
+# setdiff(dscrtp_fields, names(dscrtp_export))
 
 ##### notes #####
+
 # export of images from video?  stills from time stamp?
 # what about image name associations?
 # [8] "X.media_name"
@@ -197,15 +198,15 @@ setdiff(dscrtp_fields, names(dscrtp_export))
 # [23] "X.y"
 # [24] "X.y_pixels"
 
-
-
 # LocationAccuracy?
+
 # what about completeness of ID? "Needs.Review" We only want things that have been reviewed.
 # Needs.Review.Comments
 # ReviewedBy, should this name go into IdentifiedBy?
 
 # AssociatedNavIdtator (we would like to get smoothed tracklines) Are these at the dive level?
 
+## Habitat questions.
 # AssociatedGeologyId
 # AttachmentSubstrate
 # DominantSubstrate
@@ -225,11 +226,9 @@ setdiff(dscrtp_fields, names(dscrtp_export))
 
 # Color?
 
-# we want fish too!
+# We want fish too!
 
-
-
-# are you capturing 'Locality" or named places?
+# Are you capturing 'Locality" or named places?
 
 
 
