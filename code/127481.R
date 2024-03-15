@@ -107,7 +107,6 @@ dscrtp_export <- corals %>%
     ObservationDate = 'Timestamp'
   )
 
-
 ##### transformations and paste operations #####
 dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrencComments,
                                           'Heights measured using Tator software', sep = ' | ')
