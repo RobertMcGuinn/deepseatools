@@ -50,6 +50,9 @@ st_write(points,
 ##### write out points for delivery #####
 points_select <- filt %>% filter(CatalogNumber %in% points$CatalogNumber)
 
+##### points_select #####
+
+
 ##### export result to csv (export to CSV) #####
 filename <- "20240318-0_subset_of_NDB_version_20240115-0_RPMcGuinn.csv"
 write.csv(points_select,
