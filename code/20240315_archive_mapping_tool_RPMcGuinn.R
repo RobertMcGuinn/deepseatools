@@ -59,19 +59,24 @@ filt <- indata %>% filter(Flag == 0)
 theme_set(theme_bw())
 world = ne_countries(scale = "medium", returnclass="sf")
 
-map <- ggplot(data=world) +
-  geom_point(data=filt,
-             aes(x=as.numeric(Longitude), y=as.numeric(Latitude)),
-             size=0.5,
-             shape=16,
-             fill="red") +
+map <- ggplot(data = world) +
+  geom_point(data = filt,
+             aes(x = as.numeric(Longitude), y = as.numeric(Latitude)),
+             size = 0.5,
+             shape = 16,
+             color = "red") +  # Change fill to color for geom_point
   labs(title = "Observations of Deep-Sea Coral and Sponge Occurrences
           \n from the NOAA National Deep-Sea Coral and Sponge Database, 1842-Present",
-       x = "Longitude", y="Latitude", caption = "Database v. 20240115-0")+
-  geom_sf()
+       x = "Longitude", y = "Latitude", caption = "Database v. 20240115-0") +
+  geom_sf() +
+  scale_x_continuous(name = "Longitude", breaks = seq(-180, 180, by = 10),
+                     labels = paste(seq(-180, 180, by = 10), "°")) +
+  scale_y_continuous(name = "Latitude", breaks = seq(-90, 90, by = 10),
+                     labels = paste(seq(-90, 90, by = 10), "°"))
 
-##### save the plot #####
+# Save the plot
 ggsave("c:/rworking/deepseatools/images/map2.png",
+       plot = map,  # Specify the plot object
        width = 8,
        height = 5.57,
        units = "in")
@@ -84,12 +89,6 @@ write.table(lonlat,
 
 ##### check #####
 head(lonlat)
-
-
-
-
-
-
 
 
 

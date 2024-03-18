@@ -26,12 +26,12 @@ library(redmineR)
 source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
 ##### bring in shapefile of AOI #####
-pac_aoi <- sf::st_read(
-  "C:/rworking/deepseatools/indata/Pacific_AOI_buf500m/Pacific_AOI_buf500m.shp"
+fph_aoi <- sf::st_read(
+  "C:/rworking/deepseatools/indata/FL_Pan_AOI_500mbuff/FL_Pan_AOI_500mbuff.shp"
   )
 
 ##### set project crs #####
-projcrs <- st_crs(pac_aoi)
+projcrs <- st_crs(fph_aoi)
 
 ##### create sf version of database #####
 geo_filt <- st_as_sf(filt, coords = c("Longitude", "Latitude"), crs = 4326)
@@ -40,7 +40,7 @@ geo_filt <- st_as_sf(filt, coords = c("Longitude", "Latitude"), crs = 4326)
 geo_filt_transform <- st_transform(geo_filt, crs = projcrs)
 
 ##### intersect points with aoi #####
-points <- st_intersection(geo_filt_transform, pac_aoi)
+points <- st_intersection(geo_filt_transform, fph_aoi)
 
 ##### export points for GIS check #####
 st_write(points,
@@ -51,7 +51,7 @@ st_write(points,
 points_select <- filt %>% filter(CatalogNumber %in% points$CatalogNumber)
 
 ##### export result to csv (export to CSV) #####
-filename <- "20240213-0_subset_of_NDB_version_20240115-0_RPMcGuinn.csv"
+filename <- "20240318-0_subset_of_NDB_version_20240115-0_RPMcGuinn.csv"
 write.csv(points_select,
           paste("c:/rworking/deepseatools/indata/",
                 filename, sep=''),
