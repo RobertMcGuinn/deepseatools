@@ -28,7 +28,7 @@ library(taxize)
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv('OET_NA138_2022_2022_123176.csv')
 
-##### NEW VERSION #####
+##### ***** NEW VERSION ******  #####
 ##### load data #####
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv('20231204-1_OET_NA138_2022_2022_123176.csv')
@@ -505,6 +505,52 @@ rm(list=setdiff(ls(), c("filt")))
 
 
 
+
+
+
+
+
+##### ***** NEW VERSION ***** #####
+##### load NDB #####
+source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
+
+##### load data #####
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20240108-0_OET_NA138_2022_2022_123176'
+sub <- read.csv(paste(filename, '.csv', sep = ''))
+
+##### check #####
+x <- sub %>%
+  filter(is.na(ImageFilePath) == F) %>%
+  pull(ImageFilePath)
+
+filt %>% filter(grepl('hcarlson', IdentifiedBy)) %>%
+  pull(IdentifiedBy) %>%
+  unique()
+
+filt %>% filter(grepl('Hercules', VehicleName)) %>%
+  pull(VehicleName) %>%
+  table()
+
+sub %>% filter(IndividualCount == -999,
+                Flag == 0) %>%
+  pull(CategoricalAbundance) %>%
+  table(useNA = 'always')
+
+##### run QA report #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+##### QA Report to Google Drive
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1GYhZcbpLKU2icZrxbo4TTtEBWxnoSzQR"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".PDF", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".PDF", sep=''),
+             overwrite = T)
 
 
 
