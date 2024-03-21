@@ -42,17 +42,17 @@ opts_chunk$set(
 
 ```
 
-```{r load_NDB, echo=F, message=FALSE, warning=FALSE, cache=T, eval=F}
+```{r load_NDB, echo=F, message=FALSE, warning=FALSE, cache=T, eval=T}
 ##### manual input: latest version of NDB #####
 ## the data must be in the folder below
 ## get the latest from google drive and place in your local folder
-setwd("C:/rworking/deepseatools/indata")
-indata <- read.csv("DSCRTP_NatDB_20230620-0.csv", header = T) 
-filt <- indata %>%
-  filter(Flag == "0", 
-         is.na(Phylum) == F)
+# setwd("C:/rworking/deepseatools/indata")
+# indata <- read.csv("DSCRTP_NatDB_20230620-0.csv", header = T) 
+# filt <- indata %>%
+#   filter(Flag == "0", 
+#          is.na(Phylum) == F)
 ## get the flagged records alone
-# flagged <- sub %>%  filter(Flag == "1")
+flagged <- sub %>%  filter(Flag == "1")
 ```
 
 ```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
@@ -139,7 +139,7 @@ m
 
 ```
 
-```{r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE, eval=FALSE}
+```{r schema, echo=FALSE, cache = FALSE, warning=FALSE, message=FALSE, eval=F}
 ##### download Google Sheet version of schema for use in R  documents ##### 
 ## run this command once per session to authorize googlesheets4 to your account
 # gs4_auth()

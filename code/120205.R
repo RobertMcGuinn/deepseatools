@@ -20,6 +20,7 @@ library(tidyverse)
 library(sf)
 library(remotes)
 library(redmineR)
+library(rmarkdown)
 
 ##### load data #####
 setwd('c:/rworking/deepseatools/indata')
@@ -57,7 +58,7 @@ filt %>%
 
 
 
-##### NEW VERSION #####
+##### ***** NEW VERSION *****  #####
 ##### load data #####
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv('20231130-1_NOAA_RL-19-05_Clarke_2019_2019_120205.csv')
@@ -549,6 +550,41 @@ rm(list=setdiff(ls(), c("filt")))
 
 
 
+
+
+
+
+
+
+##### ***** NEW VERSION *****  #####
+##### load NDB #####
+source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
+
+##### load data #####
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20240111-0_NOAA_RL-19-05_Clarke_2019_2019_120205'
+sub <- read.csv(paste(filename, '.csv', sep = ''))
+
+##### check #####
+table(sub$Flag)
+sub %>% filter(Flag == 1) %>% group_by(Phylum, Class, Order, Family, ScientificName) %>%
+  summarize(n=n())
+table(sub$IndividualCount, useNA = 'always')
+filt %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+
+##### run QA report #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/0B9c2c_XdhpFBNkk4a1Q0VXItNWc"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".PDF", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".PDF", sep=''),
+             overwrite = T)
 
 
 

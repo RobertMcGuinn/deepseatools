@@ -59,7 +59,6 @@ rmarkdown::render("C:/rworking/deepseatools/code/20230731-0_rmd_accession_qa_das
 ##### check #####
 sub %>% filter(grepl('Invalid latitude', FlagReason)) %>% pull(Longitude)
 
-
 sub %>%
   # filter(ScientificName == "Keratoisis magnifica") %>%
   group_by(Flag,

@@ -68,10 +68,6 @@ filt %>%
   pull(SurveyID) %>% unique()
 
 
-
-
-
-
 ##### make any corrections #####
 sub <- sub %>%
   mutate(AphiaID = ifelse(ScientificName == 'Actinopterygii', 10194, AphiaID)) %>%
@@ -598,4 +594,57 @@ write.csv(sub_enhanced3,
 
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
+
+
+
+##### ***** NEW VERSION *****  #####
+##### load NDB #####
+source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
+
+##### load data #####
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20231219-0_HURL_archive_records_SBingo_1972_2013_121131'
+sub <- read.csv(paste(filename, '.csv', sep = ''))
+
+##### check #####
+table(sub$Flag)
+sub %>% filter(Flag == 1) %>% group_by(Phylum, Class, Order, Family, ScientificName) %>%
+  summarize(n=n())
+table(sub$IndividualCount, useNA = 'always')
+filt %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+filt %>% filter(grepl('Shimada', Vessel)) %>% pull(Vessel) %>% table()
+filt %>% filter(grepl('HURL', DatasetID)) %>% pull(DatasetID) %>% table()
+filt %>% filter(grepl('Hawaii', DataProvider)) %>% pull(DataProvider) %>% table()
+sub %>%  filter(Longitude > -2) %>% pull(Longitude)
+sub %>% filter(is.na(SurveyID) == T) %>%
+  pull(ScientificName) %>%
+  unique()
+
+##### map check #####
+x <- sub %>% filter(
+  # FlagReason == 'Horizontal position or depth is questionable' |
+  #   FlagReason == 'Insufficient taxonomic information | Horizontal position or depth is questionable'
+  # FlagReason == 'Insufficient taxonomic information | Possible intersection with land'|
+  # FlagReason == 'Possible intersection with land'
+  FlagReason ==  'Invalid latitude | Invalid longitude'
+) %>%
+  group_by(CatalogNumber, Latitude, Longitude) %>%
+  summarize(n=n())
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+st_write(points, "C:/rworking/deepseatools/indata/sub_geo.shp", delete_dsn = T)
+
+##### run QA report #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/13Jg191pDiJPU9GF-Vp238E2sjzJV9eoq"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".PDF", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".PDF", sep=''),
+             overwrite = T)
+
 
