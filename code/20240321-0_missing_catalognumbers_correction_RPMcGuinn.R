@@ -64,7 +64,24 @@ z <- indata_new %>% filter(CatalogNumber %in% x,Order == 'Antipatharia' |
                              Family == 'Stylasteridae' |
                              Order == 'Scleractinia' |
                              ScientificName == 'Octocorallia') %>%
+
   pull(CatalogNumber)
+
+##### check #####
+yo <- indata_new %>% filter(CatalogNumber %in% x,Order == 'Antipatharia' |
+                             Phylum == 'Porifera' |
+                             Family == 'Parazoanthidae'|
+                             Order == 'Scleralcyonacea' |
+                             Order == 'Malacalcyonacea' |
+                             Order == 'Octocorallia incertae sedis' |
+                             Family == 'Stylasteridae' |
+                             Order == 'Scleractinia' |
+                             ScientificName == 'Octocorallia') %>%
+  group_by(Phylum, Class, Order, Family, Genus, ScientificName, VernacularNameCategory, Flag, FlagReason) %>%
+  summarize(n=n()) %>% View()
+
+
+new2 %>% filter(ScientificName == 'Scleralcyonacea') %>% pull(VernacularNameCategory) %>% unique()
 
 ##### write out recovery CatalogNumbers #####
 z %>% write.csv('c:/rworking/deepseatools/indata/20240321-0_missing_catalognumbers_correction_RPMcGuinn.csv')
