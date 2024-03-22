@@ -639,6 +639,7 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     Genus %in% c('Madracis', 'Solenosmilia') ~ 'stony coral (branching)',
     ScientificName %in% c('Pocilloporidae') ~ 'stony coral (unspecified)',
     ScientificName %in% c('Octocorallia', 'Octocorallia incertae sedis', 'Scleralcyonacea') ~ 'insufficient taxonomic resolution',
+    ScientificName %in% c('Verseveldtia granulosa') ~ 'Verseveldtia granulosa',
     TRUE ~ ''))
 
 ##### check #####
@@ -716,6 +717,8 @@ sub_enhanced2 <- sub_enhanced_filter %>%
 #   group_by(AphiaID, Class, Order, Family, Genus, Species) %>%
 #   summarize(n=n()) %>% View
 
+filt %>% filter(Family == 'Funiculinidae') %>%
+  pull(VernacularNameCategory) %>% unique()
 
 ##### get rid of unneeded column names #####
 names_list <- names(filt)

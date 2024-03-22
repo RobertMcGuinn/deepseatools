@@ -441,7 +441,6 @@ library(worrms)
 library(openxlsx)
 library(taxize)
 
-
 ##### load data #####
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv('20231204-1_NMNH-IZ_THourigan_1890_2022_121717.csv')
@@ -454,8 +453,144 @@ sub %>%
   group_by(ScientificName, Phylum, Class, Order, Family, Genus, VernacularNameCategory) %>%
   summarize(n=n()) %>% View
 
-sub_enhanced2 %>%
-  filter(VernacularNameCategory == 'stony coral (cup)') %>%
+##### assign VernacularNameCategory #####
+## define not in
+`%notin%` <- Negate(`%in%`)
+
+gorgfamilies <- c("Paramuriceidae","Chrysogorgiidae","Dendrobrachiidae",
+                  "Ellisellidae", "Isididae",
+                  "Pleurogorgiidae", "Primnoidae",
+                  "Acanthogorgiidae", "Gorgoniidae","Keroeididae",
+                  "Plexauridae", "Anthothelidae",
+                  "Coralliidae", "Melithaeidae",
+                  "Paragorgiidae", "Parisididae","Spongiodermidae", "Subergorgiidae",
+                  "Victorgorgiidae", "Keratoisididae", "Malacalcyonacea incertae sedis", 'Mopseidae',
+                  'Chelidonisididae')
+
+softfamilies <- c("Alcyoniidae","Aquaumbridae", "Ifalukellidae",
+                  "Nephtheidae","Nidaliidae", "Paralcyoniidae",
+                  "Xeniidae", "Taiaroidae", 'Cornulariidae', 'Haimeidae')
+
+othercorallikehydrozoanfamilies <- c("Solanderiidae", "Haleciidae")
+
+stonycoralbranching <- tax %>%
+  filter(VernacularNameCategory == 'stony coral (branching)') %>%
+  pull(ScientificName)
+
+stonycoralcupcoral <- tax %>%
+  filter(VernacularNameCategory == 'stony coral (cup coral)') %>%
+  pull(ScientificName)
+
+sub2 <- sub %>%
+  mutate(VernacularNameCategory = case_when(
+    Phylum %in% c('Chordata') ~ 'fish',
+    TaxonRank %in% c('Order') &
+      Order %in% c('Alcyonacea') ~ 'alcyonacean (unspecified)',
+    Order %in% c('Antipatharia') ~ 'black coral',
+    Class %in% c('Calcarea')~ 'calcareous sponge',
+    Class %in% c('Demospongiae') ~ 'demosponge',
+    Class %in% c('Hexactinellida') ~ 'glass sponge',
+    Class %in% c('Homoscleromorpha') ~ 'homoscleromorph sponge',
+    Family %in% c('Parazoanthidae') ~ 'gold coral',
+    Family %in% gorgfamilies ~ 'gorgonian coral',
+    Family %in% softfamilies ~ 'soft coral',
+    Genus %in% c('Aspera', 'Verseveldtia') ~ 'soft coral',
+    Order %in% c('Malacalcyonacea') ~ 'soft coral',
+    Order %in% c('Anthoathecata') &
+      Family %notin%  c('Solanderiidae') ~ 'lace coral',
+    Family %in% c('Lithotelestidae', 'Aulopsammiidae') ~ 'lithotelestid coral',
+    Family %in% othercorallikehydrozoanfamilies ~ 'other coral-like hydrozoan',
+    ScientificName %in% c('Pennatuloidea') ~ 'sea pen',
+    ScientificName %in% c('Porifera') ~ 'sponge',
+    Suborder %in% c('Stolonifera') ~ 'stoloniferan coral',
+    Family %in% c('Clavulariidae') ~ 'stoloniferan coral',
+    Genus %in% c('Clavularia', 'Sarcodictyon', 'Scleranthelia', 'Pseudocladochonus') ~ 'stoloniferan coral',
+    Order %in% c('Scleractinia') &
+      TaxonRank %in% c('Order')  ~ 'stony coral (unspecified)',
+    ScientificName %in% stonycoralbranching ~ 'stony coral (branching)',
+    ScientificName %in% c(stonycoralcupcoral, 'Desmophyllum hourigani') ~ 'stony coral (cup coral)',
+    Genus %in% c('Acanthogorgia', 'Hypnogorgia', 'Thelogorgia',
+                 'Stephanogorgia', 'Helicogorgia', 'Distichogorgia',
+                 'Xenogorgia', 'Caliacis', 'Briareopsis', 'Elasmogorgia',
+                 'Pseudothesea', 'Bayergorgia', 'Flagelligorgia') ~ 'gorgonian coral',
+    Genus %in% c('Hydrodendron') ~ 'other coral-like hydrozoan',
+    Genus %in% c('Caryophyllia', 'Paracyathus', 'Asterosmilia',
+                 'Heteropsammia') ~ 'stony coral (cup coral)',
+    Family %in% c('Micrabaciidae', 'Flabellidae', 'Turbinoliidae', 'Astrangiidae',
+                  'Rhizangiidae', 'Anthemiphylliidae') ~ 'stony coral (cup coral)',
+    ScientificName %in% c('Caryophylliidae') ~ 'stony coral (unspecified)',
+    Genus %in% c('Telestula') ~ 'stoloniferan coral',
+    ScientificName %in% c('Dendrophylliidae') ~ 'stony coral (unspecified)',
+    Genus %in% c('Leptoseris', 'Dactylotrochus',
+                 'Anomocora', 'Paraconotrochus',
+                 'Trochocyathus', 'Cladopsammia',
+                 'Balanophyllia', 'Deltocyathus', 'Tubastraea') ~ 'stony coral (cup coral)',
+    Genus %in% c('Madracis', 'Solenosmilia') ~ 'stony coral (branching)',
+    ScientificName %in% c('Pocilloporidae') ~ 'stony coral (unspecified)',
+    ScientificName %in% c('Octocorallia', 'Octocorallia incertae sedis', 'Scleralcyonacea') ~ 'insufficient taxonomic resolution',
+    Family %in% c('Funiculinidae', 'Virgulariidae', 'Umbellulidae', 'Protoptilidae') ~ 'sea pen',
+    ScientificName %in% c('Verseveldtia granulosa') ~ 'soft coral',
+    Genus %in% c('Rhizopsammia', 'Notophyllia', 'Vaughanella', 'Thalamophyllia', 'Tethocyathus', 'Coenocyathus') ~ 'stony coral (cup coral)',
+    TRUE ~ ''))
+
+##### check #####
+sub2 %>% pull(VernacularNameCategory) %>%
+  table(useNA = 'always')
+
+sub2 %>%
+  group_by(Phylum, Class, Order, Family, Genus, ScientificName, VernacularNameCategory) %>%
+  summarize(n=n()) %>%
+  View()
+
+filt %>%
+  filter(Family == 'Caryophylliidae') %>%
   pull(VernacularNameCategory) %>% unique()
+
+filt %>%
+  filter(Genus == 'Coenocyathus') %>%
+  pull(VernacularNameCategory) %>% unique()
+
+##### produce a patch for VernacularNameCategory #####
+x <- sub2 %>% select(CatalogNumber, VernacularNameCategory)
+x %>% write.csv('c:/rworking/deepseatools/indata/20240321_VernacularNameCategory_patch_RPMcGuinn.csv')
+
+##### check #####
+sub %>%
+  filter(CatalogNumber %in% c(1303120, 1303121)) %>%
+  group_by(CatalogNumber, SampleID, Phylum, Class, Order, Family, Genus, ScientificName) %>%
+  summarize(n=n())
+
+##### map check #####
+sub %>%
+  filter(SamplingEquipment == 'slurp') %>%
+  group_by(Vessel, VehicleName, ObservationDate, SamplingEquipment) %>%
+  summarize(n=n())
+
+sub %>%
+  filter(SamplingEquipment == 'sediment catcher') %>%
+  group_by(Vessel, VehicleName, ObservationDate, SamplingEquipment) %>%
+  summarize(n=n())
+
+
+points <- st_as_sf(sub3, coords = c("Longitude", "Latitude"), crs = 4326)
+
+st_write(points,
+         "C:/rworking/deepseatools/indata/geo3.shp",
+         append = F)
+
+sub3 %>%
+  group_by(Phylum, Class, Order, Family, Genus, ScientificName) %>%
+  summarize(n=n()) %>% View()
+
+filt %>% filter(EventID == 'JSL-II-2161') %>%
+  group_by(Phylum, Class, Order, Family, Genus, ScientificName, ObservationDate) %>%
+  summarize(n=n()) %>% View()
+
+
+
+
+
+
+
 
 
