@@ -25,7 +25,10 @@ library(worrms)
 ##### load dataset of interest ('sub') #####
 setwd('c:/rworking/deepseatools/indata')
 filename <- '20240226-0_20240219_New_Records_THourigan_126744'
-sub <- read.csv(paste(filename, '.csv', sep = ''))
+sub <- read.csv(paste(filename, '.csv', sep = ''),
+                encoding = "latin9",
+                header = TRUE,
+                stringsAsFactors = FALSE)
 
 ##### make any corrections #####
 sub <- sub %>% filter(AphiaID != -999)
@@ -464,7 +467,7 @@ filename <- "20240226-0_20240219_New_Records_THourigan_126744_taxonomy_patch.csv
 write.csv(sub_enhanced3,
           paste("c:/rworking/deepseatools/indata/",
                 filename, sep=''),
-          fileEncoding = "latin9",
+          fileEncoding = "UTF-8", # or "latin9"
           row.names = F,
           quote = T)
 
