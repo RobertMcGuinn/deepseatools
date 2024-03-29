@@ -10,34 +10,24 @@ library(openxlsx)
 library(taxize)
 
 ##### load NDB from local file (manual)#####
-setwd("C:/rworking/deepseatools/indata")
-filename <- "DSCRTP_NatDB_20230828-0.csv"
-indata <- read.csv(filename,
-                   encoding = "latin9",
-                   header = TRUE,
-                   stringsAsFactors = FALSE)
-filt <- indata %>%
-  filter(Flag == 0)
-
-rm(indata)
-rm(filename)
+source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
 ##### load the taxonomy table from CSV #####
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 
 ##### load dataset of interest ('sub') from local file #####
 setwd("C:/rworking/deepseatools/indata")
-filename <- "20230804120029_SH-18-12_dscrtp_submission_nearly_final.csv"
+filename <- "20230410-2_NOAA_SH-19-07.csv"
 sub <- read.csv(filename,
                 encoding = "latin9",
                 header = TRUE,
                 stringsAsFactors = FALSE)
 
 ##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
-## flag these taxa
+## filter taxa list (Optional)
 sub1 <- sub # %>% filter(ScientificName != 'Vertebrata')
 
-## change these
+## change these (optional changes)
 sub2 <- sub1 %>%
   mutate(ScientificName = str_replace(ScientificName, "Macrouridaev", "Macrouridae"))
 #  mutate(ScientificName = str_replace(ScientificName, "Cottunculus sp.", "Cottunculus" )) %>%
@@ -57,10 +47,9 @@ sub2 <- sub1 %>%
 #   mutate(ScientificName = str_replace(ScientificName, "unidentified sebastomus", "Sebastes (Sebastosomus)"))
 
 
-## flag 'Vertebrata'
-
 ##### create vector of names #####
 my_vector <- unique(sub2$ScientificName)
+# remove any missing value.
 my_vector <- my_vector[complete.cases(my_vector)]
 
 ##### parse the list using taxize function 'gbif_parse' #####
@@ -158,7 +147,8 @@ for (i in seq_along(my_groups)){
 }
 species_list <- df
 
-##### loop to get classification #####
+##### loop to get full classification #####
+## create the
 df <- data.frame(
   Domain = character(),
   Kingdom = character(),

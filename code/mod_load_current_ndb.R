@@ -12,11 +12,13 @@ digits = 121
 
 ##### load national database (manual) #####
 path <- "C:/rworking/deepseatools/indata"
-csv <- 'DSCRTP_NatDB_20240115-0.csv'
-# 'DSCRTP_NatDB_20230928-0.csv'
+csv <- "DSCRTP_NatDB_20240325-0.csv" # 'Aretha Franklin'
+# 'DSCRTP_NatDB_20240115-0.csv'
+# 'DSCRTP_NatDB_20230928-0.csv'(published as '20230828-0')
 # "DSCRTP_NatDB_20230620-0.csv"
 # "DSCRTP_NatDB_20230620-0_published.csv"
 # "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
+# Link to master change log: https://docs.google.com/spreadsheets/d/1psUlMQS1d2rRgsiKWJsCTPleJ7TMKYNV/edit#gid=121019363
 
 setwd(path)
 indata <- read.csv(csv, header = T, encoding = 'latin1')
