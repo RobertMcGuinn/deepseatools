@@ -45,34 +45,35 @@ drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 options(lifecycle_disable_warnings = TRUE)
 
 ##### ***OR*** read current database from disk #####
-setwd("C:/rworking/deepseatools/indata")
-filename <- "DSCRTP_NatDB_20230828-0.csv"
-indata <- read.csv(filename,
-                   encoding = "UTF-8",
-                   header = TRUE,
-                   stringsAsFactors = FALSE)
-filt <- indata %>%
-  filter(Flag == 0)
+source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
-rm(indata)
-rm(filename)
+##### read previous version of database from disk #####
+digits = 121
+path <- "C:/rworking/deepseatools/indata"
+csv <- "DSCRTP_NatDB_20240115-0.csv" # 'Aretha Franklin'
+# 'DSCRTP_NatDB_20240115-0.csv'
+# 'DSCRTP_NatDB_20230928-0.csv'(published as '20230828-0')
+# "DSCRTP_NatDB_20230620-0.csv"
+# "DSCRTP_NatDB_20230620-0_published.csv"
+# "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
+# Link to master change log: https://docs.google.com/spreadsheets/d/1psUlMQS1d2rRgsiKWJsCTPleJ7TMKYNV/edit#gid=121019363
 
-
-##### clean up everything except core objects ######
-rm(list=setdiff(ls(), c("filt")))
+setwd(path)
+indata <- read.csv(csv, header = T, encoding = 'latin1')
+## encoding choice is either latin1 or UTF-8. Depends on incoming.
+## this does not define encoding, it simply tells the importer
+## which encoding is in the incoming file.
+filt_old <- indata %>%
+  filter(Flag == "0", is.na(Phylum) == F)
 
 ##### ***OPTIONAL download Google Sheet version of schema for use in R documents #####
 # Register and download Google Sheet using googlesheets4::read_sheet
 s <- read_sheet('1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw')
 
-##### checking #####
+##### check #####
 # s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(FieldDescription)
 # s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(ValidValues)
 
-##### check #####
-## occurrenceID==NOAA_DSCRTP:1178027,
-## that had an NA value for "basisOfRecord".
-## The rest of the dataset has a value of "PreservedSpecimen".
 # filt %>% filter(CatalogNumber == 1178027) %>%
 #   group_by(DatasetID, PI, Repository) %>%
 #   summarize(n=n()) %>% View()
@@ -95,19 +96,19 @@ version <- unique(filt$DatabaseVersion)
 version <- as.character(version)
 
 ##### bring in datasetID key from local path #####
-key <- read.xlsx("C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx")
+old_key <- read.xlsx("C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx")
+key <- read.xlsx("C:/rworking/deepseatools/indata/20240325-0_DatasetID_Key_DSCRTP.xlsx")
 
 ##### checking #####
 setdiff(filt$DatasetID, key$DatasetID)
 setdiff(key$DatasetID, filt$DatasetID)
 #
 filt_old %>% filter(grepl('Carreiro', DatasetID)) %>%
-  pull(DatasetID) %>% unique() %>%
+  pull(DatasetID) %>% unique() %>% arrange()
   View
 
 key %>% filter(grepl('Carreiro', DatasetID)) %>%
-  pull(DatasetID) %>% unique() %>%
-  View
+  pull(DatasetID) %>% sort()
 
 x <- setdiff(filt$DatasetID, key$DatasetID)
 x <- filt %>% filter(DatasetID %in% x) %>%
@@ -116,8 +117,8 @@ x <- filt %>% filter(DatasetID %in% x) %>%
 View(x)
 
 
-x <- setdiff(filt_old$CatalogNumber, filt$CatalogNumber)
-x <- filt_old %>% filter(CatalogNumber %in% x) %>%
+x <- setdiff(filt$CatalogNumber, filt_old$CatalogNumber)
+x <- filt %>% filter(CatalogNumber %in% x) %>%
   group_by(DatasetID) %>%
   summarize(n=n())
 View(x)
@@ -205,36 +206,31 @@ filt$CitationMaker <- paste(filt$DataProvider,'. ',
 
 ##### checking: looking at the Citation #####
 
-# 1] "NOAA_NEFSC_HB-15-04"
-# [2] "NOAA_AFSC_Tiglax_D2017"
-# [3] "NOAA_AFSC_Tiglax_SSL_2016"
-# [4] "NOAA_SH-18-12_ROV-Transect"
-# [5] "SOI_FK171005"
-# [6] "ZSM"
-# [7] "Choy et al, 2020"
-# [8] "Lehnert & Stone 2016"
-# [9] "RBCM"
-# [10] "Watling 2015"
-# [11] "Shen2019"
-# [12] "TMAG"
+# OET_NA138
+# Baco et al. 2023
+# Bayer_1958
+# HBOM
+# SAM
+# SAMC
+# NTM
+# JAMSTEC
+# NSMT
+# Shen et al. 2022
+# BAMZ
+# Watling et al. 2022
+# Xavier_et_al_2015
+# Gastineau_et_al_2023
+# Macrina_et_al_2024
+# NMCIC
 
-x <- "De_Clippele_etal_2019"
+x <- "NMCIC"
 
 y <- filt %>% filter(DatasetID == x) %>%
-  group_by(VernacularNameCategory,
-           gisMEOW,
-           RecordType,
-           Phylum,
-           Vessel,
-           VehicleName,
-           SurveyID,
-           ObservationYear,
-           ObservationDate,
-           Locality,
+  group_by(WebSite,
            DataProvider,
-           Repository,
-           Citation,
-           IdentifiedBy, PI) %>%
+           DatasetID,
+           ObservationYear,
+           CitationMaker) %>%
   summarize(n=n()) %>%  View()
 
 filt %>% filter(DatasetID == x) %>%
@@ -242,7 +238,7 @@ filt %>% filter(DatasetID == x) %>%
   unique()
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from local path #####
-key <- read.xlsx("C:/rworking/deepseatools/indata/20230918-1_DatasetID_Key_DSCRTP.xlsx")
+key <- read.xlsx("C:/rworking/deepseatools/indata/20240325-0_DatasetID_Key_DSCRTP.xlsx")
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from Google Drive #####
 ## create a list of files (or single file) that meets title query (Manual change)
@@ -286,7 +282,7 @@ z <- left_join(y,x)
 View(z)
 
 ##### write out result (manual change to file name) #####
-write.xlsx(z, "C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx",
+write.xlsx(z, "C:/rworking/deepseatools/indata/20240325-0_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
 ##### manual upload new key to Google Drive (point and click stuff) #####
@@ -674,6 +670,7 @@ setdiff(biglist, unique(filt$DatasetID))
 setdiff(unique(filt$DatasetID), biglist)
 length(unique(filt$DatasetID))
 length(biglist)
+length(key$DatasetID)
 
 ##### check #####
 filt %>% filter(grepl('EX-19-05', DatasetID)) %>%
