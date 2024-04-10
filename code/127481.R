@@ -138,11 +138,11 @@ dscrtp_export$ObservationTime <- time
 # tail(dscrtp_export$ObservationTime)
 # tail(time)
 
-##### field lists #####
+##### looking a different field lists #####
 ##fields that already have the same name ##
 same <- intersect(names(corals), s$FieldName)
 
-## fields that needed to be created
+## fields that needed to be created through renames)
 create <- c('VernacularName',
             'SurveyID',
             'EventID',
@@ -168,7 +168,7 @@ needed <- c('CommonName',
             'Identification.Date',
             'Identification.Comments',
             'PercentCover',
-            'OccurrenceComments',
+            'Occurrence.Comments',
             'Taxon.Rank',
             'Timestamp',
             'Proportion.Of.Injury',
@@ -176,10 +176,9 @@ needed <- c('CommonName',
             'Transect')
 
 dscrtp_fields <- union(same, create)
-
 mdbc_fields <- union(same, needed)
 
-##### whittle down to the only the variables needed and create the export #####
+##### EXPORT TO DSCRTP, whittle down to the only the variables needed and create the export #####
 dscrtp_export_x <- dscrtp_export[,dscrtp_fields]
 
 ##### check #####
