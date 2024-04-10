@@ -34,7 +34,7 @@ source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
 sheetid <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
 s <- read_sheet(sheetid)
 
-##### load data #####
+##### load project data #####
 mapping <- read.xlsx('c:/rworking/deepseatools/indata/DSCRTP_MDBC_Tator_Mapping.xlsx')
 
 ## The workbook is the tailored / filtered-down version and contains data from multiple
@@ -112,7 +112,7 @@ dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrencComments,
                                           'Heights measured using Tator software', sep = ' | ')
 
 dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrenceComments,
-                                          'Proportion or injury: ', dscrtp_export$Proportion.Of.Injury,
+                                          'Proportion of injury: ', dscrtp_export$Proportion.Of.Injury,
                                           'Type of injury: ', dscrtp_export$Type.Of.Injury, sep = ' | ')
 
 dscrtp_export$EventID <- paste(dscrtp_export$EventID, dscrtp_export$Transect, sep = '-')
@@ -138,7 +138,7 @@ dscrtp_export$ObservationTime <- time
 # tail(dscrtp_export$ObservationTime)
 # tail(time)
 
-##### looking a different field lists #####
+##### creating field lists #####
 ##fields that already have the same name ##
 same <- intersect(names(corals), s$FieldName)
 
@@ -180,6 +180,7 @@ mdbc_fields <- union(same, needed)
 
 ##### EXPORT TO DSCRTP, whittle down to the only the variables needed and create the export #####
 dscrtp_export_x <- dscrtp_export[,dscrtp_fields]
+write.csv(dscrtp_export_x, 'c:/rworking/deepseatools/indata/20240410-0_TATOR_DSCRTP_export_RPMcGuinn.csv')
 
 ##### check #####
 # setdiff(names(dscrtp_export), dscrtp_fields)
