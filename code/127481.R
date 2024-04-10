@@ -53,24 +53,24 @@ events <- read.xlsx('c:/rworking/deepseatools/indata/NF2206_Forward_Videos_Annot
 corals <- read.csv('c:/rworking/deepseatools/indata/nf2206_corals_example.csv')
 
 ##### check #####
-table(corals$Transect)
-table(events$EventType, useNA = 'always')
-names(events)
-View(corals)
-names(corals)
-table(corals$RecordType)
-table(corals$ScientificName)
-head(corals$X.x)
-head(corals$X.y)
-head(corals$X.x_pixels)
-head(corals$X.y_pixels)
-s %>% filter(FieldName == "MaximumSize") %>%
-  group_by(FieldDescription, ValidValues) %>%
-  summarize(n=n()) %>% View()
-table(corals$CruiseID, useNA = 'always')
-corals %>%
-  filter(CruiseID == '') %>%
-  pull(CruiseID)
+# table(corals$Transect)
+# table(events$EventType, useNA = 'always')
+# names(events)
+# View(corals)
+# names(corals)
+# table(corals$RecordType)
+# table(corals$ScientificName)
+# head(corals$X.x)
+# head(corals$X.y)
+# head(corals$X.x_pixels)
+# head(corals$X.y_pixels)
+# s %>% filter(FieldName == "MaximumSize") %>%
+#   group_by(FieldDescription, ValidValues) %>%
+#   summarize(n=n()) %>% View()
+# table(corals$CruiseID, useNA = 'always')
+# corals %>%
+#   filter(CruiseID == '') %>%
+#   pull(CruiseID)
 
 ##### find names in common #####
 x <- intersect(names(mdbc), s$FieldName)
@@ -117,7 +117,7 @@ dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrenceComments,
 
 dscrtp_export$EventID <- paste(dscrtp_export$EventID, dscrtp_export$Transect, sep = '-')
 
-dscrtp_export$SampleID <- dscrtp_export$ObservationDate
+dscrtp_export$SampleID <- dscrtp_export$ObservationDate #pre-transformed, see below for transformation.
 
 
 ## dealing with date and time
@@ -180,7 +180,8 @@ mdbc_fields <- union(same, needed)
 
 ##### EXPORT TO DSCRTP, whittle down to the only the variables needed and create the export #####
 dscrtp_export_x <- dscrtp_export[,dscrtp_fields]
-write.csv(dscrtp_export_x, 'c:/rworking/deepseatools/indata/20240410-0_TATOR_DSCRTP_export_RPMcGuinn.csv')
+write.csv(dscrtp_export_x, 'c:/rworking/deepseatools/indata/20240410-0_TATOR_DSCRTP_export_RPMcGuinn.csv',
+          row.names = F)
 
 ##### check #####
 # setdiff(names(dscrtp_export), dscrtp_fields)
