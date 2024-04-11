@@ -4,7 +4,7 @@
 ## purpose:
 
 ##### linkage #####
-filename <- '' ## manual: for this code file name, match to redmine
+filename <- '128852' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
@@ -22,7 +22,13 @@ library(terra)
 library(ggplot2)
 library(rnaturalearth)
 library(rnaturalearthdata)
+library(googlesheets4)
 
 ##### source ndb #####
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
+
+##### read in the data inventory sheet from google drive #####
+
+
+
 
