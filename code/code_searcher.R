@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- '127481'
+x <- '128852'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
