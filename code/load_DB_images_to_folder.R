@@ -62,6 +62,6 @@ for(i in 1:length(z$CatalogNumber)){
 library(openxlsx)
 setwd("C:/rworking/deepseatools/indata")
 write.xlsx(z,
-           '20220127-0_DENSE_Antipathes_furcata_images_NOAA_NDB_20220127-0_RPMGuinn.xlsx',
+           'yo.xlsx',
            rowNames = FALSE)
 
