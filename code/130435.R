@@ -37,7 +37,7 @@ setwd('C:/rworking/deepseatools/indata')
 xlsx_file <- '16235_full_image_annotation_report.xlsx'
 xlsx_data <- read.xlsx(xlsx_file, startRow = 2)
 
-##### download the images of interest from the NCEI WAF#####
+##### download the images of interest from the NCEI WAF #####
 path <- 'C:/rworking/deepseatools/images/annotation_test'
 dir.create(path)
 setwd(path)
