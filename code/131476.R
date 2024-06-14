@@ -1,10 +1,11 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate:20240604
-## purpose: experimentation with NOAA data and H3 integration work
+## startdate: 20240613
+## purpose: oe_collab: Ashley M.: NDSF assets funded through DSCRTP
+## https://vlab.noaa.gov/redmine/issues/131476
 
 ##### linkage #####
-filename <- '131006' ## manual: for this code file name, match to redmine
+filename <- '131476' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
@@ -23,12 +24,12 @@ library(ggplot2)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(googlesheets4)
-library(rgbif)
 
 ##### source ndb #####
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
+unique(filt$DatabaseVersion)
 
-##### read in the data inventory sheet from Google drive #####
+##### read in the data inventory sheet from google drive #####
 
 
 
