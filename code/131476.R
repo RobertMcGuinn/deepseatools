@@ -18,7 +18,6 @@ browseURL(redmine_link)
 library(tidyverse)
 library(sf)
 library(remotes)
-library(redmineR)
 library(terra)
 library(ggplot2)
 library(rnaturalearth)
@@ -29,7 +28,32 @@ library(googlesheets4)
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 unique(filt$DatabaseVersion)
 
-##### read in the data inventory sheet from google drive #####
+##### filter #####
+x <- filt %>% filter(grepl('Atlantis', Vessel) |
+                       grepl('Alvin', VehicleName) |
+                       grepl('Jason', VehicleName) |
+                       grepl('Sentry', VehicleName),
+                     grepl('NOAA', DatasetID) |
+                       grepl('BOEM', DatasetID) |
+                       grepl('WHOI', DatasetID))  %>%
+  group_by(ObservationYear,
+           DatasetID,
+           SurveyID,
+           Vessel,
+           VehicleName,
+           RecordType) %>%
+  summarize(n=n()) %>%
+  arrange(ObservationYear)
+
+View(x)
+
+##### write result #####
+write_csv(x, 'c:/rworking/deepseatools/indata/20240614-0_WHOI_obs_in_NDB_for_Ashley_M_RPMcGuinn.csv')
+
+github_link
+
+
+
 
 
 
