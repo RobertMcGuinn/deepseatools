@@ -4,7 +4,7 @@
 ## purpose: taxonomic trouble shooting
 
 ##### linkage #####
-filename <- '128548' ## manual: for this code file name, match to redmine
+filename <- '129429' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
@@ -111,23 +111,8 @@ write.csv(change_summary,
           row.names = F,
           quote = T)
 
-##### checking #####
-change_summary %>% filter(is.na(VerbatimScientificName.x) == T) %>% View()
-
-change_summary %>% filter(ScientificName.x == "Bathygorgia") %>%
-  group_by(CatalogNumber,
-           VerbatimScientificName.x,
-           VerbatimScientificName.y,
-           ScientificName.x,
-           ScientificName.y,
-           AphiaID.x,
-           AphiaID.y) %>%
-  summarize(n=n()) %>% View()
-
-
-##### changes #####
-
-change_summary %>%
+##### creatig a patch for cases where VerbatimScientificName is blank for cf taxa #####
+cf <- change_summary %>%
   filter(grepl('cf.', ScientificName.x) |
            grepl('cf.', ScientificName.y)) %>%
   group_by(CatalogNumber,
@@ -137,7 +122,25 @@ change_summary %>%
            ScientificName.y,
            AphiaID.x,
            AphiaID.y) %>%
-  summarize(n=n()) %>% View()
+  summarize(n=n())
+
+ungroup(cf)
+
+patch <- cf %>%
+  ungroup() %>%
+  select(CatalogNumber, ScientificName.x) %>%
+  rename(VerbatimScientificName = ScientificName.x)
+
+View(patch)
+write.csv(patch, '../indata/cf_VerbatimScientificName_patch.csv')
+
+
+
+
+
+
+
+
 
 
 
