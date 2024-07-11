@@ -228,7 +228,53 @@ patch <- yo %>%
 patch %>% write.csv("../indata/patch_for_correct_cf_handling.csv", row.names = F)
 
 
-########## looking at missing VernacularNameCategory #####
+
+##### *****
+##### working on specific changes to AphiaID #####
+change_summary %>% filter(ScientificName.x == "Paramuriceidae") %>%
+  group_by(CatalogNumber,
+           VerbatimScientificName.x,
+           VerbatimScientificName.y,
+           VernacularNameCategory.x,
+           VernacularNameCategory.y,
+           ScientificName.x,
+           ScientificName.y,
+           AphiaID.x,
+           AphiaID.y) %>%
+  summarize(n=n()) %>% View()
+
+##### list of specfic changes needed #####
+# 968117, 994317 # Alternatipathes to Bathypathes
+# 971742, 883738 # Isididae to Bathygorgia
+# 521181, 103304 # Bathypathes conferta to Bathypathes
+# many, 286810   # Deltocyathus varians (286809) to Deltocyathus vaughani (286810)
+# 164149, 135074 # Clavularia (125270) to Dendrophylliidae (135074)
+# many, 289917   # Errinopora pourtalesii (289915) to Errinopora zarhyncha (289917)
+# many, 287016   # Flabellum (Ulocyathus) macandrewi to Flabellum (Ulocyathus) marcus
+# 642614, 125295 # Pleurogorgia to  Iridogorgia
+# 952693, 125307 # Isididae to Lepidisis
+# 971742, 883738 # Isididae to Bathygorgia
+# many, 1647267  # Muricella brunnea to Muricella reticulata
+# many, 288722   # Nicella americana to Nicella americana
+# many, 418845   # Nicella americana to Chironephthya agassizii
+# 952690, 125311 # Paramuriceidae to Paramuricea
+# 250129, 125278 # Stenisis humilis to Primnoidae
+# many, 291129  # Stereotelesto to Stereotelesto corallina
+# many, 267906  # Thelogorgia stellata to Thelogorgia
+# many, 135105  # Trochocyathus (Trochocyathus) to Trochocyathus
+# 949115, 131644 # Porifera to Cladorhizidae
+# 949143, 131692 # Porifera to Euplectellidae
+# many, 1424208 # Farrea to Farrea cordelli
+# 488793, 131689 # Geodiidae to Farreidae
+# 949638, 131689 # Porifera to Farreidae
+# many, 132038 # Latrunculia (Latrunculia) to Latrunculia
+# many, 1651922 # Acanthascus (Staurocalyptus) to Acanthascus (Staurocalyptus) pamelaturnerae
+
+
+
+
+##### ***** #####
+##### looking at missing VernacularNameCategory #####
 vnc <- change_summary %>%
   filter(is.na(VernacularNameCategory.y) == T) %>%
   group_by(CatalogNumber,
@@ -292,27 +338,6 @@ filt_new %>% filter(ScientificName == "Isidella") %>%
 # "Pennatuloidea"
 # "Schulzeviella"
 
-##### ***** #####
-##### working on specific changes to AphiaID #####
-change_summary %>% filter(ScientificName.x == "Dendrophylliidae") %>%
-  group_by(CatalogNumber,
-           VerbatimScientificName.x,
-           VerbatimScientificName.y,
-           VernacularNameCategory.x,
-           VernacularNameCategory.y,
-           ScientificName.x,
-           ScientificName.y,
-           AphiaID.x,
-           AphiaID.y) %>%
-  summarize(n=n()) %>% View()
-
-##### list of specfic changes needed #####
-
-# 968117, 994317 # Alternatipathes to Bathypathes
-# 971742, 883738 # Isididae to Bathygorgia
-# 521181, 103304 # Bathypathes conferta to Bathypathes
-# many, 286810   # Deltocyathus varians (286809) to Deltocyathus vaughani (286810)
-# 164149, 135074 # Clavularia (125270) to Dendrophylliidae (135074)
 
 
 
