@@ -22,6 +22,7 @@ library(terra)
 library(ggplot2)
 library(rnaturalearth)
 library(rnaturalearthdata)
+library(worrms)
 
 ##### packages #####
 library(tidyverse)
@@ -43,6 +44,8 @@ setwd(path)
 indata <- read.csv(csv, header = T, encoding = 'latin1')
 filt_new <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
+
+rm(indata)
 
 ##### compare differences #####
 ## Merge data frames based on CatalogNumber
@@ -111,7 +114,8 @@ write.csv(change_summary,
           row.names = F,
           quote = T)
 
-##### creatig a patch for cases where VerbatimScientificName is blank for cf taxa #####
+##### ***** #####
+##### creating a patch for cases where VerbatimScientificName is blank for cf taxa #####
 cf <- change_summary %>%
   filter(grepl('cf.', ScientificName.x) |
            grepl('cf.', ScientificName.y)) %>%
@@ -124,25 +128,191 @@ cf <- change_summary %>%
            AphiaID.y) %>%
   summarize(n=n())
 
-ungroup(cf)
-
 patch <- cf %>%
   ungroup() %>%
   select(CatalogNumber, ScientificName.x) %>%
   rename(VerbatimScientificName = ScientificName.x)
 
-View(patch)
-write.csv(patch, '../indata/cf_VerbatimScientificName_patch.csv')
+cf2 <- filt_new %>%
+  filter(grepl('cf.', ScientificName)) %>%
+  group_by(CatalogNumber,
+           ScientificName) %>%
+    summarize(n=n()) %>% rename(VerbatimScientificName = ScientificName) %>%
+    select(CatalogNumber, VerbatimScientificName)
+
+patch2 <- rbind(patch, cf2)
+## View(patch2)
+write.csv(patch2,
+          '../indata/cf_VerbatimScientificName_patch.csv',
+          row.names = F)
 
 
+##### ***** #####
+## working on taxonomic patch for incorrect cf handling for taxonrank == species
+##### create a list of AphiaIDs that we need to get parent taxa for #####
+aphiaID_list <- change_summary %>%
+  ungroup() %>%
+  filter(grepl('cf.', ScientificName.x),
+         TaxonRank.y == 'species') %>%
+  group_by(ScientificName.x,
+           ScientificName.y,
+           AphiaID.x,
+           AphiaID.y) %>%
+  summarize(n=n()) %>%
+  pull(AphiaID.y)
+
+##### check #####
+View(aphiaID_list)
+
+##### function: to get parent taxa from incoming AphiaID #####
+get_parent_taxon <- function(aphia_id) {
+  # Get detailed information about the taxon
+  taxon_info <- wm_record(aphia_id)
+  # Get the rank of the taxon
+  taxon_rank <- taxon_info$rank
+  # Get the classification hierarchy of the taxon
+  classification <- wm_classification(aphia_id)
+  # Find the index of the current taxon in the classification
+  taxon_index <- which(classification$rank == taxon_rank)
+  # Get the parent taxon
+  parent_taxon <- classification[taxon_index - 1, ]
+
+}
+
+##### apply the parent taxa function over the list #####
+parent_taxa <- sapply(aphiaID_list, get_parent_taxon)
+parent <- parent_taxa[3, ]
+parent <- unlist(parent)
+aphiaIDs <- parent_taxa[1,]
+aphiaIDs <-  unlist(aphiaIDs)
+
+##### check #####
+parent
+
+##### join the new parent taxa list and parent aphiaIDs to original CatalogNumbers #####
+x <- change_summary %>%
+  ungroup() %>%
+  filter(grepl('cf.', ScientificName.x),
+         TaxonRank.y == 'species') %>%
+  group_by(ScientificName.x,
+           ScientificName.y,
+           AphiaID.x,
+           AphiaID.y) %>%
+  summarize(n=n())
+
+x$parent <- parent
+## View(x)
+x$AphiaID <- aphiaIDs
+## View(x)
+y <- change_summary %>%
+  ungroup() %>%
+  filter(grepl('cf.', ScientificName.x),
+         TaxonRank.y == 'species') %>%
+  group_by(CatalogNumber,
+           ScientificName.x,
+           ScientificName.y,
+           AphiaID.x,
+           AphiaID.y) %>%
+  summarize(n=n())
+
+## View(y)
+yo <- left_join(x,y, by = 'ScientificName.y')
+View(yo)
+
+patch <- yo %>%
+  ungroup() %>%
+  dplyr::select(CatalogNumber, AphiaID)
+
+# View(patch)
+
+patch %>% write.csv("../indata/patch_for_correct_cf_handling.csv", row.names = F)
 
 
+########## looking at missing VernacularNameCategory #####
+vnc <- change_summary %>%
+  filter(is.na(VernacularNameCategory.y) == T) %>%
+  group_by(CatalogNumber,
+           VerbatimScientificName.x,
+           VerbatimScientificName.y,
+           VernacularNameCategory.x,
+           VernacularNameCategory.y,
+           ScientificName.x,
+           ScientificName.y,
+           AphiaID.x,
+           AphiaID.y) %>%
+  summarize(n=n())
 
+vnc <- change_summary %>%
+  filter(CatalogNumber == "968117") %>%
+  group_by(CatalogNumber,
+           VerbatimScientificName.x,
+           VerbatimScientificName.y,
+           VernacularNameCategory.x,
+           VernacularNameCategory.y,
+           ScientificName.x,
+           ScientificName.y,
+           AphiaID.x,
+           AphiaID.y) %>%
+  summarize(n=n())
 
+View(vnc)
+View(change_summary)
+View(vnc)
 
+filt_new %>%
+  filter(is.na(VernacularNameCategory) == T |
+           VernacularNameCategory == '') %>%
+  group_by(ScientificName, AphiaID) %>%
+  summarize(n=n())
 
+filt_new %>%
+  filter(is.na(VernacularNameCategory) == T |
+           VernacularNameCategory == '') %>%
+  group_by(ScientificName) %>%
+  summarize(n=n()) %>% pull(ScientificName) %>% unique()
 
+filt_new %>% filter(ScientificName == "Isidella trichotoma") %>%
+  pull(VernacularNameCategory) %>% table(useNA = 'always')
 
+filt_new %>% filter(ScientificName == "Isidella") %>%
+  pull(VernacularNameCategory) %>% unique()
+
+# "Adinisis"
+# "Atlantia denticulata"
+# "Calyptrophora lyra"
+# "Caulophacus (Caulodiscus) iocasicus"
+# "Cladorhiza gelida"
+# "Heterocyathus monileseptatum"
+# "Isidella trichotoma"
+# "Lycopodina"
+# "Malacalcyonacea"
+# "Narella japonensis"
+# "Pennatula aculeata var. alba"
+# "Pennatula aculeata var. rosea"
+# "Pennatuloidea"
+# "Schulzeviella"
+
+##### ***** #####
+##### working on specific changes to AphiaID #####
+change_summary %>% filter(ScientificName.x == "Dendrophylliidae") %>%
+  group_by(CatalogNumber,
+           VerbatimScientificName.x,
+           VerbatimScientificName.y,
+           VernacularNameCategory.x,
+           VernacularNameCategory.y,
+           ScientificName.x,
+           ScientificName.y,
+           AphiaID.x,
+           AphiaID.y) %>%
+  summarize(n=n()) %>% View()
+
+##### list of specfic changes needed #####
+
+# 968117, 994317 # Alternatipathes to Bathypathes
+# 971742, 883738 # Isididae to Bathygorgia
+# 521181, 103304 # Bathypathes conferta to Bathypathes
+# many, 286810   # Deltocyathus varians (286809) to Deltocyathus vaughani (286810)
+# 164149, 135074 # Clavularia (125270) to Dendrophylliidae (135074)
 
 
 
