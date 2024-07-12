@@ -115,10 +115,8 @@ write.csv(change_summary,
           quote = T)
 
 ##### ***** #####
-##### creating a patch for cases where VerbatimScientificName is blank for cf taxa #####
-cf <- change_summary %>%
-  filter(grepl('cf.', ScientificName.x) |
-           grepl('cf.', ScientificName.y)) %>%
+##### creating a patch for VerbatimScientificName is blank for cf taxa #####
+yo <- change_summary %>%
   group_by(CatalogNumber,
            VerbatimScientificName.x,
            VerbatimScientificName.y,
@@ -128,24 +126,39 @@ cf <- change_summary %>%
            AphiaID.y) %>%
   summarize(n=n())
 
-patch <- cf %>%
+## create the patch
+patch <- yo %>%
   ungroup() %>%
-  select(CatalogNumber, ScientificName.x) %>%
-  rename(VerbatimScientificName = ScientificName.x)
+  mutate(VerbatimScientificName = paste(VerbatimScientificName.x,VerbatimScientificName.y,ScientificName.x, sep = ' | ')) %>%
+  select(CatalogNumber, VerbatimScientificName)
 
-cf2 <- filt_new %>%
+## clean the patch
+patch <- patch %>%
+  mutate(
+    VerbatimScientificName = gsub('NA \\| NA \\| ','', VerbatimScientificName))
+
+## add another cf from the currently published database 20240325-0.
+new <- filt_new %>%
   filter(grepl('cf.', ScientificName)) %>%
   group_by(CatalogNumber,
            ScientificName) %>%
     summarize(n=n()) %>% rename(VerbatimScientificName = ScientificName) %>%
     select(CatalogNumber, VerbatimScientificName)
 
-patch2 <- rbind(patch, cf2)
-## View(patch2)
-write.csv(patch2,
-          '../indata/cf_VerbatimScientificName_patch.csv',
-          row.names = F)
+patch2 <- rbind(patch, new)
 
+## clean up the string to pick just the first one in the pasted list. Capture that cleaned string as VerbatimScientificName
+patch2 <- patch2 %>% mutate(VerbatimScientificName = gsub(' \\| [^|]+ \\| [^|]+', '', VerbatimScientificName))
+
+##### check #####
+View(patch)
+View(patch2)
+patch2 %>% group_by(VerbatimScientificName) %>% summarize(n=n()) %>% View()
+
+##### write the patch #####
+write.csv(patch2,
+          '../indata/VerbatimScientificName_patch.csv',
+          row.names = F)
 
 ##### ***** #####
 ## working on taxonomic patch for incorrect cf handling for taxonrank == species
@@ -244,6 +257,7 @@ change_summary %>% filter(ScientificName.x == "Paramuriceidae") %>%
   summarize(n=n()) %>% View()
 
 ##### list of specfic changes needed #####
+## NOTES
 # 968117, 994317 # Bathypathes to Alternatipathes
 # 971742, 883738 # Isididae to Bathygorgia
 # many, 286810   # Deltocyathus varians (286809) to Deltocyathus vaughani (286810)
@@ -268,6 +282,7 @@ change_summary %>% filter(ScientificName.x == "Paramuriceidae") %>%
 # many, 132038 # Latrunculia (Latrunculia) to Latrunculia
 # many, 1651922 # Acanthascus (Staurocalyptus) to Acanthascus (Staurocalyptus) pamelaturnerae
 
+##### making the changes #####
 change_summary2 <- change_summary %>%
   mutate(AphiaID = case_when(
   ScientificName.x %in% c('Alternatipathes') &
@@ -313,26 +328,27 @@ change_summary2 <- change_summary %>%
   ScientificName.x %in% c('Farreidae') &
     ScientificName.y %in% c('Porifera') ~ '131689',
   ScientificName.x %in% c('Latrunculia') &
-    ScientificName.y %in% c('Latrunculia (Latrunculia)') ~ '131689',
+    ScientificName.y %in% c('Latrunculia (Latrunculia)') ~ '132038', # note: Tom says to leave at 'Latrunculia 132038' per email 20240712
   ScientificName.x %in% c('Staurocalyptus pamelaturnerae') &
     ScientificName.y %in% c('Acanthascus (Staurocalyptus)') ~ '1651922'))
 
-
-
-
-
-
 ##### check #####
-change_summary2 %>% pull(AphiaID) %>% table(useNA = 'always')
+# change_summary2 %>% pull(AphiaID) %>% table(useNA = 'always')
+#
+# change_summary %>% filter(ScientificName.x == "Latrunculia") %>%
+#   group_by(VerbatimScientificName.x, VerbatimScientificName.y, ScientificName.x, ScientificName.y, TaxonRank.x, TaxonRank.y) %>%
+#   summarize(n=n()) %>% View()
+#
+# change_summary %>% filter(CatalogNumber == "164149") %>%
+#   group_by(ScientificName.x, ScientificName.y) %>%
+#   summarize(n=n()) %>% View()
 
-change_summary %>% filter(ScientificName.x == "Staurocalyptus pamelaturnerae") %>%
-  group_by(ScientificName.x, ScientificName.y) %>%
-  summarize(n=n()) %>% View()
+##### create patch for individual AphiaID changes #####
+patch <- change_summary2 %>% dplyr::select(CatalogNumber, AphiaID) %>% filter(is.na(AphiaID) == F)
+dim(patch)
 
-change_summary %>% filter(CatalogNumber == "164149") %>%
-  group_by(ScientificName.x, ScientificName.y) %>%
-  summarize(n=n()) %>% View()
-
+##### write patch for individual AphiaID changes per Tom Hourigan edits
+patch %>% write.csv('../indata/patch_for_individual_AphiaID_corrections.csv', row.names = F)
 
 ##### ***** #####
 ##### looking at missing VernacularNameCategory #####
