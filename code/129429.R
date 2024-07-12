@@ -244,19 +244,17 @@ change_summary %>% filter(ScientificName.x == "Paramuriceidae") %>%
   summarize(n=n()) %>% View()
 
 ##### list of specfic changes needed #####
-# 968117, 994317 # Alternatipathes to Bathypathes
+# 968117, 994317 # Bathypathes to Alternatipathes
 # 971742, 883738 # Isididae to Bathygorgia
-# 521181, 103304 # Bathypathes conferta to Bathypathes
 # many, 286810   # Deltocyathus varians (286809) to Deltocyathus vaughani (286810)
-# 164149, 135074 # Clavularia (125270) to Dendrophylliidae (135074)
+# 164149, 135074 # Clavulariidae (125270) to Dendrophylliidae (135074)
 # many, 289917   # Errinopora pourtalesii (289915) to Errinopora zarhyncha (289917)
 # many, 287016   # Flabellum (Ulocyathus) macandrewi to Flabellum (Ulocyathus) marcus
 # 642614, 125295 # Pleurogorgia to  Iridogorgia
 # 952693, 125307 # Isididae to Lepidisis
 # 971742, 883738 # Isididae to Bathygorgia
 # many, 1647267  # Muricella brunnea to Muricella reticulata
-# many, 288722   # Nicella americana to Nicella americana
-# many, 418845   # Nicella americana to Chironephthya agassizii
+# many, 418845   # Nicella americana to Neospongodes agassizii
 # 952690, 125311 # Paramuriceidae to Paramuricea
 # 250129, 125278 # Stenisis humilis to Primnoidae
 # many, 291129  # Stereotelesto to Stereotelesto corallina
@@ -270,7 +268,70 @@ change_summary %>% filter(ScientificName.x == "Paramuriceidae") %>%
 # many, 132038 # Latrunculia (Latrunculia) to Latrunculia
 # many, 1651922 # Acanthascus (Staurocalyptus) to Acanthascus (Staurocalyptus) pamelaturnerae
 
+change_summary2 <- change_summary %>%
+  mutate(AphiaID = case_when(
+  ScientificName.x %in% c('Alternatipathes') &
+    ScientificName.y %in% c('Bathypathes') ~ '994317',
+  ScientificName.x %in% c('Bathygorgia') &
+    ScientificName.y %in% c('Isididae') ~ '883738',
+  ScientificName.x %in% c('Deltocyathus vaughani') &
+    ScientificName.y %in% c('Deltocyathus varians') ~ '286810',
+  ScientificName.x %in% c('Dendrophylliidae') &
+    ScientificName.y %in% c('Clavulariidae') ~ '135074',
+  ScientificName.x %in% c('Errinopora zarhyncha') &
+    ScientificName.y %in% c('Errinopora pourtalesii') ~ '289917',
+  ScientificName.x %in% c('Flabellum (Ulocyathus) marcus') &
+    ScientificName.y %in% c('Flabellum (Ulocyathus) macandrewi') ~ '287016',
+  ScientificName.x %in% c('Iridogorgia') &
+    ScientificName.y %in% c('Pleurogorgia') ~ '125295',
+  ScientificName.x %in% c('Lepidisis') &
+    ScientificName.y %in% c('Isididae') ~ '125307',
+  ScientificName.x %in% c('Bathygorgia') &
+    ScientificName.y %in% c('Isididae') ~ '883738',
+  ScientificName.x %in% c('Muricella reticulata') &
+    ScientificName.y %in% c('Muricella brunnea') ~ '1647267',
+  ScientificName.x %in% c('Neospongodes agassizii') &
+    ScientificName.y %in% c('Nicella americana') ~ '418845',
+  ScientificName.x %in% c('Paramuricea') &
+    ScientificName.y %in% c('Paramuriceidae') ~ '125311',
+  ScientificName.x %in% c('Primnoidae') &
+    ScientificName.y %in% c('Stenisis humilis') ~ '125278',
+  ScientificName.x %in% c('Stereotelesto corallina') &
+    ScientificName.y %in% c('Stereotelesto') ~ '291129',
+  ScientificName.x %in% c('Thelogorgia') &
+    ScientificName.y %in% c('Thelogorgia stellata') ~ '267906',
+  ScientificName.x %in% c('Trochocyathus') &
+    ScientificName.y %in% c('Trochocyathus (Trochocyathus)') ~ '135105',
+  ScientificName.x %in% c('Cladorhizidae') &
+    ScientificName.y %in% c('Porifera') ~ '131644',
+  ScientificName.x %in% c('Euplectellidae') &
+    ScientificName.y %in% c('Porifera') ~ '131692',
+  ScientificName.x %in% c('Farrea cordelli') &
+    ScientificName.y %in% c('Farrea') ~ '1424208',
+  ScientificName.x %in% c('Farreidae') &
+    ScientificName.y %in% c('Geodiidae') ~ '131689',
+  ScientificName.x %in% c('Farreidae') &
+    ScientificName.y %in% c('Porifera') ~ '131689',
+  ScientificName.x %in% c('Latrunculia') &
+    ScientificName.y %in% c('Latrunculia (Latrunculia)') ~ '131689',
+  ScientificName.x %in% c('Staurocalyptus pamelaturnerae') &
+    ScientificName.y %in% c('Acanthascus (Staurocalyptus)') ~ '1651922'))
 
+
+
+
+
+
+##### check #####
+change_summary2 %>% pull(AphiaID) %>% table(useNA = 'always')
+
+change_summary %>% filter(ScientificName.x == "Staurocalyptus pamelaturnerae") %>%
+  group_by(ScientificName.x, ScientificName.y) %>%
+  summarize(n=n()) %>% View()
+
+change_summary %>% filter(CatalogNumber == "164149") %>%
+  group_by(ScientificName.x, ScientificName.y) %>%
+  summarize(n=n()) %>% View()
 
 
 ##### ***** #####
