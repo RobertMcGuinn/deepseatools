@@ -23,9 +23,13 @@ library(ggplot2)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(googlesheets4)
+library(rgbif)
+library(worrms)
+library(taxize)
 
 ##### source ndb #####
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
+unique(filt$DatabaseVersion)
 
 ##### NEW VERSION #####
 ##### load the accession #####
@@ -34,19 +38,125 @@ source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 sub <- read.csv('../indata/20240711-1_NOAA_AFSC_GOA_MACE_DropCam_2013_123180.csv')
 
 ##### check #####
-table(sub$AphiaID, useNA = 'always')
-
-##### make any corrections #####
-sub <- sub %>% filter(AphiaID != -999)
-
-##### check #####
-# dim(sub)
+# table(sub$AphiaID, useNA = 'always')
+# table(sub$ScientificName, useNA = 'always')
 
 ##### load the taxonomy table from CSV #####
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 
+##### get unique ScientificNames
+taxa <- unique(sub$ScientificName)
+
+##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
+## filter taxa list (Optional)
+sub1 <- sub # %>% filter(ScientificName != 'Vertebrata')
+
+## change the following taxa ro better match
+sub2 <- sub1 %>%
+  mutate(ScientificName2 = case_when(
+    ScientificName %in% "Sea pen" ~ "Pennatuloidea",
+    ScientificName %in% "Halipteris sp." ~ "Halipteris",
+    ScientificName %in% "Pennatulacean" ~ "Pennatuloidea",
+    ScientificName %in% "Upright demosponge" ~"Demospongiae",
+    ScientificName %in% "Upright calcarea" ~ "Calcarea",
+    ScientificName %in% "Upright hexactinellid"~ "Hexactinellida",
+    ScientificName %in% "Halipteris willemoesi" ~ "Halipteris willemoesi",
+    ScientificName %in% "Primnoidae" ~ "Primnoidae",
+    ScientificName %in% "Stylasteridae" ~ "Stylasteridae"))
+
+##### check #####
+# table(sub2$ScientificName2, useNA = 'always')
+#
+# sub2 %>%
+#   group_by(ScientificName, ScientificName2) %>%
+#   summarize(n=n()) %>% View()
+
+##### create vector of names #####
+my_vector <- unique(sub2$ScientificName2)
+
+# remove any missing value.
+my_vector <- my_vector[complete.cases(my_vector)]
+
+##### parse the list using taxize function 'gbif_parse' #####
+parsed_list <- gbif_parse(my_vector)
+
+## get only unique parsed names
+parsed_list <- distinct(parsed_list)
+
+##### check #####
+
+##### create vector from parsed list #####
+my_vector_parsed <- parsed_list$canonicalname
+
+## get only unique names
+my_vector_parsed <- unique(my_vector_parsed)
+
+##### check #####
+# my_vector_parsed
+sort(my_vector_parsed)
+sort(my_vector)
+
+##### make groups of 50 (because the API limit is 50) #####
+my_groups <- split(my_vector_parsed, ceiling(seq_along(my_vector)/50))
+
+##### loop to get records by names list #####
+## run this just once to get the proper data structure for an empty dataframe
+species_list <- wm_records_name("Octocorallia", fuzzy = F)
+
+## initiate the empty data frame
+df <- species_list[0,]
+
+## loop to get WoRMS records from names (b)
+for (i in seq_along(my_groups)){
+  species_list <- wm_records_names(name = my_groups[[i]],
+                                   fuzzy = F,
+                                   marine_only = T,
+
+  )
+  species_list <- do.call("rbind", species_list)
+  df <- rbind(df, species_list)
+}
+species_list <- df
+
+## get rid of any extinct matches
+species_list <- species_list %>%
+  filter(isExtinct == 0 |
+           is.na(isExtinct) == T)
+
+## get just the data that are distinct
+species_list <- distinct(species_list)
+
+##### extract names and  for crosswalk purposes
+crosswalk <- species_list %>% dplyr::select(scientificname, valid_name, valid_AphiaID)
+
+##### join crosswalk to original data #####
+by <- join_by(ScientificName2 == scientificname)
+joined <- left_join(sub2, species_list, by)
+
+View(joined)
+
+##### create a summary joined file #####
+summary <- joined %>%
+  group_by(status,
+           phylum,
+           ScientificName,
+           ScientificName2,
+           valid_name,
+           valid_AphiaID,
+           rank,
+           authority) %>%
+  summarize(n=n())
+
+##### check: test for difficult taxa #####
+summary$sametest <- ifelse(summary$ScientificName2 == summary$valid_name,"Yes","No")
+changes <- summary %>% filter(sametest == "No") %>% pull(ScientificName2)
+nomatch <- summary %>% filter(is.na(sametest) == T) %>% pull(ScientificName2)
+
+changes
+nomatch
+
 ##### create vector from incoming AphiaIDs #####
-my_vector <- unique(sub$AphiaID)
+my_vector <- unique(summary$valid_AphiaID)
 
 ## make groups of 50 (because the API limit is 50)
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
@@ -62,23 +172,7 @@ for (i in seq_along(my_groups)){
 species_list_original <- df
 
 ##### check #####
-# dim(species_list_original)
-# View(sub)
-#
-# table(species_list_original$AphiaID, useNA = 'always')
-#
-# table(sub$AphiaID, useNA = 'always')
-#
-# sub %>% filter(AphiaID == -999) %>% pull(ScientificName)
-#
-# species_list_original %>% filter(is.na(AphiaID) == T) %>%
-#   pull(scientificname)
-# table(sub$AphiaID, useNA = 'always')
-# setdiff(species_list_original$AphiaID, sub$AphiaID)
-# setdiff(sub$AphiaID, species_list_original$AphiaID)
-# View(species_list_original)
-# table(species_list$status)
-# species_list_original %>% filter(status != 'accepted') %>% View()
+View(species_list_original)
 
 ##### create a complete valid AphiaID list #####
 species_list_original <- species_list_original %>%
@@ -87,7 +181,7 @@ species_list_original <- species_list_original %>%
                                          valid_AphiaID))
 
 ##### check #####
-# species_list_original %>% filter(status != 'accepted') %>%
+# species_list_original %>% filter(status == 'accepted') %>%
 #   group_by(AphiaID, valid_AphiaID, valid_AphiaID_complete) %>%
 #   summarize(n=n()) %>% View()
 
@@ -251,20 +345,11 @@ by <- join_by(valid_AphiaID == AphiaID)
 joined4 <- left_join(joined3, synonyms, by)
 
 ##### check #####
-# names(joined4)
-# setdiff(joined4$AphiaID, species_list_original$valid_AphiaID_complete)
-# setdiff(species_list_original$valid_AphiaID_complete, joined4$AphiaID)
-
-###### join original table with the new table #####
-joined4$AphiaID2 <- joined4$AphiaID
-by <- join_by(valid_AphiaID_complete == AphiaID2)
-taxonomy_table <- left_join(species_list_original, joined4, by)
-# View(taxonomy_table)
-# names(taxonomy_table)
+View(joined4)
 
 ##### add taxonomy to sub #####
-by <- join_by(AphiaID == AphiaID.x)
-sub_enhanced <- left_join(sub, taxonomy_table, by)
+by <- join_by(valid_AphiaID == valid_AphiaID)
+sub_enhanced <- left_join(joined, joined4, by)
 
 ##### check #####
 # sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
@@ -275,11 +360,11 @@ sub_enhanced <- left_join(sub, taxonomy_table, by)
 # dim(sub_enhanced)
 
 ##### gather information into proper variables #####
-sub_enhanced$VerbatimScientificName <- sub$ScientificName
-sub_enhanced$ScientificName <- sub_enhanced$scientificname.y
+sub_enhanced$VerbatimScientificName <- sub_enhanced$ScientificName
+sub_enhanced$ScientificName <- sub_enhanced$valid_name.x
 sub_enhanced$VernacularName <- sub_enhanced$vernaculars_list
 sub_enhanced$TaxonRank <- sub_enhanced$rank.y
-sub_enhanced$AphiaID <- sub_enhanced$valid_AphiaID_complete
+sub_enhanced$AphiaID <- sub_enhanced$valid_AphiaID
 sub_enhanced$Phylum <- sub_enhanced$phylum.y
 sub_enhanced$Class <- sub_enhanced$Class.y
 sub_enhanced$Subclass <- sub_enhanced$Subclass.y
@@ -295,11 +380,10 @@ sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority.y
 sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
 
 ##### check #####
-table(sub_enhanced$VerbatimScientificName, useNA = 'always')
-# table(x$Phylum, useNA = 'always')
-# table(sub_enhanced_filter$Class, useNA = 'always')
-# sub_enhanced_filter %>% filter(Class == 'Hydrozoa') %>%
-#   group_by(Class, Order, Family, Genus, Species) %>%
+# table(sub_enhanced$VerbatimScientificName, useNA = 'always')
+# table(sub_enhanced$ScientificName, useNA = 'always')
+#
+# sub_enhanced %>% group_by(VerbatimScientificName, ScientificName, AphiaID) %>%
 #   summarize(n=n()) %>% View()
 
 ##### apply taxonomic filter #####
@@ -336,12 +420,16 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
 
 
 ##### check #####
-# table(sub_enhanced_filter$Phylum, useNA = 'always')
-# table(sub_enhanced_filter$Subphylum, useNA = 'always')
-#
-# sub_enhanced_filter %>%
-#   group_by(AphiaID, Phylum, Subphylum, Class, Order, Family, Genus, Species) %>%
-#   summarize(n=n()) %>% View()
+table(sub_enhanced_filter$Phylum, useNA = 'always')
+table(sub_enhanced_filter$Subphylum, useNA = 'always')
+
+sub_enhanced_filter %>% filter(Subphylum == 'Medusozoa') %>%
+  group_by(Phylum, Subphylum, Class, Order, Family, Genus, Species) %>%
+  summarize(n=n()) %>% View()
+
+sub_enhanced_filter %>%
+  group_by(AphiaID) %>%
+  summarize(n=n()) %>% View()
 
 ##### assign VernacularNameCategory #####
 ## define not in
@@ -441,35 +529,17 @@ sub_enhanced3<- sub_enhanced2 %>%
          ScientificNameAuthorship,
          Synonyms)
 
+##### make TaxonRank lower case to conform to our schema #####
+sub_enhanced3$TaxonRank <- tolower(sub_enhanced3$TaxonRank)
+
 ##### check #####
-# View(sub_enhanced3)
-# dim(sub_enhanced3)
-# dim(sub)
-# setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-# table(is.na(sub$CatalogNumber))
-# sub %>% filter(ScientificName == 'Dichotella gemmacea') %>% pull(AphiaID)
-# 'Dichotella gemmacea'
-#
-# x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
-# sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
-group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
-  summarize(n=n()) %>% View()
-#
-x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-sub %>% filter(CatalogNumber %in% x) %>%
-  group_by(AphiaID, Phylum, Class, Subclass, Order, Family, Genus) %>%
-  summarize(n=n()) %>% View()
-#
-# table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
-#
-# sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(Order) %>% unique()
-#
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
-  group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
+sub_enhanced3 %>%
+  group_by(VerbatimScientificName, ScientificName, Phylum, Class, Order, Family, Genus, Species, TaxonRank) %>%
   summarize(n=n()) %>% View()
 
+
 ##### export result to csv (export to CSV) #####
-filename <- "20231204-1_OET_NA138_2022_2022_123176_taxonomy_patch.csv"
+filename <- "20240711-1_NOAA_AFSC_GOA_MACE_DropCam_2013_123180_taxonomy_patch.csv"
 write.csv(sub_enhanced3,
           paste("c:/rworking/deepseatools/indata/",
                 filename, sep=''),
