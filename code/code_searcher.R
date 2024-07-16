@@ -19,9 +19,6 @@ file.edit(path)
 ##### source chosen file #####
 source(path)
 
-##### clean up everything except filt ######
-rm(list=setdiff(ls(), c("filt")))
-
 ##### find out the time files were edited #####
 # Get file information
 file_info <- lapply(files, file.info)
@@ -34,6 +31,9 @@ file_info_df <- data.frame(File = basename(files), Modification_Time = modificat
 
 # Print the result
 print(file_info_df) ## files having a larger Modification_Time were created later in time.
+
+##### clean up everything except filt ######
+rm(list=setdiff(ls(), c("filt")))
 
 
 
