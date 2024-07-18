@@ -45,7 +45,7 @@ sub$image_credit <- paste('Image: ', sub$ScientificName, ' at a depth of ', sub$
                           'Reporter: ', sub$Reporter, '. ',
                           'DSCRTP Dataset ID: ', sub$DatasetID, '. ',
                           'DSCRTP Database version: ', sub$DatabaseVersion, '. ',
-                          'CatalogNumber: ', sub$CatalogNumber,
+                          'Catalog Number: ', sub$CatalogNumber,
                           #'Data contact: ', sub$DataContact,'. ',
                           #'Reporter: ', sub$Reporter,'. ',
                           #'Repository: ', sub$Repository,'. ',
