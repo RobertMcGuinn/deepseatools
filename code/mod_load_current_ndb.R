@@ -12,7 +12,7 @@ digits = 121
 
 ##### load national database (manual) #####
 path <- "C:/rworking/deepseatools/indata"
-csv <- "DSCRTP_NatDB_20240723-0.csv" # 'Aretha Franklin'
+csv <- "DSCRTP_NatDB_20240325-0.csv"
 # "DSCRTP_NatDB_20240723-0.csv" # 'taxonomy patch to be applied here'
 # "DSCRTP_NatDB_20240325-0.csv" # 'Aretha Franklin'
 # 'DSCRTP_NatDB_20240115-0.csv' (taxonomy patch applied)
