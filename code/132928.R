@@ -34,38 +34,16 @@ patch1 <- read.csv('../indata/patch_for_correct_cf_handling.csv')
 patch2 <- read.csv('../indata/patch_for_individual_AphiaID_corrections.csv')
 patch_rbind <- rbind(patch1, patch2)
 
+##### check #####
+# patch_rbind %>%
+#   filter(AphiaID == '132038') %>%
+#   pull(CatalogNumber) %>% length()
+# ## 7370
+
+filt %>% filter(CatalogNumber == '423553') %>% pull(ScientificName)
+
 ##### create vector from incoming AphiaIDs #####
 my_vector <- unique(patch_rbind$AphiaID)
-
-## make groups of 50 (because the API limit is 50)
-my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
-
-##### loop to get records by AphiaID #####
-species_list <- wm_records_name("Caryophyllia corrugata", fuzzy = FALSE)
-df <- species_list[0,]
-
-for (i in seq_along(my_groups)){
-  species_list <- wm_record(my_groups[[i]])
-  df <- rbind(df, species_list)
-}
-species_list_original <- df
-
-##### check #####
-View(species_list_original)
-
-##### create a complete valid AphiaID list #####
-species_list_original <- species_list_original %>%
-  mutate(valid_AphiaID_complete = ifelse(is.na(valid_AphiaID) == T,
-                                         AphiaID,
-                                         valid_AphiaID))
-
-##### check #####
-# species_list_original %>% filter(status == 'accepted') %>%
-#   group_by(AphiaID, valid_AphiaID, valid_AphiaID_complete) %>%
-#   summarize(n=n()) %>% View()
-
-##### create vector from valid AphiaIDs #####
-my_vector <- unique(species_list_original$valid_AphiaID_complete)
 
 ## make groups of 50 (because the API limit is 50)
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
@@ -85,6 +63,7 @@ species_list <- df
 # table(is.na(species_list$AphiaID))
 # table(species_list$status)
 # dim(species_list)
+# species_list %>%  filter(AphiaID == '132038') %>% View()
 
 ##### loop to get classification #####
 df <- data.frame(
@@ -214,17 +193,17 @@ synonyms <- df
 # class(synonyms$AphiaID)
 
 ##### left join the summary from above with all of the other API tables #####
-by <- join_by(valid_AphiaID == AphiaID)
+by <- join_by(AphiaID == AphiaID)
 joined2 <- left_join(species_list, classification, by)
 
-by <- join_by(valid_AphiaID == AphiaID)
+by <- join_by(AphiaID == AphiaID)
 joined3 <- left_join(joined2, vernaculars, by)
 
-by <- join_by(valid_AphiaID == AphiaID)
+by <- join_by(AphiaID == AphiaID)
 joined4 <- left_join(joined3, synonyms, by)
 
 ##### check #####
-View(joined4)
+# View(joined4)
 
 ##### gather information into proper variables #####
 joined4$ScientificName <- joined4$scientificname
@@ -250,6 +229,8 @@ joined4$Synonyms <- joined4$synonyms_list
 #
 # sub_enhanced %>% group_by(VerbatimScientificName, ScientificName, AphiaID) %>%
 #   summarize(n=n()) %>% View()
+
+# joined4 %>% filter(AphiaID == '132038') %>% View()
 
 ##### apply taxonomic filter #####
 sub_enhanced_filter <- joined4 %>%
@@ -286,16 +267,16 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
 
 
 ##### check #####
-table(sub_enhanced_filter$Phylum, useNA = 'always')
-table(sub_enhanced_filter$Subphylum, useNA = 'always')
-
-sub_enhanced_filter %>% filter(Subphylum == 'Medusozoa') %>%
-  group_by(Phylum, Subphylum, Class, Order, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View()
-
-sub_enhanced_filter %>%
-  group_by(AphiaID) %>%
-  summarize(n=n()) %>% View()
+# table(sub_enhanced_filter$Phylum, useNA = 'always')
+# table(sub_enhanced_filter$Subphylum, useNA = 'always')
+#
+# sub_enhanced_filter %>% filter(Subphylum == 'Medusozoa') %>%
+#   group_by(Phylum, Subphylum, Class, Order, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
+#
+# sub_enhanced_filter %>%
+#   group_by(AphiaID) %>%
+#   summarize(n=n()) %>% View()
 
 ##### load the taxonomy table from CSV #####
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
@@ -378,11 +359,6 @@ filt %>% filter(CatalogNumber %in% patch_rbind$CatalogNumber,
                 AphiaID == '135074') %>% pull(VernacularNameCategory) %>% unique()
 
 
-##### get rid of unneeded column names #####
-names_list <- names(filt)
-sub_enhanced2 <- sub_enhanced2 %>%
-  dplyr::select(all_of(names_list))
-
 ##### select just the taxonomic variables #####
 sub_enhanced3<- sub_enhanced2 %>%
   select(ScientificName,
@@ -409,24 +385,29 @@ sub_enhanced3$TaxonRank <- tolower(sub_enhanced3$TaxonRank)
 
 
 ##### check #####
-dim(sub)
-dim(sub_enhanced3)
-
-sub_enhanced3 %>%
-  group_by(VernacularNameCategory,
-           ScientificName,
-           Phylum,
-           Class,
-           Order,
-           Family,
-           Genus,
-           Species,
-           TaxonRank) %>%
-  summarize(n=n()) %>%
-  View()
+# dim(sub_enhanced3)
+#
+# sub_enhanced3 %>%
+#   group_by(VernacularNameCategory,
+#            ScientificName,
+#            Phylum,
+#            Class,
+#            Order,
+#            Family,
+#            Genus,
+#            Species,
+#            TaxonRank,
+#            AphiaID) %>%
+#   summarize(n=n()) %>%
+#   View()
+#
+#
+# sub_enhanced3 %>% View()
+#
+# filt %>% filter(ScientificName == 'Latrunculia (Latrunculia)') %>% pull(CatalogNumber) %>% length()
 
 ##### export result to csv (export to CSV) #####
-filename <- "20240726-0_taxonomy_patch_for_DSCRTP_NatDB_20240723-0.csv"
+filename <- "20240726-1_taxonomy_patch_for_DSCRTP_NatDB_20240723-0.csv"
 write.csv(sub_enhanced3,
           paste("c:/rworking/deepseatools/indata/",
                 filename, sep=''),
