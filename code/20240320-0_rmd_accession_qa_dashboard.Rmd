@@ -17,11 +17,11 @@ library(tidyverse)
 library(knitr)
 library(flextable)
 library(sp)
-library(rgdal)
-library(extrafont)
+#library(rgdal)
+#library(extrafont)
 library(googlesheets4)
 library(googledrive)
-library(leaflet)
+# library(leaflet)
 library(RColorBrewer)
 library(terra)
 library(sf)
@@ -42,26 +42,8 @@ opts_chunk$set(
 
 ```
 
-```{r load_NDB, echo=F, message=FALSE, warning=FALSE, cache=T, eval=T}
-##### manual input: latest version of NDB #####
-## the data must be in the folder below
-## get the latest from google drive and place in your local folder
-# setwd("C:/rworking/deepseatools/indata")
-# indata <- read.csv("DSCRTP_NatDB_20230620-0.csv", header = T) 
-# filt <- indata %>%
-#   filter(Flag == "0", 
-#          is.na(Phylum) == F)
-## get the flagged records alone
-flagged <- sub %>%  filter(Flag == "1")
-```
+```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=T}
 
-```{r OR_data_and_subset_local, echo=FALSE, message=FALSE, warning=FALSE, eval=F}
-##### load dataset of interest ('sub') from local file #####
-setwd("C:/rworking/deepseatools/indata")
-sub <- read.csv(paste(filename,".csv",sep = ''),
-                encoding = "latin9",
-                header = TRUE,
-                stringsAsFactors = FALSE)
 ## get the flagged records alone
 flagged <- sub %>%  filter(Flag == "1")
 

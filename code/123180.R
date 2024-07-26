@@ -31,7 +31,7 @@ library(taxize)
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 unique(filt$DatabaseVersion)
 
-##### NEW VERSION #####
+##### NEW VERSION (original) #####
 ##### load the accession #####
 ## NOAA_AFSC_GOA_MACE_DropCam_2013_123180
 ## verions 20240711-1_NOAA_AFSC_GOA_MACE_DropCam_2013_123180
@@ -51,7 +51,7 @@ taxa <- unique(sub$ScientificName)
 ## filter taxa list (Optional)
 sub1 <- sub # %>% filter(ScientificName != 'Vertebrata')
 
-## change the following taxa ro better match
+## change the following taxa to better match
 sub2 <- sub1 %>%
   mutate(ScientificName2 = case_when(
     ScientificName %in% "Sea pen" ~ "Pennatuloidea",
@@ -549,6 +549,27 @@ write.csv(sub_enhanced3,
 
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
+
+##### NEW VERSION #####
+##### load latest verion #####
+filename <- '20240717-1_NOAA_AFSC_GOA_MACE_DropCam_2013_123180'
+sub <- read.csv(paste('../indata/',filename,'.csv', sep=''))
+
+#### run QA report #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+##### QA Report to Google Drive# ####
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1PfiJLXV_zrI1vL8h5gSB2GBmTkwCdfh7"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".PDF", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".PDF", sep=''),
+             overwrite = T)
+
 
 
 

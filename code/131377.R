@@ -562,6 +562,32 @@ write.csv(sub_enhanced3,
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
 
+##### NEW VERSION #####
+##### load latest version #####
+filename <- '20240717-1_NOAA_AFSC_GOA_MACE_DropCam_2019_131377'
+sub <- read.csv(paste('../indata/',filename,'.csv', sep=''))
+
+#### run QA report #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+##### QA Report to Google Drive# ####
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1xCO1ZtE-eHAw_KDKwiuRd7TPv_z3FoA_"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".PDF", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".PDF", sep=''),
+             overwrite = T)
+
+##### map check #####
+x <- sub %>%
+  group_by(CatalogNumber, Latitude, Longitude) %>%
+  summarize(n=n())
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+st_write(points, "C:/rworking/deepseatools/indata/sub_geo.shp", delete_dsn = T)
 
 
 
