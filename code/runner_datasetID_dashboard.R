@@ -50,7 +50,9 @@ source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 ##### read previous version of database from disk #####
 digits = 121
 path <- "C:/rworking/deepseatools/indata"
-csv <- "DSCRTP_NatDB_20240115-0.csv" # 'Aretha Franklin'
+csv <- "DSCRTP_NatDB_20240325-0.csv" # "Aretha Franklin"
+# "DSCRTP_NatDB_20240726-0.csv" # "Stanley Kubrick"
+# 'DSCRTP_NatDB_20240325-0.csv' # "Aretha Franklin"
 # 'DSCRTP_NatDB_20240115-0.csv'
 # 'DSCRTP_NatDB_20230928-0.csv'(published as '20230828-0')
 # "DSCRTP_NatDB_20230620-0.csv"
@@ -97,7 +99,7 @@ version <- as.character(version)
 
 ##### bring in datasetID key from local path #####
 old_key <- read.xlsx("C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx")
-key <- read.xlsx("C:/rworking/deepseatools/indata/20240325-0_DatasetID_Key_DSCRTP.xlsx")
+key <- read.xlsx("C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx")
 
 ##### checking #####
 setdiff(filt$DatasetID, key$DatasetID)
@@ -112,7 +114,7 @@ key %>% filter(grepl('Carreiro', DatasetID)) %>%
 
 x <- setdiff(filt$DatasetID, key$DatasetID)
 x <- filt %>% filter(DatasetID %in% x) %>%
-  group_by(ObservationDate, DatasetID, RecordType, SamplingEquipment, VehicleName, DataProvider, Repository, Locality, SurveyComments, Citation, Vessel, WebSite) %>%
+  group_by(DatasetID, RecordType, SamplingEquipment, VehicleName, DataProvider, Repository, Locality, SurveyComments, Citation, Vessel, WebSite) %>%
   summarize(n=n())
 View(x)
 
@@ -238,12 +240,12 @@ filt %>% filter(DatasetID == x) %>%
   unique()
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from local path #####
-key <- read.xlsx("C:/rworking/deepseatools/indata/20240325-0_DatasetID_Key_DSCRTP.xlsx")
+key <- read.xlsx("C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx")
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from Google Drive #####
 ## create a list of files (or single file) that meets title query (Manual change)
 
-x <- drive_find(q = "name contains '20240115-0_DatasetID_Key_DSCRTP'") #
+x <- drive_find(q = "name contains '20240726-0_DatasetID_Key_DSCRTP'") #
 
 ## browse to it
 x %>% drive_browse()
@@ -282,7 +284,7 @@ z <- left_join(y,x)
 View(z)
 
 ##### write out result (manual change to file name) #####
-write.xlsx(z, "C:/rworking/deepseatools/indata/20240325-0_DatasetID_Key_DSCRTP.xlsx",
+write.xlsx(z, "C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
 ##### manual upload new key to Google Drive (point and click stuff) #####
