@@ -14,7 +14,7 @@ digits = 121
 path <- "C:/rworking/deepseatools/indata"
 csv <- "DSCRTP_NatDB_20240726-0.csv"
 
-# "DSCRTP_NatDB_20240726-0.csv" # 'Stanley Kubrick'
+# "DSCRTP_NatDB_20240726-0.csv" # 'Mick Jagger (Stanley Kubrick, Mick Stanley, McStanley)'
 # "DSCRTP_NatDB_20240723-0.csv" # 'taxonomy patch to be applied here'
 # "DSCRTP_NatDB_20240325-0.csv" # 'Aretha Franklin'
 # 'DSCRTP_NatDB_20240115-0.csv' (taxonomy patch applied)
