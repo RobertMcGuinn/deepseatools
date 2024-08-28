@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'mod_load'
+x <- 'mod_l'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,

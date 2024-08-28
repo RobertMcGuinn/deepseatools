@@ -14,7 +14,7 @@ filename <- "20240726-0_quarterly_update_report"
 
 ## render
 ## set target to render
-rmarkdown::render("C:/rworking/deepseatools/code/20240325-0_rmd_quarterly_report_for_database_update.rmd",
+rmarkdown::render("C:/rworking/deepseatools/code/20240726-0_rmd_quarterly_report_for_database_update.rmd",
        output_file =  paste(filename,".docx", sep=''),
        output_dir = 'C:/rworking/deepseatools/reports')
 

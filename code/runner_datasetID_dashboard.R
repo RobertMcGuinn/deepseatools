@@ -98,92 +98,29 @@ version <- unique(filt$DatabaseVersion)
 version <- as.character(version)
 
 ##### bring in datasetID key from local path #####
-old_key <- read.xlsx("C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx")
+old_key <- read.xlsx("C:/rworking/deepseatools/indata/20240325-0_DatasetID_Key_DSCRTP.xlsx")
 key <- read.xlsx("C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx")
 
 ##### checking #####
-setdiff(filt$DatasetID, key$DatasetID)
-setdiff(key$DatasetID, filt$DatasetID)
-#
-filt_old %>% filter(grepl('Carreiro', DatasetID)) %>%
-  pull(DatasetID) %>% unique() %>% arrange()
-  View
-
-key %>% filter(grepl('Carreiro', DatasetID)) %>%
-  pull(DatasetID) %>% sort()
-
-x <- setdiff(filt$DatasetID, key$DatasetID)
-x <- filt %>% filter(DatasetID %in% x) %>%
-  group_by(DatasetID, RecordType, SamplingEquipment, VehicleName, DataProvider, Repository, Locality, SurveyComments, Citation, Vessel, WebSite) %>%
-  summarize(n=n())
-View(x)
-
-
-x <- setdiff(filt$CatalogNumber, filt_old$CatalogNumber)
-x <- filt %>% filter(CatalogNumber %in% x) %>%
-  group_by(DatasetID) %>%
-  summarize(n=n())
-View(x)
-
-filt_old %>% filter(grepl('Carreiro', DatasetID)) %>%
-  group_by(DatasetID) %>% summarize(n=n()) %>%
-  View
-
-#
-key %>% filter(grepl("EX-19-05", DatasetID)) %>% pull(DatasetID) %>% table()
-#
-# key %>%
-#   filter(DatasetID == "NOAA_PC-11-05-L1") %>%
-#   pull(abstract)
-#
-# x <- "NOAA_SH-22-09"
-# x <- filt %>% filter(grepl(x, DatasetID)) %>%
-#   group_by(Citation, CitationMaker, WebSite, Vessel, SurveyID, ObservationYear, ObservationDate, DatasetID) %>%
-#   summarize(n=n())
-# View(x)
-
-
-# x <- setdiff(filt$DatasetID, key$DatasetID)
-# x <- filt %>% filter(DatasetID %in% x) %>%
-#   group_by(DatasetID) %>%
-#   summarize(n=n())
-# View(x)
-#
-# x <- "NOAA_CINMS_SW-19-06"
-# x <- filt %>% filter(DatasetID == x) %>% pull(Locality) %>% unique()
-# View(x)
-#
-
-#
-# id <- "BOEM_Mid-Atlantic_Canyons"
-# x <- paste("https://deepseacoraldata.noaa.gov/Dataset%20Summaries/", id, ".html", sep = '')
-# browseURL(x)
-#
-
-
-# View(x)
-#
-#
-# rm(x)
-#
-# setdiff(indata$DatasetID, key$DatasetID)
-# setdiff(key$DatasetID, indata$DatasetID)
+# setdiff(filt$DatasetID, old_key$DatasetID)
+# setdiff(key$DatasetID, filt$DatasetID)
 
 ##### MANUAL STEP (in Google Drive) : go update the DatasetID key with the new values #####
+##
 # setdiff(filt$DatasetID, key$DatasetID)
 
 ##### checking #####
-x <- filt %>%
-  filter(DatasetID == "NOAA_RL-19-05") %>%
-  group_by(Vessel, VehicleName, WebSite, SurveyID, ObservationDate, ObservationYear) %>%
-  summarize(n=n())
-
-x
-
-x <- filt %>%
-  filter(DatasetID == "NOAA_PC-16-05") %>% pull(Citation) %>% unique()
-
-x
+# x <- filt %>%
+#   filter(DatasetID == "NOAA_RL-19-05") %>%
+#   group_by(Vessel, VehicleName, WebSite, SurveyID, ObservationDate, ObservationYear) %>%
+#   summarize(n=n())
+#
+# x
+#
+# x <- filt %>%
+#   filter(DatasetID == "NOAA_PC-16-05") %>% pull(Citation) %>% unique()
+#
+# x
 
 ##### write the citation information #####
 
@@ -240,63 +177,68 @@ filt %>% filter(DatasetID == x) %>%
   unique()
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from local path #####
-key <- read.xlsx("C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx")
+# key <- read.xlsx("C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx")
 
 ##### ***OR*** bring in new MANUALLY UPDATED datasetID key from Google Drive #####
-## create a list of files (or single file) that meets title query (Manual change)
-
-x <- drive_find(q = "name contains '20240726-0_DatasetID_Key_DSCRTP'") #
-
-## browse to it
-x %>% drive_browse()
-
-# getting the id as a character string
-y <- x$id
-
-# this downloads the file to the specified path (manual change required)
-dl <- drive_download(as_id(y),
-                     path = "C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx",
-                     overwrite = TRUE)
-
-## read the file into R as a data frame
-key <- read.xlsx(dl$local_path)
+# ## create a list of files (or single file) that meets title query (Manual change)
+#
+# x <- drive_find(q = "name contains '20240726-0_DatasetID_Key_DSCRTP'") #
+#
+# ## browse to it
+# x %>% drive_browse()
+#
+# # getting the id as a character string
+# y <- x$id
+#
+# # this downloads the file to the specified path (manual change required)
+# dl <- drive_download(as_id(y),
+#                      path = "C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx",
+#                      overwrite = TRUE)
+#
+# ## read the file into R as a data frame
+# key <- read.xlsx(dl$local_path)
 
 ##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
-## build a frequency table by DatasetID from new file
-x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
-
-# strip 'n' from existing key
-names(key)
-y <- key[,1:8]
-
-x$DatasetID <- as.character(x$DatasetID)
-y$DatasetID <- as.character(y$DatasetID)
-
-## check
-names(y)
-View(y)
+# ## build a frequency table by DatasetID from new file
+# x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
+#
+# # strip 'n' from existing key
+# names(key)
+# y <- key[,1:8]
+#
+# x$DatasetID <- as.character(x$DatasetID)
+# y$DatasetID <- as.character(y$DatasetID)
+#
+# ## check
+# names(y)
+# View(y)
 
 
 ## merge new numbers to create old key + new counts
-z <- left_join(y,x)
+# z <- left_join(y,x)
 
 ##### check #####
 View(z)
 
 ##### write out result (manual change to file name) #####
-write.xlsx(z, "C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx",
-           overwrite = TRUE)
+# write.xlsx(z, "C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx",
+#            overwrite = TRUE)
 
 ##### manual upload new key to Google Drive (point and click stuff) #####
 ##### ***OR*** full run set 'filt' to d #####
 rm(filt_old)
 d <- filt
 
-##### ***OPTIONAL*** subsetting of indata to d (optional step for testing purposes) #####
-# d <- d %>%
-#   filter(
-#     DatasetID == 'NIWA'
-#   )
+##### ***OPTIONAL*** subsetting of indata to d (optional step for testing or one-off update purposes) #####
+x <- setdiff(filt$DatasetID, old_key$DatasetID)
+
+d <- d %>%
+  filter(DatasetID %in% x)
+
+##### check #####
+d %>% filter(DatasetID == 'NOAA_DY-19-06') %>% pull(ScientificName) %>% unique()
+
+table(d$DatasetID)
 
 ##### cleanup #####
 rm(indata)
@@ -768,4 +710,16 @@ filt %>%
 sub %>%
   filter(CatalogNumber == "912379") %>%
   dplyr::select(Latitude, Longitude)
-=
+
+filt %>% filter(is.na(TaxonRank) == T) %>% pull(CatalogNumber) %>%
+  length()
+
+filt %>% filter(TaxonRank == '') %>% pull(CatalogNumber) %>%
+  length()
+
+filt %>% filter(TaxonRank == 'NA')
+
+filt %>% filter(DatasetID == 'NOAA_DY-19-06') %>%
+  pull(TaxonRank) %>% table(useNA = 'always')
+
+filt %>% filter(grepl('mov', ImageURL)) %>% pull(ImageURL)
