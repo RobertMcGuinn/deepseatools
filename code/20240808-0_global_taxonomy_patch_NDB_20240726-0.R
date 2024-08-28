@@ -20,7 +20,7 @@ library(worrms)
 library(openxlsx)
 library(taxize)
 
-##### load current NDB version 20240726-0 #####
+##### load current NDB version 20240726-0 "Mick Jagger" #####
 source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
 ##### check #####
@@ -28,12 +28,14 @@ source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
 # filt %>% filter(AphiaID == -999) %>%
 #   pull(ScientificName) %>%
 #   unique()
-
 # unique(filt$DatabaseVersion)
 
 ##### edit incoming as neccesary AphiaIDs to the NDB ######
 ## take out records where AphiaID is -999
-# filt_fixed <- filt %>% filter(AphiaID != -999)
+filt_fixed <- filt %>% filter(AphiaID != -999)
+
+
+
 
 ##### check #####
 # length(filt$CatalogNumber)-length(filt_fixed$CatalogNumber)
@@ -59,6 +61,11 @@ source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
 # 602367 125286 # Clavularia
 # 246100 170653 # Polymastia pacifica
 # 286696 1393629 # Stylatula gracilis
+
+##### change incorrect AphiaIDs #####
+filt_fixed <- filt_fixed %>%
+  mutate(AphiaID = ifelse(AphiaID == 196178, 196168, AphiaID)) %>%
+  mutate(AphiaID = ifelse(AphiaID == 1287836, 1287835, AphiaID))
 
 ##### load the taxonomy table from CSV #####
 tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
@@ -505,21 +512,40 @@ sub_enhanced <-
   filter(CatalogNumber %notin% null_aphiaIDs)
 
 ##### check #####
-# sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
-#   pull(ScientificName) %>%
-#   unique()
-# #
-# dim(filt)
-# dim(filt_fixed)
-# dim(sub_enhanced)
-#
-# sub_enhanced %>%
-#   filter(grepl('DSCRTP_og', IdentificationComments)) %>%
-#   pull(IdentificationComments) %>% length()
+
+## https://www.marinespecies.org/aphia.php?p=taxdetails&id=196168 # Keroeididae Kinoshita, 1910
+## https://www.marinespecies.org/aphia.php?p=taxdetails&id=1287835 # Stichopathes luetkeni
+
+sub_enhanced %>% filter(AphiaID == '196168') %>% pull(ScientificName) %>% unique() # 196178
+sub_enhanced %>% filter(AphiaID == '1287835') %>% pull(ScientificName) %>% unique() # 1287836
+
+sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
+  pull(ScientificName) %>%
+  unique()
+
+table(sub_enhanced$Phylum.x)
+table(sub_enhanced$Phylum.y)
+
+x <- sub_enhanced %>% filter(Phylum.y == 'Echinodermata' | Phylum.y == 'Arthropoda') %>%
+  group_by(scientificname.x, scientificname.y, ScientificName,  phylum.x, phylum.y, Phylum.x, Phylum.y, AphiaID, AphiaID.y, CatalogNumber) %>%
+  summarize(n=n()) %>% pull(CatalogNumber) %>% unique()
+
+x <- c(1010837,1015581,522726,525492)
+
+sub_enhanced %>% filter(CatalogNumber %in% x) %>%
+  group_by(ScientificName, Class.x, Order.x) %>% summarize(n=n())
+
+sub_enhanced %>% filter(Phylum.y == 'Echinodermata' | Phylum.y == 'Arthropoda') %>%
+  group_by(scientificname.x, scientificname.y, ScientificName,  phylum.x, phylum.y, Phylum.x, Phylum.y, AphiaID, AphiaID.y, CatalogNumber) %>%
+  summarize(n=n()) %>% View()
 
 
 ##### gather information into proper variables#####
-## meant to preserve names where needed
+
+## This optional step 1 (be careful) meant to preserve names where needed inside of IdentificationComments.
+## This was done on Aretha Franklin and results of this operation will be present within Mick Jagger
+## Don't need to do this again.
+
 # sub_enhanced$IdentificationComments <-
 #   paste('DSCRTP_og_scientificname:',
 #         ' ',
@@ -528,7 +554,7 @@ sub_enhanced <-
 #         sub_enhanced$IdentificationComments,
 #         sep = '')
 
-# sub_enhanced$VerbatimScientificName <- filt$VerbatimScientificName
+## this step overwrites (be careful)
 sub_enhanced$ScientificName <- sub_enhanced$scientificname.y
 sub_enhanced$VernacularName <- sub_enhanced$vernaculars_list
 sub_enhanced$TaxonRank <- sub_enhanced$rank.y
@@ -730,11 +756,21 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     TRUE ~ VernacularNameCategory))
 
 ##### check #####
+table(sub_enhanced2$Phylum)
+table(sub_enhanced$Phylum)
+
 table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
+
+x <- c(1010837,1015581,522726,525492)
+sub_enhanced2 %>% filter(CatalogNumber %in% x) %>%
+  group_by(ScientificName, VernacularNameCategory) %>%
+  summarize(n=n())
+
 sub_enhanced2 %>%
   filter(VernacularNameCategory == '') %>%
   group_by(AphiaID, Class, Order, Family, Genus, ScientificName) %>%
   summarize(n=n()) %>% View()
+
 #
 # filt_fixed %>% filter(Genus == 'Flagelligorgia') %>%
 #   group_by(VernacularNameCategory, Genus, ScientificName) %>%
@@ -779,8 +815,7 @@ sub_enhanced2 %>%
 #   group_by(DatasetID, VernacularNameCategory, Family, ScientificName, DepthInMeters, EntryDate) %>%
 #   summarize(n=n()) %>% View()
 #
-#
-#
+##
 # filt %>% filter(Order == 'Malacalcyonacea') %>% pull(VernacularNameCategory) %>%
 #   table(useNA = 'always')
 #
@@ -839,33 +874,43 @@ sub_enhanced3<- sub_enhanced2 %>%
          IdentificationComments)
 
 ##### check #####
-# x <- sub_enhanced3 %>% filter( grepl('Cirrhipathes', ScientificName)) %>%
-#     group_by(CatalogNumber, ScientificName, VerbatimScientificName, IdentificationComments, AphiaID, Phylum,
-#              Class, Order, Suborder,
-#              Family, Genus, Species) %>%
-#     summarize(n=n()) %>% pull(CatalogNumber) %>% unique()
-#
-# y <- filt_fixed %>% filter(CatalogNumber %in% x,
-#                       FishCouncilRegion == 'Gulf of Mexico') %>%
-#   pull(DatasetID)
-#
-# y <- setdiff(filt$CatalogNumber, sub_enhanced3$CatalogNumber)
-# filt %>% filter(CatalogNumber %in% y) %>%
-#   group_by(CatalogNumber, ScientificName, VerbatimScientificName, IdentificationComments, AphiaID, Phylum,
-#            Class, Order, Suborder,
-#            Family, Genus, Species) %>%
-#   summarize(n=n()) %>% View()
+x <- sub_enhanced3 %>% filter( grepl('Cirrhipathes', ScientificName)) %>%
+    group_by(CatalogNumber, ScientificName, VerbatimScientificName, IdentificationComments, AphiaID, Phylum,
+             Class, Order, Suborder,
+             Family, Genus, Species) %>%
+    summarize(n=n()) %>% pull(CatalogNumber) %>% unique()
 
+y <- filt_fixed %>% filter(CatalogNumber %in% x,
+                      FishCouncilRegion == 'Gulf of Mexico') %>%
+  pull(DatasetID) %>% unique()
+
+y <- setdiff(filt$CatalogNumber, sub_enhanced3$CatalogNumber)
+filt %>% filter(CatalogNumber %in% y) %>%
+  group_by(CatalogNumber, ScientificName, VerbatimScientificName, IdentificationComments, AphiaID, Phylum,
+           Class, Order, Suborder,
+           Family, Genus, Species) %>%
+  summarize(n=n()) %>% View()
 
 # dim(sub_enhanced3)
 # dim(filt)
 # length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
 #
-# x <- setdiff(filt_fixed$CatalogNumber, sub_enhanced2$CatalogNumber)
-# sub_enhanced %>% filter(CatalogNumber %in% x) %>%
-#   group_by(CatalogNumber, AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
-#   summarize(n=n()) %>% View()
-#
+x <- setdiff(filt$CatalogNumber, sub_enhanced3$CatalogNumber)
+
+sub_enhanced3 %>% filter(CatalogNumber %in% x) %>%
+  group_by(CatalogNumber, ScientificName, AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
+  summarize(n=n()) %>% View()
+
+## taxa that are -999 AphiaID
+x <- setdiff(filt$CatalogNumber, sub_enhanced3$CatalogNumber)
+taxa <- filt %>% filter(CatalogNumber %in% x) %>%
+  group_by(CatalogNumber, ScientificName, AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
+  summarize(n=n()) %>% pull(ScientificName) %>% unique()
+
+## OPTIONAL break up for worms API (optional for long lists)
+# taxa1 <- taxa[1:50]
+# taxa2 <- taxa[51:66]
+
 #
 # table(is.na(sub$CatalogNumber))
 # table(is.na(sub_enhanced3$CatalogNumber))
@@ -906,8 +951,20 @@ filt %>% pull(TaxonRank) %>% table(useNA = 'always')
 
 filt %>% filter(Genus == "Heterocyathus") %>% pull(VernacularNameCategory) %>% table()
 
+##### decaptitalize TaxonRank #####
+sub_enhanced3$TaxonRank <- tolower(sub_enhanced3$TaxonRank)
+
+##### #####
+##### save and load objects for future use #####
+# save multiple objects
+save(sub_enhanced3,
+     file = 'c:/rworking/deepseatools/indata/20240828-0_sub_enhanced3.Rdata')
+
+## load the objects back ()
+load('../indata/20240828-0_sub_enhanced3.Rdata')
+
 ##### export result to csv (export to CSV) #####
-filename <- "20240110-0_global_taxonomy_patch_NDB_20230828-0_125104.csv"
+filename <- "20240828-0_global_taxonomy_patch_NDB_20240726-0.csv"
 write.csv(sub_enhanced3,
           paste("c:/rworking/deepseatools/indata/",
                 filename, sep=''),
