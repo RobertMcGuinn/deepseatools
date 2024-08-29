@@ -1,7 +1,7 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate: 20240808
-## purpose: global taxonomy patch
+## purpose: global taxonomy patch for 20240726-0 'Mick Jagger' [Mick Stanley]
 
 ##### linkage #####
 ## manual input here
@@ -956,7 +956,7 @@ sub_enhanced3$TaxonRank <- tolower(sub_enhanced3$TaxonRank)
 save(sub_enhanced3,
      file = 'c:/rworking/deepseatools/indata/20240828-0_sub_enhanced3.Rdata')
 
-## load the objects back ()
+##### load the final patch back to environment #####
 load('../indata/20240828-0_sub_enhanced3.Rdata')
 
 ##### check #####
@@ -970,7 +970,7 @@ z %>% filter(is.na(ScientificName.y) == T) %>% group_by(ScientificName.x, Scient
 
 z %>% filter(Class.x != Class.y) %>%
   group_by(ScientificName.x, ScientificName.y, Class.x, Class.y) %>%
-  summarize(n=n()) %>% view()
+  summarize(n=n()) %>% View()
 
 cats <- z %>% filter(ScientificName.x != ScientificName.y) %>% pull(CatalogNumber)
 

@@ -33,7 +33,7 @@ filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
 ##### clean up everything except core objects ######
-rm(list=setdiff(ls(), c("filt")))
+## rm(list=setdiff(ls(), c("filt")))
 
 ##### check #####
 # filt %>%
