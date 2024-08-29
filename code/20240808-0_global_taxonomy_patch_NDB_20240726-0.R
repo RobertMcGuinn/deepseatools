@@ -8,8 +8,7 @@
 filename <- '20240808-0_global_taxonomy_patch_NDB_20240726-0.R' ## entry: name of the current file.  make sure to include '.R'
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
-# browseURL(github_link)
-## google drive: https://drive.google.com/drive/folders/1OQPfeFOBLLKhDe6RU4UzqSdxxm6n7bqY?usp=drive_link
+redmin_link <- 'https://vlab.noaa.gov/redmine/issues/134194'
 
 ##### packages #####
 library(tidyverse)
@@ -33,8 +32,6 @@ source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
 ##### edit incoming as neccesary AphiaIDs to the NDB ######
 ## take out records where AphiaID is -999
 filt_fixed <- filt %>% filter(AphiaID != -999)
-
-
 
 
 ##### check #####
@@ -897,7 +894,7 @@ filt %>% filter(CatalogNumber %in% y) %>%
 #
 x <- setdiff(filt$CatalogNumber, sub_enhanced3$CatalogNumber)
 
-sub_enhanced3 %>% filter(CatalogNumber %in% x) %>%
+filt %>% filter(CatalogNumber %in% x) %>%
   group_by(CatalogNumber, ScientificName, AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
   summarize(n=n()) %>% View()
 
@@ -954,14 +951,40 @@ filt %>% filter(Genus == "Heterocyathus") %>% pull(VernacularNameCategory) %>% t
 ##### decaptitalize TaxonRank #####
 sub_enhanced3$TaxonRank <- tolower(sub_enhanced3$TaxonRank)
 
-##### #####
-##### save and load objects for future use #####
+##### save object for future use #####
 # save multiple objects
 save(sub_enhanced3,
      file = 'c:/rworking/deepseatools/indata/20240828-0_sub_enhanced3.Rdata')
 
 ## load the objects back ()
 load('../indata/20240828-0_sub_enhanced3.Rdata')
+
+##### check #####
+x <- filt %>% select(CatalogNumber, ScientificName, Class)
+y <- sub_enhanced3 %>% select(CatalogNumber, ScientificName, Class)
+z <- left_join(x,
+               y,
+               by = "CatalogNumber")
+z %>% filter(is.na(ScientificName.y) == T) %>% group_by(ScientificName.x, ScientificName.y) %>%
+  summarize(n=n())
+
+z %>% filter(Class.x != Class.y) %>%
+  group_by(ScientificName.x, ScientificName.y, Class.x, Class.y) %>%
+  summarize(n=n()) %>% view()
+
+cats <- z %>% filter(ScientificName.x != ScientificName.y) %>% pull(CatalogNumber)
+
+sub_enhanced3 %>% filter(CatalogNumber %in% cats) %>% pull(ScientificName) %>% unique()
+
+filt %>% filter(ScientificName == 'Neopelta aberrans') %>%
+  group_by(ScientificName, Class, Order, Family, Genus, Species) %>%
+  summarize(n=n()) %>% View()
+
+x <- setdiff(filt$CatalogNumber, sub_enhanced3$CatalogNumber)
+filt %>% filter(CatalogNumber %in% x) %>%
+  group_by(ScientificName, Class, Order, Family, Genus, Species, AphiaID) %>%
+  summarize(n=n()) %>% View()
+
 
 ##### export result to csv (export to CSV) #####
 filename <- "20240828-0_global_taxonomy_patch_NDB_20240726-0.csv"
@@ -973,10 +996,12 @@ write.csv(sub_enhanced3,
           quote = T)
 
 ##### clean up everything except core objects ######
-rm(list=setdiff(ls(), c("filt")))
+rm(list=setdiff(ls(), c('filt', 'sub_enhanced3')))
 
 
-##### check output #####
-x <- read.csv('c:/rworking/deepseatools/indata/20240110-0_global_taxonomy_patch_NDB_20230828-0_.csv')
+
+
+
+
 
 
