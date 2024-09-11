@@ -34,10 +34,15 @@ source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
 sheetid <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
 s <- read_sheet(sheetid)
 
+##### check #####
+s %>%
+  group_by(DSCRTPGroup, FieldName) %>%
+  summarize(n=n()) %>% View()
+
 ##### load project data #####
 mapping <- read.xlsx('c:/rworking/deepseatools/indata/DSCRTP_MDBC_Tator_Mapping.xlsx')
 
-## The workbook is the tailored / filtered-down version and contains data from multiple
+## Mark Taipan: The workbook is the tailored / filtered-down version and contains data from multiple
 ## tables (e.g. fish, corals, marine debris). I believe this is what NCEI is
 ## using to ingest into their own database
 mdbc <- read.xlsx('c:/rworking/deepseatools/indata/NF2206_Forward_Videos_Annotations_dEqqYAtRJW.xlsx',
