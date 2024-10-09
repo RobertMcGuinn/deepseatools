@@ -7,7 +7,7 @@
 ##### linkage #####
 filename <- '127481' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
-github_link <- paste(github_path, filename, '.R', sep = '')
+github_link <- paste(github_path, filename, '-2', '.R', sep = '')
 browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- filename
@@ -35,9 +35,9 @@ sheetid <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
 s <- read_sheet(sheetid)
 
 ##### check #####
-s %>%
-  group_by(DSCRTPGroup, FieldName) %>%
-  summarize(n=n()) %>% View()
+# s %>%
+#   group_by(DSCRTPGroup, FieldName) %>%
+#   summarize(n=n()) %>% View()
 
 ##### load project data #####
 ## copy on google drive:
@@ -48,13 +48,18 @@ corals <- read.xlsx('c:/rworking/deepseatools/indata/PC2202L1_FWD_Videos_Annotat
 fish <- read.xlsx('c:/rworking/deepseatools/indata/PC2202L1_FWD_Videos_Annotation_Report.xlsx',
                     sheet = 'fish')
 
+events <- read.xlsx('c:/rworking/deepseatools/indata/PC2202L1_FWD_Videos_Annotation_Report.xlsx',
+                  sheet = 'events')
+
 ##### check #####
 x <- names(corals)  # Assigns the names of 'corals' to 'x'
-result <- grepl('Taxon', x)  # Checks for the presence of 'Cover' in 'x'
-
+result <- grepl('Taxon', x)  # Checks for the presence of 'search term' in 'x'
 # Subset 'x' to get only the names where 'result' is TRUE
 matching_names <- x[result]
-matching_names  # Displays the names where 'Cover' is present
+matching_names  # Displays the names where search term is present
+
+names(events)
+
 
 
 ##### check #####

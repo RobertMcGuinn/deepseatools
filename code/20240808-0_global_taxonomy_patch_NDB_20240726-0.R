@@ -960,6 +960,10 @@ save(sub_enhanced3,
 load('../indata/20240828-0_sub_enhanced3.Rdata')
 
 ##### check #####
+sub_enhanced3 %>% filter(VernacularNameCategory == 'insufficient taxonomic resolution') %>%
+  group_by(ScientificName, VerbatimScientificName) %>%
+  summarize(n=n())
+
 x <- filt %>% select(CatalogNumber, ScientificName, Class)
 y <- sub_enhanced3 %>% select(CatalogNumber, ScientificName, Class)
 z <- left_join(x,
@@ -998,10 +1002,31 @@ write.csv(sub_enhanced3,
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c('filt', 'sub_enhanced3')))
 
+##### patch VernacularNameCategory where = "insufficient taxonomic resolution" #####
+## isolate CatalogNumbers of interest
+x <- sub_enhanced3 %>% filter(VernacularNameCategory == 'insufficient taxonomic resolution') %>% pull(CatalogNumber)
 
+## find corresponding CatalogNumbers in database (filt) ##
+y <- filt %>% filter(CatalogNumber %in% x) %>% select(CatalogNumber, VernacularNameCategory)
 
+## join the data to the global taxonomy patch
+new_data <- left_join(sub_enhanced3, y, by = "CatalogNumber")
 
+##### create a new patch dataset #####
+what <- new_data %>% mutate(VernacularNameCategory = ifelse(is.na(VernacularNameCategory.y) == T, VernacularNameCategory.x, VernacularNameCategory.y))
 
+## cleanup the extra variables
+what <- what %>%
+  select(-VernacularNameCategory.x, -VernacularNameCategory.y)
 
+##### check ####
+what %>% pull(VernacularNameCategory) %>% table(useNA = 'always')
 
-
+##### export result to csv (export to CSV) #####
+filename <- "20241009-0_global_taxonomy_patch_NDB_20240726-0.csv"
+write.csv(what,
+          paste("c:/rworking/deepseatools/indata/",
+                filename, sep=''),
+          fileEncoding = "latin9",
+          row.names = F,
+          quote = T)
