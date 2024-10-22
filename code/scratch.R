@@ -27,21 +27,23 @@ library(googlesheets4)
 ##### source ndb #####
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
-##### read in the data inventory sheet from google drive #####
-filt %>%
-  filter(is.na(ImageURL) == T) %>%
-           pull(ImageURL) %>%
-           table(useNA = 'always')
+##### scratch #####
+cats <-
+  c(1579138,1579139,1579140,1579141,1579142,1579143,1579144,1579145,1579146)
 
-filt %>%
-  filter(ImageURL == 'NA') %>%
-  pull(ImageURL) %>%
+filt %>% filter(CatalogNumber %in%  cats) %>%
+  pull(FishCouncilRegion) %>%
   table(useNA = 'always')
 
-filt %>%
-  filter(ImageURL == '') %>%
-  pull(ImageURL) %>%
+filt %>% filter(ScientificName == 'Desmophyllum pertusum') %>%
+  pull(VernacularNameCategory) %>%
   table(useNA = 'always')
+
+filt %>% filter(ScientificName == 'Coenocyathus bowersi') %>%
+  pull(VernacularNameCategory) %>%
+  table(useNA = 'always')
+
+
 
 
 

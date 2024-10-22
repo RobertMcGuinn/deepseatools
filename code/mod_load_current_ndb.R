@@ -11,9 +11,9 @@ library(tidyverse)
 digits = 121
 
 ##### load national database (manual) #####
-path <- "C:/rworking/deepseatools/indata"
-csv <- "DSCRTP_NatDB_20240726-0.csv"
+path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20240726-0.csv"
 
+# "DSCRTP_NatDB_20241016-2.csv"
 # "DSCRTP_NatDB_20240726-0.csv" # 'Mick Jagger (Stanley Kubrick, Mick Stanley, McStanley)'
 # "DSCRTP_NatDB_20240723-0.csv" # 'taxonomy patch to be applied here'
 # "DSCRTP_NatDB_20240325-0.csv" # 'Aretha Franklin'
@@ -24,8 +24,7 @@ csv <- "DSCRTP_NatDB_20240726-0.csv"
 # "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
 # Link to master change log: https://docs.google.com/spreadsheets/d/1psUlMQS1d2rRgsiKWJsCTPleJ7TMKYNV/edit#gid=121019363
 
-setwd(path)
-indata <- read.csv(csv, header = T, encoding = 'latin1')
+indata <- read.csv(path, header = T, encoding = 'latin1')
 ## encoding choice is either latin1 or UTF-8. Depends on incoming.
 ## this does not define encoding, it simply tells the importer
 ## which encoding is in the incoming file.
@@ -33,7 +32,7 @@ filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
 ##### clean up everything except core objects ######
-## rm(list=setdiff(ls(), c("filt")))
+rm(list=setdiff(ls(), c("filt")))
 
 ##### check #####
 # filt %>%
