@@ -5,7 +5,7 @@
 
 ##### linkage #####
 ## manual input here
-filename <- '20240808-0_global_taxonomy_patch_NDB_rerun_20240726-0.R' ## entry: name of the current file.  make sure to include '.R'
+filename <- '20241018-0_global_taxonomy_patch_NDB_rerun_20240726-0.R' ## entry: name of the current file.  make sure to include '.R'
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
 redmin_link <- 'https://vlab.noaa.gov/redmine/issues/134194'
@@ -1085,7 +1085,7 @@ newpatch %>%
    table(useNA = 'always')
 
 
- ##### export result to csv (export to CSV) #####
+##### export result to csv (export to CSV) #####
  filename <- "20241022-0_global_taxonomy_patch_NDB_20240726-0.csv"
  write.csv(newpatch,
            paste("c:/rworking/deepseatools/indata/",
