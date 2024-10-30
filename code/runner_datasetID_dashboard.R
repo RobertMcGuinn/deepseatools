@@ -47,10 +47,14 @@ options(lifecycle_disable_warnings = TRUE)
 ##### ***OR*** read current database from disk #####
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
+##### check #####
+table(filt$DatabaseVersion)
+
 ##### read previous version of database from disk #####
 digits = 121
 path <- "C:/rworking/deepseatools/indata"
-csv <- "DSCRTP_NatDB_20240325-0.csv" # "Aretha Franklin"
+csv <- "DSCRTP_NatDB_20240726-0.csv"
+
 # "DSCRTP_NatDB_20240726-0.csv" # "Stanley Kubrick"
 # 'DSCRTP_NatDB_20240325-0.csv' # "Aretha Franklin"
 # 'DSCRTP_NatDB_20240115-0.csv'
@@ -62,11 +66,13 @@ csv <- "DSCRTP_NatDB_20240325-0.csv" # "Aretha Franklin"
 
 setwd(path)
 indata <- read.csv(csv, header = T, encoding = 'latin1')
+
 ## encoding choice is either latin1 or UTF-8. Depends on incoming.
 ## this does not define encoding, it simply tells the importer
 ## which encoding is in the incoming file.
 filt_old <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
+rm(indata)
 
 ##### ***OPTIONAL download Google Sheet version of schema for use in R documents #####
 # Register and download Google Sheet using googlesheets4::read_sheet
@@ -401,6 +407,8 @@ rm(filt)
 d <- merge(d, key, all.x = TRUE)
 
 ##### checking #####
+# d %>% pull(DatasetID) %>% table(useNA = 'always')
+
 # x <- d %>% filter(DatasetID == "Carranza_etal_2012")
 # write.csv(test, "c:/rworking/deepseatools/indata/carranza.csv")
 # test2 <- read_utf8("c:/rworking/deepseatools/indata/carranza.csv")
@@ -433,18 +441,18 @@ d <- merge(d, key, all.x = TRUE)
 
 ##### *** run the reports *** #####
 ##### assign which datasets cross the 180 line #####
-yo <- filt %>%
+yo <- d %>%
   filter(as.numeric(Longitude) > 0) %>%
   pull(DatasetID) %>%
   unique()
 
-yo2 <- filt %>%
+yo2 <- d %>%
   filter(as.numeric(Longitude) < 0) %>%
   pull(DatasetID) %>%
   unique()
 
 one_eighty <- intersect(yo, yo2)
-not_one_eighty <- setdiff(filt$DatasetID, one_eighty)
+not_one_eighty <- setdiff(d$DatasetID, one_eighty)
 
 ##### checking #####
 length(one_eighty)+length(not_one_eighty)
@@ -602,17 +610,17 @@ literature <- list.files('C:/rworking/deepseatools/reports/datasetid/literature/
 program <- list.files('C:/rworking/deepseatools/reports/datasetid/program/')
 repository <- list.files('C:/rworking/deepseatools/reports/datasetid/repository/')
 
-length(cruise)
-length(literature)
-length(program)
+length(cruise) +
+length(literature) +
+length(program) +
 length(repository)
 
 biglist <- c(cruise, literature, program, repository)
 biglist <- gsub(pattern = "\\.html$", "", biglist)
 
-setdiff(biglist, unique(filt$DatasetID))
-setdiff(unique(filt$DatasetID), biglist)
-length(unique(filt$DatasetID))
+setdiff(biglist, unique(d$DatasetID))
+setdiff(unique(d$DatasetID), biglist)
+length(unique(d$DatasetID))
 length(biglist)
 length(key$DatasetID)
 
