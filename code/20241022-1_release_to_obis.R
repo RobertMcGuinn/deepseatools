@@ -82,6 +82,7 @@ obis_fields <- c('DatabaseVersion',
                  'RecordType',
                  'ImageURL',
                  'Locality',
+                 'Citation',
                  'references'
                  )
 
@@ -102,7 +103,8 @@ obis <- filt %>%
     basisOfRecord = 'RecordType', # requires modification
     associatedMedia = 'ImageURL', # verbatim
     locality = 'Locality', # verbatim
-    datasetID = 'DatasetID'
+    datasetID = 'DatasetID', # verbatim
+    associatedReferences = 'Citation' # verbatim
     )
 
 obis$occurrenceStatus <- 'Present'
