@@ -81,6 +81,7 @@ obis_fields <- c('DatabaseVersion',
                  'MaximumDepthInMeters',
                  'RecordType',
                  'ImageURL',
+                 'Locality',
                  'references'
                  )
 
@@ -100,6 +101,7 @@ obis <- filt %>%
     maximumDepthInMeters = 'MaximumDepthInMeters', # verbatim
     basisOfRecord = 'RecordType', # requires modification
     associatedMedia = 'ImageURL', # verbatim
+    locality = 'Locality', # verbatim
     datasetID = 'DatasetID'
     )
 
@@ -139,23 +141,27 @@ obis$coordinateUncertaintyInMeters <- gsub("[^[:digit:]., ]", "", obis$coordinat
 ##### check #####
 obis %>% pull(coordinateUncertaintyInMeters) %>% table(useNA = 'always')
 
-
 ##### add and delete variables for dwca #####
 obis$id <- obis$occurrenceID
 obis$kingdom <- 'Animalia'
 obis$geodeticDatum <- 'WGS84'
 obis <- obis %>%  select(-DatabaseVersion)
 
+##### transform CoordinateUncertaintyInMeters #####
+obis$coordinateUncertaintyInMeters <- as.numeric(obis$coordinateUncertaintyInMeters)
+
 ##### write out file for submission #####
-today <- '2024-10-28'
+today <- '2024-10-31'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
   write.csv(paste('dwc_noaa_dsc_rtp_version', '_', version , '_', today, '.txt', sep = ''),
-            row.names = FALSE)
+            row.names = FALSE, na = '')
 
 ##### check #####
 ## Use read.delim() to read the file
 # data <- read.delim('dwc_noaa_dsc_rtp_version_20241022-1_2024-10-28.txt', header = TRUE, sep = ",", stringsAsFactors = FALSE)
+
+filt %>% filter(Phylum == 'Chordata') %>% pull(Class) %>% table(useNA = 'always')
 
 
