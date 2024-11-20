@@ -1,7 +1,7 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate: 20240308
-## purpose: dscrtp crosswalk with tator exports
+## purpose: dscrtp crosswalk with tator exports for moving data from MDBC to the National Database.
 ## issuename: 20240308_tator_dscrtp_crosswalk_MTaipan_RPMcGuinn
 
 ##### linkage #####

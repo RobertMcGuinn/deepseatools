@@ -62,8 +62,6 @@ rm(list=setdiff(ls(), c("filt")))
 #   summarize(n=n()) %>%
 #   write.csv('c:/rworking/deepseatools/reports/20231109-0_summary_of_drop_camera_work_in_AK_RPMcGuinn.csv')
 #
-#
-
 
 
 

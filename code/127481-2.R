@@ -62,53 +62,91 @@ intersect(names(corals), names(fish))
 setdiff(names(corals), names(fish))
 setdiff(names(fish), names(corals))
 
-x <- intersect(names(events), names(fish))
-summary(events[,x])
+x <- intersect(names(corals), names(events))
+summary(corals[,x])
 
 table(events$EventType, useNA = 'always')
 names(events)
+corals$MediaId
+
+corals %>% select(MediaName, MediaId) %>% View()
+
+corals %>% group_by(MediaName, MediaId) %>% summarize(n=n()) %>% View()
 
 ##### create a single fish and coral data frame #####
-## Find intersecting column names
-common_columns <- intersect(names(corals), names(fish))
 
-## Subset data frames to only the intersecting columns
-corals_common <- corals[ ,common_columns]
-fish_common <- fish[ ,common_columns]
+## fix the mis-matching classes between vectors so I can use bind_rows function
+corals$OccurrenceComments <- as.character(corals$OccurrenceComments)
+fish$IdentificationComments <- as.character(fish$IdentificationComments)
+fish$IdentifiedBy <-  as.character(fish$IdentifiedBy)
+fish$IdentificationDate <- as.character(fish$IdentificationDate)
 
-## Bind rows together
-coralsfish <- rbind(corals_common, fish_common)
+## bind rows
+coralsfish <- bind_rows(corals, fish)
+
+##### take out the unknown and null within ScientificName #####
+coralsfish_cl <- coralsfish %>% filter(is.na(ScientificName) == F)
+coralsfish_cl <- coralsfish %>% filter(!(grepl('Unknown', ScientificName) | grepl('unknown', ScientificName)))
 
 ##### check #####
-coralsfish %>%
-  filter(is.null(Timestamp) == T) %>%
-  pull(Timestamp) %>%
-  length()
+table(coralsfish_cl$ScientificName, useNA = 'always')
+coralsfish %>% filter(is.na(ScientificName) == T) %>% pull(ScientificName) %>% length()
+coralsfish %>% filter(grepl('Unknown', ScientificName) |
+                      grepl('unknown', ScientificName)) %>%
+  pull(ScientificName) %>% table()
 
-##### join the geology information #####
+
+##### join the geology information by timestamp #####
 ## get the timestamps in a joinable format
-coralsfish$Timestamp_pos <- ymd_hms(coralsfish$Timestamp)
+coralsfish_cl$Timestamp_pos <- ymd_hms(coralsfish_cl$Timestamp)
 geology$Timestamp_pos <- ymd_hms(geology$Timestamp)
 
 ## Specify the tolerance window in seconds (e.g., 600 seconds for 10 minutes)
 tolerance_window <- 20
 
 ## Perform the fuzzy left join
-result <- difference_left_join(coralsfish, geology, by = "Timestamp_pos", max_dist = tolerance_window, distance_col = "time_diff") %>%
+result <- difference_left_join(coralsfish_cl, geology, by = "Timestamp_pos", max_dist = tolerance_window, distance_col = "time_diff") %>%
   group_by(Timestamp_pos.x) %>%
   slice_min(order_by = time_diff, n = 1, with_ties = FALSE) %>% # `with_ties = FALSE` ensures only one row per Timestamp_pos.x
   ungroup()
 
 result <-
-  left_join(coralsfish, result, by = c("Timestamp_pos" = "Timestamp_pos.x"))
+  left_join(coralsfish_cl, result, by = c("Timestamp_pos" = "Timestamp_pos.x"))
 
 ##### check #####
+result %>% group_by(CMECSGeoform1,
+                    CMECSGeoform2,
+                    DominantSubstrate,
+                    BedrockMegaclast,
+                    BoulderCobble,
+                    PebbleGranule,
+                    SandMud,
+                    AlgalSubstrate,
+                    CoralSubstrate,
+                    ShellSubstrate) %>%
+  summarize(n=n()) %>% View()
+
+
+names(result)
+
+result %>%
+  pull(CMECSGeoform1) %>%
+  table(useNA = 'always')
+
 result %>%
   pull(CMECSGeoform2) %>%
   table(useNA = 'always')
 
 result %>%
-  filter(DominantSubstrate == 'Bedrock') %>% pull(ScientificName.x) %>%
+  pull(DominantSubstrate) %>%
+  table(useNA = 'always')
+
+result %>%
+  pull(DominantSubstrate.x) %>%
+  table(useNA = 'always')
+
+result %>%
+  filter(DominantSubstrate == 'Bedrock') %>% pull(DominantSubstrate) %>%
   table(useNA = 'always')
 
 result %>% select(Timestamp_pos, Timestamp_pos.y) %>% View()
@@ -122,8 +160,7 @@ names(coralsfish)
 names(result)
 
 result %>% group_by(IdentificationComments, IdentificationComments.x, IdentificationComments.y) %>%
-  summarize(n=n())
-
+  summarize(n=n()) %>% View()
 
 result %>% group_by(IdentifiedBy, IdentifiedBy.x, IdentifiedBy.y, IdAnalyst, IdAnalyst.x, IdAnalyst.y) %>%
   summarize(n=n())
