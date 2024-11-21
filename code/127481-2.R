@@ -58,23 +58,24 @@ geology <- read.xlsx('c:/rworking/deepseatools/indata/PC2202L1_FWD_Videos_Annota
                                sheet = 'geology')
 
 ##### check #####
-intersect(names(corals), names(fish))
-setdiff(names(corals), names(fish))
-setdiff(names(fish), names(corals))
+# intersect(names(corals), names(fish))
+# setdiff(names(corals), names(fish))
+# setdiff(names(fish), names(corals))
+#
+# x <- intersect(names(corals), names(events))
+# summary(corals[,x])
+#
+# table(events$EventType, useNA = 'always')
+# names(events)
+# corals$MediaId
+#
+# corals %>% select(MediaName, MediaId) %>% View()
+#
+# corals %>% group_by(MediaName, MediaId) %>% summarize(n=n()) %>% View()
 
-x <- intersect(names(corals), names(events))
-summary(corals[,x])
 
-table(events$EventType, useNA = 'always')
-names(events)
-corals$MediaId
-
-corals %>% select(MediaName, MediaId) %>% View()
-
-corals %>% group_by(MediaName, MediaId) %>% summarize(n=n()) %>% View()
-
+##### ***** #####
 ##### create a single fish and coral data frame #####
-
 ## fix the mis-matching classes between vectors so I can use bind_rows function
 corals$OccurrenceComments <- as.character(corals$OccurrenceComments)
 fish$IdentificationComments <- as.character(fish$IdentificationComments)
@@ -84,17 +85,18 @@ fish$IdentificationDate <- as.character(fish$IdentificationDate)
 ## bind rows
 coralsfish <- bind_rows(corals, fish)
 
-##### take out the unknown and null within ScientificName #####
+##### filter: take out the unknown and null within ScientificName #####
 coralsfish_cl <- coralsfish %>% filter(is.na(ScientificName) == F)
 coralsfish_cl <- coralsfish %>% filter(!(grepl('Unknown', ScientificName) | grepl('unknown', ScientificName)))
 
 ##### check #####
-table(coralsfish_cl$ScientificName, useNA = 'always')
-coralsfish %>% filter(is.na(ScientificName) == T) %>% pull(ScientificName) %>% length()
-coralsfish %>% filter(grepl('Unknown', ScientificName) |
-                      grepl('unknown', ScientificName)) %>%
-  pull(ScientificName) %>% table()
+# table(coralsfish_cl$ScientificName, useNA = 'always')
+# coralsfish %>% filter(is.na(ScientificName) == T) %>% pull(ScientificName) %>% length()
+# coralsfish %>% filter(grepl('Unknown', ScientificName) |
+#                       grepl('unknown', ScientificName)) %>%
+#   pull(ScientificName) %>% table()
 
+# names(coralsfish_cl)
 
 ##### join the geology information by timestamp #####
 ## get the timestamps in a joinable format
@@ -105,7 +107,10 @@ geology$Timestamp_pos <- ymd_hms(geology$Timestamp)
 tolerance_window <- 20
 
 ## Perform the fuzzy left join
-result <- difference_left_join(coralsfish_cl, geology, by = "Timestamp_pos", max_dist = tolerance_window, distance_col = "time_diff") %>%
+result <- difference_left_join(coralsfish_cl, geology,
+                               by = "Timestamp_pos",
+                               max_dist = tolerance_window,
+                               distance_col = "time_diff") %>%
   group_by(Timestamp_pos.x) %>%
   slice_min(order_by = time_diff, n = 1, with_ties = FALSE) %>% # `with_ties = FALSE` ensures only one row per Timestamp_pos.x
   ungroup()
@@ -114,78 +119,89 @@ result <-
   left_join(coralsfish_cl, result, by = c("Timestamp_pos" = "Timestamp_pos.x"))
 
 ##### check #####
-result %>% group_by(CMECSGeoform1,
-                    CMECSGeoform2,
-                    DominantSubstrate,
-                    BedrockMegaclast,
-                    BoulderCobble,
-                    PebbleGranule,
-                    SandMud,
-                    AlgalSubstrate,
-                    CoralSubstrate,
-                    ShellSubstrate) %>%
+sum(is.na(result$Timestamp_pos))
+sort(names(coralsfish_cl))
+sort(names(result))
+
+result %>% group_by(DominantSubstrate,
+                    DominantSubstrate.x,
+                    DominantSubstrate.y,) %>%
   summarize(n=n()) %>% View()
 
 
-names(result)
+result %>% group_by(AnnotatorResponse,
+                    AnnotatorResponse.x,
+                    AnnotatorResponse.y) %>%
+  summarize(n=n()) %>%
+              View()
 
-result %>%
-  pull(CMECSGeoform1) %>%
-  table(useNA = 'always')
+result %>% group_by(AssociatedTransectId,
+                    AssociatedTransectId.x,
+                    AssociatedTransectId.y,
+                    TransectId.x,
+                    TransectId.y,
+                    DiveId,
+                    DiveId.x,
+                    DiveId.y ) %>%
+  summarize(n=n()) %>%
+  View()
 
-result %>%
-  pull(CMECSGeoform2) %>%
-  table(useNA = 'always')
+result %>% group_by(OccurrenceComments.x, OccurrenceComments.y) %>%
+  summarize(n=n()) %>%
+  View()
 
-result %>%
-  pull(DominantSubstrate) %>%
-  table(useNA = 'always')
+result %>% group_by(IdentificationComments,
+                    IdentificationComments.x,
+                    IdentificationComments.y) %>%
+  summarize(n=n()) %>%
+  View()
 
-result %>%
-  pull(DominantSubstrate.x) %>%
-  table(useNA = 'always')
+result %>% group_by(BboxHeight.x,
+                    BboxWidth.x,
+                    BboxX.x,
+                    BboxY.x,
+                 ) %>%
+  summarize(n=n()) %>%
+  View()
 
-result %>%
-  filter(DominantSubstrate == 'Bedrock') %>% pull(DominantSubstrate) %>%
-  table(useNA = 'always')
+result %>% group_by(CategoricalAbundance.x,
+                    CategoricalAbundance.y) %>%
+  summarize(n=n()) %>%
+  View()
 
-result %>% select(Timestamp_pos, Timestamp_pos.y) %>% View()
 
-result %>% filter(is.na(Timestamp_pos.y) == T) %>% pull(Timestamp_pos.y) %>% length()
-result %>% filter(is.na(Timestamp_pos.y) == F) %>% pull(Timestamp_pos.y) %>% length()
+result %>% group_by(Latitude,
+                    Latitude.x,
+                    Latitude.y,
+                    Longitude,
+                    Longitude.x,
+                    Longitude.y ) %>%
+  summarize(n=n()) %>%
+  View()
 
-table(events$Camera, useNA = 'always')
 
-names(coralsfish)
-names(result)
 
-result %>% group_by(IdentificationComments, IdentificationComments.x, IdentificationComments.y) %>%
-  summarize(n=n()) %>% View()
-
-result %>% group_by(IdentifiedBy, IdentifiedBy.x, IdentifiedBy.y, IdAnalyst, IdAnalyst.x, IdAnalyst.y) %>%
-  summarize(n=n())
-
-##### create export #####
-## deal with the variables that need a simple name change
-dscrtp_export <- coralsfish %>%
-  rename(
-    VernacularName = 'CommonName', ##### this will conflict with our WoRMS API Call
-    SurveyID = 'CruiseId',
-    EventID = 'DiveId',
-    MaximumSize = 'MaximumSizeHeight',
-    MinimumSize = 'MinimumSizeHeight',
-    Cover = 'PercentCover',
-    ObservationDate = 'Timestamp',
-    DepthInMeters = 'NavDepth'
-  )
-
-##### check ####
-## find names in common
-# x <- intersect(names(dscrtp_export), s$FieldName)
-# x
-#
-# table(dscrtp_export$SurveyID, useNA = 'always')
-# table(dscrtp_export$Morphospecies, useNA = 'always')
+##### ***** #####
+##### create export: main crosswalk #####
+dscrtp_export <- result %>%
+  mutate(
+    CMECSGeoForm = paste(CMECSGeoform1, CMECSGeoform2, sep = ' | '),
+    CategoricalAbunance = CategoricalAbundance.x,
+    SurveyID = CruiseId,
+    EventID = paste(DiveID,TransectID, sep = '-'),
+    Longitude = Longitude,
+    Latitude = Latitude,
+    IdentificationComments = paste(IdentificationComments, AnnotatorResponse, sep = ' | '),
+    MaximumSize = MaximumSizeHeight.x,
+    MinimumSize = MinimumSizeHeight.x,
+    Cover = PercentCover.x,
+    ObservationDate = Timestamp,
+    DepthInMeters = NavDepth,
+    OccurrenceComments = OccurrenceComments.x,
+    BboxHeight = BboxHeight.x,
+    BboxWidth = BboxWidth.x,
+    BboxX = BboxX.x,
+    BboxY = BboxY.x)
 
 
 ##### paste information to OccurrenceComments #####
@@ -202,7 +218,7 @@ dscrtp_export$EventID <- paste(dscrtp_export$EventID, dscrtp_export$TransectID, 
 #### create Sample ID from pre-tranformed ObservationDate
 dscrtp_export$SampleID <- dscrtp_export$ObservationDate #pre-transformed, see below for transformation.
 
-##### tranforming date and time #####
+##### transforming date and time #####
 split_position = 10
 date <- substr(dscrtp_export$ObservationDate, 1, split_position)
 time <- substr(dscrtp_export$ObservationDate, split_position + 2, nchar(dscrtp_export$ObservationDate))
