@@ -73,7 +73,6 @@ geology <- read.xlsx('c:/rworking/deepseatools/indata/PC2202L1_FWD_Videos_Annota
 #
 # corals %>% group_by(MediaName, MediaId) %>% summarize(n=n()) %>% View()
 
-
 ##### ***** #####
 ##### create a single fish and coral data frame #####
 ## fix the mis-matching classes between vectors so I can use bind_rows function
@@ -169,7 +168,6 @@ result %>% group_by(CategoricalAbundance.x,
   summarize(n=n()) %>%
   View()
 
-
 result %>% group_by(Latitude,
                     Latitude.x,
                     Latitude.y,
@@ -179,25 +177,66 @@ result %>% group_by(Latitude,
   summarize(n=n()) %>%
   View()
 
+result %>% group_by(NavDepth,
+                    NavDepth.x,
+                    NavDepth.y) %>%
+  summarize(n=n()) %>%
+  View()
 
+result %>% group_by(IndividualCount.x) %>%
+  summarize(n=n()) %>%
+  View()
+
+result %>% pull(IndividualCount.x) %>% table(useNA = 'always')
+result %>% pull(Condition.x) %>% table(useNA = 'always')
+result %>% pull(PolygonDtype.x) %>% table(useNA = 'always')
+result %>% pull(TypeOfInjury.x) %>% table(useNA = 'always')
+
+## Questions for Mark Taipan:
+## What is the 'Polygon' and 'PolygonDtype' going to be used for?
+## Should I only take the ones where 'NeedsReview' is false?
+## Salinity and Temperature are empty. Will they be populated for the corals and fish sheet?
+## IdentificationDate is mostly empty, would we be expecting this to be populated in the future?
+## Go over our structure for the ImageFilePath variable.
+## What is VersionName and VersionID?
+## What should we use as our SampleID and TrackingID identifiers? (possibly paste(MediaId, MediaName, Frame, sep = ' | ') or 'TatorID')
 
 ##### ***** #####
-##### create export: main crosswalk #####
+##### create export: main crosswalk pre-transformation #####
 dscrtp_export <- result %>%
   mutate(
-    CMECSGeoForm = paste(CMECSGeoform1, CMECSGeoform2, sep = ' | '),
-    CategoricalAbunance = CategoricalAbundance.x,
-    SurveyID = CruiseId,
-    EventID = paste(DiveID,TransectID, sep = '-'),
+    ImageFilePath = paste(MediaId, MediaName, Frame, sep = ' | '), ## this will need to be adapted when we get the media in house
+    SampleAreaInSquareMeters = SampleAreaInSquareMeters.x,
+
+    ScientificName = ScientificName.x,
+    Morphospecies = Morphospecies.x,
+    IdentifiedBy = paste(IdentifiedBy, ReviewedBy, set = ' | '),
+    IdentificationDate = IdentificationDate,
+    IdentificationComments = paste(IdentificationComments, AnnotatorResponse, OccurrenceComments.x, sep = ' | '),
+    OccurrenceComments = paste(OccurrenceComments.x, TypeOfInjury.x, sep = ' | '),
+    Condition = Condition.x, # needs transformation
+
     Longitude = Longitude,
     Latitude = Latitude,
-    IdentificationComments = paste(IdentificationComments, AnnotatorResponse, sep = ' | '),
-    MaximumSize = MaximumSizeHeight.x,
-    MinimumSize = MinimumSizeHeight.x,
-    Cover = PercentCover.x,
     ObservationDate = Timestamp,
-    DepthInMeters = NavDepth,
-    OccurrenceComments = OccurrenceComments.x,
+    MinimumDepthInMeters = NavDepth,
+    MaximumDepthInMeters = NavDepth,
+
+    CategoricalAbunance = paste(CategoricalAbundance.x, FishCategoricalAbundance.x, sep = ' | '), ## mixed up for fish
+    IndividualCount = IndividualCount.x,
+    Cover = PercentCover.x,
+
+    MaximumSize = paste(MaximumSizeHeight.x, MaximumSizeWidth.x, FishTotalLength.x, sep = ' | '), ## mixed up for fish
+    MinimumSize = paste(MinimumSizeHeight.x, MinimumSizeWidth.x, FishTotalLengh.x, sep = ' | '), ## mixed up for fish
+
+    CMECSGeoForm = paste(CMECSGeoform1, CMECSGeoform2, sep = ' | '),
+    Habitat = paste(CMECSGeoform1, CMECSGeoform2, DominantSubstrate, sep = ' | '),
+    Salinity = Salinity.x,
+    Temperature = Temperature.x,
+
+    SurveyID = CruiseId,
+    EventID = paste(DiveID,TransectID, sep = '-'),
+
     BboxHeight = BboxHeight.x,
     BboxWidth = BboxWidth.x,
     BboxX = BboxX.x,
