@@ -88,10 +88,6 @@ coralsfish <- bind_rows(corals, fish)
 coralsfish_cl <- coralsfish %>% filter(is.na(ScientificName) == F)
 coralsfish_cl <- coralsfish %>% filter(!(grepl('Unknown', ScientificName) | grepl('unknown', ScientificName)))
 
-##### check: put cf in front of every column name to differentiate in join operations #####
-# coralsfish_cl <- coralsfish_cl %>%
-#   rename_with(~ paste0("cf_", .))
-
 ##### check #####
 # table(coralsfish_cl$ScientificName, useNA = 'always')
 # coralsfish %>% filter(is.na(ScientificName) == T) %>% pull(ScientificName) %>% length()
@@ -124,103 +120,8 @@ result$joiner_Timestamp_pos.x <- paste(result$ScientificName, result$Timestamp.x
 result <-
   left_join(coralsfish_cl, result, by = c("joiner_Timestamp_pos" = "joiner_Timestamp_pos.x"))
 
-##### check #####
-result %>% group_by(ScientificName.x, ScientificName.y) %>%
-  summarize(n=n(), .groups = 'drop') %>% View()
-
-sort(names(result))
-
-result %>% group_by(time_diff, Timestamp_pos, Timestamp_pos.y) %>%
-  summarize(n=n()) %>% arrange(desc(time_diff)) %>% View()
-
-result %>% group_by(DominantSubstrate.x, DominantSubstrate.y, CMECSGeoform1, CMECSGeoform2) %>%
-  summarize(n=n(), .groups = "drop") %>% arrange(desc(n)) %>%
-  print(n=100)
-
-sum(is.na(result$Timestamp_pos))
-sort(names(coralsfish_cl))
-sort(names(result))
-
-result %>% group_by(DominantSubstrate,
-                    DominantSubstrate.x,
-                    DominantSubstrate.y,) %>%
-  summarize(n=n()) %>% View()
-
-result %>% group_by(AnnotatorResponse,
-                    AnnotatorResponse.x,
-                    AnnotatorResponse.y) %>%
-  summarize(n=n()) %>%
-              View()
-
-result %>% group_by(AssociatedTransectId,
-                    AssociatedTransectId.x,
-                    AssociatedTransectId.y,
-                    TransectId.x,
-                    TransectId.y,
-                    DiveId,
-                    DiveId.x,
-                    DiveId.y ) %>%
-  summarize(n=n()) %>%
-  View()
-
-result %>% group_by(OccurrenceComments.x, OccurrenceComments.y) %>%
-  summarize(n=n()) %>%
-  View()
-
-result %>% group_by(IdentificationComments,
-                    IdentificationComments.x,
-                    IdentificationComments.y) %>%
-  summarize(n=n()) %>%
-  View()
-
-result %>% group_by(BboxHeight.x,
-                    BboxWidth.x,
-                    BboxX.x,
-                    BboxY.x,
-                 ) %>%
-  summarize(n=n()) %>%
-  View()
-
-result %>% group_by(CategoricalAbundance.x,
-                    CategoricalAbundance.y) %>%
-  summarize(n=n()) %>%
-  View()
-
-result %>% group_by(Latitude,
-                    Latitude.x,
-                    Latitude.y,
-                    Longitude,
-                    Longitude.x,
-                    Longitude.y ) %>%
-  summarize(n=n()) %>%
-  View()
-
-result %>% group_by(NavDepth,
-                    NavDepth.x,
-                    NavDepth.y) %>%
-  summarize(n=n()) %>%
-  View()
-
-result %>% group_by(IndividualCount.x) %>%
-  summarize(n=n()) %>%
-  View()
-
-result %>% pull(IndividualCount.x) %>% table(useNA = 'always')
-result %>% pull(Condition.x) %>% table(useNA = 'always')
-result %>% pull(PolygonDtype.x) %>% table(useNA = 'always')
-result %>% pull(TypeOfInjury.x) %>% table(useNA = 'always')
-
-## Questions for Mark Taipan:
-## What is the 'Polygon' and 'PolygonDtype' going to be used for?
-## Should I only take the ones where 'NeedsReview' is false?
-## Salinity and Temperature are empty. Will they be populated for the corals and fish sheet?
-## IdentificationDate is mostly empty, would we be expecting this to be populated in the future?
-## Go over our structure for the ImageFilePath variable.
-## What is VersionName and VersionID?
-## What should we use as our SampleID and TrackingID identifiers? (possibly paste(MediaId, MediaName, Frame, sep = ' | ') or 'TatorID')
-
 ##### ***** #####
-##### create export: main crosswalk pre-transformation #####
+##### create export: main crosswalk and transformations #####
 dscrtp_export <- result %>%
   mutate(
     ImageFilePath = paste(MediaId, MediaName, Frame, sep = ' | '), ## this will need to be adapted when we get the media in house
@@ -231,17 +132,17 @@ dscrtp_export <- result %>%
     IdentificationDate = IdentificationDate,
     IdentificationComments = paste(IdentificationComments, AnnotatorResponse, OccurrenceComments.x, sep = ' | '),
     OccurrenceComments = paste(OccurrenceComments.x, TypeOfInjury.x, sep = ' | '),
-    Condition = Condition.x, # needs transformation
+    Condition = Condition.x,
     Longitude = Longitude,
     Latitude = Latitude,
     ObservationDate = Timestamp,
     MinimumDepthInMeters = NavDepth,
     MaximumDepthInMeters = NavDepth,
-    CategoricalAbundance = paste(CategoricalAbundance.x, FishCategoricalAbundance.x, sep = ' | '), ## mixed up for fish, needs transformation
+    CategoricalAbundance = coalesce(CategoricalAbundance.x, FishCategoricalAbundance.x),
     IndividualCount = IndividualCount.x,
     Cover = PercentCover.x,
-    MaximumSize = paste(MaximumSizeHeight.x, MaximumSizeWidth.x, FishTotalLength.x, sep = ' | '), ## mixed up for fish, needs transformation
-    MinimumSize = paste(MinimumSizeHeight.x, MinimumSizeWidth.x, FishTotalLength.x, sep = ' | '), ## mixed up for fish, needs transformation
+    MaximumSize = MaximumSizeHeight.x,
+    MinimumSize = MinimumSizeHeight.x,
     CMECSGeoForm = paste(CMECSGeoform1, CMECSGeoform2, sep = ' | '),
     Habitat = paste(CMECSGeoform1, CMECSGeoform2, DominantSubstrate, sep = ' | '),
     Salinity = Salinity.x,
@@ -252,7 +153,6 @@ dscrtp_export <- result %>%
     BboxWidth = BboxWidth.x,
     BboxX = BboxX.x,
     BboxY = BboxY.x)
-
 
 ## paste information to OccurrenceComments
 dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrencComments,
@@ -276,51 +176,65 @@ dscrtp_export$ObservationTime <- time
 dscrtp_export$ObservationTime <- sub("\\+.*", "", dscrtp_export$ObservationTime)
 
 ## get just the DSCRTP fields out
-dscrtp_fields <- intersect(names(dscrtp_export), s$FieldName)
+dscrtp_fields <- c(intersect(names(dscrtp_export), s$FieldName),
+                   'BboxHeight',
+                   'BboxWidth',
+                   'BboxX',
+                   'BboxY')
 
-## isolate the DSCRTP fields
-dscrtp_export_x <- dscrtp_export[,dscrtp_fields]
 
-## NOTE: These are the binary variables for habitat
-# BedrockMegaclast
-# BedrockMegaclast.x
-# BedrockMegaclast.y
-# BoulderCobble
-# BoulderCobble.x
-# BoulderCobble.y
-# CoralPresence.x
-# CoralPresence.y
-# CoralSubstrate
-# CoralSubstrate.x
-# CoralSubstrate.y
-# SandMud
-# SandMud.x
-# SandMud.y
-# ShellSubstrate
-# ShellSubstrate.x
-# ShellSubstrate.y
+## isolate just the DSCRTP fields
+dscrtp_export <- dscrtp_export[,dscrtp_fields]
+
+## transform the 'Condition' variable
+dscrtp_export <- dscrtp_export %>%
+  mutate(
+    Condition = as.character(Condition), # Convert to character
+    Condition = case_when(
+      Condition %in% c('Affected') ~ 'Damaged',
+      Condition %in% c('Healthy') ~ 'Live',
+      Condition %in% c('Not Set', 'Unknown') ~ '',
+      Condition %in% c('Dead') ~ 'Dead',
+      TRUE ~ ''
+    ),
+    Condition = na_if(Condition, '') # Replace blanks with NA
+  )
+
+## transform the 'CategoricalAbundance' Value
+dscrtp_export <- dscrtp_export %>%
+  mutate(
+    CategoricalAbundance = as.character(CategoricalAbundance), # Convert to character
+    CategoricalAbundance = case_when(
+      CategoricalAbundance %in% c('>500') ~ '>100',
+      CategoricalAbundance %in% c('Not Set') ~ '',
+      TRUE ~ CategoricalAbundance
+    ),
+    CategoricalAbundance = na_if(CategoricalAbundance, '') # Replace blanks with NA
+  )
+
 
 ##### check #####
-dscrtp_export_x %>% pull(ObservationTime) %>% table(useNA = 'always')
-dscrtp_export_x %>% pull(ObservationDate) %>% table(useNA = 'always')
-dscrtp_export_x %>% pull(SampleID) %>% unique() %>% length()
-dscrtp_export_x %>% pull(SurveyID) %>% unique()
-dscrtp_export_x %>% pull(EventID) %>% unique()
-dscrtp_export_x %>% pull(Habitat) %>% unique()
-dscrtp_export_x %>% pull(CMECSGeoForm) %>% unique()
-dscrtp_export_x %>% pull(MinimumSize) %>% unique()
-dscrtp_export_x %>% pull(MaximumSize) %>% unique()
-dscrtp_export_x %>% pull(IndividualCount) %>% unique()
-dscrtp_export_x %>% pull(CategoricalAbundance) %>% unique()
-dscrtp_export_x %>% pull(Condition) %>% unique()
-dscrtp_export_x %>% pull(Condition) %>% table(useNA = 'always')
-s %>% filter(FieldName == 'Condition') %>% pull(ValidValues)
+# dscrtp_export %>% pull(MinimumSize) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(MaximumSize) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(Condition) %>% unique()
+# dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(CategoricalAbundance) %>% table(useNA = 'always')
+
 
 ##### write the file to disk #####
-write.csv(dscrtp_export_x,
-          'c:/rworking/deepseatools/indata/20241125-0_TATOR_DSCRTP_export_RPMcGuinn.csv',
+write.csv(dscrtp_export,
+          'c:/rworking/deepseatools/indata/20241125-0_Example_TATOR_DSCRTP_export_RPMcGuinn.csv',
           row.names = F)
 
+##### NOTES #####
+## Questions for Mark Taipan:
+## What is the 'Polygon' and 'PolygonDtype' going to be used for?
+## Should I only take the ones where 'NeedsReview' is false?
+## Salinity and Temperature are empty. Will they be populated for the corals and fish sheet?
+## IdentificationDate is mostly empty, would we be expecting this to be populated in the future?
+## Go over our structure for the ImageFilePath variable.
+## What is VersionName and VersionID?
+## What should we use as our SampleID and TrackingID identifiers? (possibly paste(MediaId, MediaName, Frame, sep = ' | ') or 'TatorID')
 
 
 
