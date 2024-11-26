@@ -212,14 +212,25 @@ dscrtp_export <- dscrtp_export %>%
     CategoricalAbundance = na_if(CategoricalAbundance, '') # Replace blanks with NA
   )
 
+## remove records with ScientificName issues
+dscrtp_export <- dscrtp_export %>%
+  filter(
+    !is.na(ScientificName),                      # Ensure ScientificName is not NA
+    ScientificName != 'Human Debris-Line',       # Exclude 'Human Debris-Line'
+    ScientificName != 'Fishing Line'             # Exclude 'Fishing Line'
+  )
+
 
 ##### check #####
-# dscrtp_export %>% pull(MinimumSize) %>% table(useNA = 'always')
-# dscrtp_export %>% pull(MaximumSize) %>% table(useNA = 'always')
-# dscrtp_export %>% pull(Condition) %>% unique()
-# dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
-# dscrtp_export %>% pull(CategoricalAbundance) %>% table(useNA = 'always')
-
+dscrtp_export %>% pull(MinimumSize) %>% table(useNA = 'always')
+dscrtp_export %>% pull(MaximumSize) %>% table(useNA = 'always')
+dscrtp_export %>% pull(Condition) %>% unique()
+dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
+dscrtp_export %>% pull(CategoricalAbundance) %>% table(useNA = 'always')
+dscrtp_export %>% pull(IdentifiedBy) %>% table(useNA = 'always')
+dscrtp_export %>% pull(Latitude) %>% table(useNA = 'always')
+dscrtp_export %>% pull(Longitude) %>% table(useNA = 'always')
+dscrtp_export %>% pull(ScientificName) %>% table(useNA = 'always')
 
 ##### write the file to disk #####
 write.csv(dscrtp_export,
