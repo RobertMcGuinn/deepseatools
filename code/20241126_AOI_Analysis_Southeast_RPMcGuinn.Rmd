@@ -1,10 +1,9 @@
 ---
-title: "Area of Interest Report - Oculina Bank HAPC"
+title: "Area of Interest Report - SFAA near Oculina Bank HAPC"
 author: "Robert P. McGuinn"
 date: "November 27, 2024"
 output: word_document
 ---
-
 
 ```{r packages, eval=T, echo=F, message=FALSE, warning=FALSE, cache=FALSE}
 ## load packages
@@ -28,6 +27,7 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(openxlsx)
 library(googledrive)
+library(spocc)
 
 
 ```
@@ -94,20 +94,27 @@ rm(x)
 ```
 
 ```{r import_aoi, echo=FALSE, echo = F, message = FALSE, warning=FALSE, eval=T}
-shapefile_path <- "C:/rworking/deepseatools/indata/20221104_protected_areas_update_HColeman/20221104_protected_areas.shp"
-protected_areas <- st_read(shapefile_path)
+shapefile_path <- "C:/rworking/deepseatools/indata/sfaa.shp"
+sfaa <- st_read(shapefile_path)
 
 ##### get the Oculina HAPC ##### 
+shapefile_path <- "C:/rworking/deepseatools/indata/20221104_protected_areas_update_HColeman/20221104_protected_areas.shp"
+protected_areas <- st_read(shapefile_path)
 oculina <- protected_areas %>% filter(Sitename == 'Oculina Bank HAPC')
+
+##### check #####
+# plot(oculina)
+# plot(sfaa)
+
 ```
 
 ```{r buffering, echo=F}
 ##### buffer operations ##### 
 ## create 5000 meter buffer
-oculina_buf_5000 <- st_buffer(oculina, dist=5000) # map units are in meters
+sfaa_buf_5000 <- st_buffer(sfaa, dist=5000) # map units are in meters
 
 ##create 20000 meter buffer
-oculina_buf_20000 <- st_buffer(oculina, dist=20000) # map units are in meters
+sfaa_buf_20000 <- st_buffer(sfaa, dist=20000) # map units are in meters
 
 
 ```
@@ -115,35 +122,15 @@ oculina_buf_20000 <- st_buffer(oculina, dist=20000) # map units are in meters
 ```{r intersect, echo=F}
 ##### intersection operations ##### 
 ## transform CRS for coral and sponge points projection to match polygons
-points_transform <- st_transform(points, crs = st_crs(oculina))
+points_transform <- st_transform(points, crs = st_crs(sfaa))
 
 ## checking
 # st_crs(points_transform)
 
-## plot to see how they relate
-# bbox <- st_bbox(oculina_buf_20000)
-# 
-# ggplot() +
-#   geom_sf(data = points_transform, color = "blue", size = .2) +
-#   geom_sf(data = oculina_buf_20000, fill = "red", alpha = 0.3) +
-#   geom_sf(data = oculina_buf_5000, fill = "black", alpha = 0.3) +
-#   geom_sf(data = oculina, fill = "green", alpha = 0.3) +
-#   theme_minimal() +
-#   coord_sf(
-#     xlim = c(bbox["xmin"], bbox["xmax"]),
-#     ylim = c(bbox["ymin"], bbox["ymax"])
-#   ) +
-#   labs(
-#     title = "Oculina Banks HAPC with 20km buffer",
-#     subtitle = "Coral and sponge occurences in the buffer area",
-#     caption = paste("Data source: NOAA National Database for Deep-sea Corals and Sponges: ", db_version, sep = '')
-#   )
-
-
 ## find points within the polygons
-points_in_0 <- st_join(points_transform, oculina, join = st_within) # no buffer
-points_in_5000 <- st_join(points_transform, oculina_buf_5000, join = st_within) # 5000 meter buffer
-points_in_20000 <- st_join(points_transform, oculina_buf_20000, join = st_within) # 20000 meter buffer
+points_in_0 <- st_join(points_transform, sfaa, join = st_within) # no buffer
+points_in_5000 <- st_join(points_transform, sfaa_buf_5000, join = st_within) # 5000 meter buffer
+points_in_20000 <- st_join(points_transform, sfaa_buf_20000, join = st_within) # 20000 meter buffer
 
 ## checking
 # dim(points_in_0)
@@ -166,18 +153,34 @@ points_in_20000_select <- points_in_20000 %>% filter(is.na(Shape_Area) == F)
 
 ```
 
-```{r load_images_to_folder, eval=F, echo=F}
+```{r, plot, echo = F}
+## plot to see how they relate
+ggplot() +
+  geom_sf(data = oculina, fill = "blue", alpha = 0.3) +
+  geom_sf(data = sfaa, fill = "red", alpha = 0.3) +
+  geom_sf(data = sfaa_buf_20000, fill = "black", alpha = 0.3) +
+  geom_sf(data = sfaa_buf_5000, fill = "green", alpha = 0.3) +
+  geom_sf(data = points_in_0_select) +
+  geom_sf(data = points_in_5000_select) +
+  geom_sf(data = points_in_20000_select) +
+  theme_minimal()
+
+```
+
+```{r load_images_to_local_folder, eval=F, echo=F}
 ## load any images to a local folder 
 #### WARNING: This chunk takes a long time.  Go get a coffee #####
 ###### download all images and put them in a folder #####
 z <- points_in_0_select %>% filter(is.na(ImageURL) == F)
 
 ## check 
-length(z$ImageFilePath)
+length(z$ImageFilePath) # if this is zero, then the code below will return nothing
 
-dir.create('C:/rworking/deepseatools/indata/imageset_0', recursive = TRUE)
-setwd("C:/rworking/deepseatools/indata/imageset_0")
+## manual: change directory to send images
+dir.create('C:/rworking/deepseatools/indata/imageset_0_pt2', recursive = TRUE)
+setwd("C:/rworking/deepseatools/indata/imageset_0_pt2")
 
+## loop to download images 
 for(i in 1:length(z$CatalogNumber)){
   download.file(as.character(z$ImageURL[i]),
                 destfile = paste("DSCRTP",
@@ -191,7 +194,7 @@ for(i in 1:length(z$CatalogNumber)){
 
 ```
 
-```{r eval=F, echo=F}
+```{r load_images_to_google_drive, eval=F, echo=F}
 # load the images to a Google Drive folder
 ## WARNING: This chunk could take a longish time. Go get a coffee
 
@@ -213,32 +216,65 @@ drive_upload(i,
 
 ```{r echo=F}
 z <- points_in_5000_select %>% filter(is.na(ImageURL) == F)
+
 ```
 
-```{r cache=T, echo=F}
-## get OBIS data 
-## first get the original projection back (this is what OBIS and GBIF expect)
-sfaa_sf_transform <- st_transform(sfaa_sf, crs = st_crs(x_geo))
+```{r get_obis_data, cache=T, echo=F}
+## get get OBIS data 
+## first get the original projection back (this CRS is what OBIS and GBIF expect)
+## ID["EPSG",6326]]
+sfaa_transform <- st_transform(sfaa, crs = st_crs(x_geo))
 
 ##### getting OBIS data #####
-# using bounding box variables defined above
+## using bounding box variables defined above in another chunk
 library(spocc)
-bounds <- c(minlon, minlat, maxlon, maxlat)
-out <- occ(geometry = sfaa_sf_transform, from = 'obis', limit = 10000)
+out <- occ(geometry = sfaa_transform, from = 'obis', limit = 10000)
 obis <- as.data.frame(out$obis$data)
 
+## check 
+dim(obis)
+# View(obis)
+
 ```
 
-```{r echo=F}
+```{r get_obis_data_in_5000m_buffer, echo=F}
 ##### first transform back to the the original projection back (this is what OBIS and GBIF expect) #####
-sfaa_sf_buf_5000_transform <- st_transform(sfaa_sf_buf_5000, crs = st_crs(x_geo))
+sfaa_buf_5000_transform <- st_transform(sfaa_buf_5000, crs = st_crs(x_geo))
 
 ##### getting OBIS data #####
 # using bounding box variables defined above
 library(spocc)
-bounds <- c(minlon, minlat, maxlon, maxlat)
-out <- occ(geometry = sfaa_sf_buf_5000_transform, from = 'obis', limit = 10000)
+out <- occ(geometry = sfaa_buf_5000_transform, from = 'obis', limit = 10000)
 obisbuffer5000 <- as.data.frame(out$obis$data)
+
+## check 
+dim(obis)
+View(obis)
+
+```
+
+```{r get_obis_data_in_5000m_buffer, echo=F}
+##### first transform back to the the original projection back (this is what OBIS and GBIF expect) #####
+sfaa_buf_20000_transform <- st_transform(sfaa_buf_20000, crs = st_crs(x_geo))
+
+##### getting OBIS data #####
+# using bounding box variables defined above
+library(spocc)
+out <- occ(geometry = sfaa_buf_20000_transform, from = 'obis', limit = 10000)
+obisbuffer20000 <- as.data.frame(out$obis$data)
+
+## check 
+dim(obis)
+View(obis)
+
+```
+
+```{r get_data_from_gbif, cache=T, eval=F, echo=F}
+
+##### get data from GBIF #####
+out <- occ(geometry = sfaa_transform, from = 'gbif')
+gbif <- as.data.frame(out$gbif$data)
+dim(gbif)
 
 ```
 
@@ -264,15 +300,6 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 ## OPTIONAL: write out featureclass to geodatabase from sp object 
 fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
 arc.write(file.path(fgdb_path, 'obis'), data=x_geo, overwrite = TRUE)
-
-```
-
-```{r cache=T, eval=F, echo=F}
-##### pinging GBIF for data #####
-library(spocc)
-bounds <- c(minlon, minlat, maxlon, maxlat)
-out <- occ(geometry = sfaa_sf_transform, from = 'gbif')
-gbif <- as.data.frame(out$gbif$data)
 
 ```
 
