@@ -303,53 +303,14 @@ To create summaries of occurrence data to support fishery resource access decisi
 
 # Online Resources
 
-NOAA GeoPlatform interactive map: [LINK](https://noaa.maps.arcgis.com/home/webmap/viewer.html?webmap=4a558d07290542f68bca89ccfad38f1b&extent=-81.6837,27.7539,-77.4979,29.3078)
-
-The main project folder for this analysis on Google Drive: [LINK](https://drive.google.com/drive/folders/1cRlhREcCdBFLlR0nzRaEB3GvrfoCZ4Pf?usp=sharing)
-
-A Word version of this report is linked here: [LINK](https://drive.google.com/file/d/1PWa0v4rJm7yEOs1PtCHMS6lkvp7_x-WV/view?usp=sharing)
-
-The source RMarkdown code used to generate this report is linked here on GitHub: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/2021_AOI_Analysis.Rmd)
+The source RMarkdown code used to generate this report is linked here on GitHub: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/20241126_AOI_Analysis_Southeast_RPMcGuinn.Rmd)
 
 # Methods
 
-Coral and sponge occurrences from DSCRTP and other occurrences from OBIS and GBIF are summarized.  Buffer and intersect operations were performed to summarize the occurrence points within two zones.
+Coral and sponge occurrences from DSCRTP and other occurrences from the Ocean Biogeographic Information System (OBIS) are summarized within the SFAA Area of Interest (AOI) and in the SFAA AOI + a 5km buffer.  
 
-* AOI 
-* AOI+5km buffer
-
-# Input datasets for this analysis
-
-## DSCRTP National Database for Deep Sea Corals and Sponges
-
-* National Database for Deep-sea Corals and Sponges version: `r db_version`: [LINK](https://drive.google.com/file/d/1JlHKVr2e_UX-N3XhtKnon5cRc_pnb4b_/view?usp=sharing)
-
-* *Data dictionary*: [LINK](https://docs.google.com/spreadsheets/d/1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI/edit?usp=sharing)
-
-## Area of Interest Polygons
-
-The original SFAA polygons used in this analysis were acquired from Heather Coleman on 2021-08-02.  
-
-### Original AOI
-
-* AOI (SFAA_2014): [LINK](https://drive.google.com/file/d/1x6PJgjRfktyVB4cmCPRT0rAzQQjdTzL1/view?usp=sharing)
-
-### Buffers of Original AOI
-
-* AOI+5km buffer (SFAA_2014_buf_5000): [LINK](https://drive.google.com/file/d/1X5ZupVA0UFrELQhY0AHvJUZduWZ67rRX/view?usp=sharing)
-
-## OBIS and GBIF Web Services 
-
-Ocean Biogeographic Informaton System (OBIS) data accessed on 2021-08-05.
-
-OBIS: [LINK](https://obis.org/)
-
-# Tabular output for the analysis
-
-* DSCRTP records within AOI: [LINK](https://drive.google.com/file/d/1m-SmF6V-LUCM77r-N0-ynIZb-m0sUgw2/view?usp=sharing)
-* DSCRTP records within AOI + 5km buffer: [LINK](https://drive.google.com/file/d/1qX-9EwMRPOc5qzX60hqAmpbZNQZEQ0zT/view?usp=sharing)
-* OBIS records within AOI: [LINK](https://drive.google.com/file/d/1PDK5SQVM5JgVBXk5fJFQt8aZuYYfG9X3/view?usp=sharing)
-* OBIS records within AOI + 5km buffer: [LINK](https://drive.google.com/file/d/1ftF8D3TnSPqhP3rYk1yN37uGn_lr6bC3/view?usp=sharing)
+* AOI (SFAA)
+* AOI (SFAA) + 5km buffer
 
 # Maps
 
@@ -357,23 +318,23 @@ OBIS: [LINK](https://obis.org/)
 ## plot to see how they relate
 ggplot() +
   # Add layers with legend mappings
-  geom_sf(data = oculina, aes(fill = "Oculina"), alpha = 0.3) +
-  geom_sf(data = sfaa, aes(fill = "SFAA"), alpha = 0.3) +
-  geom_sf(data = sfaa_buf_20000, aes(fill = "SFAA Buffer 20000"), alpha = 0.3) +
-  geom_sf(data = sfaa_buf_5000, aes(fill = "SFAA Buffer 5000"), alpha = 0.3) +
-  geom_sf(data = points_in_0_select, aes(color = "Points in 0 Select")) +
+  geom_sf(data = oculina, aes(fill = "Oculina Banks HAPC"), alpha = 0.3) +
+  # geom_sf(data = sfaa_buf_20000, aes(fill = "SFAA-AOI + 20 km buffer"), alpha = 0.3) +
+  geom_sf(data = sfaa_buf_5000, aes(fill = "SFAA-AOI + 5 km buffer"), alpha = 0.3) +
+  geom_sf(data = points_in_0_select, aes(color = "National Database points within AOI")) +
+  geom_sf(data = sfaa, aes(fill = "SFAA-AOI"), alpha = 1) +
   
   # Custom legend labels and colors
   scale_fill_manual(
-    name = "Layers",
-    values = c("Oculina" = "blue", 
-               "SFAA" = "red", 
-               "SFAA Buffer 20000" = "black", 
-               "SFAA Buffer 5000" = "green")
+    name = "AOIs",
+    values = c("Oculina Banks HAPC" = "blue", 
+               # "SFAA-AOI + 20 km buffer" = "black", 
+               "SFAA-AOI + 5 km buffer" = "green",
+               "SFAA-AOI" = "red" )
   ) +
   scale_color_manual(
     name = "Points",
-    values = c("Points in 0 Select" = "black")
+    values = c("National Database points within AOI" = "black")
   ) +
   
   # Minimal theme and optional adjustments
@@ -393,31 +354,33 @@ obisbuffer5000_sf_filter <- obisbuffer5000_sf %>% filter(name %in%  c('Oculina v
 # table(obis_sf_filter$name)
 
 
+library(ggplot2)
+
 ggplot() +
   # Basemap data layer with fill mapped for legend
-  geom_sf(data = sfaa, aes(fill = "sfaa"), alpha = 1) +
+  geom_sf(data = sfaa, aes(fill = "SFAA-AOI"), alpha = 1) +
 
   # Specific plotted data with color mapped for legend
   geom_sf(data = obisbuffer5000_sf,
-          aes(color = "obisbuffer5000_sf"),  # Map color to a label
+          aes(color = "OBIS points within AOI + 5 km buffer"),  # Map color to a label
           shape = 3, alpha = .3, size = 3) +
   geom_sf(data = points_in_5000_select,
-          aes(color = "points_in_5000_select"),  # Map color to a label
+          aes(color = "National Database points within AOI + 5 km buffer"),  # Map color to a label
           shape = 4, alpha = .3) +
   geom_sf(data = points_in_0_select,
-          aes(color = "points_in_0_select"),  # Map color to a label
+          aes(color = "National Database points within AOI"),  # Updated label
           shape = 4, size = 3) +
   
   # Legend customization
   scale_fill_manual(
-    name = "Area of Interest",
-    values = c("sfaa" = "red")
+    name = "AOI",
+    values = c("SFAA-AOI" = "red")
   ) +
   scale_color_manual(
     name = "Points",
-    values = c("obisbuffer5000_sf" = "grey",
-               "points_in_5000_select" = "red",
-               "points_in_0_select" = "black")
+    values = c("OBIS points within AOI + 5 km buffer" = "grey",
+               "National Database points within AOI + 5 km buffer" = "red",
+               "National Database points within AOI" = "black")  # Match updated label
   ) +
   
   # Theme for better readability
@@ -430,32 +393,20 @@ ggplot() +
 
 ```
 
-Preliminary results
+# Results
 
-## Images
-
-Some, but not all, of the DSCRTP occurrences have associated images. Within the AOI+5km buffer we found `r length(z$CatalogNumber)` records with images within the database. These images are available within this Google Drive folder: [LINK](https://drive.google.com/drive/folders/1oOiCVRWJUc4fQQ1dec9q3APYfk1Ea4nj?usp=sharing)
-
-*Note:* Useful information is embedded in the file name for these images. The naming convention used is as follows: 
-
-"DSCRTP_CatalogNumber_Scientific Name_DepthInMeters_ImageID.jpg"
-
-No occurrences with images were found directly intersecting the AOI. Also, no additional occurrences with images were found directly intersecting the AOI+20km buffer.  
-
-OBIS images were not obtained for this analysis to date.
-
-## Taxa within the AOI (DSCRTP National Database)
+## Taxa within the AOI (no buffer) from the DSCRTP NOAA National Database for Deep-sea Corals and Sponges
 
 Number of occurrences within the AOI: `r length(points_in_0_select$CatalogNumber)`
 
-### List of Coral Taxa Grouped by 'VernacularNameCategory' (from National Database)
+### Table of Taxa Grouped by 'VernacularNameCategory' 
 
 ``` {r CoralByVernacularNameCategoryTarget, echo=FALSE }
 target <- as.data.frame(points_in_0_select)
 
 sum_tbl <-
   target %>%
-  filter(Phylum == "Cnidaria") %>% 
+  # filter(Phylum == "Cnidaria") %>% 
   group_by(VernacularNameCategory) %>%
   summarize(
     Taxa = toString(unique(ScientificName)),
@@ -466,25 +417,7 @@ sum_tbl
 
 ```
 
-### List of Sponge Taxa Grouped by 'VernacularNameCategory' (from National Database)
-
-``` {r SpongeByVernacularNameCategoryTarget, echo=FALSE }
-target <- as.data.frame(points_in_0_select)
-
-sum_tbl <-
-  target %>%
-  filter(Phylum == "Porifera") %>% 
-  group_by(VernacularNameCategory) %>%
-  summarize(
-    Taxa = toString(unique(ScientificName)),
-    Records = n()) %>%
-  arrange(desc(Records))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
-
-```
-
-### Expedition Details (DSCRTP)
+### Dataset Details from the National Database
 
 ``` {r Expedition_details_no_buf, echo=FALSE }
 
@@ -504,11 +437,11 @@ sum_tbl
 
 ```
 
-## Taxa within the AOI (OBIS)
+## Taxa within the AOI (no buffer) from OBIS
 
 Number of occurrences within the AOI: `r length(obis$datasetName)`
 
-### OBIS: List of Taxa Grouped by Order
+### Table of Taxa Grouped by Order
 
 ``` {r TaxaByOrderTargetOBIS, echo=FALSE }
 
@@ -524,25 +457,33 @@ sum_tbl
 
 ```
 
-### Expedition Details (obis)
+### Dataset Details (OBIS)
 
 ``` {r Expedition_details_obis, echo=FALSE }
 sum_tbl <-
   obis %>%
   group_by(dataset_id) %>%
   summarize(
-    Records = n()) %>%
+    Records = n()
+  ) %>%
+  mutate(
+    OBIS_Dataset = paste('https://obis.org/dataset/', dataset_id, sep = '') 
+  ) %>%
+  dplyr::select(OBIS_Dataset,Records) %>% 
   arrange(desc(Records))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+
+sum_tbl <- kable(sum_tbl, row.names = FALSE, digits = 2)
 sum_tbl
+
+
 
 ```
 
-## Taxa within the AOI plus 5000m buffer zone (DSCRTP National Database)
+## Taxa within the AOI plus 5000m buffer zone from the National Database)
 
 Number of occurrences within the AOI+5000 meter buffer: `r length(points_in_5000_select$CatalogNumber)`
 
-### List of Coral Taxa Grouped by 'VernacularNameCategory' (From National Database)
+### Table of Taxa Grouped by 'VernacularNameCategory' (National Database)
 
 ``` {r CoralByVernacularNameCategoryBuffer, echo=FALSE }
 buffer <- as.data.frame(points_in_5000_select)
@@ -558,23 +499,7 @@ sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
 sum_tbl
 ```
 
-### List of Sponge Taxa Grouped by 'VernacularNameCategory' (From National Database)
-
-``` {r SpongeByVernacularNameCategoryBuffer, echo=FALSE }
-sum_tbl <- 
-  buffer %>%
-  filter(Phylum == "Porifera") %>% 
-  group_by(VernacularNameCategory) %>%
-  summarize(
-    Taxa = toString(unique(ScientificName)),
-    Records = n()) %>%
-  arrange(desc(Records))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
-sum_tbl
-```
-
-
-### Expedition Details (DSCRTP)
+### Dataset Details (National Database)
 
 ``` {r Expedition_details_buf_5000, echo=FALSE }
 sum_tbl <-
@@ -595,7 +520,7 @@ sum_tbl
 
 Number of occurrences within the AOI: `r length(obisbuffer5000$datasetName)`
 
-### OBIS: List of Taxa Grouped by Order
+### Table of Taxa Grouped by Order
 
 ``` {r TaxaByOrderBufferOBIS, echo=FALSE }
 
@@ -612,17 +537,25 @@ sum_tbl
 ```
 
 
-### Expedition Details (obis)
+### Dataset Details (OBIS)
 
 ``` {r Expedition_details_obis_buffer, echo=FALSE }
+sum_tbl <-
 sum_tbl <-
   obisbuffer5000 %>%
   group_by(dataset_id) %>%
   summarize(
-    Records = n()) %>%
+    Records = n()
+  ) %>%
+  mutate(
+    OBIS_Dataset = paste('https://obis.org/dataset/', dataset_id, sep = '') 
+  ) %>%
+  dplyr::select(OBIS_Dataset,Records) %>% 
   arrange(desc(Records))
-sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+
+sum_tbl <- kable(sum_tbl, row.names = FALSE, digits = 2)
 sum_tbl
+
 
 ```
 
