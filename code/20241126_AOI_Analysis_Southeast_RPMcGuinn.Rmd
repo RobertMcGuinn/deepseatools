@@ -1,7 +1,7 @@
 ---
 title: "Area of Interest Report - SFAA near Oculina Bank HAPC"
 author: "Robert P. McGuinn"
-date: "November 27, 2024"
+date: "December 09, 2024"
 output: word_document
 ---
 
@@ -281,6 +281,87 @@ obisbuffer20000_sf <- st_as_sf(
 
 ```
 
+```{r get_gbif_data, cache=T, echo=F, eval=T} 
+##### getting gbif data #####
+## first get the original projection back (this CRS is what gbif and GBIF expect)
+## ID["EPSG",6326]]
+sfaa_transform <- st_transform(sfaa, crs = st_crs(x_geo))
+sfaa_transform <- st_make_valid(sfaa_transform)
+sfaa_transform_wkt <- sf::st_as_text(sf::st_geometry(sfaa_transform))
+
+## using bounding box variables defined above in another chunk
+library(spocc)
+out <- occ(geometry = sfaa_transform_wkt, from = 'gbif', limit = 10000)
+gbif <- as.data.frame(out$gbif$data)
+
+
+## Convert to sf object using coordinates
+gbif_sf <- st_as_sf(
+  gbif,
+  coords = c("longitude", "latitude"), # specify coordinate columns
+  crs = 4326                         # set CRS to WGS84 (EPSG:4326)
+)
+
+## check 
+# dim(gbif)
+# View(gbif)
+# names(gbif)
+# table(gbif$catalogNumber)
+# table(gbif$id)
+# table(gbif$aphiaID)
+# plot(gbif_sf)
+
+```
+
+```{r get_gbif_data_in_5000m_buffer, cache=T, echo=F, eval=T}
+##### first transform back to the the original projection back (this is what gbif and GBIF expect) #####
+sfaa_buf_5000_transform <- st_transform(sfaa_buf_5000, crs = st_crs(x_geo))
+sfaa_buf_5000_transform <- st_make_valid(sfaa_buf_5000_transform)
+sfaa_buf_5000_transform_wkt <- sf::st_as_text(sf::st_geometry(sfaa_buf_5000_transform))
+
+##### getting gbif data #####
+# using bounding box variables defined above
+library(spocc)
+out <- occ(geometry = sfaa_buf_5000_transform_wkt, from = 'gbif', limit = 10000)
+gbifbuffer5000 <- as.data.frame(out$gbif$data)
+
+## Convert to sf object using coordinates
+gbifbuffer5000_sf <- st_as_sf(
+  gbifbuffer5000,
+  coords = c("longitude", "latitude"), # specify coordinate columns
+  crs = 4326                         # set CRS to WGS84 (EPSG:4326)
+)
+
+## check 
+# dim(gbifbuffer5000)
+# View(gbifbufrer5000)
+
+```
+
+```{r get_gbif_data_in_20000m_buffer, cache=T, echo=F, eval=F}
+##### first transform back to the the original projection back (this is what gbif and GBIF expect) #####
+sfaa_buf_20000_transform <- st_transform(sfaa_buf_20000, crs = st_crs(x_geo))
+sfaa_buf_20000_transform <- st_make_valid(sfaa_buf_20000_transform)
+sfaa_buf_20000_transform_wkt <- sf::st_as_text(sf::st_geometry(sfaa_buf_20000_transform))
+
+##### getting gbif data #####
+# using bounding box variables defined above
+library(spocc)
+out <- occ(geometry = sfaa_buf_20000_transform_wkt, from = 'gbif', limit = 10000)
+gbifbuffer20000 <- as.data.frame(out$gbif$data)
+
+## Convert to sf object using coordinates
+gbifbuffer20000_sf <- st_as_sf(
+  gbifbuffer20000,
+  coords = c("longitude", "latitude"), # specify coordinate columns
+  crs = 4326                         # set CRS to WGS84 (EPSG:4326)
+)
+
+## check 
+# dim(gbifbuffer20000)
+
+```
+
 ```{r echo=F, eval=F}
 # export data files to local folder
 ##### export Excel file of data records to folder #####
@@ -297,6 +378,19 @@ z <- points_in_5000_select %>% filter(is.na(ImageURL) == F)
 
 ```
 
+```{r getting_NOAA_bathy, echo=F, eval=F}
+st_bbox(sfaa)
+st_crs(sfaa)
+st_crs(points)
+yo<-st_transform(sfaa, st_crs(points))
+st_crs(yo)
+st_bbox(yo)
+
+
+
+```
+
+
 # Purpose of Report
 
 To create summaries of occurrence data to support fishery resource access decision making.  
@@ -307,7 +401,9 @@ The source RMarkdown code used to generate this report is linked here on GitHub:
 
 # Methods
 
-Coral and sponge occurrences from DSCRTP and other occurrences from the Ocean Biogeographic Information System (OBIS) are summarized within the SFAA Area of Interest (AOI) and in the SFAA AOI + a 5km buffer.  
+Coral and sponge occurrences from NOAA National Database for Deep-sea Corals and Sponges and other occurrences from the Ocean Biogeographic Information System (OBIS) and the Global Biodiversity Information Facility (GBIF) are summarized within the SFAA Area of Interest (AOI) and in the SFAA AOI + a 5km buffer.  
+
+Version Notes: OBIS and GBIF database last accessed 2024-12-09.  National database version number 20241022-1.  
 
 * AOI (SFAA)
 * AOI (SFAA) + 5km buffer
@@ -354,6 +450,46 @@ obisbuffer5000_sf_filter <- obisbuffer5000_sf %>% filter(name %in%  c('Oculina v
 # table(obis_sf_filter$name)
 
 
+library(ggplot2)
+
+ggplot() +
+  # Basemap data layer with fill mapped for legend
+  geom_sf(data = sfaa, aes(fill = "SFAA-AOI"), alpha = 1) +
+
+  # Specific plotted data with color mapped for legend
+  geom_sf(data = obisbuffer5000_sf,
+          aes(color = "OBIS points within AOI + 5 km buffer"),  # Map color to a label
+          shape = 3, alpha = .3, size = 3) +
+  geom_sf(data = points_in_5000_select,
+          aes(color = "National Database points within AOI + 5 km buffer"),  # Map color to a label
+          shape = 4, alpha = .3) +
+  geom_sf(data = points_in_0_select,
+          aes(color = "National Database points within AOI"),  # Updated label
+          shape = 4, size = 3) +
+  
+  # Legend customization
+  scale_fill_manual(
+    name = "AOI",
+    values = c("SFAA-AOI" = "red")
+  ) +
+  scale_color_manual(
+    name = "Points",
+    values = c("OBIS points within AOI + 5 km buffer" = "grey",
+               "National Database points within AOI + 5 km buffer" = "red",
+               "National Database points within AOI" = "black")  # Match updated label
+  ) +
+  
+  # Theme for better readability
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1),  # Rotate x-axis labels
+    legend.position = "right"                          # Position legend
+  )
+
+
+```
+
+```{r plot_3, fig.width=6, fig.height=4, dpi=300, echo = F, eval=T}
 library(ggplot2)
 
 ggplot() +
@@ -479,7 +615,49 @@ sum_tbl
 
 ```
 
-## Taxa within the AOI plus 5000m buffer zone from the National Database)
+## Taxa within the AOI (no buffer) from GBIF
+
+Number of occurrences within the AOI: `r length(gbif$datasetName)`
+
+### Table of Taxa Grouped by Order
+
+``` {r TaxaByOrderTargetgbif, echo=FALSE }
+
+sum_tbl <-
+  gbif %>%
+  group_by(order) %>%
+  summarize(
+    Taxa = toString(unique(name)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+
+```
+
+### Dataset Details (gbif)
+
+``` {r Expedition_details_gbif, echo=FALSE }
+sum_tbl <-
+  gbif %>%
+  group_by(datasetKey) %>%
+  summarize(
+    Records = n()
+  ) %>%
+  mutate(
+    gbif_Dataset = paste('https://gbif.org/dataset/', datasetKey, sep = '') 
+  ) %>%
+  dplyr::select(gbif_Dataset,Records) %>% 
+  arrange(desc(Records))
+
+sum_tbl <- kable(sum_tbl, row.names = FALSE, digits = 2)
+sum_tbl
+
+
+
+```
+
+## Taxa within the AOI plus 5000m buffer zone from the National Database
 
 Number of occurrences within the AOI+5000 meter buffer: `r length(points_in_5000_select$CatalogNumber)`
 
@@ -551,6 +729,66 @@ sum_tbl <-
     OBIS_Dataset = paste('https://obis.org/dataset/', dataset_id, sep = '') 
   ) %>%
   dplyr::select(OBIS_Dataset,Records) %>% 
+  arrange(desc(Records))
+
+sum_tbl <- kable(sum_tbl, row.names = FALSE, digits = 2)
+sum_tbl
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Taxa within the AOI plus 5000m buffer zone (GBIF)
+
+Number of occurrences within the AOI: `r length(gbifbuffer5000$datasetName)`
+
+### Table of Taxa Grouped by Order
+
+``` {r TaxaByOrderBuffergbif, echo=FALSE }
+
+sum_tbl <-
+  gbifbuffer5000 %>%
+  group_by(order) %>%
+  summarize(
+    Taxa = toString(unique(name)),
+    Records = n()) %>%
+  arrange(desc(Records))
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2, align = )
+sum_tbl
+
+```
+
+
+### Dataset Details (gbif)
+
+``` {r Expedition_details_gbif_buffer, echo=FALSE }
+sum_tbl <-
+sum_tbl <-
+  gbifbuffer5000 %>%
+  group_by(datasetKey) %>%
+  summarize(
+    Records = n()
+  ) %>%
+  mutate(
+    gbif_Dataset = paste('https://gbif.org/dataset/', datasetKey, sep = '') 
+  ) %>%
+  dplyr::select(gbif_Dataset,Records) %>% 
   arrange(desc(Records))
 
 sum_tbl <- kable(sum_tbl, row.names = FALSE, digits = 2)
