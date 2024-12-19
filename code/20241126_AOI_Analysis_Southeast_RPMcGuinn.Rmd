@@ -385,11 +385,13 @@ st_crs(points)
 yo<-st_transform(sfaa, st_crs(points))
 st_crs(yo)
 st_bbox(yo)
+st_bbox(obis_sf)
+st_bbox(yo)
+
 
 
 
 ```
-
 
 # Purpose of Report
 
@@ -490,8 +492,19 @@ ggplot() +
 ```
 
 ```{r plot_3, fig.width=6, fig.height=4, dpi=300, echo = F, eval=T}
+# Load required libraries
 library(ggplot2)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
 
+# Load Natural Earth country boundaries
+countries <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Define the bounding box for Florida and the nearby East Coast
+florida_bbox <- c(xmin = -85, xmax = -75, ymin = 24, ymax = 32)  # Adjust these values as needed
+
+# Create the map
 ggplot() +
   # Basemap data layer with fill mapped for legend
   geom_sf(data = sfaa, aes(fill = "SFAA-AOI"), alpha = 1) +
@@ -506,7 +519,15 @@ ggplot() +
   geom_sf(data = points_in_0_select,
           aes(color = "National Database points within AOI"),  # Updated label
           shape = 4, size = 3) +
-  
+
+  # Add country outlines
+  geom_sf(data = countries, fill = NA, color = "black", size = 0.5) +
+
+  # Zoom in to Florida and the nearby East Coast using coord_sf
+  coord_sf(xlim = c(florida_bbox["xmin"], florida_bbox["xmax"]),
+           ylim = c(florida_bbox["ymin"], florida_bbox["ymax"]),
+           expand = FALSE) +
+
   # Legend customization
   scale_fill_manual(
     name = "AOI",
@@ -518,14 +539,13 @@ ggplot() +
                "National Database points within AOI + 5 km buffer" = "red",
                "National Database points within AOI" = "black")  # Match updated label
   ) +
-  
+
   # Theme for better readability
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 90, hjust = 1),  # Rotate x-axis labels
     legend.position = "right"                          # Position legend
   )
-
 
 ```
 

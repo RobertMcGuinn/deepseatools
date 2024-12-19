@@ -13,6 +13,7 @@ digits = 121
 ##### load national database (manual) #####
 path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20241022-1.csv"
 
+## Version History
 # "DSCRTP_NatDB_20241022-1.csv" # 'Shaggy'
 # "DSCRTP_NatDB_20240726-0.csv" # 'Mick Jagger (Stanley Kubrick, Mick Stanley, McStanley)'
 # "DSCRTP_NatDB_20240723-0.csv" # 'taxonomy patch to be applied here'
@@ -22,7 +23,7 @@ path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20241022-1.csv"
 # "DSCRTP_NatDB_20230620-0.csv"
 # "DSCRTP_NatDB_20230620-0_published.csv"
 # "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
-# Link to master change log: https://docs.google.com/spreadsheets/d/1psUlMQS1d2rRgsiKWJsCTPleJ7TMKYNV/edit#gid=121019363
+## Link to master change log: https://docs.google.com/spreadsheets/d/1psUlMQS1d2rRgsiKWJsCTPleJ7TMKYNV/edit#gid=121019363
 
 indata <- read.csv(path, header = T, encoding = 'latin1')
 ## encoding choice is either latin1 or UTF-8. Depends on incoming.
