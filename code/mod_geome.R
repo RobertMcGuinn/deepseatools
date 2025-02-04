@@ -4,7 +4,7 @@
 ## purpose:
 
 ##### linkage #####
-filename <- 'scratch' ## manual: for this code file name, match to redmine
+filename <- 'mod_geome' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
@@ -42,21 +42,29 @@ View(listExpeditions(projectId))
 listEntities()
 
 ##### workflow example #####
-acaoli <- queryMetadata(entity = "Sample", query = "genus = Acanthurus AND specificEpithet = olivaceus")
-acaoli_seqs <- querySanger(projects = 1, locus= "CYB", query = "genus = Acanthurus AND specificEpithet = olivaceus")
-acaoli_sra <- queryMetadata( entity = "fastqMetadata", query = "genus = Acanthurus AND specificEpithet = olivaceus AND _exists_:bioSample", select=c("Event","Sample"))
+acaoli <- queryMetadata(entity = "Sample",
+                        query = "genus = Acanthurus AND specificEpithet = olivaceus")
 
-##### look at Sample table #####
-sample_table <- acaoli_sra$Sample
-names(sample_table)
-head(sample_table$materialSampleID)
-length(unique(sample_table$materialSampleID))
+acaoli_seqs <- querySanger(projects = 1,
+                           locus= "CYB",
+                           query = "genus = Acanthurus AND specificEpithet = olivaceus")
 
-##### look at  table #####
-sample_table <- acaoli_sra$Sample
-names(sample_table)
-head(sample_table$materialSampleID)
-length(unique(sample_table$materialSampleID))
+acaoli_sra <- queryMetadata(entity = "fastqMetadata",
+                            query = "genus = Acanthurus AND specificEpithet = olivaceus AND _exists_:bioSample",
+                            select=c("Event","Sample"))
+
+##### look at tables #####
+sample <- acaoli_sra$Sample
+event <- acaoli_sra$Event
+fastqMetadata <- acaoli_sra$fastqMetadata
+
+View(sample)
+View(event)
+View(fastqMetadata)
+
+
+
+
 
 
 
