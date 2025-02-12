@@ -32,16 +32,16 @@ library(geomedb)
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
 ##### help #####
-help("geomedb")
+# help("geomedb")
+#
+# View(listProjects())
+#
+# projectId <- 348
+# View(listExpeditions(projectId))
+#
+# listEntities()
 
-View(listProjects())
-
-projectId <- 348
-View(listExpeditions(projectId))
-
-listEntities()
-
-##### workflow example #####
+##### query the API #####
 acaoli <- queryMetadata(entity = "Sample",
                         query = "genus = Acanthurus AND specificEpithet = olivaceus")
 
@@ -53,14 +53,46 @@ acaoli_sra <- queryMetadata(entity = "fastqMetadata",
                             query = "genus = Acanthurus AND specificEpithet = olivaceus AND _exists_:bioSample",
                             select=c("Event","Sample"))
 
-##### look at tables #####
+##### extract specific df's #####
 sample <- acaoli_sra$Sample
 event <- acaoli_sra$Event
 fastqMetadata <- acaoli_sra$fastqMetadata
 
+# sample <- acaoli$Sample
+# event <- acaoli$Event
+# fastqMetadata <- acaoli$fastqMetadata
+
+# sample <- acaoli_seqs$Sample
+# event <- acaoli_seqs$Event
+# fastqMetadata <- acaoli_seqs$fastqMetadata
+
+##### check #####
+# names(acaoli_seqs)
+# str(acaoli_seqs)
 View(sample)
 View(event)
 View(fastqMetadata)
+#
+# intersect(names(sample), names(event))
+# intersect(names(fastqMetadata), names(sample))
+# intersect(names(fastqMetadata), names(event))
+
+###### create list of all variables.
+all_names <- union(names(sample), names(event))
+all_names <- union(all_names, names(fastqMetadata))
+
+##### check #####
+grep('material', all_names, value = T)
+grep('material', names(sample), value = T)
+grep('material', names(fastqMetadata), value = T)
+grep('material', names(event), value = T)
+
+sort(names(sample))
+
+grep('id', all_names, value = T)
+
+##### look at a specific sequence #####
+acaoli_seqs$`https://n2t.net/ark:/21547/BEC2Acaoli_904_CYB [marker = CYB] [tissueID = Acaoli_904] [genus = Acanthurus] [specificEpithet = olivaceus]`
 
 
 
@@ -68,6 +100,15 @@ View(fastqMetadata)
 
 
 
+
+
+
+##### look at USNM SampleID #####
+filt %>% filter(grepl("NMNH", DatasetID)) %>%
+  pull(SampleID) %>% unique()
+
+filt %>% filter(grepl("NMNH", DatasetID)) %>%
+  select(DatasetID, SampleID, TrackingID) %>% View()
 
 
 

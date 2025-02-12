@@ -27,8 +27,10 @@ path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20241219-1_CSV/DSCRTP_NatD
 ## Link to master change log: https://docs.google.com/spreadsheets/d/1psUlMQS1d2rRgsiKWJsCTPleJ7TMKYNV/edit#gid=121019363
 
 indata <- read.csv(path, header = T, encoding = 'latin1')
+
 ## encoding choice is either latin1 or UTF-8. Depends on incoming.
 ## this does not define encoding, it simply tells the importer
+
 ## which encoding is in the incoming file.
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
