@@ -5,9 +5,9 @@
 ## issuename: 20240308_tator_dscrtp_crosswalk_MTaipan_RPMcGuinn
 
 ##### linkage #####
-filename <- '127481' ## manual: for this code file name, match to redmine
+filename <- '127481-2' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
-github_link <- paste(github_path, filename, '-2', '.R', sep = '')
+github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- filename
