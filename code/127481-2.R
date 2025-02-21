@@ -42,19 +42,18 @@ s <- read_sheet(sheetid)
 #   summarize(n=n()) %>% View()
 
 ##### load export from tator #####
-## copy on google drive:
-## https://docs.google.com/spreadsheets/d/165lLT5g8r-m9d0sWtG2Y69bSHWL0XKik/edit?usp=drive_link&ouid=109414727136135095326&rtpof=true&sd=true
+tatorexport <- 'PC2202L1_Forward Videos_2025-02-18_report_XJDopbtRvb.xlsx'
 
-corals <- read.xlsx('c:/rworking/deepseatools/indata/PC2202L1_FWD_Videos_Annotation_Report.xlsx',
+corals <- read.xlsx(paste('c:/rworking/deepseatools/indata/', tatorexport, sep = ''),
                   sheet = 'corals_inverts')
 
-fish <- read.xlsx('c:/rworking/deepseatools/indata/PC2202L1_FWD_Videos_Annotation_Report.xlsx',
+fish <- read.xlsx(paste('c:/rworking/deepseatools/indata/', tatorexport, sep = ''),
                     sheet = 'fish')
 
-events <- read.xlsx('c:/rworking/deepseatools/indata/PC2202L1_FWD_Videos_Annotation_Report.xlsx',
+events <- read.xlsx(paste('c:/rworking/deepseatools/indata/', tatorexport, sep = ''),
                   sheet = 'events')
 
-geology <- read.xlsx('c:/rworking/deepseatools/indata/PC2202L1_FWD_Videos_Annotation_Report.xlsx',
+geology <- read.xlsx(paste('c:/rworking/deepseatools/indata/', tatorexport, sep = ''),
                                sheet = 'geology')
 
 ##### check #####
@@ -72,6 +71,10 @@ geology <- read.xlsx('c:/rworking/deepseatools/indata/PC2202L1_FWD_Videos_Annota
 # corals %>% select(MediaName, MediaId) %>% View()
 #
 # corals %>% group_by(MediaName, MediaId) %>% summarize(n=n()) %>% View()
+names(corals)
+names(fish)
+names(events)
+table(events$EventType)
 
 ##### ***** #####
 ##### create a single fish and coral data frame #####
@@ -121,14 +124,14 @@ result <-
   left_join(coralsfish_cl, result, by = c("joiner_Timestamp_pos" = "joiner_Timestamp_pos.x"))
 
 ##### ***** #####
-##### create export: main crosswalk and transformations #####
+##### main crosswalk and transformations #####
 dscrtp_export <- result %>%
   mutate(
-    ImageFilePath = paste(MediaId, MediaName, Frame, sep = ' | '), ## this will need to be adapted when we get the media in house
+    ImageFilePath = paste(MediaId, Frame, sep = ' | '), ## this will need to be adapted when we get the media in house
     SampleAreaInSquareMeters = SampleAreaInSquareMeters.x,
     ScientificName = ScientificName.x,
     Morphospecies = paste(Morphospecies.x, Color.x, sep = ' | '),
-    IdentifiedBy = paste(IdentifiedBy, ReviewedBy, set = ' | '),
+    IdentifiedBy = paste(IdentifiedBy, ReviewedBy, sep = ' | '),
     IdentificationDate = IdentificationDate,
     IdentificationComments = paste(IdentificationComments, AnnotatorResponse, OccurrenceComments.x, sep = ' | '),
     OccurrenceComments = paste(OccurrenceComments.x, TypeOfInjury.x, sep = ' | '),
@@ -231,11 +234,88 @@ dscrtp_export %>% pull(IdentifiedBy) %>% table(useNA = 'always')
 dscrtp_export %>% pull(Latitude) %>% table(useNA = 'always')
 dscrtp_export %>% pull(Longitude) %>% table(useNA = 'always')
 dscrtp_export %>% pull(ScientificName) %>% table(useNA = 'always')
+str(dscrtp_export)
+
+
+dscrtp_export %>% pull(IdentificationComments) %>% table()
+dscrtp_export$IdentificationComments2 <- sub(
+  " \\| NA \\| NA$", "", dscrtp_export$IdentificationComments
+  )
+dscrtp_export$IdentificationComments3 <- sub(
+  " \\| NA$", "", dscrtp_export$IdentificationComments2
+)
+
+dscrtp_export$IdentificationComments4 <- sub(
+  "NA \\| ", "", dscrtp_export$IdentificationComments3
+)
+
+
+
+dscrtp_export %>%
+  pull(IdentificationComments4) %>%
+  unique()
+
+dscrtp_export %>%
+  pull(IdentifiedBy) %>%
+  unique()
+
+corals %>% pull(IdentifiedBy) %>% unique()
+
+##### correct NA values in IdentificationComments #####
+dscrtp_export$IdentificationComments2 <- sub(
+  " \\| NA \\| NA$", "", dscrtp_export$IdentificationComments
+)
+dscrtp_export$IdentificationComments3 <- sub(
+  " \\| NA$", "", dscrtp_export$IdentificationComments2
+)
+
+dscrtp_export$IdentificationComments4 <- sub(
+  "NA \\| ", "", dscrtp_export$IdentificationComments3
+)
+
+dscrtp_export$IdentificationComments <- dscrtp_export$IdentificationComments4
+
+##### correct NA values in IdentifiedBy #####
+dscrtp_export$IdentifiedBy2 <- sub(
+  " \\| NA \\| NA$", "", dscrtp_export$IdentifiedBy
+)
+dscrtp_export$IdentifiedBy3 <- sub(
+  " \\| NA$", "", dscrtp_export$IdentifiedBy2
+)
+
+dscrtp_export$IdentifiedBy4 <- sub(
+  "NA \\| ", "", dscrtp_export$IdentifiedBy3
+)
+
+dscrtp_export$IdentifiedBy <- dscrtp_export$IdentifiedBy4
+
+##### correct NA values in Morphospecies #####
+dscrtp_export$Morphospecies2 <- sub(
+  " \\| NA \\| NA$", "", dscrtp_export$Morphospecies
+)
+dscrtp_export$Morphospecies3 <- sub(
+  " \\| NA$", "", dscrtp_export$Morphospecies2
+)
+
+dscrtp_export$Morphospecies4 <- sub(
+  "NA \\| ", "", dscrtp_export$Morphospecies3
+)
+
+dscrtp_export$Morphospecies <- dscrtp_export$Morphospecies4
+
+##### check #####
+dscrtp_export %>% pull(IdentificationComments) %>% unique()
+dscrtp_export %>% pull(ImageFilePath) %>% unique() %>% length()
+dscrtp_export %>% pull(IdentifiedBy) %>% unique()
+dscrtp_export %>% pull(ScientificName) %>% unique()
+dscrtp_export %>% pull(Morphospecies) %>% unique()
 
 ##### write the file to disk #####
 write.csv(dscrtp_export,
-          'c:/rworking/deepseatools/indata/20241125-0_Example_TATOR_DSCRTP_export_RPMcGuinn.csv',
+          'c:/rworking/deepseatools/indata/20250218_PC2201L1_FWD_Video_TATOR_DSCRTP_export_RPMcGuinn.csv',
           row.names = F)
+
+
 
 ##### NOTES #####
 ## Questions for Mark Taipan:
