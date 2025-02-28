@@ -124,7 +124,7 @@ result <-
   left_join(coralsfish_cl, result, by = c("joiner_Timestamp_pos" = "joiner_Timestamp_pos.x"))
 
 ##### ***** #####
-##### main crosswalk and transformations #####
+##### main crosswalk and transformations to create export #####
 dscrtp_export <- result %>%
   mutate(
     ImageFilePath = paste(MediaId, Frame, sep = ' | '), ## this will need to be adapted when we get the media in house
@@ -275,6 +275,9 @@ dscrtp_export$IdentificationComments4 <- sub(
 
 dscrtp_export$IdentificationComments <- dscrtp_export$IdentificationComments4
 
+## cleanup
+dscrtp_export <- dscrtp_export %>% select(c(-IdentificationComments2, -IdentificationComments3, -IdentificationComments4))
+
 ##### correct NA values in IdentifiedBy #####
 dscrtp_export$IdentifiedBy2 <- sub(
   " \\| NA \\| NA$", "", dscrtp_export$IdentifiedBy
@@ -288,6 +291,9 @@ dscrtp_export$IdentifiedBy4 <- sub(
 )
 
 dscrtp_export$IdentifiedBy <- dscrtp_export$IdentifiedBy4
+
+## cleanup
+dscrtp_export <- dscrtp_export %>% select(c(-IdentifiedBy2, -IdentifiedBy3, -IdentifiedBy4))
 
 ##### correct NA values in Morphospecies #####
 dscrtp_export$Morphospecies2 <- sub(
@@ -303,12 +309,32 @@ dscrtp_export$Morphospecies4 <- sub(
 
 dscrtp_export$Morphospecies <- dscrtp_export$Morphospecies4
 
+## cleanup
+dscrtp_export <- dscrtp_export %>% select(c(-Morphospecies2, -Morphospecies3, -Morphospecies4))
+
+
+##### correct NA values in CMECSGeoForm #####
+dscrtp_export$CMECSGeoForm2 <- sub(
+  " \\| NA \\| NA$", "", dscrtp_export$CMECSGeoForm
+)
+dscrtp_export$CMECSGeoForm3 <- sub(
+  " \\| NA$", "", dscrtp_export$CMECSGeoForm2
+)
+
+dscrtp_export$CMECSGeoForm4 <- sub(
+  "NA \\| ", "", dscrtp_export$CMECSGeoForm3
+)
+
+
+dscrtp_export$CMECSGeoForm <- dscrtp_export$CMECSGeoForm4
+
+## cleanup
+dscrtp_export <- dscrtp_export %>% select(c(-CMECSGeoForm2, -CMECSGeoForm3, -CMECSGeoForm4))
+
 ##### check #####
-dscrtp_export %>% pull(IdentificationComments) %>% unique()
-dscrtp_export %>% pull(ImageFilePath) %>% unique() %>% length()
-dscrtp_export %>% pull(IdentifiedBy) %>% unique()
-dscrtp_export %>% pull(ScientificName) %>% unique()
-dscrtp_export %>% pull(Morphospecies) %>% unique()
+names(dscrtp_export)
+dscrtp_export %>% pull(OccurrenceComments) %>% table() %>% sort()
+
 
 ##### write the file to disk #####
 write.csv(dscrtp_export,

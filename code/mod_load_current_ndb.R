@@ -12,7 +12,8 @@ digits = 121
 
 ##### load national database (manual) #####
 path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20241219-1_CSV/DSCRTP_NatDB_20241219-1.csv"
-
+## "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20241219-1_CSV/DSCRTP_NatDB_20241219-1.csv"
+## "C:/Users/Robert.Mcguinn/Downloads/DSCRTP_CSV (4)/DSCRTP_NatDB_20241219-1.csv"
 ## Version History
 # "DSCRTP_NatDB_
 # "DSCRTP_NatDB_20241022-1.csv" # 'Shaggy'
