@@ -71,10 +71,10 @@ geology <- read.xlsx(paste('c:/rworking/deepseatools/indata/', tatorexport, sep 
 # corals %>% select(MediaName, MediaId) %>% View()
 #
 # corals %>% group_by(MediaName, MediaId) %>% summarize(n=n()) %>% View()
-names(corals)
-names(fish)
-names(events)
-table(events$EventType)
+# names(corals)
+# names(fish)
+# names(events)
+# table(events$EventType)
 
 ##### ***** #####
 ##### create a single fish and coral data frame #####
@@ -127,7 +127,7 @@ result <-
 ##### main crosswalk and transformations to create export #####
 dscrtp_export <- result %>%
   mutate(
-    ImageFilePath = paste(MediaId, Frame, sep = ' | '), ## this will need to be adapted when we get the media in house
+    ImageFilePath = paste(MediaId, Frame, TatorId, sep = '_'), ## this will need to be adapted when we get the media in house
     SampleAreaInSquareMeters = SampleAreaInSquareMeters.x,
     ScientificName = ScientificName.x,
     Morphospecies = paste(Morphospecies.x, Color.x, sep = ' | '),
@@ -225,41 +225,41 @@ dscrtp_export <- dscrtp_export %>%
 
 
 ##### check #####
-dscrtp_export %>% pull(MinimumSize) %>% table(useNA = 'always')
-dscrtp_export %>% pull(MaximumSize) %>% table(useNA = 'always')
-dscrtp_export %>% pull(Condition) %>% unique()
-dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
-dscrtp_export %>% pull(CategoricalAbundance) %>% table(useNA = 'always')
-dscrtp_export %>% pull(IdentifiedBy) %>% table(useNA = 'always')
-dscrtp_export %>% pull(Latitude) %>% table(useNA = 'always')
-dscrtp_export %>% pull(Longitude) %>% table(useNA = 'always')
-dscrtp_export %>% pull(ScientificName) %>% table(useNA = 'always')
-str(dscrtp_export)
-
-
-dscrtp_export %>% pull(IdentificationComments) %>% table()
-dscrtp_export$IdentificationComments2 <- sub(
-  " \\| NA \\| NA$", "", dscrtp_export$IdentificationComments
-  )
-dscrtp_export$IdentificationComments3 <- sub(
-  " \\| NA$", "", dscrtp_export$IdentificationComments2
-)
-
-dscrtp_export$IdentificationComments4 <- sub(
-  "NA \\| ", "", dscrtp_export$IdentificationComments3
-)
-
-
-
-dscrtp_export %>%
-  pull(IdentificationComments4) %>%
-  unique()
-
-dscrtp_export %>%
-  pull(IdentifiedBy) %>%
-  unique()
-
-corals %>% pull(IdentifiedBy) %>% unique()
+# dscrtp_export %>% pull(MinimumSize) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(MaximumSize) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(Condition) %>% unique()
+# dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(CategoricalAbundance) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(IdentifiedBy) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(Latitude) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(Longitude) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(ScientificName) %>% table(useNA = 'always')
+# str(dscrtp_export)
+#
+#
+# dscrtp_export %>% pull(IdentificationComments) %>% table()
+# dscrtp_export$IdentificationComments2 <- sub(
+#   " \\| NA \\| NA$", "", dscrtp_export$IdentificationComments
+#   )
+# dscrtp_export$IdentificationComments3 <- sub(
+#   " \\| NA$", "", dscrtp_export$IdentificationComments2
+# )
+#
+# dscrtp_export$IdentificationComments4 <- sub(
+#   "NA \\| ", "", dscrtp_export$IdentificationComments3
+# )
+#
+#
+#
+# dscrtp_export %>%
+#   pull(IdentificationComments4) %>%
+#   unique()
+#
+# dscrtp_export %>%
+#   pull(IdentifiedBy) %>%
+#   unique()
+#
+# corals %>% pull(IdentifiedBy) %>% unique()
 
 ##### correct NA values in IdentificationComments #####
 dscrtp_export$IdentificationComments2 <- sub(
@@ -331,14 +331,36 @@ dscrtp_export$CMECSGeoForm <- dscrtp_export$CMECSGeoForm4
 ## cleanup
 dscrtp_export <- dscrtp_export %>% select(c(-CMECSGeoForm2, -CMECSGeoForm3, -CMECSGeoForm4))
 
+
+##### add some metadata ######
+dscrtp_export$DataProvider <- "NOAA, Mesophotic Deep Benthic Communities Restoration Project"
+dscrtp_export$Vessel <- 'Pisces R/V'
+
 ##### check #####
-names(dscrtp_export)
-dscrtp_export %>% pull(OccurrenceComments) %>% table() %>% sort()
+filt %>% filter(grepl("PC", SurveyID)) %>% pull(Vessel) %>% table()
+# str(dscrtp_export)
+# dscrtp_export %>% pull(MinimumDepthInMeters) %>% is.na() %>% table()
+# dscrtp_export %>% pull(MaximumDepthInMeters) %>% is.na() %>% table()
+# dscrtp_export %>% pull(SurveyID) %>% is.na() %>% table()
+# dscrtp_export %>% pull(IdentifiedBy) %>% table()
+
+# dscrtp_export %>% pull(IdentificationDate) %>% is.na() %>% table()
+# dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(Habitat) %>% table(useNA = 'always')  %>% sort()
+dim(dscrtp_export)
 
 
+x <- s %>% filter(PointNew == "R") %>% pull(FieldName)
+setdiff(names(dscrtp_export), x)
+setdiff(x,names(dscrtp_export))
+
+
+# dscrtp_export %>% pull(OccurrenceComments) %>% table() %>% sort()
+
+##### ***** #####
 ##### write the file to disk #####
 write.csv(dscrtp_export,
-          'c:/rworking/deepseatools/indata/20250218_PC2201L1_FWD_Video_TATOR_DSCRTP_export_RPMcGuinn.csv',
+          'c:/rworking/deepseatools/indata/20250228_PC2201L1_FWD_Video_TATOR_DSCRTP_export_RPMcGuinn.csv',
           row.names = F)
 
 
