@@ -346,7 +346,7 @@ filt %>% filter(grepl("PC", SurveyID)) %>% pull(Vessel) %>% table()
 
 # dscrtp_export %>% pull(IdentificationDate) %>% is.na() %>% table()
 # dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
-# dscrtp_export %>% pull(Habitat) %>% table(useNA = 'always')  %>% sort()
+# dscrtp_export %>% pull(Habitat) %>% table(useNA = 'always')  %>% sort()d
 dim(dscrtp_export)
 
 
