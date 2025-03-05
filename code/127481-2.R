@@ -57,6 +57,10 @@ geology <- read.xlsx(paste('c:/rworking/deepseatools/indata/', tatorexport, sep 
                                sheet = 'geology')
 
 ##### check #####
+names(events)
+names(corals)
+
+
 # intersect(names(corals), names(fish))
 # setdiff(names(corals), names(fish))
 # setdiff(names(fish), names(corals))
@@ -335,10 +339,38 @@ dscrtp_export <- dscrtp_export %>% select(c(-CMECSGeoForm2, -CMECSGeoForm3, -CME
 ##### add some metadata ######
 dscrtp_export$DataProvider <- "NOAA, Mesophotic Deep Benthic Communities Restoration Project"
 dscrtp_export$Vessel <- 'Pisces R/V'
+dscrtp_export$Locality <- 'Gulf of America (formerly Gulf of Mexico)'
+dscrtp_export$RecordType <- 'video observation'
+dscrtp_export$Modified <- '2025-03-05'
+dscrtp_export$DataContact <- 'Bassett, Rachel | rachel.bassett@noaa.gov'
+dscrtp_export$Reporter <- 'Bassett, Rachel | rachel.bassett@noaa.gov'
+dscrtp_export$DatasetID <- 'MDBC_SurveyID'
+dscrtp_export$PI <- 'Bassett, Rachel | rachel.bassett@noaa.gov'
+
+##### make Citation #####
+dscrtp_export$CitationMaker <- paste(dscrtp_export$DataProvider,'. ','Observation date range: ',
+                           min(dscrtp_export$ObservationDate[dscrtp_export$ObservationDate != "-999"]),' to ',
+                           max(dscrtp_export$ObservationDate[dscrtp_export$ObservationDate != "-999"]),'. ',
+                           'Coral or sponge occurrence observations submitted to the NOAA National Database for Deep Sea Corals and Sponges (www.deepseacoraldata.noaa.gov)', '. ',
+                           #'DSCRTP Accession ID: ',dscrtp_export$AccessionID, '. ',
+                           #'Record type: ', dscrtp_export$RecordType, '. ',
+                           'Vessel(s): ', dscrtp_export$Vessel,'. ',
+                           'Sampling vehicle: ', dscrtp_export$VehicleName,'. ',
+                           'Survey ID: ', dscrtp_export$SurveyID,'. ',
+                           'DSCRTP Dataset ID: ', dscrtp_export$DatasetID, '. ',
+                           'Principal investigator: ', dscrtp_export$PI,'. ',
+                           'Reporter: ', dscrtp_export$Reporter, '. ',
+                           'Database version: ', unique(filt$DatabaseVersion), '. ',
+                           #'Data contact: ', dscrtp_exportDataContact,'. ',
+                           #'Reporter: ', dscrtp_exportReporter,'. ',
+                           #'Repository: ', dscrtp_exportRepository,'. ',
+                           # 'Web site [last accessed on YYYY-MM-DD]: ', dscrtp_exportWebSite,'.',
+                           sep = '')
+unique(dscrtp_export$CitationMaker)
 
 ##### check #####
-filt %>% filter(grepl("PC", SurveyID)) %>% pull(Vessel) %>% table()
-# str(dscrtp_export)
+# filt %>% filter(grepl("PC", SurveyID)) %>% pull(Vessel) %>% table()
+# st#r(dscrtp_export)
 # dscrtp_export %>% pull(MinimumDepthInMeters) %>% is.na() %>% table()
 # dscrtp_export %>% pull(MaximumDepthInMeters) %>% is.na() %>% table()
 # dscrtp_export %>% pull(SurveyID) %>% is.na() %>% table()
@@ -347,12 +379,12 @@ filt %>% filter(grepl("PC", SurveyID)) %>% pull(Vessel) %>% table()
 # dscrtp_export %>% pull(IdentificationDate) %>% is.na() %>% table()
 # dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
 # dscrtp_export %>% pull(Habitat) %>% table(useNA = 'always')  %>% sort()d
-dim(dscrtp_export)
-
-
-x <- s %>% filter(PointNew == "R") %>% pull(FieldName)
-setdiff(names(dscrtp_export), x)
-setdiff(x,names(dscrtp_export))
+# dim(dscrtp_export)
+#
+#
+# x <- s %>% filter(PointNew == "R") %>% pull(FieldName)
+# setdiff(names(dscrtp_export), x)
+# setdiff(x,names(dscrtp_export))
 
 
 # dscrtp_export %>% pull(OccurrenceComments) %>% table() %>% sort()
@@ -362,25 +394,6 @@ setdiff(x,names(dscrtp_export))
 write.csv(dscrtp_export,
           'c:/rworking/deepseatools/indata/20250228_PC2201L1_FWD_Video_TATOR_DSCRTP_export_RPMcGuinn.csv',
           row.names = F)
-
-
-
-##### NOTES #####
-## Questions for Mark Taipan:
-## What is the 'Polygon' and 'PolygonDtype' going to be used for?
-## Should I only take the ones where 'NeedsReview' is false?
-## Salinity and Temperature are empty. Will they be populated for the corals and fish sheet?
-## IdentificationDate is mostly empty, would we be expecting this to be populated in the future?
-## Go over our structure for the ImageFilePath variable.
-## What is VersionName and VersionID?
-## What should we use as our SampleID and TrackingID identifiers? (possibly paste(MediaId, MediaName, Frame, sep = ' | ') or 'TatorID')
-
-
-
-
-
-
-
 
 
 
