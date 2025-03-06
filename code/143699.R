@@ -396,10 +396,10 @@ dscrtp_export$Citation <- paste(dscrtp_export$DataProvider,'. ','Observation dat
 # dscrtp_export %>% pull(SurveyID) %>% is.na() %>% table()
 # dscrtp_export %>% pull(IdentifiedBy) %>% table()
 
-dscrtp_export %>% pull(IdentificationDate) %>% is.na() %>% table()
-dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
-dscrtp_export %>% pull(Habitat) %>% table(useNA = 'always')  %>% sort()
-dim(dscrtp_export)
+# dscrtp_export %>% pull(IdentificationDate) %>% is.na() %>% table()
+# dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
+# dscrtp_export %>% pull(Habitat) %>% table(useNA = 'always')  %>% sort()
+# dim(dscrtp_export)
 
 #
 #
@@ -417,7 +417,13 @@ x <- str_remove(tatorexport, "\\.xlsx$")
 
 ## write
 write.csv(dscrtp_export,
-          paste('c:/rworking/deepseatools/indata/','20250306-0', x, '.csv', sep = ''),
+          paste('c:/rworking/deepseatools/indata/',
+                '20250306-0_',
+                'MDBC_',
+                x,
+                '_RPMcGuinn',
+                '.csv',
+                sep = ''),
           row.names = F)
 
 
