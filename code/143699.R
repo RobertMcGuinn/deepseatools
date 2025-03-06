@@ -2,10 +2,10 @@
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate: 20240308
 ## purpose: dscrtp crosswalk with tator exports
-## issuename: 20240308_tator_dscrtp_crosswalk_MTaipan_RPMcGuinn
+## issuename: 143699
 
 ##### linkage #####
-filename <- '127481-2' ## manual: for this code file name, match to redmine
+filename <- '143699' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
