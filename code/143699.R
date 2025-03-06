@@ -2,7 +2,7 @@
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate: 20240308
 ## purpose: dscrtp crosswalk with tator exports
-## issuename: 143699
+## issuename: 20250306-0_NOAA_PC2202L1_MDBC_143699
 
 ##### linkage #####
 filename <- '143699' ## manual: for this code file name, match to redmine
@@ -154,7 +154,7 @@ dscrtp_export <- result %>%
     IdentifiedBy = paste(IdentifiedBy, ReviewedBy, sep = ' | '),
     IdentificationDate = IdentificationDate,
     IdentificationComments = paste(IdentificationComments, AnnotatorResponse, OccurrenceComments.x, sep = ' | '),
-    OccurrenceComments = paste(OccurrenceComments.x, TypeOfInjury.x, sep = ' | '),
+    OccurrenceComments = paste(OccurrenceComments.x, sep = ' | '),
     Condition = Condition.x,
     Longitude = Longitude,
     Latitude = Latitude,
@@ -178,14 +178,6 @@ dscrtp_export <- result %>%
     BboxWidth = BboxWidth.x,
     BboxX = BboxX.x,
     BboxY = BboxY.x)
-
-## paste information to OccurrenceComments
-dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrencComments,
-                                          'Heights measured using Tator software', sep = ' | ')
-
-dscrtp_export$OccurrenceComments <- paste(dscrtp_export$OccurrenceComments,
-                                          'Proportion of injury: ', dscrtp_export$Proportion.Of.Injury,
-                                          'Type of injury: ', dscrtp_export$Type.Of.Injury, sep = ' | ')
 
 ## create Sample ID from pre-tranformed ObservationDate
 dscrtp_export$SampleID <- paste(dscrtp_export$ObservationDate, dscrtp_export$TatorId, sep = '_') #pre-transformed, see below for transformation.
@@ -363,7 +355,7 @@ dscrtp_export$RecordType <- 'video observation'
 dscrtp_export$Modified <- '2025-03-05'
 dscrtp_export$DataContact <- 'Bassett, Rachel | rachel.bassett@noaa.gov'
 dscrtp_export$Reporter <- 'Bassett, Rachel | rachel.bassett@noaa.gov'
-dscrtp_export$DatasetID <- 'MDBC_SurveyID'
+dscrtp_export$DatasetID <- paste('NOAA_', unique(dscrtp_export$SurveyID),'_MDBC', sep = '')
 dscrtp_export$PI <- 'Bassett, Rachel | rachel.bassett@noaa.gov'
 dscrtp_export$DepthMethod <- 'reported'
 
@@ -388,13 +380,15 @@ dscrtp_export$Citation <- paste(dscrtp_export$DataProvider,'. ','Observation dat
                            sep = '')
 
 ##### check #####
+
 # unique(dscrtp_export$CitationMaker)
 # filt %>% filter(grepl("PC", SurveyID)) %>% pull(Vessel) %>% table()
 # st#r(dscrtp_export)
 # dscrtp_export %>% pull(MinimumDepthInMeters) %>% is.na() %>% table()
 # dscrtp_export %>% pull(MaximumDepthInMeters) %>% is.na() %>% table()
 # dscrtp_export %>% pull(SurveyID) %>% is.na() %>% table()
-# dscrtp_export %>% pull(IdentifiedBy) %>% table()
+dscrtp_export %>% pull(IdentifiedBy) %>% table()
+dscrtp_export %>% pull(OccurrenceComments) %>% table()
 
 # dscrtp_export %>% pull(IdentificationDate) %>% is.na() %>% table()
 # dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
@@ -419,9 +413,7 @@ x <- str_remove(tatorexport, "\\.xlsx$")
 write.csv(dscrtp_export,
           paste('c:/rworking/deepseatools/indata/',
                 '20250306-0_',
-                'MDBC_',
-                x,
-                '_RPMcGuinn',
+                unique(dscrtp_export$DatasetID),
                 '.csv',
                 sep = ''),
           row.names = F)
