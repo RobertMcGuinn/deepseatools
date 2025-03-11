@@ -8,11 +8,11 @@
 filename <- '143699' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
-browseURL(github_link)
+# browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- filename
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
-browseURL(redmine_link)
+# browseURL(redmine_link)
 
 ##### packages #####
 library(tidyverse)
@@ -380,23 +380,14 @@ dscrtp_export$Citation <- paste(dscrtp_export$DataProvider,'. ','Observation dat
                            sep = '')
 
 ##### check #####
-
-# unique(dscrtp_export$CitationMaker)
-# filt %>% filter(grepl("PC", SurveyID)) %>% pull(Vessel) %>% table()
-# st#r(dscrtp_export)
-# dscrtp_export %>% pull(MinimumDepthInMeters) %>% is.na() %>% table()
-# dscrtp_export %>% pull(MaximumDepthInMeters) %>% is.na() %>% table()
-# dscrtp_export %>% pull(SurveyID) %>% is.na() %>% table()
 dscrtp_export %>% pull(IdentifiedBy) %>% table()
 dscrtp_export %>% pull(OccurrenceComments) %>% table()
 
-# dscrtp_export %>% pull(IdentificationDate) %>% is.na() %>% table()
-# dscrtp_export %>% pull(Condition) %>% table(useNA = 'always')
-# dscrtp_export %>% pull(Habitat) %>% table(useNA = 'always')  %>% sort()
-# dim(dscrtp_export)
+dscrtp_export %>% pull(Habitat) %>% table(useNA = 'always')  %>% sort()
+dim(dscrtp_export)
 
-#
-#
+dscrtp_export %>% select(Habitat, CMECSGeoForm) %>% distinct() %>%  View()
+
 # x <- s %>% filter(PointNew == "R") %>% pull(FieldName)
 # setdiff(names(dscrtp_export), x)
 # setdiff(x,names(dscrtp_export))
@@ -407,16 +398,16 @@ dscrtp_export %>% pull(OccurrenceComments) %>% table()
 ##### ***** #####
 ##### write the file to disk #####
 ## get rid of .xlsx at the end of the input file name
-x <- str_remove(tatorexport, "\\.xlsx$")
-
-## write
-write.csv(dscrtp_export,
-          paste('c:/rworking/deepseatools/indata/',
-                '20250306-0_',
-                unique(dscrtp_export$DatasetID),
-                '.csv',
-                sep = ''),
-          row.names = F)
+# x <- str_remove(tatorexport, "\\.xlsx$")
+#
+# ## write
+# write.csv(dscrtp_export,
+#           paste('c:/rworking/deepseatools/indata/',
+#                 '20250306-0_',
+#                 unique(dscrtp_export$DatasetID),
+#                 '.csv',
+#                 sep = ''),
+#           row.names = F)
 
 
 
