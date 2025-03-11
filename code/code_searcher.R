@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'mod'
+x <- 'update'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -12,7 +12,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(10)
+y <- c(9)
 path <- files[y]
 file.edit(path)
 
