@@ -311,8 +311,6 @@ sum_tbl
 
 target <- as.data.frame(points_in_0_select)
 
-
-
 sum_tbl <-
   target %>%
   group_by(DatasetID) %>%
@@ -337,6 +335,33 @@ sum_tbl
 
 
 ```
+
+``` {r EventID_details_no_buf, echo=FALSE }
+
+sum_tbl <-
+  points_in_0_select %>%
+  group_by(DatasetID, SurveyID, EventID) %>%
+  summarize(Vessel = toString(unique(Vessel)),
+            Minimum_Depth = min(MinimumDepthInMeters),
+            Maximum_Depth = max(MaximumDepthInMeters),
+            BeginYear= min(as.numeric(ObservationYear), na.rm = T),
+            n = prettyNum(n(),big.mark = ',')) %>% 
+  arrange(desc(DatasetID))
+
+sum_tbl$url <- paste0('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/',
+                      sum_tbl$DatasetID, 
+                      '.html', 
+                      sep = '')
+
+sum_tbl$DashBoard <- paste0("[", "Dashboard Link", "](", sum_tbl$url, ")")
+sum_tbl <- sum_tbl %>% dplyr::select(-url)
+sum_tbl <- kable(sum_tbl, row.names = F, digits = 2)
+sum_tbl
+
+
+```
+
+
 
 ## Taxa within the AOI (no buffer) from OBIS
 
@@ -395,7 +420,7 @@ sum_tbl
 
 ```
 
-## Images from the National Datbase within the AOI
+## Images from the National Database within the AOI
 
 We have `r z` unique images which can be uploaded to Google Drive on request. (contact: Robert.McGuinn@NOAA.gov)
 
@@ -443,5 +468,100 @@ drive_upload(i,
              path = as_id(folderurl),
              overwrite = T)
 }
+
+```
+
+``` {r depth_db, echo=FALSE}
+##### make depth box-plots #####
+sub <- points_in_0_select
+ylower <- 0
+yupper <- 4000
+
+sub <- points_in_0_select %>% filter(is.na(FishCouncilRegion) == F,
+                       as.numeric(DepthInMeters) < yupper,
+                       as.numeric(DepthInMeters) > ylower,
+                       is.na(VernacularNameCategory) == F)
+
+sub$DepthCat4[sub$DepthInMeters < 300] <- "< 300 m"
+sub$DepthCat4[sub$DepthInMeters > 300 & sub$DepthInMeters <= 600] <- "300-600 m"
+sub$DepthCat4[sub$DepthInMeters > 600 & sub$DepthInMeters <= 1000] <- "600-1000 m"
+sub$DepthCat4[sub$DepthInMeters > 1000] <- "> 1000 m"
+sub$DepthCat4 <- factor(sub$DepthCat4, levels = c("< 300 m", "300-600 m","600-1000 m", "> 1000 m" ))
+
+list <- unique(sub$DepthCat4)
+sub$VernacularNameCategory <- as.factor(sub$VernacularNameCategory)
+
+## original color pallette for DSCRTP
+# "stony coral (branching)" =  "#FFFFFF",
+# "stony coral (cup coral)" =  "#00E6A9",
+# "black coral" =  "#000000",
+# "gorgonian coral" = "#FF0000",
+# "soft coral" =  "#00734C",
+# "sea pen" = "#0000FF",
+# "stoloniferan coral" = "#7F7F7F",
+# "lace coral" = "#A80084",
+# "lithotelestid coral" = "#FF00C5",
+# "stony coral (unspecified)" = "#D1FF73",
+# "gold coral" =  "#FFFF00",
+# "sponge (unspecified)" = "#FF0000",
+# "demosponge" = "#00FFC5",
+# "glass sponge" = "#C500FF",
+# "homoscleromorph sponge" = "#FFFF00",
+# "calcareous sponge" = "#55FF00",
+# "other coral-like hydrozoan" = "#00FFFF",
+# "alcyonacean (unspecified)" = "#D7B09E"
+
+
+my_colors <- c(
+"stony coral (branching)" =  "#FFFFFF",
+"stony coral (cup coral)" =  "#00E6A9",
+"black coral" =  "#000000",
+"gorgonian coral" = "#FF0000",
+"soft coral" =  "#00734C",
+"sea pen" = "#0000FF",
+"stoloniferan coral" = "#7F7F7F",
+"lace coral" = "#A80084",
+"lithotelestid coral" = "#FF00C5",
+"stony coral (unspecified)" = "#D1FF73",
+"gold coral" =  "#FFFF00",
+"sponge (unspecified)" = "#FF0000",
+"demosponge" = "#00FFC5",
+"glass sponge" = "#C500FF",
+"homoscleromorph sponge" = "#FFFF00",
+"calcareous sponge" = "#55FF00",
+"other coral-like hydrozoan" = "#00FFFF",
+"alcyonacean (unspecified)" = "#D7B09E",
+"fish" = "#7a2d0a"
+)
+
+for(i in list){
+  x <- sub %>% filter(DepthCat4 == i)
+  g <- ggplot(x, aes(reorder(VernacularNameCategory, DepthInMeters, FUN=median),
+                     as.numeric(DepthInMeters),
+                     fill = VernacularNameCategory)) +
+    geom_boxplot() +
+    scale_y_reverse() +
+    ylab("Depth (meters)") +
+    xlab("Vernacular Name Category") +
+    theme_bw(base_size = 13, base_family = "Cambria") +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+          axis.title.y = element_text(margin = margin(r = 30))) +
+    scale_fill_manual(values = my_colors) +
+    labs(fill = "Vernacular Name Category")
+
+
+  ggsave(paste("c:/rworking/deepseatools/images/NE/",
+               "202505311_",
+               "NatDB_",
+               unique(sub$DatabaseVersion),
+               '_',
+               i,
+               ".png",
+               sep = ''),
+         width = 10,
+         height = 6,
+         units = "in")
+}
+
 
 ```
