@@ -4,7 +4,7 @@
 ## purpose:
 
 ##### linkage #####
-filename <- '20250310-0_NE_Canyons_Monument_143822' ## manual: for this code file name, match to redmine
+filename <- '' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.Rmd', sep = '')
 browseURL(github_link)
