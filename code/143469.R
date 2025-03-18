@@ -6,7 +6,7 @@
 ##### linkage #####
 filename <- '143469' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
-github_link <- paste(github_path, filename, '.Rmd', sep = '')
+github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- filename
@@ -526,40 +526,6 @@ write.csv(sub_enhanced3,
 
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ##### ***** NEW VERSION *****  #####
 ##### load NDB #####
