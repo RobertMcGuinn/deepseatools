@@ -30,36 +30,70 @@ library(openxlsx)
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
 ##### check #####
-filt %>% filter(grepl('EX', DatasetID)) %>% pull(DatasetID) %>% unique()
+# filt %>% filter(grepl('EX', DatasetID)) %>% pull(DatasetID) %>% unique()
 
 ##### ***** ORIGINAL ***** #####
 ##### load dataset from excel #####
-filename <- '20250207_NOAA Coral Sponge_MCMI_Anne_Simpson_RPMcGuinn.xlsx'
+filename <- 'GOA_AKCSI_2022_Data_to_DC.xlsx'
 sub <- read.xlsx(file.path('c:/rworking/deepseatools/indata', filename),
-                    sheet = 'observations',
-                    startRow = 2)
+                    sheet = 'LineObservations')
 
 meta <- read.xlsx(file.path('c:/rworking/deepseatools/indata', filename),
-                 sheet = 'metadata')
-
-##### fix df #####
-sub <- sub[1:83,2:length(names(sub))]
+                 sheet = 'DSCRTP Metadata',
+                 startRow = 5)
 
 ##### rename columns #####
 sub <- sub %>%
   rename(
-    'Habitat' = 'Habitat.-description.CMECS.based',
-    'Substrate' = 'Substrate.-.what.org.attached.to',
-    'CMECSSubstrate' = 'CMECSSubstrate.(Group)'
+    'VerbatimSize' = 'Size',
   )
 
 ##### check #####
 # names(sub)
-# setdiff(names(sub),names(filt))
+setdiff(names(sub),names(filt))
+size_columns <- grep("Size", names(filt), value = TRUE)
 
 ###### fix date #####
 sub$ObservationDate <- convertToDate(sub$ObservationDate)
 sub$ObservationDate <- as.character(sub$ObservationDate)
+
+##### add metadata (NOTE: this mapping should be inspected and tested before using) #####
+sub$DatasetID <- meta[1,2]
+sub$DataProvider <- meta[2,2]
+sub$DataContact <- meta[3,2]
+sub$Citation <- meta[4,2]
+sub$Repository <- meta[5,2]
+sub$Modified <- meta[6,2]
+
+sub$SurveyID <- meta[8,2]
+sub$Vessel <- meta[9,2]
+sub$VehicleName <- meta[10,2]
+sub$PI <- meta[11,2]
+sub$PIAffiliation <- meta[12,2]
+sub$SamplingEquipment <- meta[13,2]
+sub$DepthMethod <- meta[14,2]
+sub$NavType <- meta[15,2]
+sub$LocationAccuracy <- meta[16,2]
+sub$Ocean <- meta[17,2]
+sub$LargeMarineEcosystem <- meta[18,2]
+sub$Country <- meta[19,2]
+sub$FishCouncilRegion <- meta[20,2]
+sub$Purpose   <- meta[21,2]
+sub$SurveyComments <- meta[22,2]
+sub$OtherData <- meta[23,2]
+sub$Website <- meta[24,2]
+
+sub$RecordType <- meta[26,2]
+sub$ObservationYear <- meta[27,2]
+sub$IdentifiedBy <- meta[28,2]
+sub$IdentificationQualifier <- meta[29,2]
+sub$IdentificationDate <- meta[30,2]
+sub$IdentificationComments <- meta[31,2]
+sub$OccurrenceComments <- meta[32,2]
+
+sub$Reporter <- meta[34,2]
+sub$ReporterEmail <- meta[35,2]
+sub$ReporterComments <- meta[36,2]
 
 ##### explore #####
 # length(sub$SampleID)
@@ -69,20 +103,36 @@ sub$ObservationDate <- as.character(sub$ObservationDate)
 # names(sub)
 #
 # table(sub$ObservationDate, useNA = 'always')
-# table(sub$DataProvider)
+# table(sub$DataProvider, useNA = 'always')
 # table(sub$SurveyID, useNA = 'always')
 # table(sub$Vessel, useNA = 'always')
 # table(sub$EventID, useNA = 'always')
 # table(sub$NavType, useNA = 'always')
+#
 # table(sub$LocationAccuracy, useNA = 'always')
-# table(sub$ScientificName, useNA = 'always')
-# table(sub$RecordType, useNA = 'always')
+# table(sub$EndLatitude, useNA = 'always')
+# table(sub$StartLatitude, useNA = 'always')
+# table(sub$EndLongitude, useNA = 'always')
+# table(sub$StartLongitude, useNA = 'always')
+# table(sub$Longitude, useNA = 'always')
+# table(sub$Latitude, useNA = 'always')
 # table(sub$Locality, useNA = 'always')
 #
+# table(sub$DepthInmeters, useNA = 'always')
+# table(sub$MinimumDepthInMeters, useNA = 'always')
+# table(sub$MaximumDepthInMeters, useNA = 'always')
+# table(sub$DepthMethod, useNA = "always")
+
+# table(sub$ScientificName, useNA = 'always')
+# table(sub$AphiaID, useNA = 'always')
+# table(sub$RecordType, useNA = 'always')
+# table(sub$VerbatimSize, useNA = 'always')
+
+
 # table(is.na(sub$Latitude))
 # table(is.na(sub$Longitude))
 # table(is.na(sub$SampleID))
-#
+
 # head(sub$SampleID)
 # head(sub$TrackingID)
 #
@@ -90,7 +140,7 @@ sub$ObservationDate <- as.character(sub$ObservationDate)
 # table(is.na(sub$Condition))
 
 ##### write new version for pipeline #####
-write.csv(sub, 'c:/rworking/deepseatools/indata/20250319-0_MCMI_Benthic_Survey_2015_2022_142706.csv')
+write.csv(sub, 'c:/rworking/deepseatools/indata/20250320-0_NOAA_AFSC_GOA_Coral_Survey_2022_142452.csv')
 
 ##### ***** NEW VERSION *****  #####
 ##### load data #####
