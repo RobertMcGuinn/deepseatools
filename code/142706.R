@@ -89,8 +89,22 @@ sub$ObservationDate <- as.character(sub$ObservationDate)
 # table(is.na(sub$TrackingID))
 # table(is.na(sub$Condition))
 
+##### map check #####
+sub$Longitude <- -1*sub$Longitude
+x <- sub %>% filter(
+  # FlagReason == 'Horizontal position or depth is questionable' |
+  # FlagReason == 'Insufficient taxonomic information | Horizontal position or depth is questionable'
+  # FlagReason == 'Insufficient taxonomic information | Possible intersection with land'|
+  # FlagReason == 'Possible intersection with land'
+  # FlagReason ==  'Invalid latitude | Invalid longitude'
+) %>%
+  group_by(Latitude, Longitude) %>%
+  summarize(n=n())
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+st_write(points, "C:/rworking/deepseatools/indata/sub_geo.shp", delete_dsn = T)
 ##### write new version for pipeline #####
-write.csv(sub, 'c:/rworking/deepseatools/indata/20250319-0_MCMI_Benthic_Survey_2015_2022_142706.csv')
+# write.csv(sub, 'c:/rworking/deepseatools/indata/20250319-0_MCMI_Benthic_Survey_2015_2022_142706.csv')
+
 
 ##### ***** NEW VERSION *****  #####
 ##### load data #####
@@ -126,7 +140,7 @@ for (i in seq_along(my_groups)){
   species_list <- wm_record(my_groups[[i]])
   df <- rbind(df, species_list)
 }
-species_list_original <- df
+species_list_original <- dfo
 
 ##### check #####
 # dim(species_list_original)
