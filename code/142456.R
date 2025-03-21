@@ -1,10 +1,10 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate:20250313
-## purpose:ingest for '142458'
+## purpose:ingest for '142456'
 
 ##### linkage #####
-filename <- '142458' ## manual: for this code file name, match to redmine
+filename <- '142456' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
@@ -34,7 +34,7 @@ source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
 ##### ***** ORIGINAL ***** #####
 ##### load dataset from excel #####
-filename <- '20250124_Graiff_CBNMS_ROV2017.xlsx'
+filename <- '20250124_Graiff_CBNMS_Delta2002-2003.xlsx'
 sub <- read.xlsx(file.path('c:/rworking/deepseatools/indata', filename),
                  sheet = 'observations',
                  startRow = 14)
@@ -43,7 +43,7 @@ meta <- read.xlsx(file.path('c:/rworking/deepseatools/indata', filename),
                  sheet = 'metadata',
                  startRow = 1)
 
-##### rename columns #####
+##### rename columns (OPTIONAL)#####
 # sub <- sub %>%
 #   rename(
 #     'VerbatimSize' = 'Size',
@@ -54,7 +54,6 @@ meta <- read.xlsx(file.path('c:/rworking/deepseatools/indata', filename),
 # setdiff(names(sub),names(filt))
 # size_columns <- grep("Size", names(filt), value = TRUE)
 
-###### check ######
 # table(sub$DataProvider)
 # table(sub$DataContact)
 # table(sub$Citation)
@@ -79,7 +78,7 @@ meta <- read.xlsx(file.path('c:/rworking/deepseatools/indata', filename),
 # table(sub$IdentificationDate)
 # table(sub$IdentificationComments)
 
-##### add metadata (NOTE: this mapping should be inspected and tested before using) #####
+##### add metadata #####
 sub$DataProvider <- meta[1,4]
 sub$DataContact <- meta[2,4]
 sub$Citation <- meta[3,4]
@@ -104,10 +103,9 @@ sub$IdentificationQualifier <- meta[21,4]
 sub$IdentificationDate <- meta[22,4]
 sub$IdentificationComments <- meta[23,4]
 
-###### fix dates #####
+##### fix dates #####
 sub$ObservationDate <- convertToDate(sub$ObservationDate)
 sub$ObservationDate <- as.character(sub$ObservationDate)
-
 sub$Modified <- convertToDate(sub$Modified)
 sub$Modified <- as.character(sub$Modified)
 
@@ -117,6 +115,7 @@ length(unique(sub$SampleID))
 dim(sub)
 summary(sub)
 names(sub)
+table(sub$ImageFilePath, useNA = 'always')
 table(sub$ObservationDate, useNA = 'always')
 table(sub$Modified, useNA = 'always')
 table(sub$DataProvider, useNA = 'always')
@@ -158,18 +157,8 @@ table(sub$AphiaID, useNA = "always")
 
 unique(grep("OET", filt$DatasetID, value = TRUE))
 table(unique(sub$ObservationDate))
-
 filt %>% filter(grepl("Fulmar", Vessel)) %>% select(DatasetID, Vessel, SurveyID) %>% distinct()
 filt %>% filter(grepl("CBNMS", DatasetID)) %>% select(DatasetID, Vessel, SurveyID) %>% distinct()
-
-
-
-
-
-
-
-
-
 
 ##### write new version for pipeline #####
 write.csv(sub, 'c:/rworking/deepseatools/indata/20250320-0_NOAA_AFSC_GOA_Coral_Survey_2022_142452.csv')

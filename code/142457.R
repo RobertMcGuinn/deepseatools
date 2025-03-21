@@ -1,10 +1,10 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate:20250313
-## purpose:ingest for '142458'
+## purpose:ingest for '142457'
 
 ##### linkage #####
-filename <- '142458' ## manual: for this code file name, match to redmine
+filename <- '142457' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
@@ -34,7 +34,7 @@ source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
 ##### ***** ORIGINAL ***** #####
 ##### load dataset from excel #####
-filename <- '20250124_Graiff_CBNMS_ROV2017.xlsx'
+filename <- '20250124_Graiff_CBNMS_ROV2014.xlsx'
 sub <- read.xlsx(file.path('c:/rworking/deepseatools/indata', filename),
                  sheet = 'observations',
                  startRow = 14)
@@ -54,30 +54,29 @@ meta <- read.xlsx(file.path('c:/rworking/deepseatools/indata', filename),
 # setdiff(names(sub),names(filt))
 # size_columns <- grep("Size", names(filt), value = TRUE)
 
-###### check ######
-# table(sub$DataProvider)
-# table(sub$DataContact)
-# table(sub$Citation)
-# table(sub$Repository)
-# table(sub$Modified)
-# table(sub$Reporter)
-# table(sub$ReporterComments)
-# table(sub$SurveyID)
-# table(sub$Vessel)
-# table(sub$VehicleName)
-# table(sub$PI)
-# table(sub$PIAffiliation)
-# table(sub$SamplingEquipment)
-# table(sub$DepthMethod)
-# table(sub$NavType)
-# table(sub$LocationAccuracy)
-# table(sub$Purpose)
-# table(sub$SurveyComments)
-# table(sub$RecordType)
-# table(sub$IdentifiedBy)
-# table(sub$IdentificationQualifier)
-# table(sub$IdentificationDate)
-# table(sub$IdentificationComments)
+table(sub$DataProvider)
+table(sub$DataContact)
+table(sub$Citation)
+table(sub$Repository)
+table(sub$Modified)
+table(sub$Reporter)
+table(sub$ReporterComments)
+table(sub$SurveyID)
+table(sub$Vessel)
+table(sub$VehicleName)
+table(sub$PI)
+table(sub$PIAffiliation)
+table(sub$SamplingEquipment)
+table(sub$DepthMethod)
+table(sub$NavType)
+table(sub$LocationAccuracy)
+table(sub$Purpose)
+table(sub$SurveyComments)
+table(sub$RecordType)
+table(sub$IdentifiedBy)
+table(sub$IdentificationQualifier)
+table(sub$IdentificationDate)
+table(sub$IdentificationComments)
 
 ##### add metadata (NOTE: this mapping should be inspected and tested before using) #####
 sub$DataProvider <- meta[1,4]
@@ -117,6 +116,7 @@ length(unique(sub$SampleID))
 dim(sub)
 summary(sub)
 names(sub)
+table(sub$ImageFilePath, useNA = 'always')
 table(sub$ObservationDate, useNA = 'always')
 table(sub$Modified, useNA = 'always')
 table(sub$DataProvider, useNA = 'always')
