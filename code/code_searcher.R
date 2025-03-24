@@ -13,11 +13,11 @@ files
 ## manual input required: pick the number
 ## or number you want from the list presented
 y <- c(1)
-path <- files[y]
-file.edit(path)
+this <- files[y]
+file.edit(this)
 
 ##### source chosen file #####
-source(path)
+source(this)
 
 ##### find out the time files were edited #####
 ## Get file information
