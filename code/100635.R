@@ -1,10 +1,10 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate:20250313
-## purpose:ingest for 'NOAA_SH-22-09_Clarke_2022_2022_141753'
+## purpose:ingest for '100635'
 
 ##### linkage #####
-filename <- '141753' ## manual: for this code file name, match to redmine
+filename <- '100635' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
