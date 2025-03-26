@@ -705,7 +705,7 @@ write.csv(sub_enhanced3,
                 filename_patch, sep=''),
           fileEncoding = "latin9",
           row.names = F,
-          quote = T)_
+          quote = T)
 
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
