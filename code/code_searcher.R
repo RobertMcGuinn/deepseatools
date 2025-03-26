@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- '20240320-0_rmd_accession_qa_dashboard.Rmd'
+x <- 'taxonomy'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -12,7 +12,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(1)
+y <- c(7)
 this <- files[y]
 file.edit(this)
 
@@ -28,6 +28,10 @@ modification_times <- sapply(file_info, function(info) info$mtime)
 
 ## Combine filenames with modification times
 file_info_df <- data.frame(File = basename(files), Modification_Time = modification_times)
+
+## arrange
+
+file_info_df <- file_info_df %>% arrange(Modification_Time)
 
 ## Print the result
 print(file_info_df) ## files having a larger Modification_Time were created later in time.

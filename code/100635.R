@@ -26,6 +26,7 @@ library(googlesheets4)
 library(robis)
 library(openxlsx)
 library(worrms)
+library(taxize)
 library(googledrive)
 library(googlesheets4)
 
@@ -41,7 +42,7 @@ source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 ##### ***** NEW VERSION ***** #####
 ##### load dataset from CSV #####
 setwd('c:/rworking/deepseatools/indata')
-sub <- read.csv('20250127-0_NOAA_SH-22-09_Clarke_2022_2022_141753.csv')
+sub <- read.csv('20250124-2_NOAA_SWFSC_RL1905_2019_2019_100635.csv')
 
 ##### explore #####
 # length(sub$SampleID)
@@ -98,20 +99,146 @@ sub <- read.csv('20250127-0_NOAA_SH-22-09_Clarke_2022_2022_141753.csv')
 ##### write new version for pipeline (OPTIONAL) #####
 # write.csv(sub, '')
 
-
 ##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 ## manual: make sure the IDs below are pointing at the correct sheets
-tax <- read_sheet('1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ')
-taxfl <- read_sheet('1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M')
-taxch <- read_sheet('11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8')
+# tax <- read_sheet('1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ')
+# taxfl <- read_sheet('1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M')
+# taxch <- read_sheet('11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8')
 
+##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
+## filter taxa list (Optional)
+sub1 <- sub
+
+## change the following taxa ro better match
+sub2 <- sub1 %>%
+  mutate(ScientificName = trimws(ScientificName),  # Remove extra spaces
+         ScientificName2 = case_when(
+           ScientificName == "Porifera #7" ~ "Porifera",
+           ScientificName == "Pennatulacea #1" ~ "Pennatulacea",
+           ScientificName == "Staurocalyptus spp. #2" ~ "Staurocalyptus",
+           ScientificName == "Porifera #5" ~ "Porifera",
+           ScientificName == "Porifera #3" ~ "Porifera",
+           ScientificName == "Porifera #1" ~ "Porifera",
+           ScientificName == "Porifera #4" ~ "Porifera",
+           ScientificName == "Porifera #12" ~ "Porifera",
+           ScientificName == "Porifera #9" ~ "Porifera",
+           ScientificName == "Porifera #2" ~ "Porifera",
+           ScientificName == "Porifera #6" ~ "Porifera",
+           ScientificName == "FunicuPorifera #15lina spp." ~ "Funiculina",
+           ScientificName == "Gersemia spp." ~ "Gersemia",
+           ScientificName == "Paragorgia spp." ~ "Paragorgia",
+           ScientificName == "Plexauridae #3" ~ "Plexauridae",
+           ScientificName == "Hexacorallia/Octocorallia" ~ "Hexacorallia_Octocorallia",
+           ScientificName == "Asbestopluma spp. #2"  ~ "Asbestopluma",
+           ScientificName == "Clavularia spp."   ~ "Clavularia" ,
+           ScientificName == "Polymastia spp. #1"  ~ "Polymastia",
+           ScientificName == "Bathypathes spp."   ~ "Bathypathes",
+           ScientificName == "Poecillastra spp."   ~ "Poecillastra",
+           ScientificName == "Asbestopluma spp. #1"   ~ "Asbestopluma",
+           ScientificName == "Acanthogorgia spp."   ~ "Acanthogorgia",
+           ScientificName == "Mycale spp."   ~ "Mycale",
+           ScientificName == "Plexauridae #1"   ~ "Plexauridae",
+           ScientificName == "Staurocalyptus spp. #1"   ~ "Staurocalyptus",
+           ScientificName == "Staurocalyptus spp. #1"   ~ "Staurocalyptus",
+           ScientificName == "Porifera #15"   ~ "Porifera",
+           ScientificName == "Porifera #8"   ~ "Porifera",
+           ScientificName == "Porifera #16"   ~ "Porifera",
+           ScientificName == "Latrunculia spp."   ~ "Latrunculia",
+           ScientificName == "Hexactinella spp."   ~ "Hexactinella",
+           ScientificName == "Narella spp."   ~ "Narella",
+           ScientificName == "Funiculina spp."   ~ "Funiculina",
+           ScientificName == "Placogorgia spp."   ~ "Placogorgia",
+           TRUE ~ ScientificName  # Keep original name if no match
+         ))
+
+##### check #####
+# table(sub2$ScientificName2, useNA = 'always')
+#
+# sub2 %>%
+#   group_by(ScientificName, ScientificName2) %>%
+#   summarize(n=n()) %>% View()
+
+
+##### create vector of names #####
+my_vector <- unique(sub2$ScientificName2)
+
+# remove any missing value.
+my_vector <- my_vector[complete.cases(my_vector)]
+
+##### make groups of 50 (because the API limit is 50) #####
+my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
+
+##### loop to get records by names list #####
+## run this just once to get the proper data structure for an empty dataframe
+species_list <- wm_records_name("Octocorallia", fuzzy = F)
+
+## initiate the empty data frame
+df <- species_list[0,]
+
+## loop to get WoRMS records from names (b)
+for (i in seq_along(my_groups)){
+  species_list <- wm_records_names(name = my_groups[[i]],
+                                   fuzzy = F,
+                                   marine_only = T,
+
+  )
+  species_list <- do.call("rbind", species_list)
+  df <- rbind(df, species_list)
+}
+species_list <- df
+
+## get rid of any extinct matches
+species_list <- species_list %>%
+  filter(isExtinct == 0 |
+           is.na(isExtinct) == T)
+
+## get just the data that are distinc
+species_list <- distinct(species_list)
+
+##### join sub2 with species list #####
+by <- join_by(ScientificName2 == scientificname)
+joined <- left_join(sub2, species_list, by)
+
+##### create a summary joined file #####
+summary <- joined %>%
+  group_by(status,
+           phylum,
+           ScientificName,
+           ScientificName2,
+           valid_name,
+           valid_AphiaID,
+           rank,
+           authority) %>%
+  summarize(n=n())
+
+##### check: test for difficult taxa #####
+# summary$sametest <- ifelse(summary$ScientificName2 == summary$valid_name,"Yes","No")
+# changes <- summary %>% filter(sametest == "No") %>% group_by(ScientificName2, valid_name) %>%
+#   summarize(n=n())
+# nomatch <- summary %>%
+#   filter(is.na(sametest) == T) %>%
+#   group_by(ScientificName2, valid_name) %>%
+#   summarize(n=n())
+#
+#
+# changes
+# nomatch
+
+##### strip out CatalogNumber and valid AphiaID #####
+AphiaID_map <- joined %>% select(CatalogNumber, valid_AphiaID)
+
+##### join values back to original sub #####
+sub <- left_join(sub, AphiaID_map)
+sub$AphiaID <- sub$valid_AphiaID
 
 ##### create vector from incoming AphiaIDs #####
 my_vector <- unique(sub$AphiaID)
+# remove any missing value.
+my_vector <- my_vector[complete.cases(my_vector)]
 
 ##### check #####
-# length(my_vector)
+length(my_vector)
 
 ## make groups of 50 (because the API limit is 50)
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
@@ -320,7 +447,7 @@ joined4 <- left_join(joined3, synonyms, by)
 # setdiff(joined4$AphiaID, species_list_original$valid_AphiaID_complete)
 # setdiff(species_list_original$valid_AphiaID_complete, joined4$AphiaID)
 
-###### join original table with the new table #####
+##### join original table with the new table #####
 joined4$AphiaID2 <- joined4$AphiaID
 by <- join_by(valid_AphiaID_complete == AphiaID2)
 taxonomy_table <- left_join(species_list_original, joined4, by)
@@ -518,6 +645,11 @@ View(sub_enhanced3)
 dim(sub_enhanced3)
 dim(sub)
 length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
+
+x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+sub %>% filter(CatalogNumber %in% x) %>%
+  group_by(ScientificName, valid_AphiaID) %>%
+  summarize(n=n())
 
 filt %>% filter(ScientificName == 'Callistephanus') %>% pull(VernacularNameCategory) %>% table()
 
