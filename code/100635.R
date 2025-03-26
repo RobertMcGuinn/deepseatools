@@ -42,7 +42,9 @@ source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 ##### ***** NEW VERSION ***** #####
 ##### load dataset from CSV #####
 setwd('c:/rworking/deepseatools/indata')
-sub <- read.csv('20250124-2_NOAA_SWFSC_RL1905_2019_2019_100635.csv')
+filename <- '20250124-2_NOAA_SWFSC_RL1905_2019_2019_100635'
+sub <- read.csv(paste(filename, '.csv', sep=''))
+# View(sub)
 
 ##### explore #####
 # length(sub$SampleID)
@@ -213,23 +215,23 @@ summary <- joined %>%
   summarize(n=n())
 
 ##### check: test for difficult taxa #####
-# summary$sametest <- ifelse(summary$ScientificName2 == summary$valid_name,"Yes","No")
-# changes <- summary %>% filter(sametest == "No") %>% group_by(ScientificName2, valid_name) %>%
-#   summarize(n=n())
-# nomatch <- summary %>%
-#   filter(is.na(sametest) == T) %>%
-#   group_by(ScientificName2, valid_name) %>%
-#   summarize(n=n())
-#
-#
-# changes
-# nomatch
+summary$sametest <- ifelse(summary$ScientificName2 == summary$valid_name,"Yes","No")
+changes <- summary %>% filter(sametest == "No") %>%
+  group_by(ScientificName, ScientificName2, valid_name) %>%
+  summarize(n=n())
+nomatch <- summary %>%
+  filter(is.na(sametest) == T) %>%
+  group_by(ScientificName, ScientificName2, valid_name) %>%
+  summarize(n=n())
+
+changes
+nomatch
 
 ##### strip out CatalogNumber and valid AphiaID #####
-AphiaID_map <- joined %>% select(CatalogNumber, valid_AphiaID)
+aphia<- joined %>% select(CatalogNumber, valid_AphiaID)
 
 ##### join values back to original sub #####
-sub <- left_join(sub, AphiaID_map)
+sub <- left_join(sub, aphia)
 sub$AphiaID <- sub$valid_AphiaID
 
 ##### create vector from incoming AphiaIDs #####
@@ -454,7 +456,7 @@ taxonomy_table <- left_join(species_list_original, joined4, by)
 # View(taxonomy_table)
 # names(taxonomy_table)
 
-##### add taxonomy to sub #####
+##### join taxonomy to sub #####
 by <- join_by(AphiaID == AphiaID.x)
 sub_enhanced <- left_join(sub, taxonomy_table, by)
 
@@ -485,6 +487,9 @@ sub_enhanced$Species <- word(sub_enhanced$Species.y, -1)
 sub_enhanced$Subspecies <- sub_enhanced$Subspecies.y
 sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority.y
 sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
+
+##### add a variable #####
+sub_enhanced$IdentificationComments <- sub_enhanced$VernacularNameCategory
 
 ##### check #####
 # table(sub_enhanced$Phylum, useNA = 'always')
@@ -528,16 +533,16 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
 
 
 ##### check #####
-sub_enhanced %>% filter(ScientificName == "Anthozoa") %>% pull(ScientificName)
-sub_enhanced_filter %>% filter(ScientificName == "Anthozoa") %>% pull(ScientificName)
-filt %>% filter(ScientificName == "Anthozoa") %>% pull(ScientificName)
-
-table(sub_enhanced_filter$Phylum, useNA = 'always')
-table(sub_enhanced_filter$Subphylum, useNA = 'always')
-
-sub_enhanced_filter %>%
-  group_by(AphiaID, Phylum, Subphylum, Class, Order, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View()
+# sub_enhanced %>% filter(ScientificName == "Anthozoa") %>% pull(ScientificName)
+# sub_enhanced_filter %>% filter(ScientificName == "Anthozoa") %>% pull(ScientificName)
+# filt %>% filter(ScientificName == "Anthozoa") %>% pull(ScientificName)
+#
+# table(sub_enhanced_filter$Phylum, useNA = 'always')
+# table(sub_enhanced_filter$Subphylum, useNA = 'always')
+#
+# sub_enhanced_filter %>%
+#   group_by(AphiaID, Phylum, Subphylum, Class, Order, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
 
 ##### assign VernacularNameCategory #####
 ## define not in
@@ -638,60 +643,69 @@ sub_enhanced3<- sub_enhanced2 %>%
          Species,
          Subspecies,
          ScientificNameAuthorship,
-         Synonyms)
+         Synonyms,
+         IdentificationComments)
 
 ##### check #####
-View(sub_enhanced3)
-dim(sub_enhanced3)
-dim(sub)
-length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
-
+sub_enhanced3$IdentificationComments
+# sub_enhanced3$VernacularNameCategory
+# table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
+# View(sub_enhanced3)
+# dim(sub_enhanced3)
+# dim(sub)
+# length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
+#
 x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
 sub %>% filter(CatalogNumber %in% x) %>%
-  group_by(ScientificName, valid_AphiaID) %>%
-  summarize(n=n())
-
-filt %>% filter(ScientificName == 'Callistephanus') %>% pull(VernacularNameCategory) %>% table()
-
-x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-sub_enhanced %>% filter(CatalogNumber %in% x) %>%
-  group_by(AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
+  group_by(CatalogNumber,
+    VerbatimScientificName,
+           ScientificName,
+           VernacularNameCategory,
+           valid_AphiaID) %>%
   summarize(n=n()) %>% View()
 
+# filt %>% filter(ScientificName == 'Callistephanus') %>% pull(VernacularNameCategory) %>% table()
+#
+# x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+# sub_enhanced %>% filter(CatalogNumber %in% x) %>%
+#   group_by(AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
+#
+#
+# table(is.na(sub$CatalogNumber))
+# table(is.na(sub_enhanced3$CatalogNumber))
+# sub %>% filter(ScientificName == 'Dichotella gemmacea') %>% pull(AphiaID)
+# 'Dichotella gemmacea'
+#
+# x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
+# sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
+#   group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
+#   summarize(n=n()) %>% View()
+#
+# x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+# sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID)
+#
+# table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
+#
+# sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(Order) %>% unique()
+#
+# sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
+#   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
+#
+# sub_enhanced3 %>%
+#   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species, ScientificNameAuthorship) %>%
+#   summarize(n=n()) %>% View()
 
-table(is.na(sub$CatalogNumber))
-table(is.na(sub_enhanced3$CatalogNumber))
-sub %>% filter(ScientificName == 'Dichotella gemmacea') %>% pull(AphiaID)
-'Dichotella gemmacea'
-
-x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
-sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
-  group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
-  summarize(n=n()) %>% View()
-
-x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID)
-
-table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
-
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(Order) %>% unique()
-
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
-  group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View()
-
-sub_enhanced3 %>%
-  group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species, ScientificNameAuthorship) %>%
-  summarize(n=n()) %>% View()
 
 ##### export result to csv (export to CSV) #####
-filename <- "20250127-0_NOAA_SH-22-09_Clarke_2022_2022_141753_taxonomy_patch.csv"
+filename_patch <- paste(filename, '_taxonomy_patch', '.csv',sep = '')
 write.csv(sub_enhanced3,
           paste("c:/rworking/deepseatools/indata/",
-                filename, sep=''),
+                filename_patch, sep=''),
           fileEncoding = "latin9",
           row.names = F,
-          quote = T)
+          quote = T)_
 
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
