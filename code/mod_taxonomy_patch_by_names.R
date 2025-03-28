@@ -105,11 +105,11 @@ setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv(paste(filename, '.csv', sep = ''))
 
 ##### load the most current taxonomy from Google Sheets #####
-# https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
+## https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 ## manual: make sure the IDs below are pointing at the correct sheets
-# tax <- read_sheet('1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ')
-# taxfl <- read_sheet('1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M')
-# taxch <- read_sheet('11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8')
+tax <- read_sheet('1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ')
+taxfl <- read_sheet('1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M')
+taxch <- read_sheet('11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8')
 
 ##### check #####
 # table(unique(sub$ScientificName), useNA = 'always')
@@ -209,20 +209,20 @@ summary <- joined %>%
   summarize(n=n())
 
 ##### check: test for difficult taxa #####
-# summary$sametest <- ifelse(summary$ScientificName2 == summary$valid_name,"Yes","No")
-#
-# changes <- summary %>% filter(sametest == "No") %>%
-#   group_by(ScientificName, ScientificName2, valid_name, sametest) %>%
-#   summarize(n=n())
-#
-# nomatch <- summary %>%
-#   filter(is.na(sametest) == T) %>%
-#   group_by(ScientificName, ScientificName2, valid_name, sametest
-#            ) %>%
-#   summarize(n=n())
-#
-# changes
-# nomatch
+summary$sametest <- ifelse(summary$ScientificName2 == summary$valid_name,"Yes","No")
+
+changes <- summary %>% filter(sametest == "No") %>%
+  group_by(ScientificName, ScientificName2, valid_name, sametest) %>%
+  summarize(n=n())
+
+nomatch <- summary %>%
+  filter(is.na(sametest) == T) %>%
+  group_by(ScientificName, ScientificName2, valid_name, sametest
+           ) %>%
+  summarize(n=n())
+
+changes
+nomatch
 
 ##### check #####
 # summary %>% filter(ScientificName2 == "Polycapus")
