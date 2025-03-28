@@ -4,14 +4,14 @@
 ## purpose:ingest of Accession: NOAA_EX2301_2023_143469
 
 ##### linkage #####
-filename <- '143469' ## manual: for this code file name, match to redmine
+filename <- '143180' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- filename
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
-browseURL(redmine_link)
+# browseURL(redmine_link)
 
 ##### packages #####
 library(tidyverse)
@@ -24,33 +24,63 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(googlesheets4)
 library(robis)
+library(openxlsx)
 library(worrms)
 library(googledrive)
 
-##### authorizations #####
-gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
-drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 ##### source ndb #####
-# source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
+source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
 ##### check #####
-filt %>% filter(grepl('EX', DatasetID)) %>% pull(DatasetID) %>% unique()
+# filt %>% filter(grepl('EX', DatasetID)) %>% pull(DatasetID) %>% unique()
 
-##### load dataset #####
-filename <- 'c:rworking/deepseatools/indata/20250227_EX2301_ROV_Animal_Data_SBingo_AMarranzino.tsv'
-sub <- read.delim(filename, header = TRUE, sep = "\t", fileEncoding = 'UTF-8')
-sub$DataProvider <- enc2utf8(sub$DataProvider)
+##### ***** ORIGINAL ***** #####
+##### load dataset from excel #####
+filename <- '20250219_Rooney_GOA_AI sponges.xlsx'
+sub <- read.xlsx(file.path('c:/rworking/deepseatools/indata', filename),
+                 sheet = 'observations',
+                 startRow = 14)  # Skip first 13 rows
+
+## fix date issue with import
+sub$ObservationDate <- convertToDate(corals$ObservationDate)
+sub$ObservationDate <- as.character(sub$ObservationDate)
+
+## fix some strange ones
+sub[sub$SampleID == "2021-50", "ObservationDate"] <- '2021-05-23'
+sub[sub$SampleID == "2021-65", "ObservationDate"] <- '2021-07-26'
 
 ##### explore #####
+length(sub$SampleID)
+length(unique(sub$SampleID))
+sub %>% filter(grepl('2107', ObservationDate)) %>%
+  select(SampleID, ObservationDate, SurveyID) %>%
+  arrange(SurveyID)
+
+sub %>% filter(grepl('Gladiator', Vessel)) %>%
+  select(Vessel, SurveyID) %>%
+  arrange(SurveyID)
+
+filt %>% filter(grepl('Gladiator', Vessel), SurveyID ==  '200401') %>%
+  select(Vessel, SurveyID, DatasetID, SampleID) %>%
+  distinct() %>%
+  arrange(SurveyID)
+
 dim(sub)
 summary(sub)
 names(sub)
+table(sub$ObservationDate, useNA = 'always')
 table(sub$DataProvider)
 table(sub$SurveyID, useNA = 'always')
 table(sub$Vessel, useNA = 'always')
+
 table(sub$EventID, useNA = 'always')
-table(sub$ObservationDate, useNA = 'always')
+table(sub$NavType, useNA = 'always')
+table(sub$LocationAccuracy, useNA = 'always')
 table(sub$ScientificName, useNA = 'always')
+table(sub$RecordType, useNA = 'always')
+table(sub$Locality, useNA = 'always')
+table(sub$O)
+
 table(is.na(sub$Latitude))
 table(is.na(sub$Longitude))
 table(is.na(sub$SampleID))
@@ -68,83 +98,155 @@ filt %>%
   table()
 
 
-##### ***** NEW VERSION  ***** #####
+##### ***** NEW VERSION 20250319-3 *****  #####
 ##### load dataset from CSV #####
+filename <- "20250319-3_NOAA_Sponge_Specimens_SRooney_1996_2023_143180"
 setwd('c:/rworking/deepseatools/indata')
-filename <- '20250319-0_NOAA_EX2301_2023_143469'
-sub <- read.csv(paste(filename, '.csv', sep=''))
-# View(sub)
+sub <- read.csv(paste(filename, '.csv', sep = ''))
 
 ##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 ## manual: make sure the IDs below are pointing at the correct sheets
-tax <- read_sheet('1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ')
-taxfl <- read_sheet('1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M')
-taxch <- read_sheet('11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8')
+# tax <- read_sheet('1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ')
+# taxfl <- read_sheet('1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M')
+# taxch <- read_sheet('11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8')
 
-##### explore #####
-# length(sub$SampleID)
-# length(unique(sub$SampleID))
-# dim(sub)
-# summary(sub)
-# names(sub)
-# table(sub$ImageFilePath, useNA = 'always')
-# table(sub$ObservationDate, useNA = 'always')
-# table(sub$Modified, useNA = 'always')
-# table(sub$DataProvider, useNA = 'always')
-# table(sub$SurveyID, useNA = 'always')
-# table(sub$Vessel, useNA = 'always')
-# table(sub$EventID, useNA = 'always')
-# table(sub$NavType, useNA = 'always')
-# table(sub$LocationAccuracy, useNA = 'always')
-# table(sub$EndLatitude, useNA = 'always')
-# table(sub$StartLatitude, useNA = 'always')
-# table(sub$EndLongitude, useNA = 'always')
-# table(sub$StartLongitude, useNA = 'always')
-# table(sub$Longitude, useNA = 'always')
-# table(sub$Latitude, useNA = 'always')
-# table(sub$Locality, useNA = 'always')
-# table(sub$DepthInMeters, useNA = 'always')
-# table(sub$MinimumDepthInMeters, useNA = 'always')
-# table(sub$MaximumDepthInMeters, useNA = 'always')
-# table(sub$DepthMethod, useNA = "always")
-# table(sub$ScientificName, useNA = "always")
-# table(sub$AphiaID, useNA = "always")
-# table(sub$Class)
-
-
-# table(sub$ScientificName, useNA = 'always')
+##### check #####
+# table(unique(sub$ScientificName), useNA = 'always')
 # table(sub$AphiaID, useNA = 'always')
-# table(sub$RecordType, useNA = 'always')
-# table(sub$VerbatimSize, useNA = 'always')
+# length(unique(sub$ScientificName))
+# length(sub$ScientificName)
+# table(sub$Genus, useNA = 'always')
 
+##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
+## filter taxa list (Optional)
+sub1 <- sub
 
-# table(is.na(sub$Latitude))
-# table(is.na(sub$Longitude))
-# table(is.na(sub$SampleID))
+## change the following taxa for a better match
+sub2 <- sub1  %>%
+  mutate(ScientificName = trimws(ScientificName),  # Remove extra spaces
+         ScientificName2 = case_when(
+           ScientificName == "class Calcarea" ~ "Calcarea",
+           ScientificName == "Coelosphaera kigushimkada" ~ "Coelosphaera (Histodermion) kigushimkada",
+           ScientificName == "Aaptos mucronatus n.sp." ~  "Aaptos",
+           ScientificName == "Aaptos n.sp. (new undescribed species)" ~ "Aaptos",
+           ScientificName == "Cladocroce cylindrica n. sp." ~ "Cladocroce",
+           ScientificName == "Forcepia atka n.sp." ~ "Forcepia",
+           ScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "Haliclona",
+           ScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "Haliclona" ,
+           ScientificName == "Homaxinella fruticosa n.sp." ~ "Homaxinella",
+           ScientificName == "Julavis borealis n.sp." ~ "Julavis",
+           ScientificName == "Megaciella aurantia n.sp." ~ "Megaciella",
+           ScientificName == "Polycapus rubrum n. gen. n. sp." ~ "Hymedesmiidae",
+           ScientificName == "Stelletta plana n.sp." ~ "Stellata",
+           TRUE ~ ScientificName  # Keep original name if no match
+         ))
 
-# head(sub$SampleID)
-# head(sub$TrackingID)
+##### check #####
+# sub2 %>% filter(ScientificName2 == "Polycapus") %>% pull(ScientificName2)
+
+# table(sub2$ScientificName2, useNA = 'always')
 #
-# table(is.na(sub$TrackingID))
-# table(is.na(sub$Condition))
+# sub2 %>%
+#   group_by(ScientificName, ScientificName2) %>%
+#   summarize(n=n()) %>% View()
 
-# unique(grep("OET", filt$DatasetID, value = TRUE))
-# table(unique(sub$ObservationDate))
-# filt %>% filter(grepl("Fulmar", Vessel)) %>% select(DatasetID, Vessel, SurveyID) %>% distinct()
-# filt %>% filter(grepl("CBNMS", DatasetID)) %>% select(DatasetID, Vessel, SurveyID) %>% distinct()
 
-##### create vector from incoming AphiaIDs #####
-my_vector <- unique(sub$AphiaID)
+##### create vector of names #####
+my_vector <- unique(sub2$ScientificName2)
+
 # remove any missing value.
+my_vector <- my_vector[complete.cases(my_vector)]
+
+##### make groups of 50 (because the API limit is 50) #####
+my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
+
+##### loop to get records by names list #####
+## run this just once to get the proper data structure for an empty dataframe
+species_list <- wm_records_name("Octocorallia", fuzzy = F)
+
+## initiate the empty data frame
+df <- species_list[0,]
+
+## loop to get WoRMS records from names (b)
+for (i in seq_along(my_groups)){
+  species_list <- wm_records_names(name = my_groups[[i]],
+                                   fuzzy = F,
+                                   marine_only = T,
+
+  )
+  species_list <- do.call("rbind", species_list)
+  df <- rbind(df, species_list)
+}
+species_list <- df
+
+## get rid of any extinct matches
+species_list <- species_list %>%
+  filter(isExtinct == 0 |
+           is.na(isExtinct) == T)
+
+## get just the data that are distinc
+species_list <- distinct(species_list)
+
+##### join sub2 with species list #####
+by <- join_by(ScientificName2 == scientificname)
+joined <- left_join(sub2, species_list, by)
+
+##### check #####
+# joined %>% group_by(Genus, VerbatimScientificName, ScientificName, ScientificName2, valid_name) %>%
+#   summarize(n=n()) %>% View()
+
+##### create a summary joined file #####
+summary <- joined %>%
+  group_by(status,
+           phylum,
+           ScientificName,
+           ScientificName2,
+           valid_name,
+           valid_AphiaID,
+           rank,
+           authority) %>%
+  summarize(n=n())
+
+##### check: test for difficult taxa #####
+# summary$sametest <- ifelse(summary$ScientificName2 == summary$valid_name,"Yes","No")
+#
+# changes <- summary %>% filter(sametest == "No") %>%
+#   group_by(ScientificName, ScientificName2, valid_name, sametest) %>%
+#   summarize(n=n())
+#
+# nomatch <- summary %>%
+#   filter(is.na(sametest) == T) %>%
+#   group_by(ScientificName, ScientificName2, valid_name, sametest
+#            ) %>%
+#   summarize(n=n())
+#
+# changes
+# nomatch
+
+##### check #####
+# summary %>% filter(ScientificName2 == "Polycapus")
+
+
+##### strip out CatalogNumber and valid AphiaID #####
+aphia<- joined %>% select(CatalogNumber, valid_AphiaID)
+
+##### check #####
+# names(aphia)
+
+##### join proper aphia ID values back to original sub #####
+sub <- left_join(sub, aphia)
+sub$AphiaID <- sub$valid_AphiaID
+sub <- sub %>% select(-all_of(c("valid_AphiaID")))
+
+##### create vector of valid aphiaID  #####
+my_vector <- unique(sub$AphiaID)
 my_vector <- my_vector[complete.cases(my_vector)]
 
 ##### check #####
 # length(my_vector)
-sub %>% filter(AphiaID == '-999') %>% select(VerbatimScientificName, ScientificName) %>% View()
-table(is.na(sub$ScientificName))
 
-## make groups of 50 (because the API limit is 50)
+##### make groups of 50 (because the API limit is 50) #####
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
 
 ##### loop to get records by AphiaID #####
@@ -363,9 +465,9 @@ by <- join_by(AphiaID == AphiaID.x)
 sub_enhanced <- left_join(sub, taxonomy_table, by)
 
 ##### check #####
-sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
-  pull(ScientificName) %>%
-  unique()
+# sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
+#   pull(ScientificName) %>%
+#   unique()
 #
 # dim(sub)
 # dim(sub_enhanced)
@@ -390,7 +492,7 @@ sub_enhanced$Subspecies <- sub_enhanced$Subspecies.y
 sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority.y
 sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
 
-##### add IdentificationComments is sub has reported values for VernacularNameCategory #####
+##### add a variable #####
 sub_enhanced$IdentificationComments <- sub_enhanced$VernacularNameCategory
 
 ##### check #####
@@ -505,19 +607,9 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     TRUE ~ ''))
 
 ##### check #####
-table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
-sub_enhanced2 %>% filter(ScientificName == 'Clavulariidae') %>% pull(VernacularNameCategory) %>%
-  table(useNA = 'always')
-
-filt %>% filter(ScientificName == 'Clavulariidae') %>% pull(VernacularNameCategory) %>%
-  table(useNA = 'always')
-sub_enhanced2 %>% filter(ScientificName == 'Clavulariidae') %>% pull(ScientificName) %>%
-  table(useNA = 'always')
-filt %>% filter(ScientificName == 'Malacalcyonacea') %>% pull(VernacularNameCategory) %>%
-  table(useNA = 'always')
-sub_enhanced2 %>% filter(ScientificName == 'Malacalcyonacea') %>% pull(VernacularNameCategory) %>%
-  table(useNA = 'always')
-
+# table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
+# filt %>% filter(Order == 'Malacalcyonacea') %>% pull(VernacularNameCategory) %>%
+#   table(useNA = 'always')
 #
 # filt %>% filter(Genus == 'Clavularia') %>% pull(VernacularNameCategory) %>%
 #   table(useNA = 'always')
@@ -560,6 +652,120 @@ sub_enhanced3<- sub_enhanced2 %>%
          IdentificationComments)
 
 ##### check #####
+# sub_enhanced3 %>%
+#   group_by(VerbatimScientificName, ScientificName) %>%
+#   summarize(n=n()) %>% View()
+
+##### change the following to deal with new species (OPTIONAL) ######
+## set ScientificName
+sub_enhanced3 <- sub_enhanced3  %>%
+  mutate(ScientificName = trimws(ScientificName),  # Remove extra spaces
+         ScientificName = case_when(
+           VerbatimScientificName == "Aaptos mucronatus n.sp." ~  "Aaptos mucronatus n.sp.",
+           VerbatimScientificName == "Aaptos n.sp. (new undescribed species)" ~ "Aaptos n.sp.",
+           VerbatimScientificName == "Cladocroce cylindrica n. sp." ~ "Cladocroce cylindrica n. sp.",
+           VerbatimScientificName == "Forcepia atka n.sp." ~ "Forcepia atka n.sp.",
+           VerbatimScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "Haliclona (Haliclona) n.sp.",
+           VerbatimScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "Haliclona (Reniera) n.sp." ,
+           VerbatimScientificName == "Homaxinella fruticosa n.sp." ~ "Homaxinella fruticosa n.sp.",
+           VerbatimScientificName == "Julavis borealis n.sp." ~ "Julavis borealis n.sp.",
+           VerbatimScientificName == "Megaciella aurantia n.sp." ~ "Megaciella aurantia n.sp.",
+           VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "Polycapus rubrum n. gen. n. sp.",
+           VerbatimScientificName == "Stelletta plana n.sp." ~ "Stelletta plana n.sp.",
+           TRUE ~ as.character(ScientificName)  # Keep original name if no match
+         ))
+
+
+## set ScientificNameAuthorship to null
+sub_enhanced3 <- sub_enhanced3  %>%
+  mutate(VerbatimScientificName = trimws(VerbatimScientificName),  # Remove extra spaces
+         ScientificNameAuthorship = case_when(
+           VerbatimScientificName == "Aaptos mucronatus n.sp." ~  "",
+           VerbatimScientificName == "Aaptos n.sp. (new undescribed species)" ~ "",
+           VerbatimScientificName == "Cladocroce cylindrica n. sp." ~ "",
+           VerbatimScientificName == "Forcepia atka n.sp." ~ "",
+           VerbatimScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "",
+           VerbatimScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "" ,
+           VerbatimScientificName == "Homaxinella fruticosa n.sp." ~ "",
+           VerbatimScientificName == "Julavis borealis n.sp." ~ "",
+           VerbatimScientificName == "Megaciella aurantia n.sp." ~ "",
+           VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "",
+           VerbatimScientificName == "Stelletta plana n.sp." ~ "",
+           TRUE ~ ScientificNameAuthorship  # Keep original name if no match
+         ))
+
+## set AphiaID to null
+sub_enhanced3 <- sub_enhanced3  %>%
+  mutate(ScientificName = trimws(ScientificName),  # Remove extra spaces
+         AphiaID = case_when(
+           VerbatimScientificName == "Aaptos mucronatus n.sp." ~  "",
+           VerbatimScientificName == "Aaptos n.sp. (new undescribed species)" ~ "",
+           VerbatimScientificName == "Cladocroce cylindrica n. sp." ~ "",
+           VerbatimScientificName == "Forcepia atka n.sp." ~ "",
+           VerbatimScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "",
+           VerbatimScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "" ,
+           VerbatimScientificName == "Homaxinella fruticosa n.sp." ~ "",
+           VerbatimScientificName == "Julavis borealis n.sp." ~ "",
+           VerbatimScientificName == "Megaciella aurantia n.sp." ~ "",
+           VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "",
+           VerbatimScientificName == "Stelletta plana n.sp." ~ "",
+           TRUE ~ as.character(AphiaID)  # Keep original name if no match
+         ))
+
+## set Species
+sub_enhanced3 <- sub_enhanced3  %>%
+  mutate(Species = case_when(
+    VerbatimScientificName == "Aaptos mucronatus n.sp." ~  "mucronatus",
+    VerbatimScientificName == "Aaptos n.sp. (new undescribed species)" ~ "",
+    VerbatimScientificName == "Cladocroce cylindrica n. sp." ~ "cylindrica",
+    VerbatimScientificName == "Forcepia atka n.sp." ~ "atka",
+    VerbatimScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "",
+    VerbatimScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "" ,
+    VerbatimScientificName == "Homaxinella fruticosa n.sp." ~ "fruticosa",
+    VerbatimScientificName == "Julavis borealis n.sp." ~ "borealis",
+    VerbatimScientificName == "Megaciella aurantia n.sp." ~ "aurantia",
+    VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "rubrum",
+    VerbatimScientificName == "Stelletta plana n.sp." ~ "plana",
+    TRUE ~ as.character(Species)  # Keep original name if no match
+  ))
+
+## set TaxonRank
+sub_enhanced3 <- sub_enhanced3  %>%
+  mutate(TaxonRank = case_when(
+    VerbatimScientificName == "Aaptos mucronatus n.sp." ~  "species",
+    VerbatimScientificName == "Aaptos n.sp. (new undescribed species)" ~ "species",
+    VerbatimScientificName == "Cladocroce cylindrica n. sp." ~ "species",
+    VerbatimScientificName == "Forcepia atka n.sp." ~ "species",
+    VerbatimScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "species",
+    VerbatimScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "species" ,
+    VerbatimScientificName == "Homaxinella fruticosa n.sp." ~ "species",
+    VerbatimScientificName == "Julavis borealis n.sp." ~ "species",
+    VerbatimScientificName == "Megaciella aurantia n.sp." ~ "species",
+    VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "species",
+    VerbatimScientificName == "Stelletta plana n.sp." ~ "species",
+    TRUE ~ as.character(TaxonRank)  # Keep original name if no match
+  ))
+
+## set Genus
+sub_enhanced3 <- sub_enhanced3  %>%
+  mutate(Genus = case_when(
+    VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "Polycapus",
+    VerbatimScientificName == "Julavis borealis n.sp." ~ 'Julavis',
+    TRUE ~ as.character(VerbatimScientificName)  # Keep original name if no match
+  ))
+
+
+##### check #####
+# sub_enhanced3 %>%  filter(VerbatimScientificName == "Aaptos mucronatus n.sp.") %>%
+#   pull(Species)
+#
+# sub_enhanced3 %>%  filter(VerbatimScientificName == "Polycapus rubrum n. gen. n. sp.") %>%
+#   pull(Species)
+
+sub_enhanced3 %>%  filter(VerbatimScientificName == "Julavis borealis n.sp.") %>%
+  pull(Species)
+
+
 # sub_enhanced3$IdentificationComments
 # sub_enhanced3$VernacularNameCategory
 # table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
@@ -573,11 +779,11 @@ sub_enhanced3<- sub_enhanced2 %>%
 #   group_by(CatalogNumber,
 #            VerbatimScientificName,
 #            ScientificName,
-#            VernacularNameCategory) %>%
+#            VernacularNameCategory,
+#            valid_AphiaID) %>%
 #   summarize(n=n()) %>% View()
-#
-# filt %>% filter(ScientificName == 'Callistephanus') %>%
-#   pull(VernacularNameCategory) %>% table()
+
+# filt %>% filter(ScientificName == 'Callistephanus') %>% pull(VernacularNameCategory) %>% table()
 #
 # x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
 # sub_enhanced %>% filter(CatalogNumber %in% x) %>%
@@ -610,7 +816,6 @@ sub_enhanced3<- sub_enhanced2 %>%
 #   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species, ScientificNameAuthorship) %>%
 #   summarize(n=n()) %>% View()
 
-# View(sub_enhanced3)
 
 ##### export result to csv (export to CSV) #####
 filename_patch <- paste(filename, '_taxonomy_patch', '.csv',sep = '')
@@ -622,7 +827,7 @@ write.csv(sub_enhanced3,
           quote = T)
 
 ##### clean up everything except core objects ######
-# rm(list=setdiff(ls(), c("filt")))
+rm(list=setdiff(ls(), c("filt")))
 
 ##### ***** NEW VERSION  *****  #####
 ##### load data #####
@@ -654,13 +859,6 @@ write.csv(sub_enhanced3,
 #              path = as_id(folderurl),
 #              name = paste(filename,".PDF", sep=''),
 #              overwrite = T)
-
-
-
-
-
-
-
 
 
 
