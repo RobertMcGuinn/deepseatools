@@ -12,10 +12,9 @@ digits = 121
 
 ##### load national database (manual) #####
 path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20241219-1_CSV/DSCRTP_NatDB_20241219-1.csv"
-## "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20241219-1_CSV/DSCRTP_NatDB_20241219-1.csv"
-## "C:/Users/Robert.Mcguinn/Downloads/DSCRTP_CSV (4)/DSCRTP_NatDB_20241219-1.csv"
+
 ## Version History
-# "DSCRTP_NatDB_
+# "DSCRTP_NatDB_20241219-1.csv
 # "DSCRTP_NatDB_20241022-1.csv" # 'Shaggy'
 # "DSCRTP_NatDB_20240726-0.csv" # 'Mick Jagger (Stanley Kubrick, Mick Stanley, McStanley)'
 # "DSCRTP_NatDB_20240723-0.csv" # 'taxonomy patch to be applied here'
@@ -29,15 +28,17 @@ path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20241219-1_CSV/DSCRTP_NatD
 
 indata <- read.csv(path, header = T, encoding = 'latin1')
 
-## encoding choice is either latin1 or UTF-8. Depends on incoming.
-## this does not define encoding, it simply tells the importer
-
-## which encoding is in the incoming file.
 filt <- indata %>%
   filter(Flag == "0", is.na(Phylum) == F)
 
+rm(indata)
+
+## encoding choice is either latin1 or UTF-8. Depends on incoming.
+## this does not define encoding, it simply tells the importer
+## which encoding is in the incoming file.
+
 ##### clean up everything except core objects ######
-rm(list=setdiff(ls(), c("filt")))
+# rm(list=setdiff(ls(), c("filt")))
 
 ##### check #####
 # indata %>% pull(Class) %>% table(useNA = 'always')

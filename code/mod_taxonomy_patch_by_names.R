@@ -1,10 +1,10 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate:20250313
-## purpose:ingest of Accession: NOAA_EX2301_2023_143469
+## purpose:ingest of Accession:
 
 ##### linkage #####
-filename <- '143180' ## manual: for this code file name, match to redmine
+filename <- '' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
@@ -98,9 +98,9 @@ filt %>%
   table()
 
 
-##### ***** NEW VERSION 20250319-3 *****  #####
+##### ***** NEW VERSION  *****  #####
 ##### load dataset from CSV #####
-filename <- "20250319-3_NOAA_Sponge_Specimens_SRooney_1996_2023_143180"
+filename <- ""
 setwd('c:/rworking/deepseatools/indata')
 sub <- read.csv(paste(filename, '.csv', sep = ''))
 
