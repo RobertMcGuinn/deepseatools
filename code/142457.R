@@ -174,30 +174,141 @@ filt %>% filter(grepl("CBNMS", DatasetID)) %>% select(DatasetID, Vessel, SurveyI
 ##### write new version for pipeline #####
 write.csv(sub, 'c:/rworking/deepseatools/indata/20250320-0_NOAA_AFSC_GOA_Coral_Survey_2022_142452.csv')
 
-##### ***** NEW VERSION *****  #####
-##### load data #####
+##### ***** NEW VERSION  *****  #####
+##### load dataset from CSV #####
+filename <- "20250321-3_NOAA_CBNMS_ROV_2014_142457"
 setwd('c:/rworking/deepseatools/indata')
-sub <- read.csv('')
+sub <- read.csv(paste(filename, '.csv', sep = ''))
+
+##### load the most current taxonomy from Google Sheets #####
+## https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
+## manual: make sure the IDs below are pointing at the correct sheets
+# tax <- read_sheet('1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ')
+# taxfl <- read_sheet('1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M')
+# taxch <- read_sheet('11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8')
 
 ##### check #####
+# table(unique(sub$ScientificName), useNA = 'always')
 # table(sub$AphiaID, useNA = 'always')
-# length(unique(sub$AphiaID))
+# length(unique(sub$ScientificName))
+# length(sub$ScientificName)
+# table(sub$Genus, useNA = 'always')
 
-##### make any corrections #####
+##### make taxonomic changes to incoming (manual: specific to each new dataset) #####
+## filter taxa list (Optional)
+sub1 <- sub
+
+## change the following taxa for a better match
+sub2 <- sub1  %>%
+  mutate(ScientificName = trimws(ScientificName),  # Remove extra spaces
+         ScientificName2 = ScientificName)
+
 
 ##### check #####
-dim(sub)
+# sub2 %>% filter(ScientificName2 == "Polycapus") %>% pull(ScientificName2)
 
-##### load the taxonomy table from CSV #####
-tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
+# table(sub2$ScientificName2, useNA = 'always')
+#
+# sub2 %>%
+#   group_by(ScientificName, ScientificName2) %>%
+#   summarize(n=n()) %>% View()
 
-##### create vector from incoming AphiaIDs #####
+
+##### create vector of names #####
+my_vector <- unique(sub2$ScientificName)
+
+# remove any missing value.
+my_vector <- my_vector[complete.cases(my_vector)]
+
+##### make groups of 50 (because the API limit is 50) #####
+my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
+
+##### loop to get records by names list #####
+## run this just once to get the proper data structure for an empty dataframe
+species_list <- wm_records_name("Octocorallia", fuzzy = F)
+
+## initiate the empty data frame
+df <- species_list[0,]
+
+## loop to get WoRMS records from names (b)
+for (i in seq_along(my_groups)){
+  species_list <- wm_records_names(name = my_groups[[i]],
+                                   fuzzy = F,
+                                   marine_only = T,
+
+  )
+  species_list <- do.call("rbind", species_list)
+  df <- rbind(df, species_list)
+}
+species_list <- df
+
+## get rid of any extinct matches
+species_list <- species_list %>%
+  filter(isExtinct == 0 |
+           is.na(isExtinct) == T)
+
+## get just the data that are distinc
+species_list <- distinct(species_list)
+
+##### join sub2 with species list #####
+by <- join_by(ScientificName2 == scientificname)
+joined <- left_join(sub2, species_list, by)
+
+##### check #####
+# joined %>% group_by(Genus, VerbatimScientificName, ScientificName, ScientificName2, valid_name) %>%
+#   summarize(n=n()) %>% View()
+
+##### create a summary joined file #####
+summary <- joined %>%
+  group_by(status,
+           phylum,
+           ScientificName,
+           ScientificName2,
+           valid_name,
+           valid_AphiaID,
+           rank,
+           authority) %>%
+  summarize(n=n())
+
+##### check: test for difficult taxa #####
+summary$sametest <- ifelse(summary$ScientificName2 == summary$valid_name,"Yes","No")
+
+changes <- summary %>% filter(sametest == "No") %>%
+  group_by(ScientificName, ScientificName2, valid_name, sametest) %>%
+  summarize(n=n())
+
+nomatch <- summary %>%
+  filter(is.na(sametest) == T) %>%
+  group_by(ScientificName, ScientificName2, valid_name, sametest
+  ) %>%
+  summarize(n=n())
+
+changes
+nomatch
+
+##### check #####
+# summary %>% filter(ScientificName2 == "Polycapus")
+
+
+##### strip out CatalogNumber and valid AphiaID #####
+aphia<- joined %>% select(CatalogNumber, valid_AphiaID)
+
+##### check #####
+# names(aphia)
+
+##### join proper aphia ID values back to original sub #####
+sub <- left_join(sub, aphia)
+sub$AphiaID <- sub$valid_AphiaID
+sub <- sub %>% select(-all_of(c("valid_AphiaID")))
+
+##### create vector of valid aphiaID  #####
 my_vector <- unique(sub$AphiaID)
+my_vector <- my_vector[complete.cases(my_vector)]
 
 ##### check #####
 # length(my_vector)
 
-## make groups of 50 (because the API limit is 50)
+##### make groups of 50 (because the API limit is 50) #####
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
 
 ##### loop to get records by AphiaID #####
@@ -236,9 +347,9 @@ species_list_original <- species_list_original %>%
                                          valid_AphiaID))
 
 ##### check #####
-species_list_original %>% filter(status != 'accepted') %>%
-  group_by(AphiaID, valid_AphiaID, valid_AphiaID_complete) %>%
-  summarize(n=n()) %>% View()
+# species_list_original %>% filter(status != 'accepted') %>%
+#   group_by(AphiaID, valid_AphiaID, valid_AphiaID_complete) %>%
+#   summarize(n=n()) %>% View()
 
 ##### create vector from valid AphiaIDs #####
 my_vector <- unique(species_list_original$valid_AphiaID_complete)
@@ -404,14 +515,14 @@ joined4 <- left_join(joined3, synonyms, by)
 # setdiff(joined4$AphiaID, species_list_original$valid_AphiaID_complete)
 # setdiff(species_list_original$valid_AphiaID_complete, joined4$AphiaID)
 
-###### join original table with the new table #####
+##### join original table with the new table #####
 joined4$AphiaID2 <- joined4$AphiaID
 by <- join_by(valid_AphiaID_complete == AphiaID2)
 taxonomy_table <- left_join(species_list_original, joined4, by)
 # View(taxonomy_table)
 # names(taxonomy_table)
 
-##### add taxonomy to sub #####
+##### join taxonomy to sub #####
 by <- join_by(AphiaID == AphiaID.x)
 sub_enhanced <- left_join(sub, taxonomy_table, by)
 
@@ -442,6 +553,9 @@ sub_enhanced$Species <- word(sub_enhanced$Species.y, -1)
 sub_enhanced$Subspecies <- sub_enhanced$Subspecies.y
 sub_enhanced$ScientificNameAuthorship <- sub_enhanced$authority.y
 sub_enhanced$Synonyms <- sub_enhanced$synonyms_list
+
+##### add a variable #####
+sub_enhanced$IdentificationComments <- sub_enhanced$VernacularNameCategory
 
 ##### check #####
 # table(sub_enhanced$Phylum, useNA = 'always')
@@ -485,12 +599,16 @@ sub_enhanced_filter <- sub_enhanced_filter %>%
 
 
 ##### check #####
-table(sub_enhanced_filter$Phylum, useNA = 'always')
-table(sub_enhanced_filter$Subphylum, useNA = 'always')
-
-sub_enhanced_filter %>%
-  group_by(AphiaID, Phylum, Subphylum, Class, Order, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View()
+# sub_enhanced %>% filter(ScientificName == "Anthozoa") %>% pull(ScientificName)
+# sub_enhanced_filter %>% filter(ScientificName == "Anthozoa") %>% pull(ScientificName)
+# filt %>% filter(ScientificName == "Anthozoa") %>% pull(ScientificName)
+#
+# table(sub_enhanced_filter$Phylum, useNA = 'always')
+# table(sub_enhanced_filter$Subphylum, useNA = 'always')
+#
+# sub_enhanced_filter %>%
+#   group_by(AphiaID, Phylum, Subphylum, Class, Order, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
 
 ##### assign VernacularNameCategory #####
 ## define not in
@@ -507,7 +625,7 @@ gorgfamilies <- c("Chrysogorgiidae","Dendrobrachiidae",
 
 softfamilies <- c("Alcyoniidae","Aquaumbridae", "Ifalukellidae",
                   "Nephtheidae","Nidaliidae", "Paralcyoniidae",
-                  "Xeniidae", "Taiaroidae")
+                  "Xeniidae", "Taiaroidae", 'Clavulariidae')
 
 othercorallikehydrozoanfamilies <- c("Solanderiidae", "Haleciidae")
 
@@ -547,23 +665,24 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     Genus %in% c('Acanthogorgia') ~ 'gorgonian coral',
     Genus %in% c('Hydrodendron') ~ 'other coral-like hydrozoan',
     Genus %in% c('Caryophyllia') ~ 'stony coral (cup coral)',
+    ScientificName %in% c('Malacalcyonacea')  ~ 'soft coral',
     TRUE ~ ''))
 
 ##### check #####
-table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
-filt %>% filter(Order == 'Malacalcyonacea') %>% pull(VernacularNameCategory) %>%
-  table(useNA = 'always')
-
-filt %>% filter(Genus == 'Clavularia') %>% pull(VernacularNameCategory) %>%
-  table(useNA = 'always')
-
-sub_enhanced2 %>%
-  filter(VernacularNameCategory == '') %>%
-  pull(ScientificName) %>% unique()
-
-sub_enhanced2 %>%
-  filter(VernacularNameCategory == 'stony coral (cup)') %>%
-  pull(VernacularNameCategory) %>% unique()
+# table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
+# filt %>% filter(Order == 'Malacalcyonacea') %>% pull(VernacularNameCategory) %>%
+#   table(useNA = 'always')
+#
+# filt %>% filter(Genus == 'Clavularia') %>% pull(VernacularNameCategory) %>%
+#   table(useNA = 'always')
+#
+# sub_enhanced2 %>%
+#   filter(VernacularNameCategory == '') %>%
+#   pull(ScientificName) %>% unique()
+#
+# sub_enhanced2 %>%
+#   filter(VernacularNameCategory == 'stony coral (cup)') %>%
+#   pull(VernacularNameCategory) %>% unique()
 
 ##### get rid of unneeded column names #####
 names_list <- names(sub)
@@ -591,46 +710,180 @@ sub_enhanced3<- sub_enhanced2 %>%
          Species,
          Subspecies,
          ScientificNameAuthorship,
-         Synonyms)
+         Synonyms,
+         IdentificationComments)
 
 ##### check #####
-View(sub_enhanced3)
-dim(sub_enhanced3)
-dim(sub)
-length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
-
-x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-sub_enhanced %>% filter(CatalogNumber %in% x) %>%
-  group_by(AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
+sub_enhanced3 %>%
+  group_by(VerbatimScientificName, ScientificName) %>%
   summarize(n=n()) %>% View()
 
+##### change the following to deal with new species (OPTIONAL) ######
+# ## set ScientificName
+# sub_enhanced3 <- sub_enhanced3  %>%
+#   mutate(ScientificName = trimws(ScientificName),  # Remove extra spaces
+#          ScientificName = case_when(
+#            VerbatimScientificName == "Aaptos mucronatus n.sp." ~  "Aaptos mucronatus n.sp.",
+#            VerbatimScientificName == "Aaptos n.sp. (new undescribed species)" ~ "Aaptos n.sp.",
+#            VerbatimScientificName == "Cladocroce cylindrica n. sp." ~ "Cladocroce cylindrica n. sp.",
+#            VerbatimScientificName == "Forcepia atka n.sp." ~ "Forcepia atka n.sp.",
+#            VerbatimScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "Haliclona (Haliclona) n.sp.",
+#            VerbatimScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "Haliclona (Reniera) n.sp." ,
+#            VerbatimScientificName == "Homaxinella fruticosa n.sp." ~ "Homaxinella fruticosa n.sp.",
+#            VerbatimScientificName == "Julavis borealis n.sp." ~ "Julavis borealis n.sp.",
+#            VerbatimScientificName == "Megaciella aurantia n.sp." ~ "Megaciella aurantia n.sp.",
+#            VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "Polycapus rubrum n. gen. n. sp.",
+#            VerbatimScientificName == "Stelletta plana n.sp." ~ "Stelletta plana n.sp.",
+#            TRUE ~ as.character(ScientificName)  # Keep original name if no match
+#          ))
+#
+#
+# ## set ScientificNameAuthorship to null
+# sub_enhanced3 <- sub_enhanced3  %>%
+#   mutate(VerbatimScientificName = trimws(VerbatimScientificName),  # Remove extra spaces
+#          ScientificNameAuthorship = case_when(
+#            VerbatimScientificName == "Aaptos mucronatus n.sp." ~  "",
+#            VerbatimScientificName == "Aaptos n.sp. (new undescribed species)" ~ "",
+#            VerbatimScientificName == "Cladocroce cylindrica n. sp." ~ "",
+#            VerbatimScientificName == "Forcepia atka n.sp." ~ "",
+#            VerbatimScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "",
+#            VerbatimScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "" ,
+#            VerbatimScientificName == "Homaxinella fruticosa n.sp." ~ "",
+#            VerbatimScientificName == "Julavis borealis n.sp." ~ "",
+#            VerbatimScientificName == "Megaciella aurantia n.sp." ~ "",
+#            VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "",
+#            VerbatimScientificName == "Stelletta plana n.sp." ~ "",
+#            TRUE ~ ScientificNameAuthorship  # Keep original name if no match
+#          ))
+#
+# ## set AphiaID to null
+# sub_enhanced3 <- sub_enhanced3  %>%
+#   mutate(ScientificName = trimws(ScientificName),  # Remove extra spaces
+#          AphiaID = case_when(
+#            VerbatimScientificName == "Aaptos mucronatus n.sp." ~  "",
+#            VerbatimScientificName == "Aaptos n.sp. (new undescribed species)" ~ "",
+#            VerbatimScientificName == "Cladocroce cylindrica n. sp." ~ "",
+#            VerbatimScientificName == "Forcepia atka n.sp." ~ "",
+#            VerbatimScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "",
+#            VerbatimScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "" ,
+#            VerbatimScientificName == "Homaxinella fruticosa n.sp." ~ "",
+#            VerbatimScientificName == "Julavis borealis n.sp." ~ "",
+#            VerbatimScientificName == "Megaciella aurantia n.sp." ~ "",
+#            VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "",
+#            VerbatimScientificName == "Stelletta plana n.sp." ~ "",
+#            TRUE ~ as.character(AphiaID)  # Keep original name if no match
+#          ))
+#
+# ## set Species
+# sub_enhanced3 <- sub_enhanced3  %>%
+#   mutate(Species = case_when(
+#     VerbatimScientificName == "Aaptos mucronatus n.sp." ~  "mucronatus",
+#     VerbatimScientificName == "Aaptos n.sp. (new undescribed species)" ~ "",
+#     VerbatimScientificName == "Cladocroce cylindrica n. sp." ~ "cylindrica",
+#     VerbatimScientificName == "Forcepia atka n.sp." ~ "atka",
+#     VerbatimScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "",
+#     VerbatimScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "" ,
+#     VerbatimScientificName == "Homaxinella fruticosa n.sp." ~ "fruticosa",
+#     VerbatimScientificName == "Julavis borealis n.sp." ~ "borealis",
+#     VerbatimScientificName == "Megaciella aurantia n.sp." ~ "aurantia",
+#     VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "rubrum",
+#     VerbatimScientificName == "Stelletta plana n.sp." ~ "plana",
+#     TRUE ~ as.character(Species)  # Keep original name if no match
+#   ))
+#
+# ## set TaxonRank
+# sub_enhanced3 <- sub_enhanced3  %>%
+#   mutate(TaxonRank = case_when(
+#     VerbatimScientificName == "Aaptos mucronatus n.sp." ~  "species",
+#     VerbatimScientificName == "Aaptos n.sp. (new undescribed species)" ~ "species",
+#     VerbatimScientificName == "Cladocroce cylindrica n. sp." ~ "species",
+#     VerbatimScientificName == "Forcepia atka n.sp." ~ "species",
+#     VerbatimScientificName == "Haliclona (Haliclona) n.sp. (new undescribed species)" ~ "species",
+#     VerbatimScientificName == "Haliclona (Reniera) n.sp. (new undescribed species)" ~  "species" ,
+#     VerbatimScientificName == "Homaxinella fruticosa n.sp." ~ "species",
+#     VerbatimScientificName == "Julavis borealis n.sp." ~ "species",
+#     VerbatimScientificName == "Megaciella aurantia n.sp." ~ "species",
+#     VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "species",
+#     VerbatimScientificName == "Stelletta plana n.sp." ~ "species",
+#     TRUE ~ as.character(TaxonRank)  # Keep original name if no match
+#   ))
+#
+# ## set Genus
+# sub_enhanced3 <- sub_enhanced3  %>%
+#   mutate(Genus = case_when(
+#     VerbatimScientificName == "Polycapus rubrum n. gen. n. sp." ~ "Polycapus",
+#     VerbatimScientificName == "Julavis borealis n.sp." ~ 'Julavis',
+#     TRUE ~ as.character(VerbatimScientificName)  # Keep original name if no match
+#   ))
 
-table(is.na(sub$CatalogNumber))
-table(is.na(sub_enhanced3$CatalogNumber))
-sub %>% filter(ScientificName == 'Dichotella gemmacea') %>% pull(AphiaID)
-'Dichotella gemmacea'
 
-x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
-sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
-  group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
-  summarize(n=n()) %>% View()
+##### check #####
+# sub_enhanced3 %>%  filter(VerbatimScientificName == "Aaptos mucronatus n.sp.") %>%
+#   pull(Species)
+#
+# sub_enhanced3 %>%  filter(VerbatimScientificName == "Polycapus rubrum n. gen. n. sp.") %>%
+#   pull(Species)
 
-x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID)
+sub_enhanced3 %>%  filter(VerbatimScientificName == "Julavis borealis n.sp.") %>%
+  pull(Species)
 
-table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
 
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(Order) %>% unique()
+# sub_enhanced3$IdentificationComments
+# sub_enhanced3$VernacularNameCategory
+# table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
+# View(sub_enhanced3)
+# dim(sub_enhanced3)
+# dim(sub)
+# length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
+#
+# x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+# sub %>% filter(CatalogNumber %in% x) %>%
+#   group_by(CatalogNumber,
+#            VerbatimScientificName,
+#            ScientificName,
+#            VernacularNameCategory,
+#            valid_AphiaID) %>%
+#   summarize(n=n()) %>% View()
 
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
-  group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View()
+# filt %>% filter(ScientificName == 'Callistephanus') %>% pull(VernacularNameCategory) %>% table()
+#
+# x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+# sub_enhanced %>% filter(CatalogNumber %in% x) %>%
+#   group_by(AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
+#
+#
+# table(is.na(sub$CatalogNumber))
+# table(is.na(sub_enhanced3$CatalogNumber))
+# sub %>% filter(ScientificName == 'Dichotella gemmacea') %>% pull(AphiaID)
+# 'Dichotella gemmacea'
+#
+# x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
+# sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
+#   group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
+#   summarize(n=n()) %>% View()
+#
+# x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+# sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID)
+#
+# table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
+#
+# sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(Order) %>% unique()
+#
+# sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
+#   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
+#
+# sub_enhanced3 %>%
+#   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species, ScientificNameAuthorship) %>%
+#   summarize(n=n()) %>% View()
+
 
 ##### export result to csv (export to CSV) #####
-filename <- "20231130-1_NOAA_RL-19-05_Clarke_2019_2019_120205_taxonomy_patch.csv"
+filename_patch <- paste(filename, '_taxonomy_patch', '.csv',sep = '')
 write.csv(sub_enhanced3,
           paste("c:/rworking/deepseatools/indata/",
-                filename, sep=''),
+                filename_patch, sep=''),
           fileEncoding = "latin9",
           row.names = F,
           quote = T)
@@ -638,35 +891,38 @@ write.csv(sub_enhanced3,
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
 
-##### ***** NEW VERSION *****  #####
-##### load NDB #####
-source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
-
+##### ***** NEW VERSION  *****  #####
 ##### load data #####
-setwd('c:/rworking/deepseatools/indata')
-filename <- '20240111-0_NOAA_RL-19-05_Clarke_2019_2019_120205'
-sub <- read.csv(paste(filename, '.csv', sep = ''))
+# setwd('c:/rworking/deepseatools/indata')
+# filename <- ''
+# sub <- read.csv(paste(filename, '.csv', sep = ''))
 
 ##### check #####
-table(sub$Flag)
-sub %>% filter(Flag == 1) %>% group_by(Phylum, Class, Order, Family, ScientificName) %>%
-  summarize(n=n())
-table(sub$IndividualCount, useNA = 'always')
-filt %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# table(sub$Flag)
+# sub %>% filter(Flag == 0) %>% group_by(VernacularNameCategory, Phylum, Class, Order, Family, ScientificName) %>%
+#   summarize(n=n()) %>% View()
+# table(sub$IndividualCount, useNA = 'always')
+# filt %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# sub %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('NOAA_SH-22-09', DatasetID)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('SH', SurveyID)) %>% pull(SurveyID) %>% table()
+
 
 ##### run QA report #####
 ## manual change version of dashboard version number is required
-rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_dashboard.Rmd",
-                  output_file =  paste(filename,".docx", sep=''),
-                  output_dir = 'C:/rworking/deepseatools/reports')
+# rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_dashboard.Rmd",
+#                   output_file =  paste(filename,".docx", sep=''),
+#                   output_dir = 'C:/rworking/deepseatools/reports')
 
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/0B9c2c_XdhpFBNkk4a1Q0VXItNWc"
-setwd("C:/rworking/deepseatools/reports")
-drive_upload(paste(filename,".PDF", sep=''),
-             path = as_id(folderurl),
-             name = paste(filename,".PDF", sep=''),
-             overwrite = T)
+# folderurl <- "https://drive.google.com/drive/folders/1cGC8rQoRdS_xsmYfx7hGGnx23q3VCX3Z"
+# setwd("C:/rworking/deepseatools/reports")
+# drive_upload(paste(filename,".PDF", sep=''),
+#              path = as_id(folderurl),
+#              name = paste(filename,".PDF", sep=''),
+#              overwrite = T)
+
+
 
 
 
