@@ -188,9 +188,13 @@ species_list <- species_list %>%
 ## get just the data that are distinc
 species_list <- distinct(species_list)
 
+##### de-dup species list #####
+species_list_distinct <- species_list %>% distinct(scientificname, .keep_all = TRUE)
+
+
 ##### join sub2 with species list #####
 by <- join_by(ScientificName2 == scientificname)
-joined <- left_join(sub2, species_list, by)
+joined <- left_join(sub2, species_list_distinct, by)
 
 ##### check #####
 # joined %>% group_by(Genus, VerbatimScientificName, ScientificName, ScientificName2, valid_name) %>%

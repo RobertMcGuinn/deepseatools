@@ -710,22 +710,24 @@ write.csv(sub_enhanced3,
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
 
-##### ***** NEW VERSION 20250324-2 *****  #####
+##### ***** NEW VERSION *****  #####
 ##### load data #####
 setwd('c:/rworking/deepseatools/indata')
-filename <- '20250324-2_NOAA_SH-22-09_Clarke_2022_2022_141753'
+filename <- '20250326-1_NOAA_SWFSC_RL1905_2019_2019_100635'
 sub <- read.csv(paste(filename, '.csv', sep = ''))
 
 ##### check #####
-table(sub$Flag)
-sub %>% filter(Flag == 0) %>% group_by(VernacularNameCategory, Phylum, Class, Order, Family, ScientificName) %>%
-  summarize(n=n()) %>% View()
-table(sub$IndividualCount, useNA = 'always')
-filt %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
-sub %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
-filt %>% filter(grepl('NOAA_SH-22-09', DatasetID)) %>% pull(VehicleName) %>% table()
-filt %>% filter(grepl('SH', SurveyID)) %>% pull(SurveyID) %>% table()
+# table(sub$Flag)
+# sub %>% filter(Flag == 1) %>% group_by(VerbatimLatitude) %>%
+#   summarize(n=n()) %>% View()
+# table(sub$IndividualCount, useNA = 'always')
+# filt %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# sub %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('NOAA_SH-22-09', DatasetID)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('SH', SurveyID)) %>% pull(SurveyID) %>% table()
 
+##### make some change so that the QA report runs (OPTIONAL)
+sub$Citation <- 'https://doi.org/10.25923/nx2y-2j39'
 
 ##### run QA report #####
 ## manual change version of dashboard version number is required
@@ -734,16 +736,22 @@ rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_das
                   output_dir = 'C:/rworking/deepseatools/reports')
 
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-folderurl <- "https://drive.google.com/drive/folders/1cGC8rQoRdS_xsmYfx7hGGnx23q3VCX3Z"
+folderurl <- "https://drive.google.com/drive/folders/1nsHRBtj1UUBZtticYJEjx5CBst6x8IDb"
 setwd("C:/rworking/deepseatools/reports")
-drive_upload(paste(filename,".PDF", sep=''),
+drive_upload(paste(filename,".docx", sep=''),
              path = as_id(folderurl),
-             name = paste(filename,".PDF", sep=''),
+             name = paste(filename,".docx", sep=''),
              overwrite = T)
 
+##### check #####
+filt %>% filter(DatasetID == 'NOAA_RL-19-05') %>%
+  pull(LocationAccuracy) %>% table()
 
+dim(sub)
 
-
+unique(sub$VehicleName)
+sub %>% pull(Phylum) %>% table()
+sub %>% filter(Flag == 1) %>% pull(Longitude) %>% table()
 
 
 
