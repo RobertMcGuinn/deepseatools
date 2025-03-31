@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'mod_taxonomy'
+x <- '142714'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
