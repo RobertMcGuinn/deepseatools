@@ -626,9 +626,9 @@ write.csv(sub_enhanced3,
 
 ##### ***** NEW VERSION  *****  #####
 ##### load data #####
-# setwd('c:/rworking/deepseatools/indata')
-# filename <- ''
-# sub <- read.csv(paste(filename, '.csv', sep = ''))
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20250328-0_NOAA_EX2301_2023_143469'
+sub <- read.csv(paste(filename, '.csv', sep = ''))
 
 ##### check #####
 # table(sub$Flag)
@@ -640,24 +640,30 @@ write.csv(sub_enhanced3,
 # filt %>% filter(grepl('NOAA_SH-22-09', DatasetID)) %>% pull(VehicleName) %>% table()
 # filt %>% filter(grepl('SH', SurveyID)) %>% pull(SurveyID) %>% table()
 
-
 ##### run QA report #####
 ## manual change version of dashboard version number is required
-# rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_dashboard.Rmd",
-#                   output_file =  paste(filename,".docx", sep=''),
-#                   output_dir = 'C:/rworking/deepseatools/reports')
+rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
 
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-# folderurl <- "https://drive.google.com/drive/folders/1cGC8rQoRdS_xsmYfx7hGGnx23q3VCX3Z"
-# setwd("C:/rworking/deepseatools/reports")
-# drive_upload(paste(filename,".PDF", sep=''),
-#              path = as_id(folderurl),
-#              name = paste(filename,".PDF", sep=''),
-#              overwrite = T)
+folderurl <- "https://drive.google.com/drive/folders/1bQQU6cHOPA6gD2g0rPkzqvlwv5e3lx11"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".docx", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".docx", sep=''),
+             overwrite = T)
 
+##### check #####
 
-
-
+# filt %>% filter(grepl("carlson", IdentifiedBy)) %>% pull(DatasetID) %>% table(useNA = 'always')
+# filt %>% filter(is.na(IdentificatiionQualifier))
+#
+# table(is.na(sub$IdentificationQualifier))
+table(sub$IdentificationVerificationStatus)
+filt %>% filter(grepl('NOAA Office of Ocean Exploration and Research', DataProvider)) %>% pull(DataProvider)
+filt %>% filter(grepl('Office of Ocean Exploration and Research', DataProvider)) %>%
+  pull(DataProvider) %>% unique()
 
 
 

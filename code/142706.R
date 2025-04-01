@@ -835,9 +835,9 @@ write.csv(sub_enhanced3,
 
 ##### ***** NEW VERSION  *****  #####
 ##### load data #####
-# setwd('c:/rworking/deepseatools/indata')
-# filename <- ''
-# sub <- read.csv(paste(filename, '.csv', sep = ''))
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20250328-2_MCMI_Benthic_Survey_2015_2022_142706'
+sub <- read.csv(paste(filename, '.csv', sep = ''))
 
 ##### check #####
 # table(sub$Flag)
@@ -849,23 +849,27 @@ write.csv(sub_enhanced3,
 # filt %>% filter(grepl('NOAA_SH-22-09', DatasetID)) %>% pull(VehicleName) %>% table()
 # filt %>% filter(grepl('SH', SurveyID)) %>% pull(SurveyID) %>% table()
 
-
 ##### run QA report #####
 ## manual change version of dashboard version number is required
-# rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_dashboard.Rmd",
-#                   output_file =  paste(filename,".docx", sep=''),
-#                   output_dir = 'C:/rworking/deepseatools/reports')
+rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
 
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
-# folderurl <- "https://drive.google.com/drive/folders/1cGC8rQoRdS_xsmYfx7hGGnx23q3VCX3Z"
-# setwd("C:/rworking/deepseatools/reports")
-# drive_upload(paste(filename,".PDF", sep=''),
-#              path = as_id(folderurl),
-#              name = paste(filename,".PDF", sep=''),
-#              overwrite = T)
+folderurl <- "https://drive.google.com/drive/folders/1N4Hfsw1w2lJoh7-ioaDj4HSK05bfyDLG"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".docx", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".docx", sep=''),
+             overwrite = T)
 
-
-
+##### manual map check #####
+x <- sub %>% filter(
+  Flag ==  0) %>%
+  group_by(CatalogNumber, Latitude, Longitude, FlagReason) %>%
+  summarize(n=n())
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+st_write(points, "C:/rworking/deepseatools/indata/sub_geo.shp", delete_dsn = T)
 
 
 

@@ -9,7 +9,7 @@ always_allow_html: yes
 editor_options: 
   chunk_output_type: console
 ---
-# -
+
 ```{r load_packs, echo=F, message=FALSE, warning=F}
 library(rmarkdown)
 library(xfun)
@@ -205,16 +205,17 @@ FitFlextableToPage <- function(ft, pgwidth = 6){
   return(ft_out)
 }
 ```
+# DatasetID: *`r unique(factor(sub$DatasetID))`*
 
-# File Version Used in this Report
+### File Version Used in this Report
 *`r substring(filename, 1, 10)`*
 
-# Target AccessionID: 
-*`r substring(filename,12)`*
+### AccessionID 
+Target Accession ID: `r substring(filename,12)`
 
 AccessionID is currently: `r unique(sub$AccessionID)`
 
-# DatasetID: *`r unique(factor(sub$DatasetID))`*
+# Dataset Notes
 
 Purpose: `r unique(factor(sub$Purpose))`
 
@@ -225,9 +226,9 @@ SurveyComments: `r unique(factor(sub$SurveyComments))`
 * Minimum depth (unflagged): *`r min(sub[sub$DepthInMeters != "-999" | sub$Flag == "0",]$DepthInMeters)`*
 * Maximum depth (unflagged): *`r max(sub[sub$DepthInMeters != "-999" | sub$Flag == "0",]$DepthInMeters)`*
 * Number of dives or tows recorded: *`r length(unique(sub[sub$EventID != "NA" | is.na(sub$EventID) == F,]$EventID))`* 
-* Time frame: *`r min(as.numeric(min(sub$ObservationDate)))` to `r min(as.numeric(max(sub$ObservationDate)))`*
+* Time frame: *`r min(sub$ObservationDate)` to `r max(sub$ObservationDate)`*
 * Number of ImageURL populated: `r sub %>% filter(is.na(ImageURL) == F) %>% pull(ImageURL) %>% length()`
-* Number of ImageFilePath Populated: `r sub %>% filter(is.na(ImageFilePath) == F) %>% pull(ImageURL) %>% length()`   
+* Number of ImageFilePath Populated: `r sub %>% filter(is.na(ImageFilePath) == F) %>% pull(ImageFilePath) %>% length()`   
 
 # Citation
 ``` {r Citation, echo=FALSE}
@@ -244,8 +245,8 @@ sum_tbl
 ``` {r CitationMaker, echo = FALSE, eval = T}
 
 sub$CitationMaker <- paste(sub$DataProvider,'. ','Observation date range: ', 
-                         min(sub$ObservationYear[sub$ObservationYear != "-999"]),' to ',
-                         max(sub$ObservationYear[sub$ObservationYear != "-999"]),'. ',
+                         min(sub$ObservationDate[sub$ObservationDate != "-999"]),' to ',
+                         max(sub$ObservationDate[sub$ObservationDate != "-999"]),'. ',
                          'Coral or sponge occurrence observations submitted to the NOAA National Database for Deep Sea Corals and Sponges (www.deepseacoraldata.noaa.gov)', '. ',
                          #'DSCRTP Accession ID: ',sub$AccessionID, '. ',
                          #'Record type: ', sub$RecordType, '. ',
@@ -1276,7 +1277,7 @@ ft
 
 # Temporal  
 ## Observation Time Frame  
-`r min(as.numeric(sub$ObservationYear[sub$ObservationYear != "-999"]), na.rm=TRUE)` to `r max(sub$ObservationYear, na.rm=TRUE)`
+`r min(sub$ObservationDate, na.rm=TRUE)` to `r max(sub$ObservationDate, na.rm=TRUE)`
 
 ## Observation Dates 
 

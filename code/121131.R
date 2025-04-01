@@ -626,7 +626,7 @@ x <- sub %>% filter(
   #   FlagReason == 'Insufficient taxonomic information | Horizontal position or depth is questionable'
   # FlagReason == 'Insufficient taxonomic information | Possible intersection with land'|
   # FlagReason == 'Possible intersection with land'
-  FlagReason ==  'Invalid latitude | Invalid longitude'
+  Flag ==  1
 ) %>%
   group_by(CatalogNumber, Latitude, Longitude) %>%
   summarize(n=n())
