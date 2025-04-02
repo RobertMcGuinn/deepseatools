@@ -231,7 +231,7 @@ SurveyComments: `r unique(factor(sub$SurveyComments))`
 * Number of ImageFilePath Populated: `r sub %>% filter(is.na(ImageFilePath) == F) %>% pull(ImageFilePath) %>% length()`   
 
 # Citation
-``` {r Citation, echo=FALSE}
+``` {r Citation, echo=FALSE, eval = T}
 sum_tbl <-
   sub %>%
   group_by(Citation) %>%

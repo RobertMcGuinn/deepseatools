@@ -731,7 +731,7 @@ sub$Citation <- 'https://doi.org/10.25923/nx2y-2j39'
 
 ##### run QA report #####
 ## manual change version of dashboard version number is required
-rmarkdown::render("C:/rworking/deepseatools/code/20240320-0_rmd_accession_qa_dashboard.Rmd",
+rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_dashboard.Rmd",
                   output_file =  paste(filename,".docx", sep=''),
                   output_dir = 'C:/rworking/deepseatools/reports')
 
