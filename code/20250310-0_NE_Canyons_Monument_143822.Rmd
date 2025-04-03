@@ -1,7 +1,7 @@
 ---
 title: "Area of Interest Report - Northeast Canyons and Seamounts National Monument"
 author: "Robert P. McGuinn"
-date: "March 10, 2025"
+date: "April 2, 2025"
 output: word_document
 ---
 
@@ -28,7 +28,7 @@ library(rnaturalearthdata)
 library(openxlsx)
 library(googledrive)
 library(spocc)
-
+library(terra)
 
 ```
 
@@ -38,7 +38,7 @@ source('c:/rworking/deepseatools/code/mod_load_current_NDB.R')
 
 ```
 
-```{r set_ndb_version, echo=F}
+```{r set_ndb_version, echo=F, eval=T}
 ## create needed variables
 db_version <- unique(filt$DatabaseVersion)
 
@@ -81,7 +81,7 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 
 ```
 
-```{r create_sf_from_points, message = FALSE, warning = FALSE, echo=F}
+```{r create_sf_from_points, message = FALSE, warning = FALSE, echo=T}
 ## transform coral and sponge occurrence points to 'sf' objects
 ##### transform coral and sponge points to sf #####
 points <- st_as_sf(x_geo, wkt = "geom")
@@ -93,17 +93,187 @@ rm(x)
 
 ```
 
-```{r import_aoi, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T, }
+```{r import_NE_Canyons_aoi, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T, }
 
 ##### get the NE Canyons mounument ##### 
 shapefile_path <- "C:/rworking/deepseatools/indata/20221104_protected_areas_update_HColeman/20221104_protected_areas.shp"
 protected_areas <- st_read(shapefile_path)
 ne_canyons <- protected_areas %>% filter(Sitename == 'NE Canyons and Seamounts')
 
-##### check #####
-# plot(ne_canyons)
-# protected_areas %>% filter(grepl('Canyons', Sitename)) %>% pull(Sitename)
-st_crs(ne_canyons)
+##### reproject to target crs ##### 
+ne_canyons_5070 <- st_transform(ne_canyons, crs = 5070)
+
+##### Convert sf to SpatVector ##### 
+ne_canyons_5070_spat <- vect(ne_canyons_5070)
+
+##### Write to shapefile #####
+writeVector(ne_canyons_5070_spat, "C:/rworking/deepseatools/indata/ne_canyons_5070.shp", overwrite = TRUE)
+
+
+##### check ##### 
+# st_crs(ne_canyons)
+
+```
+
+```{r import_Hudson_bathy, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T, }
+
+# Define the GeoTIFF file path
+geotiff_path <- "C:/rworking/deepseatools/indata/hc_rb_bath100/hc_rb_bath100.tif"
+
+# Read the raster data
+bathy_hudson <- rast(geotiff_path)
+
+# Reproject the raster to the target_crs
+bathy_hudson_5070 <- project(bathy_hudson, "EPSG:5070")
+
+##### write the raster (OPTIONAL) ##### 
+writeRaster(bathy_hudson_5070, "c:/rworking/deepseatools/indata/bathy_hudson_5070.tif", overwrite = TRUE)
+
+
+```
+
+```{r import_Hudson_facies, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T, }
+
+##### get the Hudson facies ##### 
+shapefile_path <- "C:/rworking/deepseatools/indata/hc_facies/hc_facies.shp"
+hc_facies <- st_read(shapefile_path)
+
+##### reproject to target crs ##### 
+hc_facies_5070 <- st_transform(hc_facies, crs = 5070)
+
+##### check ##### 
+# st_crs(hc_facies)
+# plot(hc_facies)
+# names(hc_facies)
+# table(hc_facies$INTERP)
+
+```
+
+```{r make_AOI, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T, }
+
+# Get the bounding box as a SpatVector
+aoi <- ext(hc_facies_5070) %>% as.polygons(crs = crs(hc_facies_5070))
+
+# Save the bounding box as a shapefile
+writeVector(aoi, "c:/rworking/deepseatools/indata/aoi.shp", overwrite = TRUE)
+
+```
+
+```{r import_noaa_bathy, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T, }
+
+library(marmap)
+
+# Define bounding box
+lon_min <- -68.68
+lon_max <- -65.59
+lat_min <- 38.776
+lat_max <- 40.766
+
+# Get bathymetry data (default resolution: 4 arc-minutes ~7.4 km)
+bathy_data <- getNOAA.bathy(lon1 = lon_min, lon2 = lon_max, lat1 = lat_min, lat2 = lat_max, resolution = 1)  # Use resolution = 1 for higher resolution (~1.8 km)
+
+# Convert to raster and plot
+bathy_raster <- as.raster(bathy_data)
+plot(bathy_raster)
+
+library(terra)
+
+# Convert raster object to SpatRaster
+bathy_ne_canyons <- rast(bathy_raster)
+
+## reproject the raster 
+bathy_ne_canyons_5070 <- project(bathy_ne_canyons, "EPSG:5070")
+
+##### reclassify these rasters ##### 
+# Define reclassification matrix for negative depth values
+rcl_matrix <- matrix(c(
+  -9999, -3000, 7,
+  -3000, -2500, 6,
+  -2500, -2000, 5,
+  -2000, -1500, 4,
+  -1500, -1000, 3,
+  -1000, -500, 2,
+  -500, 0, 1
+), ncol = 3, byrow = TRUE)
+
+# Reclassify the rasters
+bathy_ne_canyons_reclassified <- classify(bathy_ne_canyons_5070, rcl_matrix)
+
+
+# Plot results
+# plot(crm1_reclassified)
+# plot(crm2_reclassified)
+
+##### write the raster (OPTIONAL) ##### 
+writeRaster(bathy_ne_canyons_reclassified, "c:/rworking/deepseatools/indata/bathy_ne_canyons_reclassified.tif", overwrite = TRUE)
+# writeRaster(crm2_reclassified, "c:/rworking/deepseatools/indata/crm2_reclassified_ne_canyons.tif", overwrite = TRUE)
+
+##### check ##### 
+freq(crm1_reclassified)
+pixel_area <- prod(res(crm1_reclassified))  # Multiply x and y resolution
+pixel_area
+
+
+
+
+
+
+```
+
+```{r import_CRM_subset_reclass, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=F, }
+##### get data from here ##### 
+## https://www.ngdc.noaa.gov/thredds/catalog/crm/cudem/catalog.html
+##### load CRM data #####
+crm1 <- rast("C:/rworking/deepseatools/indata/crm/crm_vol1_2023.nc")
+crm2 <- rast("C:/rworking/deepseatools/indata/crm/crm_vol2_2023.nc")
+ext(crm1)
+##### crop crm1 to NE Canyons and Seamounts ##### 
+custom_extent <- ext(-68.68, -65.59, 39, 41)
+ne_canyons_cropped <- crop(crm1, custom_extent)
+
+##### crop crm1 to hudson ##### 
+custom_extent <- ext(-72.65, -68.66, 39, 40.28)
+hudson1_cropped <- crop(crm1, custom_extent)
+
+##### crop crm2 to hudson ##### 
+custom_extent <- ext(-72.65, -70.133573, 37.4783, 40)
+hudson2_cropped <- crop(crm2, custom_extent)
+
+## reproject the raster 
+hudson1_cropped_5070 <- project(hudson1_cropped, "EPSG:5070")
+hudson2_cropped_5070 <- project(hudson2_cropped, "EPSG:5070")
+ne_canyons_cropped_5070 <- project(ne_canyons_cropped, "EPSG:5070")
+
+##### reclassify these rasters ##### 
+# Define reclassification matrix for negative depth values
+rcl_matrix <- matrix(c(
+  -9999, -3000, 7,
+  -3000, -2500, 6,
+  -2500, -2000, 5,
+  -2000, -1500, 4,
+  -1500, -1000, 3,
+  -1000, -500, 2,
+  -500, 0, 1
+), ncol = 3, byrow = TRUE)
+
+# Reclassify the rasters
+hudson1_reclassified <- classify(hudson1_cropped_5070, rcl_matrix)
+hudson2_reclassified <- classify(hudson2_cropped_5070, rcl_matrix)
+ne_canyons_reclassified <- classify(ne_canyons_cropped_5070, rcl_matrix)
+
+# Plot results
+# plot(crm1_reclassified)
+# plot(crm2_reclassified)
+
+##### write the raster (OPTIONAL) ##### 
+writeRaster(hudson1_reclassified, "c:/rworking/deepseatools/indata/hudson1_reclassified.tif", overwrite = TRUE)
+writeRaster(hudson2_reclassified, "c:/rworking/deepseatools/indata/hudson2_reclassified.tif", overwrite = TRUE)
+writeRaster(ne_canyons_reclassified, "c:/rworking/deepseatools/indata/ne_canyons_reclassified.tif", overwrite = TRUE)
+
+##### check ##### 
+# freq(crm1_reclassified)
+# pixel_area <- prod(res(crm1_reclassified))  # Multiply x and y resolution
+# pixel_area
 
 ```
 
@@ -216,9 +386,10 @@ Version Notes: The National Database was accessed at version number `r db_versio
 
 # Maps
 
-Occurrences from the National Database
+Occurrences from the National Database that intersect AOI
 
 ```{r plot_NDB, fig.width=6, fig.height=4, dpi=300, echo = F}
+
 ## plot to see how they relate
 ggplot() +
   # Add layers with legend mappings
@@ -248,7 +419,7 @@ ggplot() +
 
 
 ```
-Occurrences from OBIS
+Occurrences from OBIS that intersect the AOI
 
 ```{r plot_OBIS, fig.width=6, fig.height=4, dpi=300, echo = F}
 ## plot to see how they relate
