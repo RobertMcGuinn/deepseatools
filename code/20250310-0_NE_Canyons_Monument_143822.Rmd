@@ -32,7 +32,7 @@ library(terra)
 
 ```
 
-```{r load_NDB, echo=F, message = FALSE, warning = FALSE, cache = TRUE, eval = F}
+```{r load_NDB, echo=F, message = FALSE, warning = FALSE, cache = TRUE, eval = T}
 ## load NDB
 source('c:/rworking/deepseatools/code/mod_load_current_NDB.R')
 
@@ -82,7 +82,6 @@ proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
 ```
 
 ```{r create_sf_from_points, message = FALSE, warning = FALSE, echo=T}
-## transform coral and sponge occurrence points to 'sf' objects
 ##### transform coral and sponge points to sf #####
 points <- st_as_sf(x_geo, wkt = "geom")
 
@@ -107,7 +106,7 @@ ne_canyons_5070 <- st_transform(ne_canyons, crs = 5070)
 ne_canyons_5070_spat <- vect(ne_canyons_5070)
 
 ##### Write to shapefile #####
-writeVector(ne_canyons_5070_spat, "C:/rworking/deepseatools/indata/ne_canyons_5070.shp", overwrite = TRUE)
+# writeVector(ne_canyons_5070_spat, "C:/rworking/deepseatools/indata/ne_canyons_5070.shp", overwrite = TRUE)
 
 
 ##### check ##### 
@@ -152,10 +151,10 @@ hc_facies_5070 <- st_transform(hc_facies, crs = 5070)
 ```{r make_AOI, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T, }
 
 # Get the bounding box as a SpatVector
-aoi <- ext(hc_facies_5070) %>% as.polygons(crs = crs(hc_facies_5070))
+hudson_aoi_bbox <- ext(hc_facies_5070) %>% as.polygons(crs = crs(hc_facies_5070))
 
 # Save the bounding box as a shapefile
-writeVector(aoi, "c:/rworking/deepseatools/indata/aoi.shp", overwrite = TRUE)
+writeVector(hudson_aoi_bbox, "c:/rworking/deepseatools/indata/aoi.shp", overwrite = TRUE)
 
 ```
 
@@ -209,13 +208,9 @@ writeRaster(bathy_ne_canyons_reclassified, "c:/rworking/deepseatools/indata/bath
 # writeRaster(crm2_reclassified, "c:/rworking/deepseatools/indata/crm2_reclassified_ne_canyons.tif", overwrite = TRUE)
 
 ##### check ##### 
-freq(crm1_reclassified)
-pixel_area <- prod(res(crm1_reclassified))  # Multiply x and y resolution
-pixel_area
-
-
-
-
+# freq(bathy_ne_canyons_reclassified)
+# pixel_area <- prod(res(bathy_ne_canyons_reclassified))  # Multiply x and y resolution
+# pixel_area
 
 
 ```
@@ -227,24 +222,34 @@ pixel_area
 crm1 <- rast("C:/rworking/deepseatools/indata/crm/crm_vol1_2023.nc")
 crm2 <- rast("C:/rworking/deepseatools/indata/crm/crm_vol2_2023.nc")
 ext(crm1)
-##### crop crm1 to NE Canyons and Seamounts ##### 
-custom_extent <- ext(-68.68, -65.59, 39, 41)
-ne_canyons_cropped <- crop(crm1, custom_extent)
 
-##### crop crm1 to hudson ##### 
-custom_extent <- ext(-72.65, -68.66, 39, 40.28)
-hudson1_cropped <- crop(crm1, custom_extent)
+##### crop crm1 to NE Canyons and Seamounts large AOI ##### 
+## define custom extent: xmin, ymin, xmax, ymax
+xmin <- -73
+ymin <- 39
+xmax <- -65
+ymax <- 41
 
-##### crop crm2 to hudson ##### 
-custom_extent <- ext(-72.65, -70.133573, 37.4783, 40)
-hudson2_cropped <- crop(crm2, custom_extent)
+## create a box polygon from the custom extent
+bbox <- st_as_sfc(st_bbox(c(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax), crs = 4326))  # Use appropriate CRS
 
-## reproject the raster 
-hudson1_cropped_5070 <- project(hudson1_cropped, "EPSG:5070")
-hudson2_cropped_5070 <- project(hudson2_cropped, "EPSG:5070")
-ne_canyons_cropped_5070 <- project(ne_canyons_cropped, "EPSG:5070")
+## Convert to sf object
+bbox_sf <- st_sf(geometry = bbox)
+
+## Export to shapefile for visualization (OPTIONAL)
+# st_write(bbox_sf, "c:/rworking/deepseatools/indata/custom_extent_box.shp", delete_layer = TRUE)
+
+## reproject to make sure the vector crs matcheses the raster 
+ne_canyons_proj <- st_transform(bbox_sf, crs(crm1))
+
+## Clip the raster using the vector (crop first, then mask)
+cropped_raster <- crop(crm1, ne_canyons_proj)
+clipped_raster <- mask(cropped_raster, ne_canyons_proj)
+
 
 ##### reclassify these rasters ##### 
+library(terra)
+
 # Define reclassification matrix for negative depth values
 rcl_matrix <- matrix(c(
   -9999, -3000, 7,
@@ -253,37 +258,30 @@ rcl_matrix <- matrix(c(
   -2000, -1500, 4,
   -1500, -1000, 3,
   -1000, -500, 2,
-  -500, 0, 1
+  -500, 0, 1, 
+  0, 1000, -999
 ), ncol = 3, byrow = TRUE)
 
-# Reclassify the rasters
-hudson1_reclassified <- classify(hudson1_cropped_5070, rcl_matrix)
-hudson2_reclassified <- classify(hudson2_cropped_5070, rcl_matrix)
-ne_canyons_reclassified <- classify(ne_canyons_cropped_5070, rcl_matrix)
+# Perform reclassification
+crm_reclass_7 <- classify(clipped_raster, rcl_matrix)
 
-# Plot results
-# plot(crm1_reclassified)
-# plot(crm2_reclassified)
-
-##### write the raster (OPTIONAL) ##### 
-writeRaster(hudson1_reclassified, "c:/rworking/deepseatools/indata/hudson1_reclassified.tif", overwrite = TRUE)
-writeRaster(hudson2_reclassified, "c:/rworking/deepseatools/indata/hudson2_reclassified.tif", overwrite = TRUE)
-writeRaster(ne_canyons_reclassified, "c:/rworking/deepseatools/indata/ne_canyons_reclassified.tif", overwrite = TRUE)
-
-##### check ##### 
-# freq(crm1_reclassified)
-# pixel_area <- prod(res(crm1_reclassified))  # Multiply x and y resolution
-# pixel_area
+## write the raster
+writeRaster(
+  crm_reclass_7,
+  filename = "c:/rworking/deepseatools/indata/crm_reclass_7.tif",
+  datatype = "INT2S",        # Ensures integer data
+  overwrite = TRUE
+)
 
 ```
 
 ```{r buffering, echo=F}
 ##### buffer operations ##### 
 ## create 5000 meter buffer
-ne_canyons_buf_5000 <- st_buffer(ne_canyons, dist=5000) # map units are in meters
+ne_canyons_buf_5000 <- st_buffer(ne_canyons_5070, dist=5000) # map units are in meters
 
 ##create 20000 meter buffer
-ne_canyons_buf_20000 <- st_buffer(ne_canyons, dist=20000) # map units are in meters
+ne_canyons_buf_20000 <- st_buffer(ne_canyons_5070, dist=20000) # map units are in meters
 
 ## check
 # plot(ne_canyons_buf_20000)
@@ -293,13 +291,13 @@ ne_canyons_buf_20000 <- st_buffer(ne_canyons, dist=20000) # map units are in met
 ```{r intersect, echo=F}
 ##### intersection operations ##### 
 ## transform CRS for coral and sponge points projection to match polygons
-points_transform <- st_transform(points, crs = st_crs(ne_canyons))
+points_transform <- st_transform(points, crs = st_crs(ne_canyons_5070))
 
 ## checking
 # st_crs(points_transform)
 
 ## find points within the polygons
-points_in_0 <- st_join(points_transform, ne_canyons, join = st_within) # no buffer
+points_in_0 <- st_join(points_transform, ne_canyons_5070, join = st_within) # no buffer
 points_in_5000 <- st_join(points_transform, ne_canyons_buf_5000, join = st_within) # 5000 meter buffer
 points_in_20000 <- st_join(points_transform, ne_canyons_buf_20000, join = st_within) # 20000 meter buffer
 
