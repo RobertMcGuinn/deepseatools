@@ -44,14 +44,13 @@ db_version <- unique(filt$DatabaseVersion)
 
 ```
 
-```{r filter_geo_OR_query, echo=F, warning=F, message=F, eval=T}
+```{r filter_points_by_geography, echo=F, warning=F, message=F, eval=T}
 ##### filter occurrences by query or box or both ##### 
-
 ## set bounding box variables
 minlat <- 37
-maxlat <- 43
-minlon <- -72
-maxlon <- -61
+maxlat <- 41
+minlon <- -73
+maxlon <- -65
 
 ## subset data by coordinates
 x <- subset(filt, as.numeric(Latitude) > minlat &
@@ -215,7 +214,7 @@ writeRaster(bathy_ne_canyons_reclassified, "c:/rworking/deepseatools/indata/bath
 
 ```
 
-```{r import_CRM_subset_reclass, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=F, }
+```{r import_CRM_subset_reclass_combine, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=F, }
 ##### get data from here ##### 
 ## https://www.ngdc.noaa.gov/thredds/catalog/crm/cudem/catalog.html
 ##### load CRM data #####
@@ -244,8 +243,30 @@ ne_canyons_proj <- st_transform(bbox_sf, crs(crm1))
 
 ## Clip the raster using the vector (crop first, then mask)
 cropped_raster <- crop(crm1, ne_canyons_proj)
-clipped_raster <- mask(cropped_raster, ne_canyons_proj)
+clipped_raster_ne <- mask(cropped_raster, ne_canyons_proj)
 
+##### crop crm2 to Hudson Canyon southern extension ##### 
+## define custom extent: xmin, ymin, xmax, ymax
+xmin <- -73
+ymin <- 37
+xmax <- -68
+ymax <- 39
+
+## create a box polygon from the custom extent
+bbox <- st_as_sfc(st_bbox(c(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax), crs = 4326))  # Use appropriate CRS
+
+## Convert to sf object
+bbox_sf <- st_sf(geometry = bbox)
+
+## Export to shapefile for visualization (OPTIONAL)
+# st_write(bbox_sf, "c:/rworking/deepseatools/indata/custom_extent_box.shp", delete_layer = TRUE)
+
+## reproject to make sure the vector crs matcheses the raster 
+hudson_proj <- st_transform(bbox_sf, crs(crm2))
+
+## Clip the raster using the vector (crop first, then mask)
+cropped_raster <- crop(crm2, hudson_proj)
+clipped_raster_hudson <- mask(cropped_raster, hudson_proj)
 
 ##### reclassify these rasters ##### 
 library(terra)
@@ -263,15 +284,52 @@ rcl_matrix <- matrix(c(
 ), ncol = 3, byrow = TRUE)
 
 # Perform reclassification
-crm_reclass_7 <- classify(clipped_raster, rcl_matrix)
+crm_reclass_7_ne <- classify(clipped_raster_ne, rcl_matrix)
+crm_reclass_7_hudson <- classify(clipped_raster_hudson, rcl_matrix)
 
-## write the raster
+##### combine the rasters in to one ##### 
+combined_raster <- mosaic(crm_reclass_7_ne, crm_reclass_7_hudson, fun = "max")
+
+##### write the combined raster for visualization ##### 
 writeRaster(
-  crm_reclass_7,
-  filename = "c:/rworking/deepseatools/indata/crm_reclass_7.tif",
+  combined_raster,
+  filename = "c:/rworking/deepseatools/indata/crm_reclass_7_combined.tif",
   datatype = "INT2S",        # Ensures integer data
   overwrite = TRUE
 )
+
+```
+
+```{r import_GEBCO_data, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=F, }
+## get data from here: https://download.gebco.net/ (aquired 20250404)
+## use this bounding box to subset
+##  West	East	South	North
+# -73	-65	37	41
+
+gebco_2024_bathy <- rast("C:/rworking/deepseatools/indata/GEBCO_04_Apr_2025_1594a0e93d89/gebco_2024_n41.0_s37.0_w-73.0_e-65.0.tif")
+
+# Define reclassification matrix for negative depth values
+rcl_matrix <- matrix(c(
+  -9999, -3000, 7,
+  -3000, -2500, 6,
+  -2500, -2000, 5,
+  -2000, -1500, 4,
+  -1500, -1000, 3,
+  -1000, -500, 2,
+  -500, 0, 1, 
+  0, 1000, -999
+), ncol = 3, byrow = TRUE)
+
+# Perform reclassification
+gebco_2024_bathy_reclass <- classify(gebco_2024_bathy, rcl_matrix)
+
+##### write the combined raster for visualization ##### 
+# writeRaster(
+#   gebco_2024_bathy_reclass,
+#   filename = "c:/rworking/deepseatools/indata/gebco_2024_bathy_reclass.tif",
+#   datatype = "INT2S",        # Ensures integer data
+#   overwrite = TRUE
+# )
 
 ```
 
@@ -321,6 +379,27 @@ points_in_20000_select <- points_in_20000 %>% filter(is.na(Shape_Area) == F)
 
 
 ```
+
+```{r intersect with classified raster, echo=F}
+
+##### Extract raster values at point locations ##### 
+# Convert sf object to SpatVector for terra
+points_vect <- vect(points)
+
+# Extract values
+extracted <- extract(gebco_2024_bathy_reclass, points_vect)
+
+# Add extracted values to the original point data
+points$Class <- extracted[, 2]  # The second column usually holds the raster values
+
+# Save the new point file with class info
+st_write(points, "c:/rworking/deepseatools/indata/points_with_classes.shp", delete_dsn = TRUE)
+
+
+
+
+```
+
 
 ```{r get_obis_data, cache=T, echo=F, eval=F} 
 ##### getting OBIS data #####
