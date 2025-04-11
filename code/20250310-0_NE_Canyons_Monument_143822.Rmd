@@ -518,7 +518,7 @@ Three separate areas of interest (AOI) are defined for the purposes of this repo
 
 # Results
 ## Region-wide AOI
-### Taxa by Depth Zone
+
 ``` {r depth_bin_figure_loop, echo=FALSE, eval=F}
 ##### Loop to make boxplots in each depth bin #####
 # Set color choices
