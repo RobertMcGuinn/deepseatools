@@ -581,8 +581,8 @@ for(i in 1:(length(depth_bins)-1)) {
 
 ```
 \newpage
-#### Figure 1 and Table 1: 0-250m
-``` {r depth_bin_table_0, echo=FALSE, eval=T}
+#### Figure and Table 1: 0-250m
+``` {r depth_bin_table_1, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 0
 mindepth <- i
@@ -667,8 +667,8 @@ sum_tbl
 ```
 
 \newpage
-#### Figure 2 and Table 2: 250-500m
-``` {r depth_bin_table_1, echo=FALSE, eval=T}
+#### Figure and Table 2: 250-500m
+``` {r depth_bin_table_2, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 250
 mindepth <- i
@@ -752,8 +752,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 3 and Table 3: 500-750m
-```{r}
+#### Figure and Table 3: 500-750m
+```{r depth_bin_table_3, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 500
 mindepth <- i
@@ -835,8 +835,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 4 and Table 4: 750-1000m
-```{r}
+#### Figure and Table 4: 750-1000m
+```{r depth_bin_table_4, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 750
 mindepth <- i
@@ -918,8 +918,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 5 and Table 5: 1000-1250m
-```{r}
+#### Figure and Table 5: 1000-1250m
+```{r depth_bin_table_5, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 1000
 mindepth <- i
@@ -1001,8 +1001,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 6 and Table 6: 1250-1500m
-```{r}
+#### Figure and Table 6: 1250-1500m
+```{r depth_bin_table_6_echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 1250
 mindepth <- i
@@ -1084,8 +1084,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 7 and Table 7: 1500-1750m
-```{r}
+#### Figure and Table 7: 1500-1750m
+```{r depth_bin_table_7, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 1500
 mindepth <- i
@@ -1167,8 +1167,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 8 and Table 8: 1750-2000m
-```{r}
+#### Figure and Table 8: 1750-2000m
+```{r depth_bin_table_8, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 1750
 mindepth <- i
@@ -1250,8 +1250,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 9 and Table 9: 2000-2250m
-```{r}
+#### Figure and Table 9: 2000-2250m
+```{r depth_bin_table_9, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 2000
 mindepth <- i
@@ -1333,8 +1333,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 10 and Table 10: 2250-2500m
-```{r}
+#### Figure and Table 10: 2250-2500m
+```{r depth_bin_table_10, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 2250
 mindepth <- i
@@ -1416,8 +1416,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 11 and Table 11: 2500-2750m
-```{r}
+#### Figure and Table 11: 2500-2750m
+```{r depth_bin_table_11, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 2500
 mindepth <- i
@@ -1499,8 +1499,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 12 and Table 12: 2750-3000m
-```{r}
+#### Figure and Table 12: 2750-3000m
+```{r depth_bin_table_12, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 2750
 mindepth <- i
@@ -1582,8 +1582,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 13 and Table 13: 3000-3250m
-```{r}
+#### Figure and Table 13: 3000-3250m
+```{r depth_bin_table_13, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 3000
 mindepth <- i
@@ -1665,8 +1665,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 14 and Table 14: 3250-3500m
-```{r}
+#### Figure and Table 14: 3250-3500m
+```{r depth_bin_table_14, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 3250
 mindepth <- i
@@ -1748,8 +1748,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 15 and Table 15: 3500-3750m
-```{r}
+#### Figure and Table 15: 3500-3750m
+```{r depth_bin_table_15, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 3500
 mindepth <- i
@@ -1831,8 +1831,8 @@ sum_tbl
 
 ```
 \newpage
-#### Figure 16 and Table 16: 3750-4500m
-```{r}
+#### Figure and Table 16: 3750-4500m
+```{r depth_bin_table_16, echo=FALSE, eval=T}
 ##### set depth bins #####
 i <- 3750
 mindepth <- i
@@ -1883,7 +1883,6 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
 print(g)  # Plot shows in Word
 
 ##### Depth Bin Summary Tables #####
-
 bin_data <- data.frame(points) %>% 
   filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
 
