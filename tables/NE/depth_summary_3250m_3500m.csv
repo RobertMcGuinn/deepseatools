@@ -1,0 +1,9 @@
+"VernacularNameCategory","N","MinDepth","MedianDepth","MaxDepth","ScientificNames","geometry"
+"fish",3,3253,3255,3265,"Ilyophinae / Anguilliformes / Dicrolene introniger",c(-67.20651, -67.13405, -67.13407, 39.35578, 39.3871, 39.38723)
+"soft coral",1,3255,3255,3255,"Malacalcyonacea",c(-67.13407, 39.38701)
+"gorgonian coral",5,3259,3259,3316,"Radicipes gracilis / Lepidisis caryophyllia",c(-68.05, -68.0583, -67.0917, 39.433, 39.4333, 39.9)
+"glass sponge",21,3254,3261,3338,"Euplectellidae / Hexactinellida / Corbitellinae / Amphidiscella / Euretidae / Farreidae / Hyalonema (Corynonema) / Chonelasma",c(-70.2917, -68.05, -68.0583, -67.13406, -67.13396, -67.13391, -67.1339, -67.13389, -67.13393, -67.13395, -67.13394, -67.13391, -67.13402, -67.13404, -67.13408, -67.13411, -67.13408, -67.13407, -67.13401, 38.3667, 39.4333, 39.4333, 39.38701, 39.38702, 39.387, 39.38699, 39.38696, 39.38697, 39.38693, 39.38717, 39.38716, 39.3871, 39.38714, 39.38722, 39.3872, 39.38726, 39.38726, 39.38729)
+"demosponge",10,3252,3262,3271,"Demospongiae / Geodia",c(-67.13405, -67.13402, -67.1339, -67.13389, -67.13397, -67.13403, -67.13407, -67.13409, -67.13411, -67.13406, 39.38698, 39.38707, 39.387, 39.38701, 39.38715, 39.38723, 39.38724, 39.38722, 39.38724, 39.38713)
+"calcareous sponge",1,3265,3265,3265,"Calcarea",c(-67.13404, 39.38721)
+"sponge",6,3255,3310,3310,"Porifera",c(-70.33833, -67.13407, 38.24, 39.38698)
+"sea pen",10,3301,3330,3434,"Anthoptilum grandiflorum / Scleroptilum grandiflorum / Pennatula aculeata / Umbellula lindahli / Umbellula / Pennatuloidea / Umbellula guentheri",c(-70.9583, -70.2917, -70.25417, -70.1417, -67.0917, 37.9417, 38.3667, 38.33, 38.3333, 39.9)
