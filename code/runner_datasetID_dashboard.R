@@ -103,17 +103,149 @@ s <- read_sheet('1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw')
 version <- unique(filt$DatabaseVersion)
 version <- as.character(version)
 
-##### bring in datasetID key from local path #####
-old_key <- read.xlsx("C:/rworking/deepseatools/indata/20240325-0_DatasetID_Key_DSCRTP.xlsx")
-key <- read.xlsx("C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx")
+##### bring in current datasetID key from local path #####
+# old_key <- read.xlsx("C:/rworking/deepseatools/indata/20240325-0_DatasetID_Key_DSCRTP.xlsx")
+key <- read.xlsx("C:/rworking/deepseatools/indata/20241219-1_DatasetID_Key_DSCRTP.xlsx")
 
-##### checking #####
-# setdiff(filt$DatasetID, old_key$DatasetID)
-# setdiff(key$DatasetID, filt$DatasetID)
+##### add new DatasetIDs #####
+## setdiff(filt$DatasetID, old_key$DatasetID)
+changed <- setdiff(key$DatasetID, filt$DatasetID)
+added <- setdiff(filt$DatasetID, key$DatasetID)
+
+added_df <- data.frame(
+  DatasetID = added,
+  class = NA,
+  title = NA,
+  method_link = NA,
+  method_text = NA,
+  single_citation = NA,
+  abstract = NA,
+  Comments = NA,
+  n = NA,
+  stringsAsFactors = FALSE
+)
+
+## combine the old and new data
+key1 <- rbind(key, added_df)
+
+##### update the class field in key #####
+key2 <- key1 %>%
+  mutate(
+    class = case_when(
+      DatasetID == "NOAA_SH-18-12_ROV" ~ 'Cruise',
+      DatasetID == "NOAA_RL-19-05_ROV" ~ 'Cruise',
+      DatasetID == "NOAA_SH-18-12_AUV" ~ 'Cruise',
+      DatasetID == "NOAA_RL-19-05_AUV" ~ 'Cruise',
+      DatasetID == "NOAA_SH-22-09_AUV" ~ 'Cruise',
+      DatasetID == "NOAA_EX-23-01" ~ 'Cruise',
+      DatasetID == "NOAA_Sponge_Specimens_SRooney_1996_2023" ~ 'Specimen',
+      DatasetID == "MCMI_Benthic_Survey" ~ 'Survey',
+      DatasetID == "NOAA_AFSC_GOA_Coral_Survey_2022" ~ 'Survey',
+      DatasetID == "NOAA_CBNMS_ROV_2014" ~ 'Cruise',
+      DatasetID == "NOAA_CBNMS_Delta_2002_2003" ~ 'Cruise',
+      DatasetID == "NOAA_CBNMS_ROV_2017" ~ 'Cruise',
+      DatasetID == "Capel_et_al_2024" ~ 'Publication',
+      DatasetID == "Filander_et_al_2021" ~ 'Publication',
+      DatasetID == "Kennedy_et_al_2025" ~ 'Publication',
+      DatasetID == "MACN" ~ 'Museum',
+      DatasetID == "Thomson_and_Henderson_1906" ~ 'Publication',
+      DatasetID == "Turner_et_al_2024" ~ 'Publication',
+      DatasetID == "UM_RSMAS_VMIC" ~ 'Museum',
+      DatasetID == "Vicario_et_al_2024" ~ 'Publication',
+      DatasetID == "NOAA_CBNMS_GFNMS_ROV_2021" ~ 'Cruise',
+      TRUE ~ class
+    )
+  )
+
+##### loop to create title and abstract #####
+# Loop through each DatasetID in the 'added' list
+for (dataset in added) {
+
+  ##### create new title #####
+  new_title <- filt %>%
+    filter(DatasetID == dataset) %>%
+    reframe(
+      title_text = paste(
+        unique(DataProvider),
+        unique(Vessel),
+        unique(SurveyID),
+        min(ObservationDate),
+        max(ObservationDate),
+        sep = " | "
+      )
+    ) %>%
+    pull(title_text)
+
+  # Update title in key2
+  key2 <- key2 %>%
+    mutate(
+      title = ifelse(DatasetID == dataset, new_title, title)
+    )
+
+  ##### create new abstract #####
+  new_abstract <- filt %>%
+    filter(DatasetID == dataset) %>%
+    reframe(
+      abstract_text = paste(
+        "This biological occurence dataset was provided by ",
+        paste(unique(DataProvider), collapse = '; '),
+        " to NOAA's Deep-sea Coral Research and Technology Program. ",
+        "Observations were from the vessel(s), ",
+        paste(unique(Vessel), collapse = '; '), ",",
+        " using the platform(s): ",
+        paste(unique(VehicleName), collapse = '; '), ".",
+        " Observation dates range from ",
+        min(ObservationDate), " to ", max(ObservationDate), ".",
+        " Marine Ecoregions of the World (MEOW) explored include: ",
+        paste(unique(gisMEOW), collapse = '; '), ".",
+        " Localities explored include: ",
+        paste(unique(Locality), collapse = '; '), ".",
+        " Changes to the originally submitted dataset may have been made to conform to the standards of NOAA's National Database for Deep-sea Corals and Sponges. ",
+        "Please reach out to: ",
+        paste(unique(DataContact), collapse = '; '),
+        " or ",
+        paste(unique(PI), collapse = '; '),
+        " for specific questions about this dataset.",
+        " Link(s) for more information: ",
+        paste(unique(WebSite), collapse = '; '),
+        sep = ''
+      )
+    ) %>%
+    pull(abstract_text)
+
+  # Update abstract in key2
+  key2 <- key2 %>%
+    mutate(
+      abstract = ifelse(DatasetID == dataset, new_abstract, abstract)
+    )
+
+} # <--- this is the closing brace for the for loop
 
 ##### MANUAL STEP (in Google Drive) : go update the DatasetID key with the new values #####
 ##
 # setdiff(filt$DatasetID, key$DatasetID)
+
+##### ***OR*** bring in new MANUALLY UPDATED datasetID key from local path #####
+# key <- read.xlsx("C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx")
+
+##### ***OR*** bring in new MANUALLY UPDATED datasetID key from Google Drive #####
+# ## create a list of files (or single file) that meets title query (Manual change)
+#
+# x <- drive_find(q = "name contains '20240726-0_DatasetID_Key_DSCRTP'") #
+#
+# ## browse to it
+# x %>% drive_browse()
+#
+# # getting the id as a character string
+# y <- x$id
+#
+# # this downloads the file to the specified path (manual change required)
+# dl <- drive_download(as_id(y),
+#                      path = "C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx",
+#                      overwrite = TRUE)
+#
+# ## read the file into R as a data frame
+# key <- read.xlsx(dl$local_path)
 
 ##### checking #####
 # x <- filt %>%
@@ -128,7 +260,7 @@ key <- read.xlsx("C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRT
 #
 # x
 
-##### write the citation information #####
+##### write the citation information into filt #####
 
 filt$CitationMaker <- paste(filt$DataProvider,'. ',
                             filt$ObservationYear,
@@ -168,7 +300,7 @@ filt$CitationMaker <- paste(filt$DataProvider,'. ',
 # Macrina_et_al_2024
 # NMCIC
 
-x <- "NMCIC"
+x <- "MACN"
 
 y <- filt %>% filter(DatasetID == x) %>%
   group_by(WebSite,
@@ -182,46 +314,23 @@ filt %>% filter(DatasetID == x) %>%
   pull(CitationMaker) %>%
   unique()
 
-##### ***OR*** bring in new MANUALLY UPDATED datasetID key from local path #####
-# key <- read.xlsx("C:/rworking/deepseatools/indata/20240726-0_DatasetID_Key_DSCRTP.xlsx")
-
-##### ***OR*** bring in new MANUALLY UPDATED datasetID key from Google Drive #####
-# ## create a list of files (or single file) that meets title query (Manual change)
-#
-# x <- drive_find(q = "name contains '20240726-0_DatasetID_Key_DSCRTP'") #
-#
-# ## browse to it
-# x %>% drive_browse()
-#
-# # getting the id as a character string
-# y <- x$id
-#
-# # this downloads the file to the specified path (manual change required)
-# dl <- drive_download(as_id(y),
-#                      path = "C:/rworking/deepseatools/indata/20240115-0_DatasetID_Key_DSCRTP.xlsx",
-#                      overwrite = TRUE)
-#
-# ## read the file into R as a data frame
-# key <- read.xlsx(dl$local_path)
-
 ##### ***OPTIONAL*** updating DatasetID key with new 'n' #####
-# ## build a frequency table by DatasetID from new file
-# x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
-#
-# # strip 'n' from existing key
-# names(key)
-# y <- key[,1:8]
-#
-# x$DatasetID <- as.character(x$DatasetID)
-# y$DatasetID <- as.character(y$DatasetID)
-#
-# ## check
-# names(y)
-# View(y)
+## build a frequency table by DatasetID from new key file
+x <- filt %>% group_by(DatasetID) %>% summarize(n=n())
 
+# strip 'n' from existing key
+names(key)
+y <- key[,1:8]
+
+x$DatasetID <- as.character(x$DatasetID)
+y$DatasetID <- as.character(y$DatasetID)
+
+## check
+names(y)
+View(y)
 
 ## merge new numbers to create old key + new counts
-# z <- left_join(y,x)
+z <- left_join(y,x)
 
 ##### check #####
 View(z)
