@@ -416,7 +416,8 @@ z <- left_join(y,x)
 key <- z
 
 ##### check #####
-key %>% filter(DatasetID %in% added) %>% pull(title)
+key %>% filter(DatasetID %in% added) %>% pull(class)
+
 
 ##### write out result (manual change to file name) #####
 write.xlsx(key, "C:/rworking/deepseatools/indata/20250409-0_DatasetID_Key_DSCRTP.xlsx",
@@ -436,6 +437,7 @@ rm(filt_old)
 d <- filt
 
 ##### ***OPTIONAL*** subsetting of indata to d (optional step for testing or one-off update purposes) #####
+
 d <- filt %>% filter(DatasetID %in% added)
 
 
