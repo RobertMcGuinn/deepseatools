@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'runner_datasetID'
+x <- 'change'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,

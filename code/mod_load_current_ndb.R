@@ -15,13 +15,13 @@ path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20250409-0.csv"
 
 ## Version History
 # "DSCRTP_NatDB_20250409-0.csv" # 'Florence Price'
-# "DSCRTP_NatDB_20241219-1.csv  # 'Edith Piaf
+# "DSCRTP_NatDB_20241219-1.csv  # 'Edith Piaf'
 # "DSCRTP_NatDB_20241022-1.csv" # 'Shaggy'
 # "DSCRTP_NatDB_20240726-0.csv" # 'Mick Jagger (Stanley Kubrick, Mick Stanley, McStanley)'
 # "DSCRTP_NatDB_20240723-0.csv" # 'taxonomy patch to be applied here'
 # "DSCRTP_NatDB_20240325-0.csv" # 'Aretha Franklin'
 # 'DSCRTP_NatDB_20240115-0.csv' (taxonomy patch applied)
-# 'DSCRTP_NatDB_20230928-0.csv'(published as '20230828-0')
+# 'DSCRTP_NatDB_20230928-0.csv' (published as '20230828-0')
 # "DSCRTP_NatDB_20230620-0.csv"
 # "DSCRTP_NatDB_20230620-0_published.csv"
 # "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
