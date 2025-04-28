@@ -7,7 +7,7 @@ output:
     reference_docx: "c:/rworking/deepseatools/code/template.docx"
 ---
 
-```{r packages, echo=F, message=FALSE, warning=FALSE, cache=FALSE, eval=T,}
+```{r packages, echo=F, message=FALSE, warning=FALSE, cache=FALSE, eval=T}
 ## load packages
 #install.packages(tidyverse)
 #install.packages('openxlsx')
@@ -57,7 +57,7 @@ knitr::opts_chunk$set(echo = FALSE,
 
 ```
 
-```{r filter_points_by_geography, echo=F, warning=F, message=F, eval=T}
+```{r filter_points_by_geography_and_create_sf, echo=F, warning=F, message=F, eval=T}
 ##### filter occurrences by query or box or both ##### 
 ## set bounding box variables
 minlat <- 37
@@ -76,26 +76,8 @@ x <- subset(filt, as.numeric(Latitude) > minlat &
 
 ## checking
 # dim(x)
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
 
-```
-
-```{r create_geo_from_points, echo=FALSE, echo = FALSE, message = FALSE, warning=FALSE, eval=T}
-## create spatial points data frame from a subset of points
-x_geo <- x
-
-## create spdf
-coordinates(x_geo) <- c("Longitude", "Latitude")
-proj4string(x_geo) <- "+proj=longlat +ellps=WGS84 +datum=WGS84"
-
-## OPTIONAL: write out featureclass to geodatabase from sp object 
-# fgdb_path <- "C:/data/aprx/aoi/aoi.gdb"
-# arc.write(file.path(fgdb_path, 'x_geo'), data=x_geo, overwrite = TRUE)
-
-```
-
-```{r create_sf_from_points, message = FALSE, warning = FALSE, echo=F, eval=T}
-##### transform coral and sponge points to sf #####
-points <- st_as_sf(x_geo, wkt = "geom")
 ```
 
 ```{r fish_points_for_interacitive map, eval=F}
@@ -120,7 +102,7 @@ fish_points_for_app %>% pull(Family) %>% table(useNA = 'always')
 
 ```{r import_NE_Canyons_aoi, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=F}
 
-##### get the NE Canyons mounument ##### 
+##### get the NE Canyons mounument boundary ##### 
 shapefile_path <- "C:/rworking/deepseatools/indata/20221104_protected_areas_update_HColeman/20221104_protected_areas.shp"
 protected_areas <- st_read(shapefile_path)
 ne_canyons <- protected_areas %>% filter(Sitename == 'NE Canyons and Seamounts')
@@ -133,7 +115,6 @@ ne_canyons_5070_spat <- vect(ne_canyons_5070)
 
 ##### Write to shapefile #####
 # writeVector(ne_canyons_5070_spat, "C:/rworking/deepseatools/indata/ne_canyons_5070.shp", overwrite = TRUE)
-
 
 ##### check ##### 
 # st_crs(ne_canyons)
