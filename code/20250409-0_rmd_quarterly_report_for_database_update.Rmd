@@ -13,7 +13,7 @@ editor_options:
 quarter <- 'Q2, FY-2025'
 version <- 'DSCRTP_NatDB_20250409-0'
 releasedate <- '2025-04-15'
-corrections <- 200
+corrections <- 2000
 
 # patch1 <- read.csv('../indata/patch_for_correct_cf_handling.csv') 
 # patch2 <- read.csv('../indata/patch_for_individual_AphiaID_corrections.csv')
