@@ -1,5 +1,5 @@
 ##### Header #####
-## author: robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
+## author: robert.mcguinn@noaa.gov, rpm@alumni.duke.edu,
 ## date_started: 20250507
 ## purpose: download metadata from WAF and put it in a folder
 
