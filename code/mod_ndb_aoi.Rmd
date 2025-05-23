@@ -1,0 +1,1594 @@
+---
+title: "Area of Interest Report - Hudson Canyon Region"
+author: "Robert P. McGuinn"
+date: "`r Sys.Date()`"
+output: 
+  word_document:
+    reference_docx: "c:/rworking/deepseatools/code/template.docx"
+
+---
+
+---
+
+```{r packages, echo=F, message=FALSE, warning=FALSE, cache=FALSE, eval=T}
+## load packages
+#install.packages(tidyverse)
+#install.packages('openxlsx')
+library(tidyverse)
+library(openxlsx)
+library(sf)
+library(RColorBrewer)
+library(raster)
+library(leaflet)
+library(extrafont)
+loadfonts()
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(maps)
+library(raster)
+library(httr)
+library(jsonlite)
+# install.packages('rnaturalearth')
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(openxlsx)
+library(googledrive)
+library(spocc)
+library(terra)
+library(knitr)
+library(kableExtra)
+library(marmap)
+
+```
+
+```{r chunk_options, include=FALSE, eval=T}
+knitr::opts_chunk$set(echo = FALSE, 
+                      fig.height = 4.5,
+                      fig.width = 7.5 
+                      )
+```
+
+```{r load_NDB, echo=F, message = FALSE, warning = FALSE, cache = TRUE, eval = F}
+## load NDB
+source('c:/rworking/deepseatools/code/mod_load_current_NDB.R')
+
+```
+
+```{r load_GEBCO_2024_data_and_reclass, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T}
+## get data from here: https://download.gebco.net/ (acquired 20250404)
+## use this bounding box to subset
+##  West	East	South	North
+# -75	-65	36	41
+
+gebco_2024_bathy <- rast("C:/rworking/deepseatools/indata/gebco_2024_n41.0_s36.0_w-75.0_e-65.0.tif")
+
+# Define reclassification matrix for negative depth values
+rcl_matrix <- matrix(c(
+  -9999, -3000, 13,
+  -3000, -2750, 12,
+  -2750, -2500, 11,
+  -2500, -2250, 10,
+  -2250, -2000, 9,
+  -2000, -1750, 8,
+  -1750, -1500, 7,
+  -1500, -1250, 6,
+  -1250, -1000, 5,
+  -1000, -750, 4,
+  -750, -500, 3,
+  -500, -250, 2,
+  -250, 0, 1,
+  0, 1000, -999
+), ncol = 3, byrow = TRUE)
+
+# rcl_matrix <- matrix(c(
+#   -9999, -3000, 7,
+#   -3000, -2500, 6,
+#   -2500, -2000, 5,
+#   -2000, -1500, 4,
+#   -750, -500, 3,
+#   -500, -250, 2,
+#   -250, 0, 1, 
+#   0, 1000, -999
+# ), ncol = 3, byrow = TRUE)
+
+# Perform reclassification
+gebco_2024_bathy_reclass <- classify(gebco_2024_bathy, rcl_matrix)
+
+##### write the combined raster for visualization ##### 
+writeRaster(
+  gebco_2024_bathy_reclass,
+  filename = "c:/rworking/deepseatools/indata/gebco_2024_bathy_reclass_250.tif",
+  datatype = "INT2S",        # Ensures integer data
+  overwrite = TRUE
+)
+
+```
+
+```{r create_variables, echo=F, eval=T}
+##### create variables ##### 
+db_version <- unique(filt$DatabaseVersion)
+aoi_name <- "AOI Name Here"
+drive_link <- "https://drive.google.com/drive/folders/1g6kNh7mY05i8PvUwrSN_z6blKYEiJM5A?usp=drive_link"
+
+```
+
+```{r filter_occurrences_by_geography_and_create_sf_object, echo=F, warning=F, message=F, eval=T}
+##### filter occurrences by query or box or both ##### 
+## set bounding box variables
+minlat <- 37
+maxlat <- 41
+minlon <- -73
+maxlon <- -65
+
+## subset data by coordinates
+x <- subset(filt, as.numeric(Latitude) > minlat &
+                   as.numeric(Latitude) < maxlat &
+                   as.numeric(Longitude) > minlon &
+                   as.numeric(Longitude) < maxlon)
+                
+## also subset data by other variables by other criteria
+# x <- x %>% filter(ScientificName == "")
+
+## checking
+# dim(x)
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+rm(x)
+
+```
+
+```{r create_aoi, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T }
+
+##### get the NE Canyons mounument ##### 
+shapefile_path <- "C:/rworking/deepseatools/indata/20221104_protected_areas_update_HColeman/20221104_protected_areas.shp"
+protected_areas <- st_read(shapefile_path)
+aoi <- protected_areas %>% filter(Sitename == 'Frank R Lautenberg (Combined Areas)')
+
+##### reproject to target crs ##### 
+aoi_5070 <- st_transform(aoi, crs = 5070)
+
+##### Write to (for mapping) #####
+# aoi_5070_spat <- vect(aoi_5070)
+# writeVector(aoi_5070_spat, "C:/rworking/deepseatools/indata/aoi_5070.shp", overwrite = TRUE)
+
+##### check ##### 
+# st_crs(ne_canyons)
+
+```
+
+```{r create buffers, echo=F, eval=T}
+##### buffer operations ##### 
+## create 5000 meter buffer
+aoi_buf_5000 <- st_buffer(aoi_5070, dist=5000) # map units are in meters
+
+##create 20000 meter buffer
+aoi_buf_20000 <- st_buffer(aoi_5070, dist=20000) # map units are in meters
+
+## check
+# plot(ne_canyons_buf_20000)
+
+```
+
+```{r intersect_points_with_aoi, echo=F, eval = T}
+##### intersection operations ##### 
+## transform CRS for coral and sponge points projection to match polygons
+points_transform <- st_transform(points, crs = st_crs(aoi_5070))
+
+## checking
+##  st_crs(points_transform)
+
+## find points within the polygons
+points_in_0 <- st_join(points_transform, aoi_5070, join = st_within) # no buffer
+points_in_5000 <- st_join(points_transform, aoi_buf_5000, join = st_within) # 5000 meter buffer
+points_in_20000 <- st_join(points_transform, aoi_buf_20000, join = st_within) # 20000 meter buffer
+
+## checking
+# names(points_in_0)
+# dim(points_in_0)
+# dim(points_in_5000)
+# dim(points_in_20000)
+# table(points_in_0$Shape_Area, useNA = 'always')
+# table(points_in_5000$Shape_Area, useNA = 'always')
+# table(points_in_20000$Shape_Area, useNA = 'always')
+
+## select intersecting points only and create separate data frames
+points_in_0_select <- points_in_0 %>% filter(is.na(Sitename) == F)
+points_in_5000_select <- points_in_5000 %>% filter(is.na(Sitename) == F)
+points_in_20000_select <- points_in_20000 %>% filter(is.na(Sitename) == F)
+
+## checking 
+# dim(points_in_0_select)
+# dim(points_in_5000_select)
+# dim(points_in_20000_select)
+
+
+```
+
+```{r intersect_reclass_raster_values_to points within aoi , echo=F, eval=T}
+##### Extract raster values at point locations ##### 
+## transform projection
+points_in_0_select <- st_transform(points_in_0_select, st_crs(points))
+
+## convert sf object to SpatVector for terra
+points_in_0_select_vect <- vect(points_in_0_select)
+
+## extract values
+extracted <- extract(gebco_2024_bathy_reclass, points_in_0_select_vect)
+
+## add extracted values to the original point data
+points_in_0_select$Classes <- extracted[, 2]  # The second column usually holds the raster values
+
+##### check ##### 
+# table(points_in_0_select$Classes, useNA = 'always')
+
+## Save the new point file with class info (POTIONAL)
+# st_write(points_in_0_select, "c:/rworking/deepseatools/indata/points.gpkg", driver = "GPKG", append = TRUE)
+
+
+```
+
+# Purpose of Report
+
+To create summaries of occurrence data to support decision making in the deep-sea regions of `r aoi_name`.  
+
+# Resources
+
+- [Google drive folder containing inputs, code, and reports](`drive_link`)
+
+- [RMarkdown code for generating this report](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/mod_ndb_aoi.Rmd) 
+
+- [NOAA's National Database for Deep-sea Corals and Sponges portal](https://www.ncei.noaa.gov/maps/deep-sea-corals-portal/) 
+
+- [Redmine tracker](https://vlab.noaa.gov/redmine/issues/143822) (for internal reference)
+
+# Analysis Notes
+
+Coral, sponge, and fish occurrences from NOAA's National Database for Deep-sea Corals and Sponges are summarized within the Northeast Canyons and Seamounts National Monument. The database version used in this report is `r unique(filt$DatabaseVersion)`.
+
+A single area of interest is defined for the purposes of this report:   
+
+- AOI = NE Canyons and Seamounts NM AOI (official boundary)
+
+Bathymetric data used for the analysis:
+
+- GEBCO 2024. https://download.gebco.net/. Acquired 2025-04-04.
+- 250 meter contour intervals used for summary figures and tables. 
+
+\newpage
+
+# Results
+#### Figure and Table 1: 0-250m
+``` {r depth_bin_table__1, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 0
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+
+
+```
+
+\newpage
+#### Figure and Table 2: 250-500m
+``` {r depth_bin_table__2, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 250
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>%  
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+
+
+```
+\newpage
+#### Figure and Table 3: 500-750m
+```{r depth_bin_table__3, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 500
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 4: 750-1000m
+```{r depth_bin_table__4, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 750
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 5: 1000-1250m
+```{r depth_bin_table__5, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 1000
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 6: 1250-1500m
+```{r depth_bin_table__6_echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 1250
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 7: 1500-1750m
+```{r depth_bin_table__7, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 1500
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 8: 1750-2000m
+```{r depth_bin_table__8, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 1750
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 9: 2000-2250m
+```{r depth_bin_table__9, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 2000
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 10: 2250-2500m
+```{r depth_bin_table__10, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 2250
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 11: 2500-2750m
+```{r depth_bin_table__11, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 2500
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 12: 2750-3000m
+```{r depth_bin_table__12, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 2750
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 13: 3000-3250m
+```{r depth_bin_table__13, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 3000
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 14: 3250-3500m
+```{r depth_bin_table__14, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 3250
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 15: 3500-3750m
+```{r depth_bin_table__15, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 3500
+mindepth <- i
+maxdepth <- i+250
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+\newpage
+#### Figure and Table 16: 3750-4500m
+```{r depth_bin_table__16, echo=FALSE, eval=T}
+##### set depth bins #####
+i <- 3750
+mindepth <- i
+maxdepth <- i+750
+bin_data <- points_in_0_select %>% 
+filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+##### set color choices ##### 
+my_colors <- c(
+  "stony coral (branching)" =  "#FFFFFF",
+  "stony coral (cup coral)" =  "#00E6A9",
+  "black coral" =  "#000000",
+  "gorgonian coral" = "#FF0000",
+  "soft coral" =  "#00734C",
+  "sea pen" = "#0000FF",
+  "stoloniferan coral" = "#7F7F7F",
+  "lace coral" = "#A80084",
+  "lithotelestid coral" = "#FF00C5",
+  "stony coral (unspecified)" = "#D1FF73",
+  "gold coral" =  "#FFFF00",
+  "sponge (unspecified)" = "#FF0000",
+  "demosponge" = "#00FFC5",
+  "glass sponge" = "#C500FF",
+  "homoscleromorph sponge" = "#FFFF00",
+  "calcareous sponge" = "#55FF00",
+  "other coral-like hydrozoan" = "#00FFFF",
+  "alcyonacean (unspecified)" = "#D7B09E",
+  "fish" = "#7a2d0a"
+)
+
+##### make a boxplot of VernacularNameCategory within depth bin ##### 
+g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = median),
+                          DepthInMeters,
+                          fill = VernacularNameCategory)) +
+  geom_boxplot() +
+  scale_y_reverse() +
+  ylab("Depth (meters)") +
+  xlab("") +
+  ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
+  theme_bw(base_size = 10, base_family = "sans") +
+  theme(
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, face = 'italic'),
+    axis.title.y = element_text(margin = margin(r = 30))
+  ) +
+  scale_fill_manual(values = my_colors) +
+  labs(fill = "Vernacular Name Category")
+
+print(g)  # Plot shows in Word
+
+##### Depth Bin Summary Tables #####
+bin_data <- data.frame(points_in_0_select) %>% 
+  filter(DepthInMeters > mindepth, DepthInMeters <= maxdepth)
+
+# Summary Table
+library(flextable)
+
+tab <- bin_data %>%
+  group_by(VernacularNameCategory) %>%
+  summarise(
+    N = n(),
+    MinDepth = min(DepthInMeters, na.rm = TRUE),
+    MedianDepth = median(DepthInMeters, na.rm = TRUE),
+    MaxDepth = max(DepthInMeters, na.rm = TRUE),
+    ScientificNames = paste(unique(ScientificName), collapse = " / "),
+    .groups = "drop"
+  ) %>%
+  arrange(MedianDepth)
+
+# Create the flextable
+sum_tbl <- flextable(tab) %>%
+  fontsize(size = 6) %>%  # Set the font size for content
+  compose(j = "N", value = as_paragraph(as_chunk(N))) %>%  # Compose column N
+  set_table_properties(layout = "autofit") %>%
+  bold(part = "header") %>%  # Optionally, make the header bold
+  fontsize(part = "header", size = 7)  # Set a smaller font size for the header
+
+sum_tbl
+
+```
+
+\newpage
+
+
