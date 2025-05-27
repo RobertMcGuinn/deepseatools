@@ -12,6 +12,10 @@ output:
 ## load packages
 #install.packages(tidyverse)
 #install.packages('openxlsx')
+# install.packages("ggspatial")
+# install.packages("prettymapr")
+library(prettymapr)
+library(ggspatial)
 library(tidyverse)
 library(openxlsx)
 library(sf)
@@ -47,9 +51,19 @@ knitr::opts_chunk$set(echo = FALSE,
                       )
 ```
 
-```{r load_NDB, echo=F, message = FALSE, warning = FALSE, cache = TRUE, eval = F}
+```{r load_NDB, echo=F, message=FALSE, warning=FALSE, cache=F, eval=F}
 ## load NDB
 source('c:/rworking/deepseatools/code/mod_load_current_NDB.R')
+
+```
+
+```{r set_run_variables, echo=F, eval=T}
+##### create variables ##### 
+db_version <- unique(filt$DatabaseVersion)
+aoi_name <- "Aleutian Islands (overall)"
+drive_link <- "https://drive.google.com/drive/folders/1BTvCPfE0W1-ZnNSPycIm_j4r-0WoftPo?usp=drive_link"
+redmine_link <- "https://vlab.noaa.gov/redmine/issues/146547"
+gebco_date <- "2024-05-23"
 
 ```
 
@@ -148,11 +162,89 @@ aoi_transform <- st_transform(aoi, crs = 3338)
 
 ```
 
-```{r create_variables, echo=F, eval=T}
-##### create variables ##### 
-db_version <- unique(filt$DatabaseVersion)
-aoi_name <- "Aleutian Islands (overall)"
-drive_link <- "https://drive.google.com/drive/folders/1BTvCPfE0W1-ZnNSPycIm_j4r-0WoftPo?usp=drive_link"
+```{r split_aoi, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T }
+
+split_bbox_vertically <- function(bbox_sfc, n = 3) {
+  bbox_coords <- st_bbox(bbox_sfc)
+  
+  width <- (bbox_coords["xmax"] - bbox_coords["xmin"]) / n
+  polys <- lapply(0:(n-1), function(i) {
+    xmin <- bbox_coords["xmin"] + i * width
+    xmax <- xmin + width
+    st_polygon(list(rbind(
+      c(xmin, bbox_coords["ymin"]),
+      c(xmax, bbox_coords["ymin"]),
+      c(xmax, bbox_coords["ymax"]),
+      c(xmin, bbox_coords["ymax"]),
+      c(xmin, bbox_coords["ymin"])
+    ))) %>% st_sfc(crs = st_crs(bbox_sfc))
+  })
+  
+  st_sf(geometry = do.call(c, polys))
+}
+
+aoi3 <- split_bbox_vertically(aoi)
+aoi_west <- aoi3[1,]
+aoi_central <- aoi3[2,]
+aoi_east <- aoi3[3,]
+```
+
+```{r plot_aois, echo=FALSE, echo = F, message = FALSE, warning=FALSE, results = "hide", eval=T }
+
+# Add a name column to each sf object
+aoi_west <- aoi_west %>% mutate(name = "aoi_west")
+aoi_central <- aoi_central %>% mutate(name = "aoi_central")
+aoi_east <- aoi_east %>% mutate(name = "aoi_east")
+
+# Combine them into one sf object
+aoi_combined <- rbind(aoi_west, aoi_central, aoi_east)
+
+# Get centroids as points for labels
+centroids <- st_centroid(aoi_combined)
+
+
+land <- ne_countries(scale = "medium", returnclass = "sf")
+bbox <- st_bbox(aoi_combined)
+
+library(ggrepel)
+
+
+ggplot() +
+  geom_sf(data = land, fill = "gray80", color = NA) +  
+  geom_sf(data = aoi_combined, aes(fill = name), color = "black", alpha = 0.5) +
+  geom_sf(data = dives_sf, color = "red", size = 2, shape = 21, fill = "yellow") +
+  ggrepel::geom_text_repel(
+    data = dives_sf,
+    aes(geometry = geometry, label = site),
+    stat = "sf_coordinates",
+    size = 3,
+    fontface = "italic",
+    color = "darkblue",
+    nudge_y = 0.01,
+    min.segment.length = 0
+  ) +
+  coord_sf(
+    xlim = c(bbox["xmin"], bbox["xmax"]),
+    ylim = c(bbox["ymin"], bbox["ymax"]),
+    expand = FALSE
+  ) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Split Bounding Box with Dive Points and Land Background",
+    x = "Longitude",
+    y = "Latitude"
+  ) +
+  theme(
+    axis.text.y = element_text(color = "black", size = 10),
+    axis.ticks.y = element_line(color = "black"),
+    axis.line.y = element_line(color = "black"),
+    axis.text.x = element_text(color = "black", size = 10),
+    axis.ticks.x = element_line(color = "black"),
+    axis.line.x = element_line(color = "black"),
+    legend.position = "none"
+  )
+
+
 
 ```
 
@@ -180,7 +272,7 @@ rm(x)
 
 ```
 
-```{r intersect_points_with_aoi, echo=F, eval = T}
+```{r transform_point_crs, echo=F, eval = T}
 ## transform CRS for coral and sponge points projection to match polygons
 points_transform <- st_transform(points, crs = st_crs(aoi_transform))
 
@@ -206,30 +298,30 @@ To create summaries of occurrence data to support decision making in the deep-se
 
 - [Google drive folder containing inputs, code, and reports](`r drive_link`)
 
-- [RMarkdown code for generating this report](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/mod_ndb_aoi.Rmd) 
+- [RMarkdown code for generating this report](`r  paste0('https://github.com/RobertMcGuinn/deepseatools/blob/master/code/', v,'_',filename,'.rmd')`)
 
 - [NOAA's National Database for Deep-sea Corals and Sponges portal](https://www.ncei.noaa.gov/maps/deep-sea-corals-portal/) 
 
-- [Redmine tracker](https://vlab.noaa.gov/redmine/issues/143822) (for internal reference)
+- [Redmine tracker](`r redmine_link`) (for internal reference)
 
 # Analysis Notes
 
-Coral, sponge, and fish occurrences from NOAA's National Database for Deep-sea Corals and Sponges are summarized within the Northeast Canyons and Seamounts National Monument. The database version used in this report is `r unique(filt$DatabaseVersion)`.
+Coral, sponge, and fish occurrences from NOAA's National Database for Deep-sea Corals and Sponges are summarized within the `r aoi_name`. The database version used in this report is `r unique(filt$DatabaseVersion)`.
 
 A single area of interest is defined for the purposes of this report:   
 
-- AOI = NE Canyons and Seamounts NM AOI (official boundary)
+- AOI = `r aoi_name`
 
 Bathymetric data used for the analysis:
 
-- GEBCO 2024. https://download.gebco.net/. Acquired 2025-04-04.
+- GEBCO 2024. https://download.gebco.net/. Acquired `r gebco_date`.
 - 250 meter contour intervals used for summary figures and tables. 
 
 \newpage
 
 # Results
 #### Figure and Table 1: 0-250m
-``` {r depth_bin_table__1, echo=FALSE, eval=T}
+``` {r depth_bin_table__1, echo=FALSE, message=F, eval=T}
 ##### set depth bins #####
 i <- 0
 mindepth <- i
