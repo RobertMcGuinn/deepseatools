@@ -64,7 +64,7 @@ db_version <- unique(filt$DatabaseVersion)
 aoi_name <- "Aleutian Islands - West"
 drive_link <- "https://drive.google.com/drive/folders/1BTvCPfE0W1-ZnNSPycIm_j4r-0WoftPo?usp=drive_link"
 redmine_link <- "https://vlab.noaa.gov/redmine/issues/146547"
-file_name <- "20250523_Aleutian_aoi_AWeinnig.Rmd"
+file_name <- "20250530_Aleutian_aoi_AWeinnig.Rmd"
 github_link <- paste0("https://github.com/RobertMcGuinn/deepseatools/blob/master/code/", file_name)
 gebco_date <- "2024-05-23"
 
