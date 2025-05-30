@@ -281,10 +281,13 @@ x <- subset(filt, as.numeric(Latitude) > minlat &
                    as.numeric(Longitude) > minlon &
                    as.numeric(Longitude) < maxlon)
                 
-## OPTIONAL also subset data by other variables by other criteria
-# points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
-# rm(x)
-# 
+## create sf files
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+
+## cleanup
+rm(x)
+
+## OPTIONAL - write points 
 # write_sf(points, "c:/rworking/deepseatools/indata/points.shp")
 
 ```
@@ -388,6 +391,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -481,6 +485,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -573,6 +578,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -664,6 +670,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -755,6 +762,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -846,6 +854,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -937,6 +946,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -1028,6 +1038,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -1119,6 +1130,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -1209,6 +1221,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -1300,6 +1313,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -1391,6 +1405,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -1482,6 +1497,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -1573,6 +1589,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -1664,6 +1681,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
@@ -1755,6 +1773,7 @@ g <- ggplot(bin_data, aes(reorder(VernacularNameCategory, DepthInMeters, FUN = m
                           fill = VernacularNameCategory)) +
   geom_boxplot() +
   scale_y_reverse() +
+  coord_cartesian(ylim = c(maxdepth, mindepth)) +  # Explicit y-axis range
   ylab("Depth (meters)") +
   xlab("") +
   ggtitle(sprintf("Depth Distribution by Category (%d-%d m)", mindepth, maxdepth)) +
