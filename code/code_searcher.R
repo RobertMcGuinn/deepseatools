@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'taxonomy'
+x <- 'rmd_datasetid_cruise_no_leaflet.Rmd'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,

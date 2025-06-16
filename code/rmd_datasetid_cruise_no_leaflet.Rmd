@@ -47,7 +47,7 @@ sub$meta <- paste("https://www.ncei.noaa.gov/waf/dsc-data/metadata/", sub$Datase
 
 ```
 
-```{r, some_variable_setup, echo=FALSE}
+```{r some_variable_setup, echo=FALSE}
 
 x <- unique(sub$erddap)
 y <- unique(sub$meta)

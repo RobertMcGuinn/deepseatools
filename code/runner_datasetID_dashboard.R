@@ -122,7 +122,7 @@ version <- as.character(version)
 old_key <- read.xlsx("C:/rworking/deepseatools/indata/20241219-1_DatasetID_Key_DSCRTP.xlsx")
 key <- read.xlsx("C:/rworking/deepseatools/indata/20250409-0_DatasetID_Key_DSCRTP.xlsx")
 
-##### add new DatasetIDs #####
+##### add new DatasetIDs to DatasetID key (watch this one closely) #####
 ## setdiff(filt$DatasetID, old_key$DatasetID)
 changed <- setdiff(key$DatasetID, filt$DatasetID)
 # added <- setdiff(filt$DatasetID, key$DatasetID)
@@ -229,19 +229,19 @@ for (dataset in added) {
     mutate(single_citation = ifelse(DatasetID == dataset, new_citation, single_citation))
 }
 
-##### clean up titles #####
+##### clean up titles in key #####
 key2$title  <- key2$title %>% str_split(" \\| ") %>%                             # Split by " | "
   lapply(function(x) x[x != "NA"]) %>%               # Remove 'NA'
   sapply(function(x) paste(x, collapse = " | "))     # Paste back together
 
 key2$title
 
-##### clean up method_link #####
+##### clean up method_link in key#####
 key2$method_link  <- key2$method_link %>% str_split(" \\| ") %>%                             # Split by " | "
   lapply(function(x) x[x != "NA"]) %>%               # Remove 'NA'
   sapply(function(x) paste(x, collapse = " | "))     # Paste back together
 
-##### set method_text #####
+##### set method_text in key #####
 key2 <- key2 %>%
   mutate(
     method_text = case_when(
@@ -253,7 +253,7 @@ key2 <- key2 %>%
 key2 <- key2 %>%
   filter(!(DatasetID %in% c("NOAA_RL-19-05", "NOAA_SH-18-12")))
 
-##### fix something specific #####
+##### OPTIONAL: fix something specific #####
 
 key2 <- key2 %>%
   mutate(
@@ -271,7 +271,7 @@ key2 <- key2 %>%
 # key2 %>% filter(DatasetID %in% added) %>% View()
 # filt %>% filter(DatasetID %in% c('Filander_et_al_2021')) %>% pull(ObservationDate) %>% table()
 
-##### MANUAL STEP (in Google Drive) : go update the DatasetID key with the new values #####
+##### ***OR*** MANUAL STEP (in Google Drive) : go update the DatasetID key with the new values #####
 ##
 # setdiff(filt$DatasetID, key$DatasetID)
 
@@ -385,14 +385,16 @@ z <- left_join(y,x)
 key <- z
 
 ##### check #####
-key %>% filter(DatasetID %in% added) %>% pull(class)
+key %>% filter(DatasetID %in% added) %>% pull(n)
+length(sub$DatasetID)
 
+filt %>% filter(DatasetID %in% added) %>% pull(CatalogNumber) %>% length()
 
-##### write out result (manual change to file name) #####
+##### OPTIONAL: write out result (manual change to file name) #####
 write.xlsx(key, "C:/rworking/deepseatools/indata/20250409-0_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
 
-##### upload PDF report to specific folder on Google Drive(manual changes to filename and folderurl)#####
+##### OPTIONAL upload PDF report to specific folder on Google Drive(manual changes to filename and folderurl)#####
 filename <- '20250409-0_DatasetID_Key_DSCRTP'
 folderurl <- "https://drive.google.com/drive/folders/1e851ZIEpDgYNmnnYwHQQZ9RyuNyz1aWf"
 setwd("C:/rworking/deepseatools/indata")
@@ -482,7 +484,7 @@ oneeighty <- intersect(yo, yo2)
 #                            'NOAA_SH-18-12',
 #                            as.character(DatasetID)))
 
-##### dealing with special character issues #####
+##### ***OPTIONAL*** dealing with special character issues #####
 ## Install and load the stringi package if not already installed
 
 # library(stringi)
@@ -623,7 +625,7 @@ one_eighty <- intersect(yo, yo2)
 not_one_eighty <- setdiff(d$DatasetID, one_eighty)
 
 ##### checking #####
-length(one_eighty)+length(not_one_eighty)
+# length(one_eighty)+length(not_one_eighty)
 
 ##### _create the folders for each type of report #####
 dir.create('C:/rworking/deepseatools/reports/datasetid/cruise')
@@ -871,9 +873,6 @@ export %>%
 table(sub$Flag)
 filt <- sub %>% filter(Flag == "0")
 filt %>% filter(CatalogNumber == "618055") %>% pull(Latitude)
-
-
-
 
 
 ##### check #####

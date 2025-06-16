@@ -52,7 +52,7 @@ knitr::opts_chunk$set(echo = FALSE,
                       )
 ```
 
-```{r load_NDB, echo=F, message=FALSE, warning=FALSE, cache=F, eval=F}
+```{r load_NDB, echo=F, message=FALSE, warning=FALSE, cache=F, eval=T}
 ## load NDB
 source('c:/rworking/deepseatools/code/mod_load_current_NDB.R')
 
@@ -267,7 +267,7 @@ ggplot() +
 library(sf)
 
 # Get the bounding box of the polygon
-bbox <- st_bbox(aoi_west)
+bbox <- st_bbox(aoi)
 
 # Extract min/max lat/lon
 minlon <- bbox["xmin"]
@@ -289,6 +289,12 @@ rm(x)
 
 ## OPTIONAL - write points 
 # write_sf(points, "c:/rworking/deepseatools/indata/points.shp")
+
+##### check ##### 
+points %>% filter(grepl("EX", DatasetID)) %>% pull(SurveyID)
+
+opoints %>% group_by(DatasetID, SurveyID) %>% summarize(Number_Records=n()) %>% View()
+
 
 ```
 
