@@ -11,7 +11,7 @@ library(tidyverse)
 digits = 121
 
 ##### load national database (manual) #####
-path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20250409-0.csv"
+path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20250409-0.csv" # 'Florence Price'
 
 ## Version History
 # "DSCRTP_NatDB_20250409-0.csv" # 'Florence Price'

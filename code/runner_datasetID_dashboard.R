@@ -26,16 +26,15 @@ library(googlesheets4)
 # Set authentication token to be stored in a folder called \.secrets``
 options(gargle_oauth_cache = ".secrets")
 
-# Authenticate manually
-gs4_auth()
+## Authenticate manually
+# gs4_auth()
 
-# If successful, the previous step stores a token file.
-# Check that a file has been created with:
+## If successful, the previous step stores a token file.
+## Check that a file has been created with:
+# list.files(".secrets/")
 
-list.files(".secrets/")
-
-# Check that the non-interactive authentication works by first deauthorizing:
-gs4_deauth()
+## Check that the non-interactive authentication works by first deauthorizing:
+# gs4_deauth()
 
 # Authenticate using token. If no browser opens, the authentication works.
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
@@ -44,25 +43,41 @@ drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 ##### set an option #####
 options(lifecycle_disable_warnings = TRUE)
 
-##### ***OR*** read current database from disk #####
+##### load current database from disk #####
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
+
+##### TESTING: load a single dataset #####
+path <- "C:/rworking/deepseatools/indata/20250309-0_NOAA_PC2202L1_MDBC_143699.csv"
+sub <- read.csv(path, header = T, encoding = 'latin1')
+
+filt2 <- rbind(filt, sub)
+filt <- filt2
 
 ##### check #####
 table(filt$DatabaseVersion)
+length(filt$DatasetID)
+length(unique(filt2$DatasetID))
+length(unique(filt$DatasetID))
+setdiff(filt2$DatasetID, filt$DatasetID)
 
 ##### read previous version of database from disk #####
 digits = 121
 path <- "C:/rworking/deepseatools/indata"
-csv <- "DSCRTP_NatDB_20240726-0.csv"
+csv <- "DSCRTP_NatDB_20241219-1.csv" # 'Edith Piaf'
 
-# "DSCRTP_NatDB_20240726-0.csv" # "Stanley Kubrick"
-# 'DSCRTP_NatDB_20240325-0.csv' # "Aretha Franklin"
-# 'DSCRTP_NatDB_20240115-0.csv'
-# 'DSCRTP_NatDB_20230928-0.csv'(published as '20230828-0')
+## Version History
+# "DSCRTP_NatDB_20250409-0.csv" # 'Florence Price'
+# "DSCRTP_NatDB_20241219-1.csv  # 'Edith Piaf'
+# "DSCRTP_NatDB_20241022-1.csv" # 'Shaggy'
+# "DSCRTP_NatDB_20240726-0.csv" # 'Mick Jagger (Stanley Kubrick, Mick Stanley, McStanley)'
+# "DSCRTP_NatDB_20240723-0.csv" # 'taxonomy patch to be applied here'
+# "DSCRTP_NatDB_20240325-0.csv" # 'Aretha Franklin'
+# 'DSCRTP_NatDB_20240115-0.csv' (taxonomy patch applied)
+# 'DSCRTP_NatDB_20230928-0.csv' (published as '20230828-0')
 # "DSCRTP_NatDB_20230620-0.csv"
 # "DSCRTP_NatDB_20230620-0_published.csv"
 # "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
-# Link to master change log: https://docs.google.com/spreadsheets/d/1psUlMQS1d2rRgsiKWJsCTPleJ7TMKYNV/edit#gid=121019363
+## Link to master change log: https://docs.google.com/spreadsheets/d/1psUlMQS1d2rRgsiKWJsCTPleJ7TMKYNV/edit#gid=121019363
 
 setwd(path)
 indata <- read.csv(csv, header = T, encoding = 'latin1')
@@ -105,12 +120,13 @@ version <- as.character(version)
 
 ##### bring in current datasetID key from local path #####
 old_key <- read.xlsx("C:/rworking/deepseatools/indata/20241219-1_DatasetID_Key_DSCRTP.xlsx")
-key <- read.xlsx("C:/rworking/deepseatools/indata/20241219-1_DatasetID_Key_DSCRTP.xlsx")
+key <- read.xlsx("C:/rworking/deepseatools/indata/20250409-0_DatasetID_Key_DSCRTP.xlsx")
 
 ##### add new DatasetIDs #####
 ## setdiff(filt$DatasetID, old_key$DatasetID)
 changed <- setdiff(key$DatasetID, filt$DatasetID)
-added <- setdiff(filt$DatasetID, key$DatasetID)
+# added <- setdiff(filt$DatasetID, key$DatasetID)
+added <- c('NOAA_PC2202L1_MDBC')
 
 added_df <- data.frame(
   DatasetID = added,
@@ -132,44 +148,24 @@ key1 <- rbind(key, added_df)
 key2 <- key1 %>%
   mutate(
     class = case_when(
-      DatasetID == "NOAA_SH-18-12_ROV" ~ 'Cruise',
-      DatasetID == "NOAA_RL-19-05_ROV" ~ 'Cruise',
-      DatasetID == "NOAA_SH-18-12_AUV" ~ 'Cruise',
-      DatasetID == "NOAA_RL-19-05_AUV" ~ 'Cruise',
-      DatasetID == "NOAA_SH-22-09_AUV" ~ 'Cruise',
-      DatasetID == "NOAA_EX-23-01" ~ 'Cruise',
-      DatasetID == "NOAA_Sponge_Specimens_SRooney_1996_2023" ~ 'Cruise',
-      DatasetID == "MCMI_Benthic_Survey" ~ 'Program',
-      DatasetID == "NOAA_AFSC_GOA_Coral_Survey_2022" ~ 'Program',
-      DatasetID == "NOAA_CBNMS_ROV_2014" ~ 'Cruise',
-      DatasetID == "NOAA_CBNMS_Delta_2002_2003" ~ 'Cruise',
-      DatasetID == "NOAA_CBNMS_ROV_2017" ~ 'Cruise',
-      DatasetID == "Capel_et_al_2024" ~ 'Literature',
-      DatasetID == "Filander_et_al_2021" ~ 'Literature',
-      DatasetID == "Kennedy_et_al_2025" ~ 'Literature',
-      DatasetID == "MACN" ~ 'Repository',
-      DatasetID == "Thomson_and_Henderson_1906" ~ 'Literature',
-      DatasetID == "Turner_et_al_2024" ~ 'Literature',
-      DatasetID == "UM_RSMAS_VMIC" ~ 'Repository',
-      DatasetID == "Vicario_et_al_2024" ~ 'Literature',
-      DatasetID == "NOAA_CBNMS_GFNMS_ROV_2021" ~ 'Cruise',
+      DatasetID == "NOAA_PC2202L1_MDBC" ~ 'Cruise',
       TRUE ~ class
     )
   )
 
 ##### loop to create title and abstract and method_link, and citation #####
-# Loop through each DatasetID in the 'added' list
 for (dataset in added) {
+  # Filter once
+  subset_filt <- filt %>% filter(DatasetID == dataset)
 
-  ##### create new title #####
-  new_title <- filt %>%
-    filter(DatasetID == dataset) %>%
-    reframe(
+  ## Create new title
+  new_title <- subset_filt %>%
+    summarise(
       title_text = paste(
-        unique(DataProvider),' | ',
-        unique(Vessel),' | ',
-        unique(SurveyID),' | ',
-        unique(SamplingEquipment),' | ',
+        unique(DataProvider), ' | ',
+        unique(Vessel), ' | ',
+        unique(SurveyID), ' | ',
+        unique(SamplingEquipment), ' | ',
         'Observation Dates: ',
         min(ObservationDate), ' to ',
         max(ObservationDate),
@@ -178,36 +174,22 @@ for (dataset in added) {
     ) %>%
     pull(title_text)
 
-
-  # Update title in key2
   key2 <- key2 %>%
-    mutate(
-      title = ifelse(DatasetID == dataset, new_title, title)
-    )
+    mutate(title = ifelse(DatasetID == dataset, new_title, title))
 
-  ##### create new method_link #####
-  new_web <- filt %>%
-    filter(DatasetID == dataset) %>%
-    reframe(
-      weblinks = paste(
-        unique(WebSite), collapse = ' | ',
-        sep = " | "
-      )
+  ## Create new method_link
+  new_web <- subset_filt %>%
+    summarise(
+      weblinks = paste(unique(WebSite), collapse = ' | ')
     ) %>%
     pull(weblinks)
 
-
-  # Update methodlink in key2
   key2 <- key2 %>%
-    mutate(
-      method_link = ifelse(DatasetID == dataset, new_web, method_link)
-    )
+    mutate(method_link = ifelse(DatasetID == dataset, new_web, method_link))
 
-
-  ##### create new abstract #####
-  new_abstract <- filt %>%
-    filter(DatasetID == dataset) %>%
-    reframe(
+  ## Create new abstract
+  new_abstract <- subset_filt %>%
+    summarise(
       abstract_text = paste(
         "NOTE: This abstract is autogenerated. NA's indicate null data within the underlying database.",
         " This biological occurence dataset was provided by ",
@@ -226,34 +208,26 @@ for (dataset in added) {
         " Changes to the originally submitted dataset may have been made to conform to the standards of NOAA's National Database for Deep-sea Corals and Sponges. ",
         "Please reach out to: ",
         paste(unique(DataContact), collapse = '; '),
-
         " for specific questions about this dataset.",
         " Link(s) for more information: ",
-        paste(unique(WebSite), collapse = '; '),
-        sep = ''
+        paste(unique(WebSite), collapse = '; ')
       )
     ) %>%
     pull(abstract_text)
 
-  # Update abstract in key2
   key2 <- key2 %>%
-    mutate(
-      abstract = ifelse(DatasetID == dataset, new_abstract, abstract)
-    )
-  ##### create new single_citation #####
-  new_citation <- filt %>%
-    filter(DatasetID == dataset) %>%
-    reframe(
+    mutate(abstract = ifelse(DatasetID == dataset, new_abstract, abstract))
+
+  ## Create new single_citation
+  new_citation <- subset_filt %>%
+    summarise(
       citation_text = paste(unique(Citation), collapse = ' | ')
     ) %>%
     pull(citation_text)
 
-  # Update citation in key2
   key2 <- key2 %>%
-    mutate(
-      single_citation = ifelse(DatasetID == dataset, new_citation, single_citation)
-    )
-} # <--- this is the closing brace for the for loop
+    mutate(single_citation = ifelse(DatasetID == dataset, new_citation, single_citation))
+}
 
 ##### clean up titles #####
 key2$title  <- key2$title %>% str_split(" \\| ") %>%                             # Split by " | "
@@ -267,12 +241,7 @@ key2$method_link  <- key2$method_link %>% str_split(" \\| ") %>%                
   lapply(function(x) x[x != "NA"]) %>%               # Remove 'NA'
   sapply(function(x) paste(x, collapse = " | "))     # Paste back together
 
-
-
-
-
-
-##### set method_test #####
+##### set method_text #####
 key2 <- key2 %>%
   mutate(
     method_text = case_when(
@@ -280,7 +249,7 @@ key2 <- key2 %>%
       TRUE ~ method_text  # Keep existing value otherwise
     )
   )
-##### remove DatasetIDs that migrated to new names or otherwise changed #####
+##### OPTIONAL: remove DatasetIDs that migrated to new names or otherwise changed #####
 key2 <- key2 %>%
   filter(!(DatasetID %in% c("NOAA_RL-19-05", "NOAA_SH-18-12")))
 
@@ -436,7 +405,7 @@ drive_upload(paste(filename,".xlsx", sep=''),
 rm(filt_old)
 d <- filt
 
-##### ***OPTIONAL*** subsetting of indata to d (optional step for testing or one-off update purposes) #####
+##### ***OR*** subsetting of indata to d (optional step for testing or one-off update purposes) #####
 
 d <- filt %>% filter(DatasetID %in% added)
 
@@ -602,7 +571,7 @@ oneeighty <- intersect(yo, yo2)
 # setdiff(key$DatasetID, d$DatasetID)
 ##### cleanup #####
 rm(filt)
-##### ***** important!! merge database with key *****  #####
+##### ***** important!! merge database with key ***** #####
 d <- merge(d, key, all.x = TRUE)
 
 ##### checking #####
