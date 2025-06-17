@@ -54,6 +54,7 @@ y <- unique(sub$meta)
 z <- unique(sub$abstract)
 all <- sub
 sub <- all[all$Flag == "0",]
+rm(all)
 
 ```
 

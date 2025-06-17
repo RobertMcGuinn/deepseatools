@@ -54,13 +54,14 @@ filt2 <- rbind(filt, sub)
 filt <- filt2
 
 ##### check #####
+table(sub$DatasetID)
 table(filt$DatabaseVersion)
 length(filt$DatasetID)
 length(unique(filt2$DatasetID))
 length(unique(filt$DatasetID))
 setdiff(filt2$DatasetID, filt$DatasetID)
 
-##### read previous version of database from disk #####
+##### ***OPTIONAL*** read previous version of database from disk #####
 digits = 121
 path <- "C:/rworking/deepseatools/indata"
 csv <- "DSCRTP_NatDB_20241219-1.csv" # 'Edith Piaf'
@@ -125,8 +126,8 @@ key <- read.xlsx("C:/rworking/deepseatools/indata/20250409-0_DatasetID_Key_DSCRT
 ##### add new DatasetIDs to DatasetID key (watch this one closely) #####
 ## setdiff(filt$DatasetID, old_key$DatasetID)
 changed <- setdiff(key$DatasetID, filt$DatasetID)
-# added <- setdiff(filt$DatasetID, key$DatasetID)
-added <- c('NOAA_PC2202L1_MDBC')
+added <- setdiff(filt$DatasetID, key$DatasetID)
+# TESTING added <- c('NOAA_PC2202L1_MDBC')
 
 added_df <- data.frame(
   DatasetID = added,
@@ -144,7 +145,7 @@ added_df <- data.frame(
 ## combine the old and new data
 key1 <- rbind(key, added_df)
 
-##### update the class field in key #####
+##### update the class field in key for each new dataset 'added' #####
 key2 <- key1 %>%
   mutate(
     class = case_when(
@@ -310,7 +311,7 @@ key2 <- key2 %>%
 #
 # x
 
-##### write the citation information into filt #####
+##### write the citation information into the database #####
 
 filt$CitationMaker <- paste(filt$DataProvider,'. ',
                             filt$ObservationYear,
@@ -408,21 +409,20 @@ rm(filt_old)
 d <- filt
 
 ##### ***OR*** subsetting of indata to d (optional step for testing or one-off update purposes) #####
-
 d <- filt %>% filter(DatasetID %in% added)
 
-
 ##### check #####
-d %>% filter(DatasetID == 'NOAA_DY-19-06') %>% pull(ScientificName) %>% unique()
-table(d$DatasetID)
-View(key)
+# d %>% filter(DatasetID == 'NOAA_DY-19-06') %>% pull(ScientificName) %>% unique()
+# table(d$DatasetID)
+# View(key)
+
 ##### cleanup #####
-rm(indata)
-rm(filt_old)
-rm(indata_old)
-rm(x)
-rm(z)
-rm(y)
+# rm(indata)
+# rm(filt_old)
+# rm(indata_old)
+# rm(x)
+# rm(z)
+# rm(y)
 
 ##### checking #####
 # table(unique(factor(d$DataProvider)))
@@ -437,19 +437,20 @@ rm(y)
 #             n=n())
 # View(yo)
 # key %>% filter(grepl("Tu", DatasetID)) %>% pull(title) %>% unique()
-yo <- filt %>%
-  filter(as.numeric(Longitude) > 0) %>%
-  pull(DatasetID) %>%
-  unique()
-
-yo2 <- filt %>%
-  filter(as.numeric(Longitude) < 0) %>%
-  pull(DatasetID) %>%
-  unique()
-
-oneeighty <- intersect(yo, yo2)
+# yo <- filt %>%
+#   filter(as.numeric(Longitude) > 0) %>%
+#   pull(DatasetID) %>%
+#   unique()
+#
+# yo2 <- filt %>%
+#   filter(as.numeric(Longitude) < 0) %>%
+#   pull(DatasetID) %>%
+#   unique()
+#
+# oneeighty <- intersect(yo, yo2)
 
 ##### checking #####
+
 # x <- d %>%
 #   arrange(ObservationYear) %>%
 #   filter(DatasetID %in% setdiff(d$DatasetID, key$DatasetID)) %>%
@@ -645,7 +646,7 @@ yo <- d %>%
 # run RMD
 library("rmarkdown")
 for (id in unique(yo$DatasetID)){
-  sub <- yo[yo$DatasetID == id,]
+  sub <- yo[yo$DatasetID == added,]
   render("C:/rworking/deepseatools/code/rmd_datasetid_cruise_no_leaflet.rmd" ,
          output_file =  paste(id,".html", sep=''),
          output_dir = 'C:/rworking/deepseatools/reports/datasetid/cruise')
