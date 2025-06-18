@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- '143699'
+x <- 'google'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -12,7 +12,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(1)
+y <- c(2)
 this <- files[y]
 file.edit(this)
 
