@@ -336,7 +336,7 @@ synonyms <- df
 # class(vernaculars$AphiaID)
 # class(synonyms$AphiaID)
 
-##### left join the summary from above with all of the other API tables #####
+##### left join the API tables #####
 by <- join_by(valid_AphiaID == AphiaID)
 joined2 <- left_join(species_list, classification, by)
 

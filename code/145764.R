@@ -1,79 +1,43 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate:20250627
-## purpose:ingest of Accession: NOAA_EX2306_2023_145769
+## startdate: 20240308
+## purpose: dscrtp crosswalk with tator exports
+## issuename: 20250306-0_NOAA_PC2202L1_MDBC_143699
 
 ##### linkage #####
-filename <- '145769' ## manual: for this code file name, match to redmine
+filename <- '143699' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- filename
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
-browseURL(redmine_link)
+# browseURL(redmine_link)
 
 ##### packages #####
 library(tidyverse)
 library(sf)
 library(remotes)
-library(redmineR)
-library(terra)
-library(ggplot2)
-library(rnaturalearth)
-library(rnaturalearthdata)
+library(openxlsx)
 library(googlesheets4)
-library(robis)
-library(worrms)
 library(googledrive)
+library(fuzzyjoin)
+library(lubridate)
+library(worrms)
+library(googlesheets4)
+library(taxize)
 
 ##### authorizations #####
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
-##### source ndb #####
-# source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
-##### check #####
-filt %>% filter(grepl('EX', DatasetID)) %>% pull(DatasetID) %>% unique()
+##### ***** #####
 
-##### load dataset #####
-filename <- 'c:rworking/deepseatools/indata/20250227_EX2301_ROV_Animal_Data_SBingo_AMarranzino.tsv'
-sub <- read.delim(filename, header = TRUE, sep = "\t", fileEncoding = 'UTF-8')
-sub$DataProvider <- enc2utf8(sub$DataProvider)
-
-##### explore #####
-dim(sub)
-summary(sub)
-names(sub)
-table(sub$DataProvider)
-table(sub$SurveyID, useNA = 'always')
-table(sub$Vessel, useNA = 'always')
-table(sub$EventID, useNA = 'always')
-table(sub$ObservationDate, useNA = 'always')
-table(sub$ScientificName, useNA = 'always')
-table(is.na(sub$Latitude))
-table(is.na(sub$Longitude))
-table(is.na(sub$SampleID))
-head(sub$SampleID)
-head(sub$TrackingID)
-table(is.na(sub$TrackingID))
-table(is.na(sub$Condition))
-filt %>%
-  filter(grepl('Bingo', Reporter)) %>%
-  pull(DatasetID) %>%
-  table()
-filt %>%
-  filter(grepl('SH', DatasetID)) %>%
-  pull(DatasetID) %>%
-  table()
-
-
-##### ***** NEW VERSION  ***** #####
+##### ***** NEW VERSION 20250627-2: Create Taxonomy Patch ***** #####
 ##### load dataset from CSV #####
-setwd('c:/rworking/deepseatools/indata')
-filename <- '20250702-2_NOAA_EX2306_2023_145769'
+setwd('c:/rworking/deepseatools/indata/')
+filename <- '20250627-2_NOAA_EX2304_2023_145764'
 sub <- read.csv(paste(filename, '.csv', sep=''))
-# View(sub)
 
 ##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
@@ -81,64 +45,14 @@ sub <- read.csv(paste(filename, '.csv', sep=''))
 tax <- read_sheet('1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ')
 taxfl <- read_sheet('1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M')
 taxch <- read_sheet('11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8')
-
-##### explore #####
-# length(sub$SampleID)
-# length(unique(sub$SampleID))
-# dim(sub)
-# summary(sub)
-# names(sub)
-# table(sub$ImageFilePath, useNA = 'always')
-# table(sub$ObservationDate, useNA = 'always')
-# table(sub$Modified, useNA = 'always')
-# table(sub$DataProvider, useNA = 'always')
-# table(sub$SurveyID, useNA = 'always')
-# table(sub$Vessel, useNA = 'always')
-# table(sub$EventID, useNA = 'always')
-# table(sub$NavType, useNA = 'always')
-# table(sub$LocationAccuracy, useNA = 'always')
-# table(sub$EndLatitude, useNA = 'always')
-# table(sub$StartLatitude, useNA = 'always')
-# table(sub$EndLongitude, useNA = 'always')
-# table(sub$StartLongitude, useNA = 'always')
-# table(sub$Longitude, useNA = 'always')
-# table(sub$Latitude, useNA = 'always')
-# table(sub$Locality, useNA = 'always')
-# table(sub$DepthInMeters, useNA = 'always')
-# table(sub$MinimumDepthInMeters, useNA = 'always')
-# table(sub$MaximumDepthInMeters, useNA = 'always')
-# table(sub$DepthMethod, useNA = "always")
-# table(sub$ScientificName, useNA = "always")
-# table(sub$AphiaID, useNA = "always")
-# table(sub$Class)
-
-
-# table(sub$ScientificName, useNA = 'always')
+##### check #####
+# View(sub)
 # table(sub$AphiaID, useNA = 'always')
-# table(sub$RecordType, useNA = 'always')
-# table(sub$VerbatimSize, useNA = 'always')
-
-
-# table(is.na(sub$Latitude))
-# table(is.na(sub$Longitude))
-# table(is.na(sub$SampleID))
-
-# head(sub$SampleID)
-# head(sub$TrackingID)
-#
-# table(is.na(sub$TrackingID))
-# table(is.na(sub$Condition))
-
-# unique(grep("OET", filt$DatasetID, value = TRUE))
-# table(unique(sub$ObservationDate))
-# filt %>% filter(grepl("Fulmar", Vessel)) %>% select(DatasetID, Vessel, SurveyID) %>% distinct()
-# filt %>% filter(grepl("CBNMS", DatasetID)) %>% select(DatasetID, Vessel, SurveyID) %>% distinct()
+# sub %>% filter(AphiaID == -999) %>% pull(ScientificName) %>% length()
+# sub %>% filter(is.na(ScientificName) == T) %>% pull(AphiaID)
 
 ##### get rid of records with no ScientificName #####
 sub <- sub %>% filter(is.na(ScientificName) == F)
-
-##### get rid of records with no AphiaID
-sub <- sub %>% filter(AphiaID != '-999')
 
 ##### create vector from incoming AphiaIDs #####
 my_vector <- unique(sub$AphiaID)
@@ -147,7 +61,6 @@ my_vector <- my_vector[complete.cases(my_vector)]
 
 ##### check #####
 # length(my_vector)
-# View(my_vector)
 # sub %>% filter(AphiaID == '-999') %>% select(VerbatimScientificName, ScientificName) %>% View()
 # table(is.na(sub$ScientificName))
 
@@ -343,7 +256,7 @@ synonyms <- df
 # class(vernaculars$AphiaID)
 # class(synonyms$AphiaID)
 
-##### left join the summary from above with all of the other API tables #####
+##### left join the API tables #####
 by <- join_by(valid_AphiaID == AphiaID)
 joined2 <- left_join(species_list, classification, by)
 
@@ -370,9 +283,9 @@ by <- join_by(AphiaID == AphiaID.x)
 sub_enhanced <- left_join(sub, taxonomy_table, by)
 
 ##### check #####
-sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
-  pull(ScientificName) %>%
-  unique()
+# sub_enhanced %>% filter(is.na(phylum.y) == T) %>%
+#   pull(ScientificName) %>%
+#   unique()
 #
 # dim(sub)
 # dim(sub_enhanced)
@@ -509,23 +422,21 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     Genus %in% c('Hydrodendron') ~ 'other coral-like hydrozoan',
     Genus %in% c('Caryophyllia') ~ 'stony coral (cup coral)',
     ScientificName %in% c('Malacalcyonacea')  ~ 'soft coral',
-    ScientificName %in% c('Caryophylliidae') ~ 'stony coral (unspecified)',
-    ScientificName %in% c('Scleralcyonacea') ~ 'scleralcyonacea (unspecified)',
     TRUE ~ ''))
 
 ##### check #####
-table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
-sub_enhanced2 %>% filter(ScientificName == 'Clavulariidae') %>% pull(VernacularNameCategory) %>%
-  table(useNA = 'always')
-
-filt %>% filter(ScientificName == 'Clavulariidae') %>% pull(VernacularNameCategory) %>%
-  table(useNA = 'always')
-sub_enhanced2 %>% filter(ScientificName == 'Clavulariidae') %>% pull(ScientificName) %>%
-  table(useNA = 'always')
-filt %>% filter(ScientificName == 'Malacalcyonacea') %>% pull(VernacularNameCategory) %>%
-  table(useNA = 'always')
-sub_enhanced2 %>% filter(ScientificName == 'Malacalcyonacea') %>% pull(VernacularNameCategory) %>%
-  table(useNA = 'always')
+# table(sub_enhanced2$VernacularNameCategory, useNA = 'always')
+# sub_enhanced2 %>% filter(ScientificName == 'Clavulariidae') %>% pull(VernacularNameCategory) %>%
+#   table(useNA = 'always')
+#
+# filt %>% filter(ScientificName == 'Clavulariidae') %>% pull(VernacularNameCategory) %>%
+#   table(useNA = 'always')
+# sub_enhanced2 %>% filter(ScientificName == 'Clavulariidae') %>% pull(ScientificName) %>%
+#   table(useNA = 'always')
+# filt %>% filter(ScientificName == 'Malacalcyonacea') %>% pull(VernacularNameCategory) %>%
+#   table(useNA = 'always')
+# sub_enhanced2 %>% filter(ScientificName == 'Malacalcyonacea') %>% pull(VernacularNameCategory) %>%
+#   table(useNA = 'always')
 
 #
 # filt %>% filter(Genus == 'Clavularia') %>% pull(VernacularNameCategory) %>%
@@ -569,63 +480,61 @@ sub_enhanced3<- sub_enhanced2 %>%
          IdentificationComments)
 
 ##### check #####
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(ScientificName)
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(VerbatimScientificName)
-filt %>% filter(ScientificName == 'Caryophylliidae') %>% pull(VernacularNameCategory) %>% unique()
-filt %>% filter(ScientificName == 'Scleralcyonacea') %>% pull(VernacularNameCategory) %>% unique()
-
-
-
-sub_enhanced3$IdentificationComments
-sub_enhanced3$VernacularNameCategory
-table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
-View(sub_enhanced3)
-dim(sub_enhanced3)
-dim(sub)
-length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
-
+# sub_enhanced3$IdentificationComments
+# sub_enhanced3$VernacularNameCategory
+# table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
+# View(sub_enhanced3)
+# dim(sub_enhanced3)
+# dim(sub)
+# length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
+#
 x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
 sub %>% filter(CatalogNumber %in% x) %>%
-  group_by(CatalogNumber,
+  group_by(
            VerbatimScientificName,
            ScientificName,
            VernacularNameCategory) %>%
   summarize(n=n()) %>% View()
 
-filt %>% filter(ScientificName == 'Callistephanus') %>%
-  pull(VernacularNameCategory) %>% table()
-
-x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-sub_enhanced %>% filter(CatalogNumber %in% x) %>%
-  group_by(AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View()
-
-
-table(is.na(sub$CatalogNumber))
-table(is.na(sub_enhanced3$CatalogNumber))
-sub %>% filter(ScientificName == 'Dichotella gemmacea') %>% pull(AphiaID)
-'Dichotella gemmacea'
-
-x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
-sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
-  group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
-  summarize(n=n()) %>% View()
-
-x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID)
-
-table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
-
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(Order) %>% unique()
-
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
-  group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
-  summarize(n=n()) %>% View()
-
+# filt %>% filter(ScientificName == 'Callistephanus') %>%
+#   pull(VernacularNameCategory) %>% table()
+#
+# x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+# sub_enhanced %>% filter(CatalogNumber %in% x) %>%
+#   group_by(AphiaID, Phylum, Class, Order, Suborder, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
+#
+#
+# table(is.na(sub$CatalogNumber))
+# table(is.na(sub_enhanced3$CatalogNumber))
+# sub %>% filter(ScientificName == 'Dichotella gemmacea') %>% pull(AphiaID)
+# 'Dichotella gemmacea'
+#
+# x <- setdiff(sub_enhanced3$VerbatimScientificName, sub_enhanced3$ScientificName)
+# sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
+#   group_by(VerbatimScientificName, ScientificName, VernacularNameCategory) %>%
+#   summarize(n=n()) %>% View()
+#
+# x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+# sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID)
+#
+# table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
+#
+# sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(Order) %>% unique()
+#
+# sub_enhanced3 %>% filter(VernacularNameCategory == '') %>%
+#   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species) %>%
+#   summarize(n=n()) %>% View()
+#
 sub_enhanced3 %>%
   group_by(AphiaID, Phylum, Class, Order, Family, Genus, Species, ScientificNameAuthorship) %>%
   summarize(n=n()) %>% View()
-View(sub_enhanced3)
+
+x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
+
+sub %>% filter(CatalogNumber %in% x) %>% pull(ScientificName) %>% unique()
+
+# View(sub_enhanced3)
 
 ##### export result to csv (export to CSV) #####
 filename_patch <- paste(filename, '_taxonomy_patch', '.csv',sep = '')
