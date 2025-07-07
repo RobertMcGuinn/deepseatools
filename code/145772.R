@@ -1,10 +1,10 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate:20250707
-## purpose:ingest of Accession: OET_NA154_145771
+## purpose:ingest of Accession: OET_NA163_145772
 
 ##### linkage #####
-filename <- '145771' ## manual: for this code file name, match to redmine
+filename <- '145772' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
