@@ -69,7 +69,7 @@ drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 ##### ***** NEW VERSION ***** #####
 ##### load dataset from CSV #####
 setwd('c:/rworking/deepseatools/indata')
-filename <- '20250702-2_OET_NA154_145771'
+filename <- '20250703-2_OET_NA163_145772'
 sub <- read.csv(paste(filename, '.csv', sep=''))
 # View(sub)
 
@@ -513,6 +513,7 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     ScientificName %in% c('Caryophylliidae') ~ 'stony coral (unspecified)',
     ScientificName %in% c('Scleralcyonacea') ~ 'scleralcyonacea (unspecified)',
     ScientificName %in% c('Dendrophylliidae') ~ 'stony coral (unspecified)',
+    ScientificName %in% c('Eunicella') ~ 'soft coral',
         TRUE ~ ''))
 
 ##### check #####
@@ -571,11 +572,12 @@ sub_enhanced3<- sub_enhanced2 %>%
          IdentificationComments)
 
 ##### check #####
-sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(ScientificName)
+sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(ScientificName) %>% unique()
 sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(VerbatimScientificName)
 filt %>% filter(ScientificName == 'Caryophylliidae') %>% pull(VernacularNameCategory) %>% unique()
 filt %>% filter(ScientificName == 'Scleralcyonacea') %>% pull(VernacularNameCategory) %>% unique()
 filt %>% filter(ScientificName == 'Dendrophylliidae') %>% pull(VernacularNameCategory) %>% unique()
+filt %>% filter(ScientificName == 'Eunicella') %>% pull(VernacularNameCategory) %>% unique()
 
 
 
@@ -614,7 +616,7 @@ sub_enhanced3 %>% filter(VerbatimScientificName %in% x) %>%
   summarize(n=n()) %>% View()
 
 x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
-sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID)
+sub %>% filter(CatalogNumber %in% x) %>% pull(AphiaID) %>% unique()
 
 table(sub_enhanced3$VernacularNameCategory, useNA = 'always')
 

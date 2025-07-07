@@ -1,63 +1,79 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate: 20250703
-## purpose: data QA
-## issuename: 145952
+## startdate: 20250707
+## purpose:ingest of Accession: OET_NA167_145773
 
 ##### linkage #####
-filename <- '145952' ## manual: for this code file name, match to redmine
+filename <- '145773' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- filename
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
-# browseURL(redmine_link)
+browseURL(redmine_link)
 
 ##### packages #####
 library(tidyverse)
 library(sf)
 library(remotes)
-library(openxlsx)
+library(terra)
+library(ggplot2)
+library(rnaturalearth)
+library(rnaturalearthdata)
 library(googlesheets4)
-library(googledrive)
-library(fuzzyjoin)
-library(lubridate)
+library(robis)
 library(worrms)
-library(googlesheets4)
-library(taxize)
+library(googledrive)
+library(openxlsx)
 
 ##### authorizations #####
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
-
-
-##### load database #####
-source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
-
-##### load schema from google drive #####
-sheetid <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
-s <- read_sheet(sheetid)
+##### source ndb #####
+# source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
 ##### check #####
-# s %>%
-#   group_by(DSCRTPGroup, FieldName) %>%
-#   summarize(n=n()) %>% View()
+# filt %>% filter(grepl('EX', DatasetID)) %>% pull(DatasetID) %>% unique()
 
-##### ***** ORIGINAL '2025-Q3_New_Records_5-10-2025' *****  #####
-##### load original excel sheet #####
-fname <- '2025-Q3_New_Records_5-10-2025.xlsx'
-sub <- read.xlsx(paste('c:/rworking/deepseatools/indata/', fname, sep = ''),
-                  sheet = 'Sheet1')
+##### explore #####
+# dim(sub)
+# summary(sub)
+# names(sub)
+# table(sub$DataProvider)
+# table(sub$SurveyID, useNA = 'always')
+# table(sub$Vessel, useNA = 'always')
+# table(sub$EventID, useNA = 'always')
+# table(sub$ObservationDate, useNA = 'always')
+# table(sub$AphiaID, useNA = 'always')
+# table(sub$ScientificName, useNA = 'always')
+# table(is.na(sub$Latitude))
+# table(is.na(sub$Longitude))
+# table(is.na(sub$SampleID))
+# head(sub$SampleID)
+# head(sub$TrackingID)
+# table(is.na(sub$TrackingID))
+# table(is.na(sub$Condition))
+#
+# sub %>% filter(sub$AphiaID == -999) %>% pull(ScientificName)
+#
+# filt %>%
+#   filter(grepl('Bingo', Reporter)) %>%
+#   pull(DatasetID) %>%
+#   table()
+# filt %>%
+#   filter(grepl('SH', DatasetID)) %>%
+#   pull(DatasetID) %>%
+#   table()
+
 
 ##### ***** NEW VERSION ***** #####
 ##### load dataset from CSV #####
 setwd('c:/rworking/deepseatools/indata')
-filename <- '20250703-2_2025_Q3_New_Records_THourigan_145952'
+filename <- '20250703-2_OET_NA167_145773'
 sub <- read.csv(paste(filename, '.csv', sep=''))
+# View(sub)
 
-##### check #####
-table(sub$AphiaID, useNA = 'always')
 ##### load the most current taxonomy from Google Sheets #####
 # https://drive.google.com/open?id=0B9c2c_XdhpFBT29NQmxIeUQ4Tlk
 ## manual: make sure the IDs below are pointing at the correct sheets
@@ -499,8 +515,6 @@ sub_enhanced2 <- sub_enhanced_filter %>%
     ScientificName %in% c('Scleralcyonacea') ~ 'scleralcyonacea (unspecified)',
     ScientificName %in% c('Dendrophylliidae') ~ 'stony coral (unspecified)',
     ScientificName %in% c('Eunicella') ~ 'soft coral',
-    ScientificName %in% c('Ednapsammia columnapriva') ~ 'stony coral (branching)',
-    ScientificName %in% c('Parasphaerasclera mcfaddenae') ~ 'soft coral',
         TRUE ~ ''))
 
 ##### check #####
@@ -563,16 +577,8 @@ sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(ScientificName) 
 sub_enhanced3 %>% filter(VernacularNameCategory == '') %>% pull(VerbatimScientificName)
 filt %>% filter(ScientificName == 'Caryophylliidae') %>% pull(VernacularNameCategory) %>% unique()
 filt %>% filter(ScientificName == 'Scleralcyonacea') %>% pull(VernacularNameCategory) %>% unique()
-filt %>% filter(Family == 'Dendrophylliidae') %>% pull(VernacularNameCategory) %>% unique()
+filt %>% filter(ScientificName == 'Dendrophylliidae') %>% pull(VernacularNameCategory) %>% unique()
 filt %>% filter(ScientificName == 'Eunicella') %>% pull(VernacularNameCategory) %>% unique()
-filt %>% filter(Genus == 'Ednapsammia') %>% pull(VernacularNameCategory) %>% unique()
-filt %>% filter(Family == 'Parasphaerascleridae') %>% pull(VernacularNameCategory) %>% unique()
-sub %>% filter(ScientificName == 'Parasphaerasclera mcfaddenae') %>%
-  pull(VernacularNameCategory) %>%
-  unique()
-sub %>% filter(ScientificName == 'Ednapsammia columnapriva') %>%
-  pull(VernacularNameCategory) %>%
-  unique()
 
 
 
@@ -587,9 +593,9 @@ length(sub$CatalogNumber) - length(sub_enhanced3$CatalogNumber)
 x <- setdiff(sub$CatalogNumber, sub_enhanced3$CatalogNumber)
 sub %>% filter(CatalogNumber %in% x) %>%
   group_by(
-    VerbatimScientificName,
-    ScientificName,
-    VernacularNameCategory) %>%
+           VerbatimScientificName,
+           ScientificName,
+           VernacularNameCategory) %>%
   summarize(n=n()) %>% View()
 
 filt %>% filter(ScientificName == 'Callistephanus') %>%
@@ -637,10 +643,4 @@ write.csv(sub_enhanced3,
 
 ##### clean up everything except core objects ######
 # rm(list=setdiff(ls(), c("filt")))
-
-
-
-
-
-
 

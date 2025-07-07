@@ -39,7 +39,7 @@ rm(indata)
 ## which encoding is in the incoming file.
 
 ##### clean up everything except core objects ######
-# rm(list=setdiff(ls(), c("filt")))
+rm(list=setdiff(ls(), c("filt")))
 
 ##### check #####
 # indata %>% pull(Class) %>% table(useNA = 'always')
@@ -69,9 +69,6 @@ rm(indata)
 #   summarize(n=n()) %>%
 #   write.csv('c:/rworking/deepseatools/reports/20231109-0_summary_of_drop_camera_work_in_AK_RPMcGuinn.csv')
 #
-
-##### check #####
-# filt %>% filter(grepl('NOAA', DataProvider)) %>% pull(DataProvider) %>% unique()
 
 
 
