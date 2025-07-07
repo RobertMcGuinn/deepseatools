@@ -24,27 +24,33 @@ filt_h3 <- point_to_cell(filtgeo,
                             simple = FALSE)
 ##### check #####
 filt_h3 %>%
-  group_by(AphiaID, h3_resolution_5) %>%
+  group_by(AphiaID, h3_resolution_6) %>%
   summarize(n=n()) %>%
   arrange(desc(n)) %>%
-  View
+  View()
 
 ##### looking at depth distribution of coral and sponge occurrences summarized within hexes #####
 filt_h3 %>% group_by(h3_resolution_6) %>%
   summarize(mindepth_res5 = min(MinimumDepthInMeters),
-            maxdepth_res5 = max(MaximumDepthInMeters)) %>%
-  View()
+            maxdepth_res5 = max(MaximumDepthInMeters),
+            diff = max(MaximumDepthInMeters)- min(MinimumDepthInMeters)) %>%
+View()
 
-##### look up hexagons and points that match a set of conditions #####
-locality <- 'Davidson Seamount'
+##### get a list of hexagons that contain points that match a set of filter conditions #####
+## also get the points that match the same condition
+library(rlang)
+
+locality <- 'Davidson Seamounts'
 
 cats <- filt_h3 %>%
   filter(grepl(locality, Locality)) %>%
-  select(c('h3_resolution_5','h3_resolution_6'))
+  select(c('h3_resolution_5', 'h3_resolution_6'))
+
+## get a list of hexagons
 hexlist <- unlist(cats, use.names = FALSE)
 hexlist <- unique(hexlist)
 
-## make a selection of points that match
+##### make a selection of points that match the same filter conditions #####
 points <- filtgeo %>%
   filter(grepl(locality, Locality))
 
@@ -84,8 +90,6 @@ points %>%
   ggtitle('Hex Relationships', subtitle = 'Neighboring Resolutions') +
   theme_minimal() +
   coord_sf(xlim = c(hex_bbox$xmin, hex_bbox$xmax), ylim = c(hex_bbox$ymin, hex_bbox$ymax))
-
-
 
 ##### get area of hexagons #####
 
