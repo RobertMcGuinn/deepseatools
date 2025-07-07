@@ -1,6 +1,6 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate:20250707
+## startdate: 20250707
 ## purpose:ingest of Accession: OET_NA163_145772
 
 ##### linkage #####
