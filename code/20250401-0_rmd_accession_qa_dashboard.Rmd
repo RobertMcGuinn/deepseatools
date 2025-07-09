@@ -430,6 +430,8 @@ ft <- flextable(sum_tbl) %>%
 ft <- set_table_properties(ft, width = 1, layout = "autofit")
 ft
 
+##### check ##### 
+# sub %>% filter(Vessel == 'Meiring Naud\xe9 R/V') %>% dim()
 
 ```
 

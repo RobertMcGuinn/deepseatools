@@ -644,3 +644,51 @@ write.csv(sub_enhanced3,
 ##### clean up everything except core objects ######
 # rm(list=setdiff(ls(), c("filt")))
 
+
+##### ***** NEW Version: 20250707-0: QA report ****** #####
+##### load data (manual) #####
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20250707-0_OET_NA167_145773'
+sub <- read.csv(paste(filename, '.csv', sep = ''))
+
+##### check #####
+# table(sub$Flag)
+# sub %>% filter(Flag == 1) %>% group_by(VerbatimLatitude) %>%
+#   summarize(n=n()) %>% View()
+# table(sub$IndividualCount, useNA = 'always')
+# filt %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# sub %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('NOAA_SH-22-09', DatasetID)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('SH', SurveyID)) %>% pull(SurveyID) %>% table()
+
+##### make some change so that the QA report runs (OPTIONAL)
+sub$Citation <- 'place holder'
+
+##### run QA report (manual) #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+##### load to google drive (manual) #####
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1mb0gybwyPGOOtdcyBFlBuRpGcC78O3ki"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".docx", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".docx", sep=''),
+             overwrite = T)
+
+##### check #####
+filt %>% filter(DatasetID == 'NOAA_RL-19-05') %>%
+  pull(LocationAccuracy) %>% table()
+
+dim(sub)
+
+unique(sub$VehicleName)
+sub %>% pull(Phylum) %>% table()
+sub %>% filter(Flag == 1) %>% pull(Longitude) %>% table()
+
+
+
+

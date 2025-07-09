@@ -642,3 +642,69 @@ write.csv(sub_enhanced3,
 
 
 
+
+
+
+
+##### ***** NEW Version: 20250707-0: QA report ****** #####
+##### load data (manual:change filename) #####
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20250707-0_2025_Q3_New_Records_THourigan_145952'
+sub <- read.csv(paste(filename, '.csv', sep = ''), fileEncoding = 'ISO-8859-15')
+
+##### check #####
+# table(sub$Flag)
+# sub %>% filter(Flag == 1) %>% group_by(VerbatimLatitude) %>%
+#   summarize(n=n()) %>% View()
+# table(sub$IndividualCount, useNA = 'always')
+# filt %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# sub %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('NOAA_SH-22-09', DatasetID)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('SH', SurveyID)) %>% pull(SurveyID) %>% table()
+
+##### make some change so that the QA report runs (OPTIONAL)
+sub$Citation <- 'place holder'
+
+##### run QA report (manual) #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+##### load to google drive (manual) #####
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1q1VZkcGphRH0oME9k7vMCVncn6ggp7b7"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".docx", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".docx", sep=''),
+             overwrite = T)
+
+##### check #####
+filt %>% filter(DatasetID == 'NOAA_RL-19-05') %>%
+  pull(LocationAccuracy) %>% table()
+
+filt %>% filter(grepl('Lavrentyev', Vessel)) %>% pull(Vessel) %>% unique()
+
+
+dim(sub)
+
+unique(sub$VehicleName)
+sub %>% pull(Phylum) %>% table()
+sub %>% filter(Flag == 1) %>% pull(Longitude) %>% table()
+
+##### map check #####
+##### map check #####
+x <- sub %>% filter(
+  # FlagReason == 'Horizontal position or depth is questionable' |
+  #   FlagReason == 'Insufficient taxonomic information | Horizontal position or depth is questionable'
+  # FlagReason == 'Insufficient taxonomic information | Possible intersection with land'|
+  # FlagReason == 'Possible intersection with land'
+  Flag ==  1
+) %>%
+  group_by(CatalogNumber, Latitude, Longitude) %>%
+  summarize(n=n())
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+st_write(points, "C:/rworking/deepseatools/indata/sub_geo.shp", delete_dsn = T)
+
+

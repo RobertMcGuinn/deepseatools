@@ -570,6 +570,7 @@ rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_das
                   output_file =  paste(filename,".docx", sep=''),
                   output_dir = 'C:/rworking/deepseatools/reports')
 
+##### load to Google Drive #####
 ## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
 folderurl <- "https://drive.google.com/drive/folders/1Xedh5g9UioIdBwGhyBTAiXa-MPo77VCu"
 setwd("C:/rworking/deepseatools/reports")
@@ -578,7 +579,20 @@ drive_upload(paste(filename,".docx", sep=''),
              name = paste(filename,".docx", sep=''),
              overwrite = T)
 
-##### check #####
+##### map_check #####
+table(sub$FlagReason)
+
+x <- sub %>% filter(
+  # FlagReason == 'Horizontal position or depth is questionable' |
+  #   FlagReason == 'Insufficient taxonomic information | Horizontal position or depth is questionable'
+  # FlagReason == 'Insufficient taxonomic information | Possible intersection with land'|
+  # FlagReason == 'Possible intersection with land'
+  Flag ==  1
+) %>%
+  group_by(CatalogNumber, Latitude, Longitude) %>%
+  summarize(n=n())
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+st_write(points, "C:/rworking/deepseatools/indata/sub_geo.shp", delete_dsn = T)
 
 
 
