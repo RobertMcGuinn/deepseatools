@@ -651,6 +651,7 @@ setwd('c:/rworking/deepseatools/indata')
 filename <- '20250707-0_OET_NA163_145772'
 sub <- read.csv(paste(filename, '.csv', sep=''))
 # View(sub)
+
 ##### check #####
 # table(sub$Flag)
 # sub %>% filter(Flag == 1) %>% group_by(VerbatimLatitude) %>%
@@ -670,7 +671,8 @@ rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_das
                   output_file =  paste(filename,".docx", sep=''),
                   output_dir = 'C:/rworking/deepseatools/reports')
 
-##### manual change: change folderurl to the current drive folder ID for the accession at hand  #####
+##### load to GDrive #####
+## manual change: change folderurl to the current drive folder ID for the accession at hand
 folderurl <- "https://drive.google.com/drive/folders/1JMeZDMnII3Ns8_WlSe48hV6B_H946Oar"
 setwd("C:/rworking/deepseatools/reports")
 drive_upload(paste(filename,".docx", sep=''),
