@@ -31,12 +31,11 @@ library(taxize)
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
-##### ***** #####
-
-##### ***** ORIGINAL ***** #####
 ##### load database #####
 source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
+
+##### ***** ORIGINAL ***** #####
 ##### load schema from google drive #####
 sheetid <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
 s <- read_sheet(sheetid)
@@ -959,6 +958,7 @@ write.csv(sub_enhanced3,
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
 
+
 ##### ***** NEW VERSION  *****  #####
 ##### load data #####
 setwd('c:/rworking/deepseatools/indata')
@@ -1402,6 +1402,7 @@ write.csv(dscrtp_export,
                 '.csv',
                 sep = ''),
           row.names = F)
+
 
 
 ##### ***** NEW VERSION 20250618-2***** #####
@@ -1948,6 +1949,7 @@ write.csv(sub_enhanced3,
 rm(list=setdiff(ls(), c("filt")))
 
 
+
 ##### ***** CTD PATCH Creation 2025xxxx-x (CREATING CTD patch) ***** #####
 ##### load dataset from CSV #####
 setwd('c:/rworking/deepseatools/indata/')
@@ -2390,19 +2392,10 @@ grep("256665150", patchSampleIDs, value = TRUE)
 
 ##### ***** #####
 
+
 ##### ***** NEW ORIGINAL from Tator (2025-06-22) ***** #####
 ## Tator report: 'PC2202L1_Forward Videos_2025-06-22_report_KZOWtUnqfT.xlsx'
 
-##### load dataset from CSV #####
-setwd('c:/rworking/deepseatools/indata/')
-filename <- '20250618-2_NOAA_PC2202L1_MDBC_143699'
-sub <- read.csv(paste(filename, '.csv', sep=''))
-
-## View(sub)
-
-##### check #####
-## true if all values are unique, false if not.
-# length(unique(sub$SampleID)) == length(sub$SampleID)E
 ##### load exports from tator #####
 tatorexport <- 'PC2202L1_Forward Videos_2025-06-22_report_KZOWtUnqfT.xlsx'
 
@@ -2745,7 +2738,8 @@ dscrtp_export$Citation <- paste(dscrtp_export$DataProvider,'. ','Observation dat
 # dscrtp_export %>% pull(IdentifiedBy) %>% table()
 # dscrtp_export %>% pull(OccurrenceComments) %>% table()
 # dscrtp_export %>% pull(Habitat) %>% table(useNA = 'always')  %>% sort()
-#
+# dscrtp_export %>% pull(Locality) %>% table(useNA = 'always')  %>% sort()
+
 # dim(dscrtp_export)
 # dscrtp_export %>% select(Habitat, CMECSGeoForm) %>% distinct() %>%  View()
 #
@@ -2767,10 +2761,13 @@ write.csv(dscrtp_export,
                 sep = ''),
           row.names = F)
 
+##### create a patch to bring forward #####
+Locality_patch <- dscrtp_export %>% select(Locality, SampleID) %>%
+  write.csv('c:/rworking/deepseatools/indata/locality_patch.csv')
 
 
 
-##### ***** NEW Version 20250627-3 ****** #####
+##### ***** NEW Version 20250627-3 Taxonomic Patch ****** #####
 ##### load dataset from CSV #####
 setwd('c:/rworking/deepseatools/indata/')
 filename <- '20250627-3_NOAA_PC2202L1_MDBC_143699'
@@ -2819,7 +2816,7 @@ my_vector_parsed <- parsed_list$canonicalname
 ## get only unique names
 my_vector_parsed <- unique(my_vector_parsed)
 
-# ##### check #####
+##### check #####
 # my_vector_parsed
 # sort(my_vector_parsed)
 # sort(my_vector)
@@ -3101,7 +3098,7 @@ joined4 <- joined4 %>% filter(!(scientificname == 'Seriola' & valid_AphiaID == 1
 # sort(joined4$scientificname)
 # joined4 %>% filter(scientificname == 'Seriola') %>% View()
 
-##### ***** add taxonomy to sub ***** #####
+##### add taxonomy to sub #####
 by <- join_by(ScientificName == scientificname)
 sub_enhanced <- left_join(sub2, joined4, by)
 
@@ -3311,5 +3308,54 @@ write.csv(sub_enhanced3,
 
 ##### clean up everything except core objects ######
 rm(list=setdiff(ls(), c("filt")))
+
+
+
+
+
+##### ***** NEW Version: 20250703-0: QA report ****** #####
+##### load data #####
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20250703-0_NOAA_PC2202L1_MDBC_143699'
+sub <- read.csv(paste(filename, '.csv', sep = ''))
+
+##### check #####
+# table(sub$Flag)
+# sub %>% filter(Flag == 1) %>% group_by(VerbatimLatitude) %>%
+#   summarize(n=n()) %>% View()
+# table(sub$IndividualCount, useNA = 'always')
+# filt %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# sub %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('NOAA_SH-22-09', DatasetID)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('SH', SurveyID)) %>% pull(SurveyID) %>% table()
+
+##### make some change so that the QA report runs (OPTIONAL)
+sub$Citation <- 'place holder'
+
+##### run QA report #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1nsHRBtj1UUBZtticYJEjx5CBst6x8IDb"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".docx", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".docx", sep=''),
+             overwrite = T)
+
+##### check #####
+filt %>% filter(DatasetID == 'NOAA_RL-19-05') %>%
+  pull(LocationAccuracy) %>% table()
+
+dim(sub)
+
+unique(sub$VehicleName)
+sub %>% pull(Phylum) %>% table()
+sub %>% filter(Flag == 1) %>% pull(Longitude) %>% table()
+
+
 
 

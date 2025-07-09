@@ -50,7 +50,7 @@ fname <- '2025-Q3_New_Records_5-10-2025.xlsx'
 sub <- read.xlsx(paste('c:/rworking/deepseatools/indata/', fname, sep = ''),
                   sheet = 'Sheet1')
 
-##### ***** NEW VERSION ***** #####
+##### ***** NEW VERSION 20250703-2 ***** #####
 ##### load dataset from CSV #####
 setwd('c:/rworking/deepseatools/indata')
 filename <- '20250703-2_2025_Q3_New_Records_THourigan_145952'
@@ -573,8 +573,6 @@ sub %>% filter(ScientificName == 'Parasphaerasclera mcfaddenae') %>%
 sub %>% filter(ScientificName == 'Ednapsammia columnapriva') %>%
   pull(VernacularNameCategory) %>%
   unique()
-
-
 
 sub_enhanced3$IdentificationComments
 sub_enhanced3$VernacularNameCategory

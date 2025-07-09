@@ -31,7 +31,7 @@ library(openxlsx)
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 ##### source ndb #####
-# source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
+source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
 ##### check #####
 # filt %>% filter(grepl('EX', DatasetID)) %>% pull(DatasetID) %>% unique()
@@ -642,4 +642,54 @@ write.csv(sub_enhanced3,
 
 ##### clean up everything except core objects ######
 # rm(list=setdiff(ls(), c("filt")))
+
+
+
+##### ***** NEW VERSION ***** #####
+##### load dataset from CSV 20250707-0 #####
+setwd('c:/rworking/deepseatools/indata')
+filename <- '20250707-0_OET_NA163_145772'
+sub <- read.csv(paste(filename, '.csv', sep=''))
+# View(sub)
+##### check #####
+# table(sub$Flag)
+# sub %>% filter(Flag == 1) %>% group_by(VerbatimLatitude) %>%
+#   summarize(n=n()) %>% View()
+# table(sub$IndividualCount, useNA = 'always')
+# filt %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# sub %>% filter(grepl('Eiwa', VehicleName)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('NOAA_SH-22-09', DatasetID)) %>% pull(VehicleName) %>% table()
+# filt %>% filter(grepl('SH', SurveyID)) %>% pull(SurveyID) %>% table()
+
+##### make some change so that the QA report runs (OPTIONAL)
+sub$Citation <- 'place holder'
+
+##### run QA report #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+##### manual change: change folderurl to the current drive folder ID for the accession at hand  #####
+folderurl <- "https://drive.google.com/drive/folders/1JMeZDMnII3Ns8_WlSe48hV6B_H946Oar"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".docx", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".docx", sep=''),
+             overwrite = T)
+
+##### check #####
+filt %>% filter(DatasetID == 'NOAA_RL-19-05') %>%
+  pull(LocationAccuracy) %>% table()
+
+dim(sub)
+
+unique(sub$VehicleName)
+sub %>% pull(Phylum) %>% table()
+sub %>% filter(Flag == 1) %>% pull(Longitude) %>% table()
+
+
+
+
+
 

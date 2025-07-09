@@ -31,8 +31,10 @@ library(taxize)
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
-##### ***** #####
+##### load database #####
+source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
+##### ***** #####
 ##### ***** NEW VERSION 20250627-2: Create Taxonomy Patch ***** #####
 ##### load dataset from CSV #####
 setwd('c:/rworking/deepseatools/indata/')
@@ -547,4 +549,37 @@ write.csv(sub_enhanced3,
 
 ##### clean up everything except core objects ######
 # rm(list=setdiff(ls(), c("filt")))
+
+
+
+##### ***** NEW VERSION 20250707-0 ****** #####
+##### load dataset from CSV #####
+setwd('c:/rworking/deepseatools/indata/')
+filename <- '20250707-0_NOAA_EX2304_2023_145764'
+sub <- read.csv(paste(filename, '.csv', sep=''), encoding = 'latin-9')
+
+##### check #####
+
+
+##### make some change so that the QA report runs (OPTIONAL)
+sub$Citation <- 'place holder'
+
+##### run QA report #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1Xedh5g9UioIdBwGhyBTAiXa-MPo77VCu"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".docx", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".docx", sep=''),
+             overwrite = T)
+
+##### check #####
+
+
+
 
