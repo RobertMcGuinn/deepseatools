@@ -17,24 +17,27 @@ library(remotes)
 library(worrms)
 library(openxlsx)
 library(taxize)
+library(googlesheets4)
+library(googledrive)
+
+##### authorizations #####
+gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
+drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ##### load current NDB version #####
 source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
-##### check #####
-## find where AphiaID are missing
-# filt %>% filter(AphiaID == -999) %>%
-#   pull(ScientificName) %>%
-#   unique()
-# unique(filt$DatabaseVersion)
-
-##### get rid of records with -999 ######
-## take out records where AphiaID is -999
-filt_fixed <- filt %>% filter(AphiaID != -999)
+##### fix one -999 AphiaID that actually has one #####
+filt_fixed <- filt %>%
+  mutate(AphiaID = ifelse(AphiaID == -999 & ScientificName == 'Aaptos', 132064, AphiaID))
 
 ##### check #####
 # length(filt$CatalogNumber)-length(filt_fixed$CatalogNumber)
-filt %>% filter(AphiaID == -999) %>% pull(ScientificName) %>% unique()
+filt_fixed%>% filter(AphiaID == -999) %>% pull(ScientificName) %>% unique()
+filt %>% filter(ScientificName == 'Aaptos') %>% pull(AphiaID) %>% table()
+
+x <-wm_name2id ('Aaptos')
+wm_record(x) %>% View()
 
 ##### deal with duplicates in filt_fixed (breaks join operations otherwise) #####
 # filt_fixed <- filt_fixed %>%
@@ -46,21 +49,20 @@ filt %>% filter(AphiaID == -999) %>% pull(ScientificName) %>% unique()
 # 246100 170653 # Polymastia pacifica
 # 286696 1393629 # Stylatula gracilis
 
-x <-wm_name2id ('Megaciella aurantia')
-wm_record(x) %>% View()
-
 ##### change incorrect AphiaIDs #####
-filt_fixed <- filt_fixed %>%
-  mutate(AphiaID = ifelse(AphiaID == 196178, 196168, AphiaID)) %>%
-  mutate(AphiaID = ifelse(AphiaID == 1287836, 1287835, AphiaID))
+# filt_fixed <- filt_fixed %>%
+#   mutate(AphiaID = ifelse(AphiaID == 196178, 196168, AphiaID)) %>%
+#   mutate(AphiaID = ifelse(AphiaID == 1287836, 1287835, AphiaID))
 
 ##### load the taxonomy table from CSV #####
-tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
-##### cleanup #####
+tax <- read_sheet('1v3yZO7ATMtV-wp9lePl2pV9-ycxFo3VGVrR_SIunbdQ')
+taxfl <- read_sheet('1ZfR4wiBQbDsFGpYXXDjHrsF1QJyoCMqfocmxbpBPo9M')
+taxch <- read_sheet('11FgDuNmIZRSf2W4MeFqn2h8pOekvQEP2nG4vcy46pY8')
+
 ##### check #####
-# filt_fixed %>% filter(AphiaID == -999) %>%
-#   pull(ScientificName) %>%
-#   unique()
+filt_fixed %>% filter(AphiaID == -999) %>%
+  pull(ScientificName) %>%
+  unique()
 #
 # filt_fixed %>%
 #   filter(ScientificName == 'Callogorgia cracentis') %>%
@@ -74,29 +76,8 @@ tax <- read.csv("C:/rworking/deepseatools/indata/tax.csv")
 ##### grab all AphiaIDs #####
 aphiaIDs <- unique(filt_fixed$AphiaID)
 
-##### check #####
-# x <- filt_fixed %>%
-#   filter(as.numeric(AphiaID) < 1) %>%
-#   pull(CatalogNumber)
-# x
-#
-# x <- filt_fixed %>%
-#   filter(as.numeric(AphiaID) < 1) %>%
-#   pull(ScientificName)
-# x
-#
-#
-# x <- filt_fixed %>%
-#   filter(CatalogNumber == 114283) %>%
-#   pull(AphiaID)
-# x
-#
-#
-# x <- filt_fixed %>%
-#   filter(AphiaID < 1) %>%
-#   pull(AphiaID)
-# x
-
+##### remove any -999 from aphiaIDs #####
+aphiaIDs <- aphiaIDs[aphiaIDs != -999]
 
 ##### create vector from incoming AphiaIDs #####
 my_vector <- aphiaIDs
@@ -104,10 +85,10 @@ my_vector <- aphiaIDs
 ##### check #####
 # length(my_vector)
 
-## make groups of 50 (because the API limit is 50)
+###### make groups of 50 (because the API limit is 50) #####
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
 
-##### loop to get records by AphiaID #####
+##### loop to get WoRMS records by AphiaID #####
 species_list <- wm_records_name("Caryophyllia corrugata", fuzzy = FALSE)
 df <- species_list[0,]
 
@@ -126,6 +107,7 @@ length(unique(filt$AphiaID))-1
 yo <- species_list_original %>% filter(duplicated(scientificname) == T) %>%
   pull(scientificname)
 yo <- na.omit(yo)
+yo
 
 species_list_original %>%
   filter(is.na(valid_AphiaID) == T) %>%
@@ -201,16 +183,16 @@ species_list <-
   species_list %>% filter(is.na(AphiaID) == F)
 
 ##### check #####
-View(species_list)
-table(is.na(species_list$AphiaID))
-table(species_list$status)
-table(species_list_original$status)
-dim(species_list)
-dim(species_list_original)
-
-species_list %>% filter(status == 'uncertain') %>%
-  group_by(AphiaID, status, valid_AphiaID, class, scientificname, valid_name) %>%
-  summarize(n=n()) %>% View()
+# View(species_list)
+# table(is.na(species_list$AphiaID))
+# table(species_list$status)
+# table(species_list_original$status)
+# dim(species_list)
+# dim(species_list_original)
+#
+# species_list %>% filter(status == 'uncertain') %>%
+#   group_by(AphiaID, status, valid_AphiaID, class, scientificname, valid_name) %>%
+#   summarize(n=n()) %>% View()
 
 
 # accepted      nomen dubium
@@ -335,9 +317,9 @@ synonyms <- df
 # dim(classification)
 # dim(vernaculars)
 # dim(synonyms)
-#
-setdiff(species_list$AphiaID, species_list_original$AphiaID)# introduced by changes from original
-setdiff(species_list_original$AphiaID, species_list$AphiaID)# changed from original
+# #
+# setdiff(species_list$AphiaID, species_list_original$AphiaID)# introduced by changes from original
+# setdiff(species_list_original$AphiaID, species_list$AphiaID)# changed from original
 
 #
 # setdiff(unique(species_list$AphiaID), unique(filt$AphiaID))
@@ -362,14 +344,14 @@ setdiff(species_list_original$AphiaID, species_list$AphiaID)# changed from origi
 # class(vernaculars$AphiaID)
 # class(synonyms$AphiaID)
 
-##### save and load objects for future use #####
+##### save objects for future use #####
 # save multiple objects
 save(species_list_original,
      species_list,
      classification,
      vernaculars,
      synonyms,
-     file = 'c:/rworking/deepseatools/indata/20240808-0_taxonomy_objects.Rdata')
+     file = 'c:/rworking/deepseatools/indata/20250714-0_taxonomy_objects.Rdata')
 
 ## clean up everything except filt
 # rm(list=setdiff(ls(), c("filt")))
@@ -381,7 +363,7 @@ save(species_list_original,
 
 ##### load objects from past work #####
 ## load the objects back ()
-load('../indata/20240808-0_taxonomy_objects.Rdata')
+load('../indata/20250714-0_taxonomy_objects.Rdata')
 
 ##### check #####
 # table(species_list$status, useNA = 'always')
@@ -692,56 +674,49 @@ stonycoralcupcoral <- tax %>%
 
 sub_enhanced2 <- sub_enhanced_filter %>%
   mutate(VernacularNameCategory = case_when(
-    is.na(VernacularNameCategory) &
-    Phylum %in% c('Chordata') ~ 'fish',
-    TaxonRank %in% c('Order') &
-      Order %in% c('Alcyonacea') ~ 'alcyonacean (unspecified)',
-    Order %in% c('Antipatharia') ~ 'black coral',
-    Class %in% c('Calcarea')~ 'calcareous sponge',
-    Class %in% c('Demospongiae') ~ 'demosponge',
-    Class %in% c('Hexactinellida') ~ 'glass sponge',
-    Class %in% c('Homoscleromorpha') ~ 'homoscleromorph sponge',
-    Family %in% c('Parazoanthidae') ~ 'gold coral',
-    Family %in% gorgfamilies ~ 'gorgonian coral',
-    Family %in% softfamilies ~ 'soft coral',
-    Genus %in% c('Aspera', 'Verseveldtia') ~ 'soft coral',
-    Order %in% c('Malacalcyonacea') ~ 'soft coral',
-    Order %in% c('Anthoathecata') &
-      Family %notin%  c('Solanderiidae') ~ 'lace coral',
-    Family %in% c('Lithotelestidae', 'Aulopsammiidae') ~ 'lithotelestid coral',
-    Family %in% othercorallikehydrozoanfamilies ~ 'other coral-like hydrozoan',
-    Superfamily %in% c('Pennatuloidea') ~ 'sea pen',
-    ScientificName %in% c('Porifera') ~ 'sponge',
-    Suborder %in% c('Stolonifera') ~ 'stoloniferan coral',
-    Family %in% c('Clavulariidae') ~ 'stoloniferan coral',
-    Genus %in% c('Clavularia', 'Sarcodictyon', 'Scleranthelia', 'Pseudocladochonus') ~ 'stoloniferan coral',
-    Order %in% c('Scleractinia') &
-      TaxonRank %in% c('Order')  ~ 'stony coral (unspecified)',
-    ScientificName %in% stonycoralbranching ~ 'stony coral (branching)',
-    ScientificName %in% c(stonycoralcupcoral, 'Desmophyllum hourigani') ~ 'stony coral (cup coral)',
-    Genus %in% c('Acanthogorgia', 'Hypnogorgia', 'Thelogorgia',
-                 'Stephanogorgia', 'Helicogorgia', 'Distichogorgia',
-                 'Xenogorgia', 'Caliacis', 'Briareopsis', 'Elasmogorgia',
-                 'Pseudothesea', 'Bayergorgia', 'Flagelligorgia') ~ 'gorgonian coral',
-    Genus %in% c('Hydrodendron') ~ 'other coral-like hydrozoan',
-    Genus %in% c('Heterocyathus') ~ 'stony coral (cup coral)',
-    Genus %in% c('Caryophyllia', 'Paracyathus', 'Asterosmilia',
-                 'Heteropsammia') ~ 'stony coral (cup coral)',
-    Family %in% c('Micrabaciidae', 'Flabellidae', 'Turbinoliidae', 'Astrangiidae',
-                  'Rhizangiidae', 'Anthemiphylliidae') ~ 'stony coral (cup coral)',
-    ScientificName %in% c('Caryophylliidae') ~ 'stony coral (unspecified)',
-    Genus %in% c('Telestula') ~ 'stoloniferan coral',
-    ScientificName %in% c('Dendrophylliidae') ~ 'stony coral (unspecified)',
-    Genus %in% c('Leptoseris', 'Dactylotrochus',
-                 'Anomocora', 'Paraconotrochus',
-                 'Trochocyathus', 'Cladopsammia',
-                 'Balanophyllia', 'Deltocyathus', 'Tubastraea') ~ 'stony coral (cup coral)',
-    Genus %in% c('Madracis', 'Solenosmilia', 'Atlantia') ~ 'stony coral (branching)',
-    ScientificName %in% c('Pocilloporidae') ~ 'stony coral (unspecified)',
-    ScientificName %in% c('Octocorallia', 'Octocorallia incertae sedis', 'Scleralcyonacea') ~ 'insufficient taxonomic resolution',
-    ScientificName %in% c('Verseveldtia granulosa') ~ 'Verseveldtia granulosa',
-    TRUE ~ VernacularNameCategory))
-
+    is.na(VernacularNameCategory) & Phylum %in% c('Chordata') ~ 'fish',
+    is.na(VernacularNameCategory) & TaxonRank %in% c('Order') & Order %in% c('Alcyonacea') ~ 'alcyonacean (unspecified)',
+    is.na(VernacularNameCategory) & Order %in% c('Antipatharia') ~ 'black coral',
+    is.na(VernacularNameCategory) & Class %in% c('Calcarea')~ 'calcareous sponge',
+    is.na(VernacularNameCategory) & Class %in% c('Demospongiae') ~ 'demosponge',
+    is.na(VernacularNameCategory) & Class %in% c('Hexactinellida') ~ 'glass sponge',
+    is.na(VernacularNameCategory) & Class %in% c('Homoscleromorpha') ~ 'homoscleromorph sponge',
+    is.na(VernacularNameCategory) & Family %in% c('Parazoanthidae') ~ 'gold coral',
+    is.na(VernacularNameCategory) & Family %in% gorgfamilies ~ 'gorgonian coral',
+    is.na(VernacularNameCategory) & Family %in% softfamilies ~ 'soft coral',
+    is.na(VernacularNameCategory) & Genus %in% c('Aspera', 'Verseveldtia') ~ 'soft coral',
+    is.na(VernacularNameCategory) & Order %in% c('Malacalcyonacea') ~ 'soft coral',
+    is.na(VernacularNameCategory) & Order %in% c('Anthoathecata') & Family %notin% c('Solanderiidae') ~ 'lace coral',
+    is.na(VernacularNameCategory) & Family %in% c('Lithotelestidae', 'Aulopsammiidae') ~ 'lithotelestid coral',
+    is.na(VernacularNameCategory) & Family %in% othercorallikehydrozoanfamilies ~ 'other coral-like hydrozoan',
+    is.na(VernacularNameCategory) & Superfamily %in% c('Pennatuloidea') ~ 'sea pen',
+    is.na(VernacularNameCategory) & ScientificName %in% c('Porifera') ~ 'sponge',
+    is.na(VernacularNameCategory) & Suborder %in% c('Stolonifera') ~ 'stoloniferan coral',
+    is.na(VernacularNameCategory) & Family %in% c('Clavulariidae') ~ 'stoloniferan coral',
+    is.na(VernacularNameCategory) & Genus %in% c('Clavularia', 'Sarcodictyon', 'Scleranthelia', 'Pseudocladochonus') ~ 'stoloniferan coral',
+    is.na(VernacularNameCategory) & Order %in% c('Scleractinia') & TaxonRank %in% c('Order')  ~ 'stony coral (unspecified)',
+    is.na(VernacularNameCategory) & ScientificName %in% stonycoralbranching ~ 'stony coral (branching)',
+    is.na(VernacularNameCategory) & ScientificName %in% c(stonycoralcupcoral, 'Desmophyllum hourigani') ~ 'stony coral (cup coral)',
+    is.na(VernacularNameCategory) & Genus %in% c('Acanthogorgia', 'Hypnogorgia', 'Thelogorgia',
+                                                 'Stephanogorgia', 'Helicogorgia', 'Distichogorgia',
+                                                 'Xenogorgia', 'Caliacis', 'Briareopsis', 'Elasmogorgia',
+                                                 'Pseudothesea', 'Bayergorgia', 'Flagelligorgia') ~ 'gorgonian coral',
+    is.na(VernacularNameCategory) & Genus %in% c('Hydrodendron') ~ 'other coral-like hydrozoan',
+    is.na(VernacularNameCategory) & Genus %in% c('Heterocyathus') ~ 'stony coral (cup coral)',
+    is.na(VernacularNameCategory) & Genus %in% c('Caryophyllia', 'Paracyathus', 'Asterosmilia', 'Heteropsammia') ~ 'stony coral (cup coral)',
+    is.na(VernacularNameCategory) & Family %in% c('Micrabaciidae', 'Flabellidae', 'Turbinoliidae', 'Astrangiidae',
+                                                  'Rhizangiidae', 'Anthemiphylliidae') ~ 'stony coral (cup coral)',
+    is.na(VernacularNameCategory) & ScientificName %in% c('Caryophylliidae') ~ 'stony coral (unspecified)',
+    is.na(VernacularNameCategory) & Genus %in% c('Telestula') ~ 'stoloniferan coral',
+    is.na(VernacularNameCategory) & ScientificName %in% c('Dendrophylliidae') ~ 'stony coral (unspecified)',
+    is.na(VernacularNameCategory) & Genus %in% c('Leptoseris', 'Dactylotrochus', 'Anomocora', 'Paraconotrochus',
+                                                 'Trochocyathus', 'Cladopsammia', 'Balanophyllia', 'Deltocyathus', 'Tubastraea') ~ 'stony coral (cup coral)',
+    is.na(VernacularNameCategory) & Genus %in% c('Madracis', 'Solenosmilia', 'Atlantia') ~ 'stony coral (branching)',
+    is.na(VernacularNameCategory) & ScientificName %in% c('Pocilloporidae') ~ 'stony coral (unspecified)',
+    is.na(VernacularNameCategory) & ScientificName %in% c('Octocorallia', 'Octocorallia incertae sedis', 'Scleralcyonacea') ~ 'insufficient taxonomic resolution',
+    is.na(VernacularNameCategory) & ScientificName %in% c('Verseveldtia granulosa') ~ 'Verseveldtia granulosa',
+    TRUE ~ VernacularNameCategory
+  ))
 ##### check #####
 table(sub_enhanced2$Phylum)
 table(sub_enhanced$Phylum)
@@ -860,6 +835,9 @@ sub_enhanced3<- sub_enhanced2 %>%
          Synonyms,
          IdentificationComments)
 
+##### decaptitalize TaxonRank #####
+sub_enhanced3$TaxonRank <- tolower(sub_enhanced3$TaxonRank)
+
 ##### check #####
 x <- sub_enhanced3 %>% filter( grepl('Cirrhipathes', ScientificName)) %>%
     group_by(CatalogNumber, ScientificName, VerbatimScientificName, IdentificationComments, AphiaID, Phylum,
@@ -938,18 +916,22 @@ filt %>% pull(TaxonRank) %>% table(useNA = 'always')
 
 filt %>% filter(Genus == "Heterocyathus") %>% pull(VernacularNameCategory) %>% table()
 
-##### decaptitalize TaxonRank #####
-sub_enhanced3$TaxonRank <- tolower(sub_enhanced3$TaxonRank)
-
-##### save object for future use #####
+##### save object from Rdata  #####
 # save multiple objects
 save(sub_enhanced3,
-     file = 'c:/rworking/deepseatools/indata/20240828-0_sub_enhanced3.Rdata')
+     file = 'c:/rworking/deepseatools/indata/20250714-0_sub_enhanced3.Rdata')
 
-##### load the final patch back to environment #####
-load('../indata/20240828-0_sub_enhanced3.Rdata')
+##### load object from Rdata #####
+load('indata/20250714-0_sub_enhanced3.Rdata')
 
 ##### check #####
+filt %>% select(AphiaID, ScientificName) %>%
+  group_by(ScientificName) %>%
+  summarise(L = length(unique(AphiaID))) %>%
+  View()
+
+sub_enhanced3 %>% pull(VernacularNameCategory) %>% table(useNA = 'always')
+
 sub_enhanced3 %>% filter(VernacularNameCategory == 'insufficient taxonomic resolution') %>%
   group_by(ScientificName, VerbatimScientificName) %>%
   summarize(n=n())
@@ -959,15 +941,42 @@ y <- sub_enhanced3 %>% select(CatalogNumber, ScientificName, Class)
 z <- left_join(x,
                y,
                by = "CatalogNumber")
-z %>% filter(is.na(ScientificName.y) == T) %>% group_by(ScientificName.x, ScientificName.y) %>%
-  summarize(n=n())
+
+z %>%
+  filter(is.na(ScientificName.y) == T) %>%
+  group_by(CatalogNumber, ScientificName.x, ScientificName.y) %>%
+  summarize(n=n()) %>% View()
+
+sub_enhanced3 %>%
+  filter(ScientificName == 'Haliclona (Haliclona)') %>%
+  pull(AphiaID) %>% table(useNA = 'always')
+
+filt %>%
+  filter(ScientificName == 'Haliclona (Haliclona)') %>%
+  pull(AphiaID) %>% table(useNA = 'always')
+
+filt %>% group_by(ScientificName, AphiaID) %>%
+  summarize(n=n()) %>% View()
+
+filt %>%
+  filter(CatalogNumber == '607200') %>%
+  pull(ScientificName)
+
+filt %>%
+  filter(CatalogNumber == '607200') %>%
+  pull(AphiaID)
+
+filt %>%
+  filter(AphiaID == '166589') %>% pull(ScientificName) %>% table()
+
+sub_enhanced3 %>%
+  filter(AphiaID == '166589') %>% pull(ScientificName) %>% table()
 
 z %>% filter(Class.x != Class.y) %>%
   group_by(ScientificName.x, ScientificName.y, Class.x, Class.y) %>%
   summarize(n=n()) %>% View()
 
 cats <- z %>% filter(ScientificName.x != ScientificName.y) %>% pull(CatalogNumber)
-
 sub_enhanced3 %>% filter(CatalogNumber %in% cats) %>% pull(ScientificName) %>% unique()
 
 filt %>% filter(ScientificName == 'Neopelta aberrans') %>%
@@ -980,114 +989,18 @@ filt %>% filter(CatalogNumber %in% x) %>%
   summarize(n=n()) %>% View()
 
 
+x <- setdiff(sub_enhanced3$CatalogNumber, filt$CatalogNumber)
+filt %>% filter(CatalogNumber %in% x) %>%
+  group_by(ScientificName, Class, Order, Family, Genus, Species, AphiaID) %>%
+  summarize(n=n()) %>% View()
+
+
 ##### export result to csv (export to CSV) #####
-filename <- "20240828-0_global_taxonomy_patch_NDB_20240726-0.csv"
+filename <- "20250714-0_global_taxonomy_patch_NDB_20250711-1.csv"
 write.csv(sub_enhanced3,
           paste("c:/rworking/deepseatools/indata/",
                 filename, sep=''),
           fileEncoding = "latin9",
           row.names = F,
           quote = T)
-
-##### clean up everything except core objects ######
-rm(list=setdiff(ls(), c('filt', 'sub_enhanced3')))
-
-##### patch VernacularNameCategory where = "insufficient taxonomic resolution" #####
-## isolate CatalogNumbers of interest
-x <- sub_enhanced3 %>% filter(VernacularNameCategory == 'insufficient taxonomic resolution') %>% pull(CatalogNumber)
-
-## find corresponding CatalogNumbers in database (filt) ##
-y <- filt %>% filter(CatalogNumber %in% x) %>% select(CatalogNumber, VernacularNameCategory)
-
-## join the data to the global taxonomy patch
-new_data <- left_join(sub_enhanced3, y, by = "CatalogNumber")
-
-##### create a new patch dataset #####
-patch <- new_data %>% mutate(VernacularNameCategory = ifelse(is.na(VernacularNameCategory.y) == T, VernacularNameCategory.x, VernacularNameCategory.y))
-
-## cleanup the extra variables
-patch <- patch %>%
-  select(-VernacularNameCategory.x, -VernacularNameCategory.y)
-
-##### check ####
-patch %>% pull(VernacularNameCategory) %>% table(useNA = 'always')
-
-##### export result to csv (export to CSV) #####
-filename <- "20241021-0_global_taxonomy_patch_NDB_20240726-0.csv"
-write.csv(patch,
-          paste("c:/rworking/deepseatools/indata/",
-                filename, sep=''),
-          fileEncoding = "latin9",
-          row.names = F,
-          quote = T)
-
-##### check #####
-##### correction to patch file #####
-x <- setdiff(filt$CatalogNumber, patch$CatalogNumber)
-df <- filt %>% filter(CatalogNumber %in% x)
-
-df_cut <- df %>% select(names(patch))
-
-fixed <- df_cut %>%
-  mutate(Class = case_when(
-    Class %in% c('Anthozoa') ~ Subclass,  # Replace 'Class' with 'Subclass' when 'Class' is 'Anthozoa'
-    TRUE ~ Class  # Keep the original 'Class' value for all other cases
-  )) %>%
-  mutate(Subclass = case_when(
-    Subclass %in% c('Hexacorallia', 'Octocorallia') ~ NA,
-    TRUE ~ Subclass))
-
-newpatch <- rbind(fixed, patch)
-
-##### check #####
-View(fixed)
-
-multipath <- newpatch %>%
-  group_by(ScientificName) %>%
-  filter(n_distinct(paste(Phylum, Class, Subclass, Order, Family, Genus, ScientificName)) > 2)# %>%
-  #filter(is.na(ScientificName) == F)
-View(multipath)
-
-multipath %>%
-  group_by(CatalogNumber, Phylum, Class, Subclass, Order) %>%
-  summarize(n=n()) %>% View()
-
-newpatch %>%
-  group_by(Phylum, Class, Order, Family, Genus) %>%
-  summarize(n=n()) %>% View()
-
-
- yo <- newpatch %>%  filter(Class == 'Anthozoa') %>%
-  group_by(CatalogNumber, Phylum, Class, Subclass, Order, Family, Genus, ScientificName) %>%
-  summarize(n=n()) %>% pull(CatalogNumber)
-
- setdiff(yo, df_cut$CatalogNumber)
-
- length(newpatch$CatalogNumber)
- length(filt$CatalogNumber)
-
- newpatch %>% filter(Order == 'Anthoathecata',
-                       is.na(Class) == T) %>%
-                       pull(Class) %>%
-                       table(useNA = 'always')
-
- newpatch %>% filter(Order == 'Anthoathecata') %>%
-   pull(Class) %>%
-   table(useNA = 'always')
-
-
-##### export result to csv (export to CSV) #####
- filename <- "20241022-0_global_taxonomy_patch_NDB_20240726-0.csv"
- write.csv(newpatch,
-           paste("c:/rworking/deepseatools/indata/",
-                 filename, sep=''),
-           fileEncoding = "latin9",
-           row.names = F,
-           quote = T)
-
-
-
-
-
-
 

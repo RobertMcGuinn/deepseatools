@@ -2,7 +2,8 @@
 ##### header #####
 ## author: Robert P. McGuinn | rpm@alumni.duke.edu
 ## purpose: modular: load current NDB file and filter out flagged
-## output: [filt]
+## input: csv of current database
+## output: 'filt'
 
 ##### packages #####
 library(tidyverse)
@@ -11,7 +12,8 @@ library(tidyverse)
 digits = 121
 
 ##### load national database (manual) #####
-path <- "C:/rworking/deepseatools/indata/DSCRTP_NatDB_20250409-0.csv" # 'Florence Price'
+filename <- 'DSCRTP_NatDB_20250714-0.csv'
+path <- paste0("C:/rworking/deepseatools/indata/", filename)
 
 ## Version History
 # "DSCRTP_NatDB_20250409-0.csv" # 'Florence Price'
