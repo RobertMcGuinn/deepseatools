@@ -17,13 +17,13 @@ browseURL(redmine_link)
 library(tidyverse)
 library(sf)
 library(remotes)
-library(redmineR)
 library(terra)
 library(ggplot2)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(googlesheets4)
 library(robis)
+library(leaflet)
 
 ##### source NDB #####
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
@@ -52,10 +52,23 @@ filt %>%
   filter(ScientificName == name) %>%
   pull(CatalogNumber) %>% length()
 
+##### get a species list from a region #####
+# Get a full species list for the Gulf of Mexico
+species_list <- checklist(geometry = "POLYGON((-97 20, -81 20, -81 30, -97 30, -97 20))",
+                          datasetid = 'f5a4799e-dc24-4807-89d9-01da47d52e3b')
 
+# View the first few species
+head(species_list)
 
+##### get a specific taxonID
+target_id <- species_list$taxonID[3]
 
-
+##### find and map occurrence records for a specific taxonid #####
+occurrences_for_id <- occurrence(taxonid = target_id)
+                                 # datasetid = 'f5a4799e-dc24-4807-89d9-01da47d52e3b')
+                                 # geometry = "POLYGON((-97 20, -81 20, -81 30, -97 30, -97 20))")
+library(leaflet)
+map_leaflet(occurrences_for_id)
 
 
 
