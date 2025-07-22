@@ -174,13 +174,21 @@ obis %>%
             row.names = FALSE, na = '')
 
 ##### check #####
-## Use read.delim() to read the file
-# data <- read.delim(
-#   'c:/rworking/deepseatools/indata/dwc_noaa_dsc_rtp_version_20241219-1_20250205-0.txt',
-#   header = TRUE,
-  # sep = ",",
-#   stringsAsFactors = FALSE)
+# length(unique(filt$ScientificName))
 #
+# filt %>% filter(TaxonRank == 'species') %>%
+#   pull(AphiaID) %>%
+#   unique() %>%
+#   length()
+
+#### Use read.delim() to read the file back in for testing #####
+data <- read.delim(
+  'c:/rworking/deepseatools/indata/dwc_noaa_dsc_rtp_version_20241219-1_20250205-0.txt',
+  header = TRUE,
+  sep = ",",
+  stringsAsFactors = FALSE)
+
+##### check #####
 # data %>%  filter(occurrenceID == "NOAA_DSCRTP:1557739") %>% pull(associatedMedia)
 # obis %>%  filter(occurrenceID == "NOAA_DSCRTP:1557739") %>% pull(scientificName)
 
