@@ -28,8 +28,11 @@ pts <- vect(points,
             geom = c("Longitude", "Latitude"),
             crs = "EPSG:4326")
 
-# Extract raster values at point locations
+##### Extract raster values at point locations #####
 vals <- terra::extract(r, pts)
+
+##### Bind extracted values to original points #####
+points_with_vals <- cbind(points, vals[, -1])  # remove ID column from 'vals'
 
 
 
