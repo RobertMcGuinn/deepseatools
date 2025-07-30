@@ -13,11 +13,29 @@ library(googlesheets4)
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
-##### get folder by name #####
-# Get folder by name
-folder <- drive_get("Team Coordination")
-# List contents of the folder
-drive_ls(folder)
+##### get list of folders by name (goes one deep)#####
+# Get the folder by name
+folder <- drive_get("DSCRTP_Data_Management_top")
+
+# List only folders one level down
+drive_listing <- drive_ls(folder) %>%
+  filter(drive_resource[[1]]$mimeType == "application/vnd.google-apps.folder")
+
+##### add the link to the google folder #####
+drive_listing$link <- paste('https://drive.google.com/drive/folders/', drive_listing$id, sep='')
+
+##### add the priority and who columns #####
+drive_listing$priority <- ''
+drive_listing$who <- ''
+
+##### write the drive listing out to csv #####
+drive_listing %>%
+  select(name, priority, who, link) %>%
+  write.csv("indata/20250729_drive_listing.csv")
+
+##### write the drive listing to google drive #####
+# Get the folder by name
+drive_upload("indata/20250729_drive_listing.csv", path = folder, name = "20250729_drive_listing_folder_listing.csv", type = "spreadsheet")
 
 ##### list information in a shared drive #####
 id <- "0AAbgBr_cP0q1Uk9PVA"
@@ -48,7 +66,7 @@ for (i in seq_len(nrow(files_to_copy))) {
   )
 }
 
-##### deleting from a folder withing a particular shared drive shared drive #####
+##### deleting from a folder within a particular shared drive #####
 ## set Shared Drive ID
 id <- "0AAbgBr_cP0q1Uk9PVA"
 shared_drive_id <- as_id(id)
@@ -93,41 +111,49 @@ list_drive_tree <- function(folder = NULL, indent = 0, root_shown = FALSE) {
 }
 
 # Start from a specfic folder (My Drive)
-folder <- drive_get("Custom_Analyses")
+folder <- drive_get("DSCRTP_Data_Management_top")
 list_drive_tree(folder)
 
 ##### list Google folders as a tree (sans files) #####
 
 # Recursive folder tree printer including the root
-list_drive_folders_tree <- function(folder = NULL, indent = 0) {
-  # If folder is NULL, start from My Drive root
+list_drive_folders_one_level <- function(folder = NULL) {
+  # Define the folder name and list contents
   if (is.null(folder)) {
-    folder_name <- "My Drive"
-    cat(strrep("  ", indent), "- ", folder_name, "\n", sep = "")
+    cat("- My Drive\n")
     contents <- drive_ls(path = NULL)
   } else {
-    folder_name <- folder$name
-    cat(strrep("  ", indent), "- ", folder_name, "\n", sep = "")
+    cat("- ", folder$name, "\n", sep = "")
     contents <- drive_ls(path = folder)
   }
 
-  # Filter only folders
+  # Filter to folders only
   if (nrow(contents) > 0) {
-    folders <- contents[grepl("application/vnd.google-apps.folder",
-                              sapply(contents$drive_resource, `[[`, "mimeType")), ]
+    folders <- contents[grepl(
+      "application/vnd.google-apps.folder",
+      sapply(contents$drive_resource, `[[`, "mimeType")
+    )]
   } else {
-    return()
+    folders <- contents[0, ]  # Return empty
   }
 
-  # Recurse into each subfolder
-  for (i in seq_len(nrow(folders))) {
-    list_drive_folders_tree(folders[i, ], indent + 1)
+  # Print just 1 level of folder names
+  if (nrow(folders) > 0) {
+    for (i in seq_len(nrow(folders))) {
+      cat("  - ", folders$name[i], "\n", sep = "")
+    }
+  } else {
+    cat("  (no subfolders)\n")
   }
+
+  # Return folder metadata (optional)
+  invisible(folders)
 }
 
 
+
 # Start from a specfic folder (My Drive)
-folder <- drive_get("Custom_Analyses")
+folder <- drive_get("DSCRTP_Data_Management_top")
 list_drive_folders_tree(folder)
 
 
