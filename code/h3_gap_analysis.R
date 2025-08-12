@@ -253,21 +253,51 @@ st_bbox(level3_geofilter)
 
 
 ##### ***** experiment: This is how it really should be done ***** #####
+##### load the geojson hexes data to sf (h3 level3) #####
+my_geojson_file <- "indata/h3_gap/h3_hexagons_03.geojson"
+level3_sp <- st_read(my_geojson_file)
+
+##### load the AOI#####
+shapefile_path <- "C:/rworking/deepseatools/indata/20221104_protected_areas_update_HColeman/20221104_protected_areas.shp"
+protected_areas <- st_read(shapefile_path)
+aoi_ne_canyons <- protected_areas %>% filter(Sitename == 'NE Canyons and Seamounts')
+
+##### harmonize the CRSs #####
+aoi_ne_canyons_transform <- st_transform(aoi_ne_canyons, crs = crs(level3_sp))
+
+##### intersect level 3 hexes by the AOI #####
+level3_geofilter <- level3_sp %>% st_filter(aoi_ne_canyons_transform)
+
+##### pull out a list of all the level 3 hexes #####
+hexes <- level3_geofilter %>%
+  pull(h3_index) %>%
+  unique()
+
 ##### load the CSV data (h3 level5) #####
 my_csv_file <- "indata/h3_gap/h3_scores_05.csv"
 level5_tab <- read.csv(my_csv_file)
 
-##### get all level 5 children #####
+##### get all level 5 hex children that correspond to the level 3 hexids selected #####
 h3_indexes_lvl5 <- unlist(lapply(hexes, function(idx) {
   get_children(idx, res = 5)
 }))
 
+##### create hex polygons from the list #####
 h3_sf_polygons <- cell_to_polygon(h3_indexes_lvl5, simple = FALSE)
 
+##### join the level 5 polygons with the level 5 data table ######
+
+## prep the files for easy joining
 level5_tab <- rename(level5_tab, h3_address = h3_index)
+
+## perform the left join
 yo <- left_join(h3_sf_polygons, level5_tab)
 
-##### map #####
+##### download the esri ocean basemap tiles #####
+# This gets the tiles for the specific area covered by your filtered data
+ocean_basemap <- get_tiles(level3_geofilter, provider = "Esri.OceanBasemap")
+
+##### create static map #####
 ggplot() +
   # 1. Add the basemap layer first
   geom_spatraster_rgb(data = ocean_basemap) +
@@ -277,7 +307,7 @@ ggplot() +
     data = yo,
     aes(fill = combined),
     color = "black",
-    alpha = 0.6
+    alpha = 0.5
   ) +
 
   # Reverse the color scale
@@ -336,7 +366,7 @@ pal <- colorNumeric(
 # Using sprintf for clean HTML formatting in the popup text.
 popup_labels <- sprintf(
   "<strong>Combined Score:</strong><br/>%.2f",
-  level3_sp_filtered$combined
+  yo$combined
 ) %>% lapply(htmltools::HTML)
 
 

@@ -11,8 +11,11 @@ library(tidyverse)
 ##### options #####
 digits = 121
 
-##### load national database (manual) #####
+##### parameter #####
 filename <- 'DSCRTP_NatDB_20250714-0.csv'
+
+##### load national database (manual) #####
+
 path <- paste0("C:/rworking/deepseatools/indata/", filename)
 
 ## Version History
