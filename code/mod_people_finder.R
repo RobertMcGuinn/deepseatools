@@ -9,6 +9,12 @@ library(tidyverse)
 library(googlesheets4)
 library(googledrive)
 
+##### linkage #####
+filename <- 'mod_people_finder' ## manual: for this code file name, match to redmine
+github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
+github_link <- paste(github_path, filename, '.R', sep = '')
+browseURL(github_link)
+
 ##### parameters #####
 person <- 'Etnoyer'
 
@@ -43,9 +49,9 @@ tab <- filt %>%
   )) %>%
   select(-DashLink)
 
-##### add to google drive #####
+##### add the summary file to google drive #####
 ## create empty sheet
-gs_name <- paste0(Sys.Date(), "_person_summary")
+gs_name <- paste0(Sys.Date(), "_", person,"_person_summary", "_NDB_version_", unique(filt$DatabaseVersion))
 sheet <- gs4_create(name = gs_name)
 
 ## move to target folder
@@ -58,7 +64,7 @@ drive_mv(file = sheet, path = as_id(folder$id))
 sheet_write(
   data = tab,
   ss = sheet,
-  sheet = "Summary"
+  sheet = "Sheet1"
 )
 
 
