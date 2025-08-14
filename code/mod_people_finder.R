@@ -23,7 +23,7 @@ gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ##### source load NDB (creates filt) #####
-source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
+# source('c:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
 ##### filter and summarize #####
 ## prepare data with formulas as plain strings
@@ -37,6 +37,7 @@ tab <- filt %>%
                            DatasetID, '.html')) %>%
   group_by(DatasetID, DashLink) %>%
   summarize(n = n(),
+            DataProvider = paste(unique(DataProvider), collapse = " | "),
             Vessel = paste(unique(Vessel), collapse = " | "),
             ObservationYear = paste(unique(ObservationYear), collapse = " | "),
             PI = paste(unique(PI), collapse = " | "),

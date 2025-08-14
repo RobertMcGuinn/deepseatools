@@ -1,6 +1,6 @@
 ##### find file #####
 ## manual: edit string for x
-x <- 'mod_load_current_ndb.R'
+x <- 'header'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,

@@ -1,52 +1,60 @@
-##### _____working with rGBIF #####
+##### Header #####
+## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
+## startdate: 20250814
+## purpose: interact with GBIF data through the rgbif package
 
-# Search by type of record, all observational in this case
+##### linkage #####
+filename <- 'rgbif' ## manual: for this code file name, match to redmine
+github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
+github_link <- paste(github_path, filename, '.R', sep = '')
+browseURL(github_link)
+# redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
+# issuenumber <- filename
+redmine_link <- paste(redmine_path, issuenumber, sep = '')
+browseURL(redmine_link)
+
+##### packages #####
+library(rgbif)
+library(tidyverse)
+
+##### count records by basisOfRecord #####
 occ_count(basisOfRecord='OBSERVATION')
 
-# Records for Puma concolor with lat/long data (georeferened) only. Note that hasCoordinate in occ_search() is the same as georeferenced in occ_count().
-occ_count(taxonKey=2435099, georeferenced=TRUE)
-#> [1] 3747
+##### count records for 'Puma concolor' using taxonKey with lat/long data (georeferened) only #####
+## Note that hasCoordinate in occ_search() is the same as georeferenced in occ_count().
+occ_count(taxonKey = 2435099,
+          hasCoordinate = T,
+          hasGeospatialIssue = F
+          )
 
-# All georeferenced records in GBIF
-occ_count(georeferenced=TRUE)
-
-# Records from Denmark
+##### get records from a specific place name #####
 denmark_code <- isocodes[grep("Denmark", isocodes$name), "code"]
 occ_count(country=denmark_code)
 
-# Number of records in a particular dataset
+##### count records in a particular dataset #####
 # this key is Smithsonian: https://www.gbif.org/dataset/821cc27a-e3bb-4bc5-ac34-89ada245069d
-occ_count(datasetKey='821cc27a-e3bb-4bc5-ac34-89ada245069d')
+# this key is for the DSCRTP: df8e3fb8-3da7-4104-a866-748f6da20a3c
+occ_count(datasetKey='df8e3fb8-3da7-4104-a866-748f6da20a3c')
 
-# All records from 2012
-occ_count(year=2012)
-#> [1] 44688340
-
-# Records for a particular dataset, and only for preserved specimens
-smithsonianKey <- '821cc27a-e3bb-4bc5-ac34-89ada245069d'
-occ_count(datasetKey = smithsonianKey)
-
-# Looking up dates
-out <- name_lookup(query='mammalia')
-out$meta
-View(out$data)
-
-x <- occ_download_get("0000796-171109162308116") %>% occ_download_import()
+# All records from 2012 in the DSCRTP database
+occ_count(datasetKey='df8e3fb8-3da7-4104-a866-748f6da20a3c', year=2012)
 
 ##### this is how you search gbif and extract data.frames#####
-# for institutionCode = USNM, catalogNumber matches USNM#
-x <- occ_search(scientificName = "Lophelia pertusa", limit = 100)
-View(x)
-class(x)
+x <- occ_search(datasetKey='df8e3fb8-3da7-4104-a866-748f6da20a3c',
+                scientificName = "Lophelia pertusa", limit = 10)
 y <- data.frame(x$data)
 
-y %>% #filter(institutionCode == "USNM") %>%
-  group_by(scientificName, catalogNumber, occurrenceID) %>%
-  summarise(n = n())
+##### isolate the 'CatalogNumber' vector #####
+cats <- y$occurrenceID
+cats <- sub(".*:", "", cats)
 
-x<-occ_search(institutionCode = "USNM")
-y<-data.frame(x$data)
+##### check for chosen 'CatalogNumber' in cats #####
 
-z<-y %>% filter(grepl("EX",recordNumber))
-View(y)
+filt %>% filter(CatalogNumber %in% cats) %>%
+  pull(ScientificName) %>% unique()
+
+
+
+
+
 
