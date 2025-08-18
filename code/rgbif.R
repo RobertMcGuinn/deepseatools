@@ -10,8 +10,8 @@ github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
 # redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 # issuenumber <- filename
-redmine_link <- paste(redmine_path, issuenumber, sep = '')
-browseURL(redmine_link)
+# redmine_link <- paste(redmine_path, issuenumber, sep = '')
+# browseURL(redmine_link)
 
 ##### packages #####
 library(rgbif)
