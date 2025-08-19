@@ -45,4 +45,6 @@ setdiff(cats, sub$CatalogNumber)
 x <- setdiff(sub$CatalogNumber, cats)
 length(x)
 
+setdiff(filt_clean$CatalogNumber,
+        filt_clean_feature$CatalogNumber)
 
