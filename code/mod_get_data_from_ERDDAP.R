@@ -4,14 +4,14 @@
 ## purpose:get data from ERDDAP
 
 ##### linkage #####
-filename <- '' ## manual: for this code file name, match to redmine
+filename <- 'mod_get_data_from_ERDDAP' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
-redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
-issuenumber <- filename
-redmine_link <- paste(redmine_path, issuenumber, sep = '')
-browseURL(redmine_link)
+# redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
+# issuenumber <- filename
+# redmine_link <- paste(redmine_path, issuenumber, sep = '')
+# browseURL(redmine_link)
 
 ##### packages #####
 library(tidyverse)
@@ -27,11 +27,11 @@ library(googlesheets4)
 ##### source ndb #####
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
-##### create a query result
+##### create a query result #####
 z <- filt %>% filter()
 
 ##### query ERDDAP for list of CatalogNumbers #####
-## get the list of CatalogNumbers into an variable
+## get the list of CatalogNumbers from the query into an variable
 catlist <- z$CatalogNumber
 
 ## create the string that I need to pass into the URL
