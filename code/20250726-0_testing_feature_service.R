@@ -20,31 +20,21 @@ library(tidyverse)
 ##### options #####
 digits = 121
 
-##### load all versions (manual) #####
-filename <- 'DSCRTP_NatDB_20250409-0.csv'
+##### load old NDB  (manual) #####
+filename <- 'DSCRTP_NaDB_20250409-0.csv'
 path <- paste0("C:/rworking/deepseatools/indata/", filename)
-sub <- read.csv(path, header = T, encoding = 'latin1')
+filt_old <- read.csv(path, header = T, encoding = 'latin1')
 
+##### load new NDB (clean for GIS) #####
 filename <- 'DSCRTP_NatDB_20250714-0_clean.csv'
 path <- paste0("C:/rworking/deepseatools/indata/", filename)
 filt_clean <- read.csv(path, header = T, encoding = 'latin1')
 
-filename <- 'feature_service.csv'
-path <- paste0("C:/rworking/deepseatools/indata/", filename)
-filt_clean_feature <- read.csv(path, header = T, encoding = 'latin1')
+##### load data from feature service #####
+## this script produces 'fs_table'
+source('code/mod_load_data_from_feature_service.R')
 
-##### check for differences #####
+##### check #####
+#dim(filt_old)
 dim(filt_clean)
-cats <- setdiff(filt_clean$CatalogNumber, filt_clean_feature$CatalogNumber)
-
-sub %>%
-  filter(CatalogNumber %in% cats) %>%
-  pull(CatalogNumber)
-
-setdiff(cats, sub$CatalogNumber)
-x <- setdiff(sub$CatalogNumber, cats)
-length(x)
-
-setdiff(filt_clean$CatalogNumber,
-        filt_clean_feature$CatalogNumber)
-
+dim(fs_table)
