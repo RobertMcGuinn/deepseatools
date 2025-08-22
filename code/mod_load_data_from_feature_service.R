@@ -1,10 +1,10 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate: 20250818
-## purpose: working with published feature services
+## purpose: download published feature service to dataframe
 
 ##### linkage #####
-filename <- 'feature_service_attributes' ## manual: for this code file name, match to redmine
+filename <- 'mod_load_data_from_feature_service' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
