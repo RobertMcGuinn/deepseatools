@@ -5,10 +5,10 @@
 
 ##### linkage #####
 ## manual input here
-filename <- '20241018-0_global_taxonomy_patch_NDB_rerun_20240726-0.R' ## entry: name of the current file.  make sure to include '.R'
+filename <- '20250711-0_global_taxonomy_patch_NatDB_20250409.R' ## entry: name of the current file.  make sure to include '.R'
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
-redmin_link <- 'https://vlab.noaa.gov/redmine/issues/134194'
+redmine_link <- 'https://vlab.noaa.gov/redmine/issues/147793'
 
 ##### packages #####
 library(tidyverse)
@@ -85,7 +85,7 @@ my_vector <- aphiaIDs
 ##### check #####
 # length(my_vector)
 
-###### make groups of 50 (because the API limit is 50) #####
+##### make groups of 50 (because the API limit is 50) #####
 my_groups <- split(my_vector, ceiling(seq_along(my_vector)/50))
 
 ##### loop to get WoRMS records by AphiaID #####
