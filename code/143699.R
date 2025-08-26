@@ -2506,6 +2506,12 @@ locality_table <- divevehiclemetadata %>%
   select(DiveID, GeneralLocation)
 result <- merge(result, locality_table, by.x= 'DiveId', by.y = 'DiveID')
 
+##### check #####
+# dim(result)
+# length(unique(result$TatorElementalId))
+# result %>% select(TatorElementalId, MediaId)
+
+
 ##### ***** #####
 ##### main crosswalk and transformations to create export #####
 dscrtp_export <- result %>%
