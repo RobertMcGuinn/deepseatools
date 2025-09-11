@@ -18,7 +18,14 @@ library(scales)
 library(RColorBrewer)
 library(naniar)
 
-##### load NDB from local file (manual: take a lood a version in mod_load_current)#####
+##### linkage #####
+filename <- '20250714-0_release_to_obis' ## manual: for this code file name, match to redmine
+github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
+github_link <- paste(github_path, filename, '.R', sep = '')
+browseURL(github_link)
+
+##### load the current version of the National Database from local file #####
+## creates object called 'filt'
 source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
 ##### check the version #####
