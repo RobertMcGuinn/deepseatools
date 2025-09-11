@@ -130,15 +130,6 @@ library(markdrive)
 markdrive::gdoc_checkout(filename = "markdrive")
 getwd()
 
-##### markdrive help ######
-# gdoc_checkout(filename = "GOT") Will search your Google drive for Google docs with "GOT" in the name and prompt to download one. After download it will be converted to .md for editing. Let's say the file that was downloaded was my_GOT_theory.docx, my_GOT_theory.md will be created in the working dir.
-#
-# gdoc_push(filname = "GOT") Will push a markdown file matching the name pattern back to Google drive and update the source document. You could also supply a dribble output from gdoc_checkout. It updates the google doc via a html conversion along the way.
-#
-# gdoc_render(filename = "./test.Rmd") will render an .md or .Rmd file to html and push it to Google Drive as a google doc. This package includes an Rstudio addin that will do this for the currently active source tab.
-#
-# Checkout to get the markdown file. Push to "save" your edits to Google drive.
-
 ##### using gdoc to push to google drive #####
 #devtools::install_github("ropenscilabs/gdoc")
 library(gdoc)
@@ -158,17 +149,68 @@ gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ##### get folder by name #####
-# Get folder by name
-folder <- drive_get("Team Coordination")
-# List contents of the folder
+library(googledrive)
+
+# Folder ID from your URL
+folder_id <- "0AAbgBr_cP0q1Uk9PVA"
+
+# Get the folder as a dribble
+folder <- drive_get(as_id(folder_id))
+
+# List the contents of the folder
 drive_ls(folder)
 
-##### list information in a shared drive #####
+# Find the sub-folder by name
+sub_folder <- drive_ls(folder, q = "name = 'Project_Management_DSCRTP' and mimeType = 'application/vnd.google-apps.folder'")
+
+# List contents if found
+if (nrow(sub_folder) > 0) {
+  drive_ls(sub_folder$id[1])
+} else {
+  message("Sub-folder not found.")
+}
+
+
+
+##### get a shared drive ID and list contents #####
 id <- "0AAbgBr_cP0q1Uk9PVA"
 shared_drive_id <- as_id(id)
 drive_ls(path = shared_drive_id,
          corpus = "drive",
          shared_drive = shared_drive_id)
+
+##### delete a folder #####
+# Define the URL of the folder you want to delete
+folder_url <- "https://drive.google.com/drive/folders/0AAbgBr_cP0q1Uk9PVA"
+
+# Find the folder by its URL
+# The as_id() function extracts the folder ID from the URL
+folder_to_delete <- drive_get(as_id(folder_url))
+
+# Use drive_trash() to move the folder to the trash
+# The verbose = TRUE argument will print a message confirming the action
+drive_trash(folder_to_delete, verbose = TRUE)
+
+##### create the basic folder structure for the shared drive #####
+target_folder <- drive_mkdir("Project_Management_DSCRTP", path = shared_drive_id)
+
+target_folder <- drive_mkdir("Data_Inventory_and_Archive_DSCRTP", path = shared_drive_id)
+
+target_folder <- drive_mkdir("Site_Characterization_Story_Map_DSCRTP", path = shared_drive_id)
+
+target_folder <- drive_mkdir("Research_and_Custom Reporting_DSCRTP", path = shared_drive_id)
+target_folderl2 <- drive_mkdir("Custom_Reporting_DSCRTP", path = target_folder)
+target_folderl2 <- drive_mkdir("Research_DSCRTP", path = target_folder)
+
+target_folder <- drive_mkdir("Portal_and_Geoplatform_DSCRTP", path = shared_drive_id)
+target_folderl2 <- drive_mkdir("GIS_layers_DSCRTP", path = target_folder)
+
+target_folder <- drive_mkdir("Outreach_Presentations_DSCRTP", path = shared_drive_id)
+
+target_folder <- drive_mkdir("Field_Team_Data_Guidance_DSCRTP", path = shared_drive_id)
+
+target_folder <- drive_mkdir("Backups_DSCRTP", path = shared_drive_id)
+
 
 ##### copy between my_drive and shared drive #####
 source_folder <- drive_get("testing_shared")
@@ -193,8 +235,8 @@ for (i in seq_len(nrow(files_to_copy))) {
 }
 
 ## delete a folder from shared drive
-folder <- drive_get("test2", shared_drive = shared_drive_id)
-drive_rm(folder)
+# folder <- drive_get("test2", shared_drive = shared_drive_id)
+# drive_rm(folder)
 
 
 ##### list Google folders as a tree (with files) #####
@@ -280,4 +322,25 @@ list_drive_folders_tree(folder)
 
 
 
+
+
+##### ***** #####
+##### move between my_drive and shared drive #####
+id <- "1iCvj6RIC42lpOn1qQ4skK0jS41WOo6Am"
+source_folder_id <- as_id(id)
+
+## set target folder Id
+id <- "1NZ52MBN7IQSW62Fb7zsp6zuHFo4e_ED2"
+target_folder_id <- as_id(id)
+
+# List all files in source folder
+files_to_copy <- drive_ls(source_folder_id)
+
+# Copy each file to the target folder
+for (i in seq_len(nrow(files_to_copy))) {
+  drive_cp(
+    file = files_to_copy[i, ],
+    path = target_folder_id
+  )
+}
 

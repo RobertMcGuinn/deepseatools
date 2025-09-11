@@ -6,14 +6,15 @@
 ##### linkage #####
 filename <- '148415' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
-github_link <- paste(github_path, filename, '.Rmd', sep = '')
-browseURL(github_link)
+github_link <- paste(github_path, filename, '.R', sep = '')
+## browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- filename
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
-browseURL(redmine_link)
+## browseURL(redmine_link)
 
 ##### packages #####
+library(fuzzyjoin)
 library(tidyverse)
 library(sf)
 library(remotes)
@@ -23,19 +24,12 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(googlesheets4)
 library(robis)
+library(openxlsx)
+library(googledrive)
 
 ##### source ndb #####
-source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
-
-
-
-
-
-
-
-
-
-##### extract the SampleIDs from filt #####
+## source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
+##### extract the relevant SamplingIDs from the NDB #####
 x <- filt %>% filter(grepl('NOAA_PC2202L1_MDBC', DatasetID)) %>% pull(SampleID)
 
 ##### ***** NEW ORIGINAL from Tator (2025-06-22) ***** #####
@@ -59,7 +53,7 @@ geology <- read.xlsx(paste('c:/rworking/deepseatools/indata/', tatorexport, sep 
 # names(corals)
 #
 # intersect(corals$TatorId, corals_test$TatorId)
-##### load data from SQL files #####
+##### load data from SQLfiles #####
 ## version 20250516
 
 filename <- 'SAMPLEMETADATA.xlsx'
@@ -163,7 +157,7 @@ crosswalk <- result %>% filter(TatorElementalId %in% x) %>%
 ##### write crosswalk #####
 write.csv(crosswalk, 'indata/20250826-1_crosswalk_for_ImageFilePath_RPMcGuinn.csv')
 
-##### write crosswalk with annotation frames #####
+##### create crosswalk with annotation frames #####
 crosswalk_frames <- result %>% filter(TatorElementalId %in% x) %>%
   select(TatorElementalId, ImageFilePath, BboxX.x, BboxY.x, BboxWidth.x, BboxHeight.x, Polygon.x) %>%
   rename(
@@ -270,12 +264,140 @@ plot_and_save_sample_bbox <- function(frame, crosswalk_frames, outdir = "plots")
 plot_and_save_sample_bbox(
   "PC2202L1_20220630T071218Z_FWD_ROV01_HD_frame120765.png",
   crosswalk_frames,
-  outdir = "sample_plots"
+  outdir = "indata/sample_plots"
 )
 
+##### check #####
+id <- "d7e06c23-d15f-441b-bad7-6afc78cb700d"
+filt %>% filter(SampleID == id) %>% select(ScientificName, VerbatimScientificName, AphiaID, IdentificationComments)
+
+##### download images at a specific location #####
+## drive_auth()
+## Ensure local folder exists
+dir.create("images/annotation", recursive = TRUE, showWarnings = FALSE)
+
+# Get the folder
+folder <- drive_get(as_id("1-WDCcUa2aSR8tgoxW6Ga3F0ld2cP2lss"))
+
+# List contents and pull IDs
+files <- drive_ls(folder)
+
+for (i in seq_len(nrow(files))) {
+  drive_download(
+    as_id(files$id[i]),
+    path = file.path("images/annotation", files$name[i]),
+    overwrite = TRUE
+  )
+}
+
+##### check: for transfer of all files #####
+# Files listed in Google Drive
+files <- drive_ls(folder)
+
+n_drive <- nrow(files)
+
+# Files actually downloaded locally
+n_local <- length(list.files("images/annotation", full.names = TRUE))
+
+# Compare
+cat("Files on Drive:", n_drive, "\n")
+cat("Files downloaded:", n_local, "\n")
+
+if (n_drive == n_local) {
+  message("✅ Counts match!")
+} else {
+  warning("⚠️ Counts do NOT match. Some files may be missing.")
+}
+
+##### create a function to plot annotations and save #####
+plot_and_save_sample_bbox <- function(frame, crosswalk_frames, indir = "images/annotation", outdir = "plots") {
+  # Create output directory if it doesn't exist
+  if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+
+  # Full image path
+  img_path <- file.path(indir, frame)
+  img <- png::readPNG(img_path)
+  img_height <- dim(img)[1]
+  img_width  <- dim(img)[2]
+
+  # Get all annotations for this frame
+  annots <- crosswalk_frames %>%
+    filter(ImageFilePath == frame)
+
+  # Generate one plot per SampleID
+  annots %>%
+    split(.$SampleID) %>%
+    imap(function(df, sid) {
+      bbox_x <- df$BboxX.x
+      bbox_y <- df$BboxY.x
+      bbox_w <- df$BboxWidth.x
+      bbox_h <- df$BboxHeight.x
+
+      # Convert normalized to pixel coordinates
+      x_min <- bbox_x * img_width
+      y_min <- bbox_y * img_height
+      x_max <- (bbox_x + bbox_w) * img_width
+      y_max <- (bbox_y + bbox_h) * img_height
+
+      # Build plot
+      g <- ggplot() +
+        annotation_raster(img, xmin = 0, xmax = img_width, ymin = 0, ymax = img_height) +
+        geom_rect(aes(xmin = x_min, xmax = x_max,
+                      ymin = img_height - y_max, ymax = img_height - y_min),
+                  color = "red", fill = NA, size = 1) +
+        coord_fixed(ratio = 1, xlim = c(0, img_width), ylim = c(0, img_height)) +
+        theme_void()
+
+      # Save the plot
+      ggsave(
+        filename = file.path(outdir, paste0(sid, ".png")),
+        plot = g,
+        width = img_width/100,
+        height = img_height/100,
+        dpi = 100
+      )
+
+      return(NULL)
+    })
+}
+
+##### apply to all files in the list #####
+library(purrr)
+
+# List downloaded files
+all_files <- list.files("images/annotation", full.names = FALSE)
+all_files <- all_files[1:(length(all_files) - 1)]
+
+# Run the function for each file
+walk(all_files, ~ plot_and_save_sample_bbox(.x, crosswalk_frames,
+                                            indir = "images/annotation",
+                                            outdir = "images/annotation/with_frames"))
+
+##### stats about what was created #####
+# Helper to summarize a folder
+summarize_folder <- function(path) {
+  files <- list.files(path, full.names = TRUE, recursive = FALSE)
+  # Keep only files (drop directories)
+  files <- files[!dir.exists(files)]
+
+  n_files <- length(files)
+  total_size_mb <- sum(file.info(files)$size, na.rm = TRUE) / (1024^2)
+
+  list(n_files = n_files, total_size_mb = total_size_mb)
+}
+
+# Compare
+annotation_stats <- summarize_folder("images/annotation")
+with_frames_stats <- summarize_folder("images/annotation/with_frames")
+
+cat("images/annotation:\n")
+cat("  Number of files:", annotation_stats$n_files, "\n")
+cat("  Total size (MB):", round(annotation_stats$total_size_mb, 2), "\n\n")
+
+cat("images/annotation/with_frames:\n")
+cat("  Number of files:", with_frames_stats$n_files, "\n")
+cat("  Total size (MB):", round(with_frames_stats$total_size_mb, 2), "\n")
 
 ##### check #####
-id <- "fa886526-f086-42f9-a883-9fa647d57438"
-filt %>% filter(SampleID == id) %>% pull(ScientificName)
-
-
+sampleid <- '01e98be2-16bf-4986-a18c-cc257b1d4163'
+filt %>% filter(SampleID == sampleid) %>% pull(ScientificName)
