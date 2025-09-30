@@ -12,13 +12,15 @@ library(tidyverse)
 digits = 121
 
 ##### parameter #####
-filename <- 'DSCRTP_NatDB_20250714-0.csv'
+filename <- 'DSCRTP_NatDB_20250926-0.csv'
 
 ##### load national database (manual) #####
 
 path <- paste0("C:/rworking/deepseatools/indata/", filename)
 
 ## Version History
+# "DSCRTP_NatDB_20250926-0.csv" # 'unnamed': DRAFT working file
+# "DSCRTP_NatDB_20250903-0_CSV" # 'unnamed: working file - MDBC Datasets'
 # "DSCRTP_NatDB_20250714-0.csv" # 'Woody Guthrie'
 # "DSCRTP_NatDB_20250409-0.csv" # 'Florence Price'
 # "DSCRTP_NatDB_20241219-1.csv  # 'Edith Piaf'

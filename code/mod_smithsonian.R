@@ -17,7 +17,6 @@ browseURL(github_link)
 library(tidyverse)
 library(sf)
 library(remotes)
-library(redmineR)
 library(terra)
 library(ggplot2)
 library(rnaturalearth)
@@ -44,10 +43,10 @@ base_url <- "https://api.si.edu/openaccess/api/v1.0/search"
 query <- "1071877"
 full_url <- paste0(base_url, "?q=", URLencode(query), "&api_key=", api_key)
 
-##### Make the API request #####
+##### make the API request #####
 response <- GET(full_url)
 
-# Parse JSON response
+## parse JSON response
 data <- content(response, as = "text")
 parsed_data <- fromJSON(data, flatten = TRUE)
 

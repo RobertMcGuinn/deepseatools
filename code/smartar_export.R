@@ -12,10 +12,8 @@ library(googledrive)
 library(magrittr)
 
 ##### load NDB #####
-# setwd("C:/rworking/deepseatools/indata")
-# indata<-read.csv("DSCRTP_NatDB_20190920-0.csv", header = T)
-# filt <- indata %>%
-#   filter(Flag == "0")
+source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
+
 
 ##### creating a list of CatalogNumbers of interest #####
 setwd("C:/rworking/deepseatools/indata")

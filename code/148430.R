@@ -599,3 +599,33 @@ sub %>% filter(Flag == 1) %>% pull(Longitude) %>% table()
 
 
 
+
+##### manual map check #####
+x <- sub %>% filter(
+  Flag ==  0) %>%
+  group_by(CatalogNumber, Latitude, Longitude, FlagReason) %>%
+  summarize(n=n())
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+st_write(points, "C:/rworking/deepseatools/indata/sub_geo.shp", delete_dsn = T)
+
+library(leaflet)
+library(sf)
+
+# Create a Leaflet map with an ocean relief background
+leaflet(data = points) %>%
+  addProviderTiles("Esri.OceanBasemap") %>%  # Ocean relief tiles
+  addCircleMarkers(
+    radius = 4,
+    color = "blue",
+    stroke = FALSE,
+    fillOpacity = 0.7,
+    popup = ~CatalogNumber  # Shows CatalogNumber on click
+  )
+
+##### check #####
+sub %>% filter(is.na(IndividualCount) == F) %>%  pull(CatalogNumber) %>% length()
+sub %>% filter(is.na(IdentificationQualifier) == T) %>%  pull(CatalogNumber) %>% length()
+
+
+
+

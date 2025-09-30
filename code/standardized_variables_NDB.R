@@ -69,7 +69,7 @@ datasetID_new <- unique(filt$DatasetID)
 
 ##### create standardized tables of key variables at latest DB version #####
 ##### _IdentificationQualifier #####
-version <- '20200710-2'
+version <- unique(filt$DatabaseVersion)
 
 x <- filt %>%
   arrange(ObservationYear) %>%
@@ -99,8 +99,7 @@ x <- filt %>%
     SurveyID_list = paste(unique(SurveyID), collapse= " | "),
   )
 
-setwd("C:/rworking/deepseatools/reports/standard")
-
+setwd("C:/rworking/deepseatools/reports/")
 x %>%
   write.csv(paste("IdentificationQualifier_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
@@ -398,3 +397,6 @@ x %>%
   write.csv(paste("IdentifiedBy_NatDB_", version, ".csv", sep = ''), row.names = FALSE)
 
 
+
+##### check #####
+filt %>% pull(DatasetID) %>% unique() %>% print()
