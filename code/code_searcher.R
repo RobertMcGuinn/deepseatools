@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'header'
+x <- 'datasetID'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -14,7 +14,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(1)
+y <- c(1,2)
 this <- files[y]
 file.edit(this)
 
@@ -32,7 +32,6 @@ modification_times <- sapply(file_info, function(info) info$mtime)
 file_info_df <- data.frame(File = basename(files), Modification_Time = modification_times)
 
 ## arrange
-
 file_info_df <- file_info_df %>% arrange(Modification_Time)
 
 ## Print the result

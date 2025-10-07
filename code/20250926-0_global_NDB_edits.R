@@ -36,6 +36,11 @@ print(all_strings_with_space)
 
 filt %>% pull(DataProvider) %>% unique() %>% sort()
 
+filt %>% pull(Repository) %>% unique() %>% sort()
+filt %>% pull(PI) %>% unique() %>% sort()
+
+
+
 
 
 
