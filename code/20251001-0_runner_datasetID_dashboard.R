@@ -488,7 +488,6 @@ length(biglist)
 length(key$DatasetID)
 length(unique(filt$DatasetID))
 
-##### write our new DatasetID key #####
-
+##### write out new DatasetID key #####
 write.xlsx(key, "C:/rworking/deepseatools/indata/20250714-0_DatasetID_Key_DSCRTP.xlsx",
            overwrite = TRUE)
