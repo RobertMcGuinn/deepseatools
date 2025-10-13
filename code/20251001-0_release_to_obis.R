@@ -207,4 +207,4 @@ x <- filt %>% filter(CatalogNumber %notin% set) %>% pull(CatalogNumber)
 filt %>%  filter(CatalogNumber %in% x) %>%
   pull(SampleID)
 
-filt %>% filter(SampleID == 'USNM 1071799') %>% pull(DataProvider)
+filt %>% filter(SampleID == 'USNM 75656') %>% pull(Vessel)
