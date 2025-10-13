@@ -19,10 +19,11 @@ library(RColorBrewer)
 library(naniar)
 
 ##### linkage #####
-filename <- '20250714-0_release_to_obis' ## manual: for this code file name, match to redmine
+filename <- '20251001-0_release_to_obis' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
-browseURL(github_link)
+usethis::proj_sitrep()
+# browseURL(github_link)
 
 ##### load the current version of the National Database from local file #####
 ## creates object called 'filt'
@@ -161,9 +162,9 @@ obis <- obis %>%  select(-DatabaseVersion)
 obis$coordinateUncertaintyInMeters <- as.numeric(obis$coordinateUncertaintyInMeters)
 
 ##### check #####
-# table(obis$basisOfRecord, useNA = 'always')
-# obis %>% filter(is.na(basisOfRecord) == T) %>% View()
-# filt %>% filter(CatalogNumber == 1606484) %>% pull(AccessionID)
+table(obis$basisOfRecord, useNA = 'always')
+obis %>% filter(is.na(basisOfRecord) == T) %>% View()
+filt %>% filter(CatalogNumber == 1606484) %>% pull(AccessionID)
 
 ##### OPTIONAL: fix where basisOfRecord is null #####
 obis <- obis %>%
@@ -173,7 +174,7 @@ obis <- obis %>%
   ))
 
 ##### write out file for submission (manual) #####
-today <- '20250721-0'
+today <- '20251001-0'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
@@ -190,7 +191,7 @@ obis %>%
 
 ##### Use read.delim() to read the file back in for testing #####
 data <- read.delim(
-  'c:/rworking/deepseatools/indata/dwc_noaa_dsc_rtp_version_20241219-1_20250205-0.txt',
+  'c:/rworking/deepseatools/indata/dwc_noaa_dsc_rtp_version_20251001-0_20251001-0.txt',
   header = TRUE,
   sep = ",",
   stringsAsFactors = FALSE)
@@ -198,4 +199,11 @@ data <- read.delim(
 ##### check #####
 # data %>%  filter(occurrenceID == "NOAA_DSCRTP:1557739") %>% pull(associatedMedia)
 # obis %>%  filter(occurrenceID == "NOAA_DSCRTP:1557739") %>% pull(scientificName)
+
+
+set <- as.numeric(gsub(".*:", "", data$occurrenceID))
+`%notin%` <- Negate(`%in%`)
+x <- filt %>% filter(CatalogNumber %notin% set) %>% pull(CatalogNumber)
+filt %>%  filter(CatalogNumber %in% x) %>%
+  pull(ObservationDate)
 
