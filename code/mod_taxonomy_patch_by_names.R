@@ -4,7 +4,7 @@
 ## purpose:ingest of Accession:
 
 ##### linkage #####
-filename <- '' ## manual: for this code file name, match to redmine
+filename <- 'mod_taxonomy_patch_by_names' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
