@@ -27,6 +27,31 @@ library(robis)
 ##### source ndb #####
 source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
 
+##### check #####
+filt %>% filter(as.numeric(IndividualCount)>1000)%>%
+  group_by(DatasetID, RecordType, SamplingEquipment, IndividualCount) %>%
+  summarize(n=n()) %>% View()
+
+filt %>% filter(DatasetID == "NOAA_AFSC_GOA_Coral_Survey_2022") %>%
+  group_by(DatasetID, RecordType, SamplingEquipment) %>%
+  summarize(
+    min_IndividualCount = min(IndividualCount),
+    max_IndividualCount = max(IndividualCount),
+    n=n()) %>% View()
+
+filt %>% filter(DatasetID == "NOAA_AFSC_GOA_Coral_Survey_2022") %>%
+  group_by(StartLatitude, StartLongitude, EndLatitude, EndLongitude) %>%
+  summarize(n=n()) %>% View()
+
+filt %>% filter(DatasetID == "NOAA_AFSC_GOA_Coral_Survey_2022") %>%
+  group_by(Density,IndividualCount, SampleAreaInSquareMeters) %>%
+  summarize(n=n()) %>% View()
+
+
+
+
+
+
 
 
 
