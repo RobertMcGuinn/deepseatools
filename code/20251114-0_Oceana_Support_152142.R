@@ -1,10 +1,10 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate:
+## startdate: 20251114
 ## purpose:
 
 ##### linkage #####
-filename <- '' ## manual: for this code file name, match to redmine
+filename <- '20251114-0_Oceana_Support_152142' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
@@ -17,7 +17,6 @@ redmine_link <- paste(redmine_path, issuenumber, sep = '')
 library(tidyverse)
 library(sf)
 library(remotes)
-library(redmineR)
 library(terra)
 library(ggplot2)
 library(rnaturalearth)

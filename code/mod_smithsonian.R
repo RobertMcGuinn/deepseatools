@@ -61,11 +61,24 @@ parsed_data$response$rows$content.indexedStructured.scientific_name
 parsed_data$response$rows$content.freetext.dataSource
 
 
+parsed_data <- fromJSON(data, flatten = TRUE)
+
+
+library(purrr)
 
 
 
+record <- parsed_data$response$rows[[1]]
+names(record)
 
 
+
+library(purrr)
+library(dplyr)
+
+# See which rows have indexedStructured data
+has_structure <- map_lgl(parsed_data$response$rows$content.indexedStructured, ~ !is.null(.x))
+which(has_structure)
 
 
 
