@@ -2,6 +2,11 @@
 Maintained by Robert P. McGuinn (robert.mcguinn@noaa.gov, rpm@alumni.duke.edu). 
 [Northern Gulf Institute](https://www.northerngulfinstitute.org/) @ NOAA/National Centers for Environmental Information (https://www.ncei.noaa.gov/)
 
+This repository is mirrored in three locations:
+- [NOAA VLab GitLab](https://vlab.noaa.gov/gitlab-community/NESDIS/NCEI/COGS/dscrtp/-/tree/deepeatools) on the 'deepseatools' branch.  
+- [NCEI GitLab](https://git.ncei.noaa.gov/robert.mcguinn/deepseatools)
+- [GitHub](https://github.com/RobertMcGuinn/deepseatools/)
+
 ## Purpose of this Repository
 This repository contains R code and workflows for cleaning, quality checking, and reporting on [NOAA's National Database for Deep-sea Corals and Sponges](https://deepseacoraldata.noaa.gov/data), herein referred to as The National Database.
 
