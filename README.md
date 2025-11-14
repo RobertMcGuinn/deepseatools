@@ -22,6 +22,34 @@ We have created an R-based tutorial that walks through some basic code to downlo
 ### An ArcGIS Tutorial is also Available: [LINK](https://learn.arcgis.com/en/projects/explore-noaas-deep-sea-coral-database/)    
 For those who might be interested using a web interface and ArcGIS Pro to download and interact with deep sea coral and sponge data, please see the following tutorial: [LINK](https://learn.arcgis.com/en/projects/explore-noaas-deep-sea-coral-database/)
 
+# Branch - 'database_qa_mcguinn' 
+Maintained by Robert P. McGuinn (robert.mcguinn@noaa.gov, rpm@alumni.duke.edu)
+
+## Purpose
+This branch contains R code and workflows for cleaning, quality checking, and reporting on [NOAA's National Database for Deep-sea Corals and Sponges](https://deepseacoraldata.noaa.gov/data), herein referred to as The National Database.
+
+## Audience
+Internal NOAA/NCEI personnel supporting deep sea coral data processing, analysis, and reporting. The main internal NOAA client for this work is the National Marine Fisheries Service (NMFS)/Office of Habitat Conservation/[Deep-sea Coral Research and Technology Program](https://deepseacoraldata.noaa.gov/).
+
+## Resources 
+Visit our mapping and [data access portal](https://www.ncei.noaa.gov/maps/deep-sea-corals-portal/). 
+
+Download a current version of The National Database as a [zipped CSV file](https://noaa.maps.arcgis.com/home/item.html?id=f465861aecac410980a7c601cfec7850)
+
+Read additional technical documentation describing The National Database at our [data page](https://deepseacoraldata.noaa.gov/data).
+
+## Source Code and Documentation
+
+All of the source code can be found in the [`code/`](code/) directory. 
+
+In the  documents directory: [`docs/`](docs/) find the following:
+
+- [Code Guide](docs/code-guide.md) — Description of the scripts and notes on how to use them. 
+
+- [Database Schema](docs/database-schema.md) — Data dictionary describing all fields within the National Database.
+
+## Access
+This is an internal project of the National Oceanic and Atmospheric Administration. Do not redistribute without authorization.
 
 
 ### Please reach out if you have questions or ideas for closer collaboration! robert.mcguinn@noaa.gov

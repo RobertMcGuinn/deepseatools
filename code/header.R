@@ -9,7 +9,7 @@ github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
-issuenumber <- filename
+issuenumber <- issuenumber <- sub(".*_(.*)$", "\\1", filename)
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
 # browseURL(redmine_link)
 
