@@ -24,10 +24,10 @@ The following documentation can be found the [`manual/`](manual/) directory.
 
 ## Tutorials
 ### R Tutorial
-We have created an [R-based tutorial](https://robertmcguinn.github.io/deepseatools/) that walks through some basic code to download, query, map, and analyze The National Database. This is a very good entry point to learn the basics. 
+- We have created an [R-based tutorial](https://robertmcguinn.github.io/deepseatools/) that walks through some basic code to download, query, map, and analyze The National Database. This is a very good entry point to learn the basics. 
 
 ### ArcGIS Tutorial
-A [tutorial](https://learn.arcgis.com/en/projects/explore-noaas-deep-sea-coral-database/) for working with data from The National Database to create charts and reports in ESRI ArcGIS Pro GIS software.  
+- A [tutorial](https://learn.arcgis.com/en/projects/explore-noaas-deep-sea-coral-database/) for working with data from The National Database to create charts and reports in ESRI ArcGIS Pro GIS software.  
 
 ### Please reach out if you have questions or ideas for closer collaboration! robert.mcguinn@noaa.gov
 
