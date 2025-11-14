@@ -2,11 +2,8 @@
 Maintained by Robert P. McGuinn (robert.mcguinn@noaa.gov, rpm@alumni.duke.edu). 
 [Northern Gulf Institute](https://www.northerngulfinstitute.org/) @ NOAA/National Centers for Environmental Information (https://www.ncei.noaa.gov/)
 
-# Purpose of this repository
+## Purpose of this repository
 This repository contains R code and workflows for cleaning, quality checking, and reporting on [NOAA's National Database for Deep-sea Corals and Sponges](https://deepseacoraldata.noaa.gov/data), herein referred to as The National Database.
-
-## Audience
-Stakeholders from the public and internal NOAA/NCEI personnel supporting deep sea coral data processing, analysis, and reporting. The main internal NOAA client for this work is the National Marine Fisheries Service (NMFS)/Office of Habitat Conservation/[Deep-sea Coral Research and Technology Program](https://deepseacoraldata.noaa.gov/). 
 
 ## Resources 
 Visit our mapping and [data access portal](https://www.ncei.noaa.gov/maps/deep-sea-corals-portal/). 
@@ -19,18 +16,13 @@ Read additional technical documentation describing The National Database at our 
 
 All of the source code can be found in the [`code/`](code/) directory. 
 
-In the  documents directory: [`docs/`](docs/) find the following:
+In the  documents directory: [`manual/`](manual/) find the following:
 
-- [Code Guide](docs/code-guide.md) — Description of the scripts and notes on how to use them. 
+- [Code Guide](manual/code-guide.md) — Description of the scripts and notes on how to use them. 
 
-- [Database Schema](docs/database-schema.md) — Data dictionary describing all fields within the National Database.
+- [Database Schema](manual/database-schema.md) — Data dictionary describing all fields within the National Database.
 
-## Access
-This is an internal project of the National Oceanic and Atmospheric Administration. Do not redistribute without authorization.
-
-
-This is a work in progress and we invite collaboration! Please help us evolve this code-base to be easier, faster, and do more things! Feel free to add to the issues in the GitHub or send a pull request for any of the code. (https://github.com/RobertMcGuinn/deepseatools/) 
-
+## Tutorials
 ### An R-Based Tutorial for Accessing and Manipulating Data is Available:  
 We have created an R-based tutorial (https://robertmcguinn.github.io/deepseatools/) that walks through some basic code to download, query, map, and analyze NOAA's National Database for Deep Sea Corals and Sponges. This is a very good entry point to learn the basics: The tutorial is under active development and will eventually expand to include instructions for more complex data analysis and visualization tasks. 
 
