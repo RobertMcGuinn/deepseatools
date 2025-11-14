@@ -1,4 +1,4 @@
-# Branch - 'deepseatools' 
+# deepseatools
 Maintained by Robert P. McGuinn (robert.mcguinn@noaa.gov, rpm@alumni.duke.edu)
 
 # Purpose of this repository
