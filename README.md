@@ -1,5 +1,5 @@
 # deepseatools
-Maintained by Robert P. McGuinn (robert.mcguinn@noaa.gov, rpm@alumni.duke.edu). 
+Maintained by Robert P.McGuinn (robert.mcguinn@noaa.gov, rpm@alumni.duke.edu). 
 [Northern Gulf Institute](https://www.northerngulfinstitute.org/) @ NOAA/National Centers for Environmental Information (https://www.ncei.noaa.gov/)
 
 This repository is mirrored in three locations:
