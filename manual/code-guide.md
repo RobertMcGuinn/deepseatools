@@ -31,4 +31,20 @@ The R code stored and described here is not fully modular and is (unfortunately)
   - **Purpose:** Runner file for generating public facing dashboards for each 'DatasetID'. This script orchestrates the running of several RMarkdown files for dashboard generation
   - **Input:** 1. A filtered version of the national database. Use `load_current_ndb.R`. 2. The current DatasetID Key that can be [found at this location in the Google Shared Drive](https://drive.google.com/drive/folders/1e851ZIEpDgYNmnnYwHQQZ9RyuNyz1aWf?usp=drive_link)
   - **Output:** A single dashboard for each DatasetID for publishing in the WAF.  
+<br><br>
+- ### [dst_report_for_database_update.Rmd](../code/dst_report_for_database_update.Rmd)  
+  - **Purpose:** Creating RMD report for announcing the update to the National database. This file is rendered and parameterized via a 'runner' file called `202501001-0_runner_dst_report_for_database_update.R`. The date prefix of this runner file will change
+  - **Input:** 1.A filtered National Database. Use `load_current_ndb.R` 2. A filtered version of the previous version of the National Database. These can be found at [this location](https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8?usp=drive_link) with the previous version being found in the 'archive' folder there.
+  - **Output:** RMD report for announcing the update to the National database as a Word document.
+<br><br>
+- ### [20251001-0_runner_dst_report_for_database_update.R](../code/202501001-0_runner_dst_report_for_database_update.R)  
+  - **Purpose:** The runner file to render `dst_report_for_database_update.RMD` for database version 20251001-0. 
+  - **Input:** 1.A filtered National Database. Use `load_current_ndb.R` 2. A filtered version of the previous version of the National Database. These can be found at [this location](https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8?usp=drive_link) with the previous version being found in the 'archive' folder there.
+  - **Output:** RMD report for announcing the update to the National database as a Word document.
+<br><br>
+
+
+
+
+
 
