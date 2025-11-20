@@ -8,15 +8,31 @@ library(curl)
 library(rmarkdown)
 library(googledrive)
 
-##### render the QA dashboard #####
-## set filename that you want to call the report
-filename <- "20251001-0_quarterly_update_report"
+##### define parameters and render #####
+quarter     <- "Q4, FY-2025"
+version     <- "DSCRTP_NatDB_20251001-0"
+releasedate <- "2025-10-15"
+corrections <- 383158
+filename <- paste(version, "_quarterly_update_report", sep="")
+last_db <- 'DSCRTP_NatDB_20250714-0.csv'
+this_db <- 'DSCRTP_NatDB_20251001-0.csv'
+newdatasetIDs <- c("OET_NA168", "OET_NA156")
 
-## render
-## set target to render
-rmarkdown::render("C:/rworking/deepseatools/code/20251001-0_rmd_quarterly_report_for_database_update.rmd",
-       output_file =  paste(filename,".docx", sep=''),
-       output_dir = 'C:/rworking/deepseatools/reports')
+rmarkdown::render(
+  "C:/rworking/deepseatools/code/20251001-0_rmd_quarterly_report_for_database_update.rmd",
+  params = list(
+    quarter     = quarter,
+    version     = version,
+    releasedate = releasedate,
+    corrections = corrections,
+    filename = filename,
+    last_db = last_db,
+    this_db = this_db,
+    newdatasetIDs = newdatasetIDs
+  ),
+  output_file = paste0(filename, ".docx"),
+  output_dir = "C:/rworking/deepseatools/reports"
+)
 
 ##### MANUAL inspection of QA report in Word, #####
 ## manual: then SAVE to PDF.

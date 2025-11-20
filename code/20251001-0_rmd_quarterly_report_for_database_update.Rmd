@@ -2,20 +2,24 @@
 title: "NOAA National Database for Deep-sea Corals and Sponges: Quarterly Data Update Announcement"
 author: "NOAA-NFMS-OHC-DSCRTP"
 date: 'Contact: Robert.McGuinn@NOAA.gov; Report last ran: `r Sys.Date()`'
-output: word_document
+
+output: 
+  word_document
+
 editor_options: 
   chunk_output_type: console
+
+params:
+  quarter: "Q4, FY-2025"
+  version: "DSCRTP_NatDB_20251001-0"
+  releasedate: "2025-10-15"
+  corrections: 383158
+  filename: 'default'
+  last_db: 'DSCRTP_NatDB_20250714-0.csv'
+  this_db: 'DSCRTP_NatDB_20251001-0.csv'
+  newdatasetIDs: !r c("OET_NA168","OET_NA156")
 ---
-# ---
-```{r manual_set_variables, echo=FALSE}
-## parameters
-quarter <- 'Q4, FY-2025'
-version <- 'DSCRTP_NatDB_20251001-0'
-releasedate <- '2025-10-15'
-corrections <- 383158
 
-
-```
 
 ```{r packages, echo=F, warning=F, message=F}
 library(openxlsx)
@@ -34,46 +38,38 @@ library(prettydoc)
 
 ```
 
-```{r manual_load_both_db, echo=FALSE, cache=T, eval=F}
+```{r manual_load_both_db, echo=FALSE, cache=F, eval=F}
 ##### [Manual] bring last two databases (old one first)
 setwd("C:/rworking/deepseatools/indata")
-indata1<-read.csv("DSCRTP_NatDB_20250714-0.csv", 
+indata1<- read.csv(params$last_db, 
                   header = T, 
-                  encoding = 'latin9')
+                  encoding = 'latin1')
 filt1 <- indata1 %>%
   filter(Flag == "0")
 
+rm(indata1)
 ##### bring new db in #####
 setwd("C:/rworking/deepseatools/indata")
-indata2<-read.csv("DSCRTP_NatDB_20251001-0.csv", 
+indata2<-read.csv(params$this_db, 
                   header = T, 
-                  encoding = 'latin9')
+                  encoding = 'latin1')
 filt <- indata2 %>%
   filter(Flag == "0")
-
+rm(indata2)
 
 ```
 
 ```{r manual_load, echo=FALSE, cache=F}
-rm(indata1)
-rm(indata2)
-
 # find the maximum new CatalogNumber
 z <- max(as.numeric(filt$CatalogNumber))
 # y <- max(as.numeric(filt2$CatalogNumber))
 
-## pick out the new datsets 
-newdatasetIDs <- setdiff(filt$DatasetID, filt1$DatasetID)
-
-## optional filter if necessary like when changing DatasetID 
-newdatasetIDs <- c("OET_NA168","OET_NA156")
-
 ## calc number new datasets added this round 
-a <- length(newdatasetIDs)
+a <- length(params$newdatasetIDs)
 
 ##### make a subset of just those new CatalogNumber(s)
 x <- filt %>% 
-  filter(DatasetID %in% newdatasetIDs)
+  filter(DatasetID %in% params$newdatasetIDs)
 
 ##### make all -999 values in InvidualCount = 1.  This is a simplifying measure 
 ## for ease of counting individual observations. This mutatded 'IndividualCount' should not be used for analysis.
@@ -81,10 +77,8 @@ x <- x %>%  mutate(IndividualCount = ifelse(IndividualCount == -999,
                                            yes = 1,
                                            no = IndividualCount))
 
-## check 
-# table(x$IndividualCount, useNA = 'always')
-# new_records <- length(x$CatalogNumber)
-# table(x$DatasetID)
+
+new_records <- length(x$CatalogNumber)
 
 ```
 
@@ -100,10 +94,10 @@ TrimAll <- function(x){
 
 ```
 
-# Quarterly update for: `r quarter`
-## Database Version: `r version`
+# Quarterly update for: `r params$quarter`
+## Database Version: `r params$version`
 
-The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(a, big.mark = ',')`** new datasets were either added or augmented with a total of **`r prettyNum(new_records, big.mark = ',')`** updated and improved records. There is now a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
+The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(a, big.mark = ',')`** new datasets were either added or augmented with a total of **`r prettyNum(new_records, big.mark = ',')`** updated and improved records. There is now a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(params$corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
 
 Go here to view and download custom data subsets of your choosing:
 https://www.ncei.noaa.gov/maps/deep-sea-corals-portal/
@@ -124,9 +118,9 @@ Please see the following tables and figures for additional detail regarding this
 
 * Observation Time Frame: **`r min(as.numeric(x$ObservationYear[x$ObservationYear != "-999"]), na.rm=TRUE)` to `r max(x$ObservationYear, na.rm=TRUE)`**
 
-* Latest database version name: **`r as.character(version)`**
+* Latest database version name: **`r as.character(params$version)`**
 
-* Date live on map portal: **`r paste("posted on", releasedate, sep = " ")`**
+* Date live on map portal: **`r paste("posted on", params$releasedate, sep = " ")`**
 
 # Overview map
 

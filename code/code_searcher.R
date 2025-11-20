@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- '20250714-0'
+x <- 'git'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
