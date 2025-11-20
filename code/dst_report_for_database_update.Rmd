@@ -9,6 +9,7 @@ output:
 editor_options: 
   chunk_output_type: console
 
+## no need to change these here, they will get overwritten parameters listed in the runner
 params:
   quarter: "Q4, FY-2025"
   version: "DSCRTP_NatDB_20251001-0"
@@ -18,8 +19,8 @@ params:
   last_db: 'DSCRTP_NatDB_20250714-0.csv'
   this_db: 'DSCRTP_NatDB_20251001-0.csv'
   newdatasetIDs: !r c("OET_NA168","OET_NA156")
+  folderurl: "https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8"
 ---
-
 
 ```{r packages, echo=F, warning=F, message=F}
 library(openxlsx)
@@ -59,7 +60,7 @@ rm(indata2)
 
 ```
 
-```{r manual_load, echo=FALSE, cache=F}
+```{r calculations, echo=FALSE, cache=F}
 # find the maximum new CatalogNumber
 z <- max(as.numeric(filt$CatalogNumber))
 # y <- max(as.numeric(filt2$CatalogNumber))
@@ -71,8 +72,8 @@ a <- length(params$newdatasetIDs)
 x <- filt %>% 
   filter(DatasetID %in% params$newdatasetIDs)
 
-##### make all -999 values in InvidualCount = 1.  This is a simplifying measure 
-## for ease of counting individual observations. This mutatded 'IndividualCount' should not be used for analysis.
+##### transformation: make all -999 values in InvidualCount = 1.  This is a simplifying ##measure for ease of counting individual observations. This mutated 'IndividualCount' should not be used for analysis.
+
 x <- x %>%  mutate(IndividualCount = ifelse(IndividualCount == -999,
                                            yes = 1,
                                            no = IndividualCount))
