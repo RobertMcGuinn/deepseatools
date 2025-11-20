@@ -9,9 +9,9 @@ filename <- '202501001-0_runner_dst_report_for_database_update' ## manual: for t
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
-redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
-issuenumber <- issuenumber <- sub(".*_(.*)$", "\\1", filename)
-redmine_link <- paste(redmine_path, issuenumber, sep = '')
+# redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
+# issuenumber <- issuenumber <- sub(".*_(.*)$", "\\1", filename)
+# redmine_link <- paste(redmine_path, issuenumber, sep = '')
 # browseURL(redmine_link)
 
 ##### packages #####
