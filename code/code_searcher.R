@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'quarterly_report_for_database_update'
+x <- 'dataset'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,

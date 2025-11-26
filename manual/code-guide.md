@@ -5,8 +5,8 @@ This guide describes the R scripts within the [`code/`](code/) directory of this
 - Comments describing code function are marked by '## '
 - Commented-out code is marked by '# '
 - Sections are marked by '##### section #####'
-- Sometimes you will find hard coded local paths like 'c:/rworking/...'. You should change these manually. These will be corrected to relative paths in future iterations of this code-base.  
-- The text 'manual' anywhere in the code indicates a place where specific text needs input.  These should be checked over using 'crtl-F' before using the code.
+- Sometimes you will find hard coded local paths like 'c:/rworking/...'. You should change these manually to suit your folder paths.
+- The text string 'manual' or 'Manual' anywhere in the code indicates a place where specific text needs input or where a manual step, outside of R, need to be taken.. These should be checked over using 'crtl-F' before using the code. 
 - Sections marked '##### check #####' are for testing and checking script progress and interim outputs. 
 - File version notes: You will see file names that have a prefix with date-based version in the format `YYYYMMDD-X_` where the first part is the version/date and the 'X' is the iteration on that day. 
 - Scripts with simple integer names (for example: 148433.R) are linked to a VLab Redmine issue in the [Redmine data QA pipeline](https://vlab.noaa.gov/redmine/projects/qa/issues?query_id=685) that further details the purpose of the script and other actions taken on the data source. The file name is the actual Redmine issue number in the pipeline.
@@ -35,8 +35,8 @@ The scripts stored and described here are not fully modular and they are meant t
   - **Output:** A single dashboard for each DatasetID for publishing in the WAF.  
 <br><br>
 - ### [dst_report_database_update.Rmd](../code/dst_report_database_update.Rmd)  
-  - **Purpose:** Creating RMD report for announcing the update to the National database. This file is rendered and parameterized via a 'runner' file called `202501001-0_runner_dst_report_for_database_update.R`. The date prefix of this runner file will change depending on the version of the National Database that you are running the report for.NOTE: The current version of the National Database within the 'DatabaseVersion' variable.
-  - **Input:** 1.A filtered National Database. Use `load_current_ndb.R` 2. A filtered version of the previous version of the National Database. These can be found at [this location](https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8?usp=drive_link) with the previous version being found in the 'archive' folder there.
+  - **Purpose:** Creating a report for announcing the quarterly update changes for the National database. This file is rendered and parameterized via a 'runner' file with the file format:  `dst_report_for_database_update_runner_202501001-0.R`. The date-based suffix of this runner file will change depending on the version of the National Database that you are running the report for. NOTE: The current version of the National Database is indicated within the 'DatabaseVersion' variable.
+  - **Input:** 1. A filtered National Database. Use `load_current_ndb.R` 2. A filtered version of the previous version of the National Database. These can be found at [this location](https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8?usp=drive_link) with the previous versions being found in the 'archive' folder there.
   - **Output:** RMD report for announcing the update to the National database as a Word document.
 <br><br>
 - ### [dst_report_database_update_runner_202501001-0.R](../code/dst_report_database_update_runner_202501001-0.R)
