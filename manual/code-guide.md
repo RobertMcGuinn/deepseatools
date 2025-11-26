@@ -12,10 +12,10 @@ This guide describes the R scripts within the [`code/`](code/) directory of this
 - Scripts with simple integer names (for example: 148433.R) are linked to a VLab Redmine issue in the [Redmine data QA pipeline](https://vlab.noaa.gov/redmine/projects/qa/issues?query_id=685) that further details the purpose of the script and other actions taken on the data source. The file name is the actual Redmine issue number in the pipeline.
 
 ## Notes on the National Database
-- The version of the National Database is noted in the `DatabaseVersion` field.This should be cited when using the database.
+- The version of the National Database is noted in the `DatabaseVersion` field. This version indicator should be cited when using the database.
 
 ## Script Usage
-The R code stored and described here is not fully modular and is meant to be ran interactively. You should not blindly run scripts using `source()`. It is better to run each section of the each script and then check intermediate results thoroughly before moving forward. There is an ongoing effort is to re-factor this code-base into a proper modular architecture, but for now it should be used interactively.
+The scripts stored and described here are not fully modular and they are meant to be ran interactively. You should not blindly run scripts using `source()`. It is better to run each section of the each script and then check intermediate results thoroughly before moving forward. There is an ongoing effort is to re-factor this code-base into a proper modular architecture, but for now it should be used interactively.
 
 ## Description of each script
 
@@ -34,13 +34,13 @@ The R code stored and described here is not fully modular and is meant to be ran
   - **Input:** 1. A filtered version of the national database. Use `load_current_ndb.R`. 2. The current DatasetID Key that can be [found at this location in the Google Shared Drive](https://drive.google.com/drive/folders/1e851ZIEpDgYNmnnYwHQQZ9RyuNyz1aWf?usp=drive_link)
   - **Output:** A single dashboard for each DatasetID for publishing in the WAF.  
 <br><br>
-- ### [dst_report_for_database_update.Rmd](../code/dst_report_for_database_update.Rmd)  
+- ### [dst_report_database_update.Rmd](../code/dst_report_database_update.Rmd)  
   - **Purpose:** Creating RMD report for announcing the update to the National database. This file is rendered and parameterized via a 'runner' file called `202501001-0_runner_dst_report_for_database_update.R`. The date prefix of this runner file will change depending on the version of the National Database that you are running the report for.NOTE: The current version of the National Database within the 'DatabaseVersion' variable.
   - **Input:** 1.A filtered National Database. Use `load_current_ndb.R` 2. A filtered version of the previous version of the National Database. These can be found at [this location](https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8?usp=drive_link) with the previous version being found in the 'archive' folder there.
   - **Output:** RMD report for announcing the update to the National database as a Word document.
 <br><br>
-- ### [20251001-0_runner_dst_report_for_database_update.R](../code/202501001-0_runner_dst_report_for_database_update.R)  
-  - **Purpose:** The runner file to render `dst_report_for_database_update.RMD` for database version 20251001-0. 
+- ### [dst_report_database_update_runner_202501001-0.R](../code/dst_report_database_update_runner_202501001-0.R)
+  - **Purpose:** The runner file to render the R-Markdown file `dst_report_database_update.RMD` for database version 20251001-0. 
   - **Input:** 1.A filtered National Database. Use `load_current_ndb.R` 2. A filtered version of the previous version of the National Database. These can be found at [this location](https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8?usp=drive_link) with the previous version being found in the 'archive' folder there.
   - **Output:** RMD report for announcing the update to the National database as a Word document.
 <br><br>
