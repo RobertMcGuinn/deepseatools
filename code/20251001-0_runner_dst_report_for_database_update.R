@@ -56,10 +56,10 @@ rmarkdown::render(
 ## manual: SAVE to PDF.
 ## manual: then Develop Redmine Checklist
 ## upload the PDF to Google Drive
-drive_upload(paste("reports/", filename,".PDF", sep=''),
-             path = as_id(folderurl),
-             name = paste(filename,".PDF", sep=''),
-             overwrite = T)
+# drive_upload(paste("reports/", filename,".PDF", sep=''),
+#              path = as_id(folderurl),
+#              name = paste(filename,".PDF", sep=''),
+#              overwrite = T)
 
 ##### checking #####
 # yo <- filt %>% filter(AphiaID == -999)

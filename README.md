@@ -17,15 +17,13 @@ This repository contains R code and workflows for cleaning, quality checking, an
 
 - Read additional technical documentation describing The National Database at our [data page](https://deepseacoraldata.noaa.gov/data).
 
-## Source Code and Documentation
+## Source Code Documentation
 
 All of the source code can be found in the [`code/`](code/) directory. 
 
 The following documentation can be found the [`manual/`](manual/) directory.
 
 - [Code Guide](manual/code-guide.md) — Description of the scripts and notes on how to use them. 
-
-- [Database Schema](manual/database-schema.md) — Data dictionary describing all fields within the National Database.
 
 ## Tutorials
 ### R Tutorial
