@@ -15,6 +15,8 @@ This repository contains R code and workflows for cleaning, quality checking, an
 
 - Download a current version of The National Database as a [zipped CSV file](https://noaa.maps.arcgis.com/home/item.html?id=f465861aecac410980a7c601cfec7850)
 
+
+
 - Read additional technical documentation describing The National Database at our [data page](https://deepseacoraldata.noaa.gov/data).
 
 - Service: Custom analyses of your area of interest are available (contact: robert.mcguinn@noaa.gov).
@@ -23,9 +25,11 @@ This repository contains R code and workflows for cleaning, quality checking, an
 
 All of the source code can be found in the [`code/`](code/) directory. 
 
-The following documentation can be found the [`manual/`](manual/) directory.
+Code descriptions and other documentation can be found the [`manual/`](manual/) directory.
 
 - [Code Guide](manual/code-guide.md) — Description of the scripts and notes on how to use them. 
+
+- [Data Dictionary](manual/data-dictionary.md)
 
 ## Tutorials
 ### R Tutorial
