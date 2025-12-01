@@ -29,7 +29,7 @@ Code descriptions and other documentation can be found the [`manual/`](manual/) 
 
 - [Code Guide](manual/code-guide.md) — Description of the scripts and notes on how to use them. 
 
-- [Data Dictionary](manual/data-dictionary.md)
+- [Data Dictionary](manual/data-dictionary.md) - A description of each of the fields within The National Database.
 
 ## Tutorials
 ### R Tutorial
