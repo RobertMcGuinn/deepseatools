@@ -17,6 +17,8 @@ This repository contains R code and workflows for cleaning, quality checking, an
 
 - Read additional technical documentation describing The National Database at our [data page](https://deepseacoraldata.noaa.gov/data).
 
+- Service: Custom analyses of your area of interest are available (contact: robert.mcguinn@noaa.gov).
+
 ## Source Code Documentation
 
 All of the source code can be found in the [`code/`](code/) directory. 
