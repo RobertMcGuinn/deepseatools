@@ -22,7 +22,6 @@ list.files(".secrets/")
 # Check that the non-interactive authentication works by first deauthorizing:
 gs4_deauth()
 
-
 # Authenticate using token. If no browser opens, the authentication works.
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
@@ -39,11 +38,13 @@ filt <- indata %>%
 # ## cleanup
 # # rm(indata)
 
-##### load schema #####
-s <- read_sheet('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+##### check: browse to schema (manual: must put in correct ID) #####
+## Google Drive location: https://drive.google.com/drive/folders/0B8lqJ4X0l6pTajJsa2t6bWRNRWc?resourcekey=0-QVD6rdiSnKeGQ4r7MSvwjQ&usp=drive_link
+## see 'current' folder and 'archive' folder within that for earlier versions.
+# gs4_browse('1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw')
 
-##### browse to schema #####
-gs4_browse('1YDskzxY8OF-34Q8aI04tZvlRbhGZqBSysuie39kYHoI')
+##### load schema from Google Drive #####
+s <- read_sheet('1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw')
 
 ##### checking #####
 # s %>% filter(FieldName == 'IdentificationVerificationStatus') %>% pull(FieldDescription)
@@ -98,8 +99,7 @@ y <- x %>% filter(PointHist == "R" |
 )
 
 ##### transpose the result and view it #####
-z <- y %>% t()
-## View(z)
+z <- y %>% t() %>% View()
 
 ##### write observations tab of submission template #####
 setwd("C:/rworking/deepseatools/indata")

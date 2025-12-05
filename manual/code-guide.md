@@ -44,7 +44,12 @@ The scripts stored and described here are not fully modular and they are meant t
   - **Input:** 1.A filtered National Database. Use `load_current_ndb.R` 2. A filtered version of the previous version of the National Database. These can be found at [this location](https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8?usp=drive_link) with the previous version being found in the 'archive' folder there.
   - **Output:** RMD report for announcing the update to the National database as a Word document.
 <br><br>
-
+<br><br>
+- ### [dst_report_NDB_submission template.R](../code/dst_report_NDB_submission template.R)
+  - **Purpose:** This code is used to produce an update to the submission template for the National Database. 
+  - **Input:** 1.The current submission template as a Google Sheet. See [this folder](https://drive.google.com/drive/folders/0B9c2c_XdhpFBNUtKOVBjOFRtRU0?resourcekey=0-OBwZmCNG6Qg2I-s5kHmfrQ&usp=drive_link).2. The data dictionary for the National Database.
+  - **Output:** A database submission template.  This code updates the existing one at the same Google Sheet ID.   
+<br><br>
 
 
 
