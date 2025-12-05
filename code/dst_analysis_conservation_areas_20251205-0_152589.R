@@ -16,19 +16,10 @@ redmine_link <- paste(redmine_path, issuenumber, sep = '')
 ##### packages #####
 library(tidyverse)
 library(sf)
-library(remotes)
-library(redmineR)
-library(terra)
-library(ggplot2)
-library(rnaturalearth)
-library(rnaturalearthdata)
-library(googlesheets4)
-library(robis)
-
-library(sf)
 
 ##### load geodatabase layer #####
 ## path to the geodatabase
+## gdb obtained here: https://www.arcgis.com/home/item.html?id=aba21f00d0014dae885deb546df2d6f5
 gdb_path <- "indata/US_FisheryManagementConservationAreas.gdb"
 
 ## list the layers in the GDB
@@ -38,7 +29,6 @@ st_layers(gdb_path) %>% View()
 data <- st_read(gdb_path, layer = "US_FisheryManagementConservationAreas")
 
 ##### drop geometry for tabular output #####
-
 ## drop geometry
 data_no_geom <- data %>% st_drop_geometry()
 
