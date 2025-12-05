@@ -2,6 +2,8 @@
 ## Author: Robert McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## Start date: 20220718
 ## purpose: generate a submission template from the data dictionary
+## warning: BE CAREFUL, this will replace the exising template.
+##          You will need to manually redo the formatting in Google Sheet.
 
 ##### packages #####
 library(tidyverse)
@@ -16,6 +18,7 @@ drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 ##### check: take a look at schema: browse to schema (manual: must put in correct ID) #####
 ## Google Drive location: https://drive.google.com/drive/folders/0B8lqJ4X0l6pTajJsa2t6bWRNRWc?resourcekey=0-QVD6rdiSnKeGQ4r7MSvwjQ&usp=drive_link
 ## see 'current' folder and 'archive' folder within that for earlier versions.
+## manual: now is the time to edit the sehema as needed and give the file a new version number
 # id <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
 # gs4_browse(id)
 

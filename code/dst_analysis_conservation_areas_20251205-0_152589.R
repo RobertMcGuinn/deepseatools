@@ -7,7 +7,7 @@
 filename <- 'dst_analysis_conservation_areas_20251205-0_152589' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
-# browseURL(github_link)
+browseURL(github_link)
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- issuenumber <- sub(".*_(.*)$", "\\1", filename)
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
@@ -27,7 +27,7 @@ library(robis)
 
 library(sf)
 
-##### add geodatabase layer #####
+##### load geodatabase layer #####
 ## path to the geodatabase
 gdb_path <- "indata/US_FisheryManagementConservationAreas.gdb"
 
