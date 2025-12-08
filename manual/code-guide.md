@@ -50,6 +50,11 @@ The scripts stored and described here are not fully modular and they are meant t
   - **Input:** 1.The current submission template as a Google Sheet. See [this folder](https://drive.google.com/drive/folders/0B9c2c_XdhpFBNUtKOVBjOFRtRU0?resourcekey=0-OBwZmCNG6Qg2I-s5kHmfrQ&usp=drive_link).2. The data dictionary for the National Database.
   - **Output:** A database submission template.  This code updates the existing one at the same Google Sheet ID.   
 <br><br>
+- ### dst_analysis....R
+  - **Purpose:** The pre-fix`dst_analysis` inidicates a custom, one-off, analysis for a specific task. These scripts all have a date at the end of the file name along with a corresponding Redmine number (example filename: `dst_analysis_conservation_areas_20251205-0_152589` ) 
+  - **Input:** 1.The current submission template as a Google Sheet. See [this folder](https://drive.google.com/drive/folders/0B9c2c_XdhpFBNUtKOVBjOFRtRU0?resourcekey=0-OBwZmCNG6Qg2I-s5kHmfrQ&usp=drive_link).2. The data dictionary for the National Database.
+  - **Output:** A database submission template.  This code updates the existing one at the same Google Sheet ID.   
+<br><br>
 
 
 
