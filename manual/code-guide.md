@@ -9,7 +9,7 @@ This guide describes the R scripts within the [`code/`](code/) directory of this
 - The text string 'manual' or 'Manual' anywhere in the code indicates a place where specific text needs input or where a manual step, outside of R, need to be taken.. These should be checked over using 'crtl-F' before using the code. 
 - Sections marked '##### check #####' are for testing and checking script progress and interim outputs. 
 - File version notes: You will see file names that have a prefix with date-based version in the format `YYYYMMDD-X_` where the first part is the version/date and the 'X' is the iteration on that day. 
-- Scripts with simple integer names (for example: 148433.R) are linked to a VLab Redmine issue in the [Redmine data QA pipeline](https://vlab.noaa.gov/redmine/projects/qa/issues?query_id=685) that further details the purpose of the script and other actions taken on the data source. The file name is the actual Redmine issue number in the pipeline.
+- Scripts with simple integer names or a suffix (for example: 148433.R) are linked to a VLab Redmine issue that further details the purpose of the script and other actions taken on the data source.
 
 ## Notes on the National Database
 - The version of the National Database is noted in the `DatabaseVersion` field. This version indicator should be cited when using the database.
@@ -46,14 +46,14 @@ The scripts stored and described here are not fully modular and they are meant t
 <br><br>
 <br><br>
 - ### [dst_report_NDB_submission template.R](../code/dst_report_NDB_submission template.R)
-  - **Purpose:** This code is used to produce an update to the submission template for the National Database. 
+  - **Purpose:** This code is used to produce an update to the submission template for the National Database. NOTE: This one overwrites the existing tabs in the sheet.
   - **Input:** 1.The current submission template as a Google Sheet. See [this folder](https://drive.google.com/drive/folders/0B9c2c_XdhpFBNUtKOVBjOFRtRU0?resourcekey=0-OBwZmCNG6Qg2I-s5kHmfrQ&usp=drive_link).2. The data dictionary for the National Database.
   - **Output:** A database submission template.  This code updates the existing one at the same Google Sheet ID.   
 <br><br>
 - ### dst_analysis....R
-  - **Purpose:** The pre-fix`dst_analysis` inidicates a custom, one-off, analysis for a specific task. These scripts all have a date at the end of the file name along with a corresponding Redmine number (example filename: `dst_analysis_conservation_areas_20251205-0_152589` ) 
-  - **Input:** 1.The current submission template as a Google Sheet. See [this folder](https://drive.google.com/drive/folders/0B9c2c_XdhpFBNUtKOVBjOFRtRU0?resourcekey=0-OBwZmCNG6Qg2I-s5kHmfrQ&usp=drive_link).2. The data dictionary for the National Database.
-  - **Output:** A database submission template.  This code updates the existing one at the same Google Sheet ID.   
+  - **Purpose:** The pre-fix `dst_analysis` indicates a custom, one-off, analysis for a specific task. These scripts all have a date at the end of the file name along with a corresponding Redmine number (example filename: `dst_analysis_conservation_areas_20251205-0_152589` has the Redmine link: [https://vlab.noaa.gov/redmine/issues/152589](https://vlab.noaa.gov/redmine/issues/152589). Also, see the 'linkage' section within the code.  
+  - **Input:** Varies by project.  All data will be accessed via Google Drive where possible.
+  - **Output:** Varies by project. 
 <br><br>
 
 
