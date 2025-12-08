@@ -1,10 +1,10 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate:
-## purpose:
+## startdate:20251208
+## purpose: data submission
 
 ##### linkage #####
-filename <- '' ## manual: for this code file name, match to redmine
+filename <- 'OET_NA_165_152637' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
@@ -25,8 +25,8 @@ library(rnaturalearthdata)
 library(googlesheets4)
 library(robis)
 
-##### source ndb #####
-source("c:/rworking/deepseatools/code/mod_load_current_ndb.R")
+##### source #####
+
 
 
 
