@@ -1,10 +1,13 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate:20251208
-## purpose: data submission
+## startdate:
+## purpose:
+
+##### parameters: manual input #####
+## add filename, should be the same name as this file
+filename <- ''
 
 ##### linkage #####
-filename <- 'OET_NA_165_152637' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
@@ -25,7 +28,7 @@ library(rnaturalearthdata)
 library(googlesheets4)
 library(robis)
 
-##### source #####
+##### section #####
 
 
 

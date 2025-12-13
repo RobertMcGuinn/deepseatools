@@ -32,16 +32,15 @@ s <- read_sheet(id)
 ## Your Google Sheet ID
 sheet_id <- "1xSfnbTRT4Lcrbbx-1_TPuvCqS4AVQEowVbLYYvoFM_s"
 
-# Read instructions tab
+## read instructions tab
 instructions_df <- read_sheet(
   ss = sheet_id,
   sheet = "instructions"
 )
 
-# colnames(instructions_df) <- rep("", ncol(instructions_df))
+## colnames(instructions_df) <- rep("", ncol(instructions_df))
 
-
-# Read observations tab
+## Read observations tab
 data_types_df <- read_sheet(
   ss = sheet_id,
   sheet = "data types"
@@ -164,29 +163,28 @@ y2 <- left_join(data.frame(FieldName = fieldlist),
 ##### -OR- write instructions, data types, metadata, observations to a workbook #####
 library(openxlsx)
 
-# Ensure observations z is properly formatted
-# Transpose y and set row names as the first column
-# Ensure all columns are character
+## Ensure observations z is properly formatted
+## Transpose y and set row names as the first column
+## Ensure all columns are character
 z[] <- lapply(z, as.character)
 
-# Create workbook
+## create workbook
 wb <- createWorkbook()
 
-# Add worksheets
+## Add worksheets
 addWorksheet(wb, "instructions")
 addWorksheet(wb, "data types")
 addWorksheet(wb, "metadata")
 addWorksheet(wb, "observations")
 
-# Write data (no styling, no row names)
+## Write data (no styling, no row names)
 writeData(wb, sheet = "instructions", x = instructions_df)
 writeData(wb, sheet = "data types", x = data_types_df)
 writeData(wb, sheet = "metadata", x = y2)
 writeData(wb, sheet = "observations", x = z)
 
-# Save workbook
+## Save workbook
 saveWorkbook(wb, "indata/20251203-0_dscrtp_submission_template.xlsx", overwrite = TRUE)
-
 
 ##### -OR- write to google sheets #####
 write_submission_template_to_gsheet <- function(
@@ -199,12 +197,12 @@ write_submission_template_to_gsheet <- function(
   library(googlesheets4)
   library(dplyr)
 
-  # --- Ensure observations is a data frame ---
+  ## --- Ensure observations is a data frame ---
   if (!is.data.frame(observations_df)) {
     observations_df <- as.data.frame(observations_df, stringsAsFactors = FALSE)
   }
 
-  # --- Names of output tabs ---
+  ## --- Names of output tabs ---
   tabs <- list(
     "instructions" = instructions_df,
     "data types"   = data_types_df,
@@ -212,7 +210,7 @@ write_submission_template_to_gsheet <- function(
     "observations" = observations_df
   )
 
-  # --- Loop through tabs and write each ---
+  ## --- Loop through tabs and write each ---
   for (tab in names(tabs)) {
 
     message(paste("Writing tab:", tab))
