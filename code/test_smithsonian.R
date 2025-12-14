@@ -1,15 +1,24 @@
+##### Header #####
+## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
+## startdate: 20251213
+## purpose: sync with GBIF Smithsonian NMNH Inv. Zoologogy database on
+## info: gbif dataset with dataset_id <- "821cc27a-e3bb-4bc5-ac34-89ada245069d"
+
 ##### packages #####
 library(rgbif)
-library(tidyr)
+library(tidyverse)
 library(worrms)
 
-##### Get GBIF taxon keys for the phyla #####
+##### parameters #####
+## set taxonomic backbone keys (integer values) for taxa of interest
+## all children taxa are included in search
 cnidaria_key <- name_backbone(name = "Cnidaria", rank = "phylum")$usageKey
 porifera_key <- name_backbone(name = "Porifera", rank = "phylum")$usageKey
 
-##### Set dataset of interest #####
+## set datasetID
 dataset_id <- "821cc27a-e3bb-4bc5-ac34-89ada245069d"
 
+##### searches from GBIF #####
 cnidaria <- occ_search(
   datasetKey = dataset_id,
   taxonKey = cnidaria_key,
@@ -25,9 +34,9 @@ porifera <- occ_search(
 )
 
 ##### check #####
-setdiff(names(porifera$data), names(cnidaria$data))
+# setdiff(names(porifera$data), names(cnidaria$data))
 
-##### bind rows #####
+##### bind rows into single dataframe #####
 combined <- bind_rows(
   porifera$data,
   cnidaria$data
@@ -36,8 +45,23 @@ combined <- bind_rows(
 ##### check #####
 table(combined$locality)
 table(combined$scientificName)
-table(combined$references)
+table(combined$relations)
 table(combined$hostingOrganizationKey)
 table(combined$datasetKey)
 table(combined$identifier)
 browseURL(combined$identifier[1])
+table(combined$collectionID)
+
+combined %>%
+  select(contains("Key")) %>% names()
+
+combined %>%
+  select(!contains("Key")) %>% names()
+
+combined %>% pull(depth) %>% table(useNA = 'always')
+
+
+
+
+
+
