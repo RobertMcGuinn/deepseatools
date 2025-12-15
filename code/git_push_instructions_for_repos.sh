@@ -8,8 +8,7 @@ git push gitlab
 git push origin master
 
 ## or copy them all at once to push to all three (paste in bash terminal after commits
+git push origin master
 git push -u vlab_gitlab master:deepseatools
 git push gitlab
-git push origin master
-
 
