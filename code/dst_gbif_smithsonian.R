@@ -8,6 +8,7 @@
 filename <- 'dst_gbif_smithsonian' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
+
 ##### packages #####
 library(rgbif)
 library(tidyverse)
