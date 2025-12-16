@@ -1,7 +1,7 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate:
-## purpose:
+## startdate: 20251216
+## purpose: FishCouncilRegion summary for Heather Coleman.
 
 ##### parameters: manual input #####
 ## add filename, should be the same name as this file
@@ -28,10 +28,16 @@ library(rnaturalearthdata)
 library(googlesheets4)
 library(robis)
 
-##### section #####
+##### load database #####
+source('code/load_current_ndb.r')
 
+##### FishCouncilRegion Summary #####
+filt %>%
+  filter(as.Date(EntryDate) > as.Date('2021-10-01') &
+           as.Date(EntryDate) < as.Date('2025-10-01')) %>%
+  pull(FishCouncilRegion) %>% table(useNA = 'always')
 
-
+##### check #####
 
 
 
