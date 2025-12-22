@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- '148433'
+x <- 'load'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,

@@ -10,7 +10,7 @@ github_link <- paste(github_path, filename, '.R', sep = '')
 redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
 issuenumber <- issuenumber <- sub(".*_(.*)$", "\\1", filename)
 redmine_link <- paste(redmine_path, issuenumber, sep = '')
-browseURL(redmine_link)
+# browseURL(redmine_link)
 
 ##### packages #####
 library(leaflet)
@@ -621,11 +621,79 @@ sub_enhanced3 <- sub_enhanced3 %>%
     ))
 
 ##### export result to csv (export to CSV) #####
-filename_patch <- paste(filename, '_taxonomy_patch', '.csv',sep = '')
-write.csv(sub_enhanced3,
-          paste("c:/rworking/deepseatools/indata/",
-                filename_patch, sep=''),
-          fileEncoding = "latin9",
-          row.names = F,
-          quote = T)
+filename <- '20251218-3_OET_NA165_152637'
+filename_patch <- paste(filename, '_taxonomy_patch', '.csv', sep = '')
+
+csv_path <- paste(
+  "c:/rworking/deepseatools/indata/",
+  filename_patch,
+  sep = ""
+)
+
+write.csv(
+  sub_enhanced3,
+  csv_path,
+  fileEncoding = "latin9",
+  row.names = FALSE,
+  quote = TRUE
+)
+
+##### add the taxonomy patch to google drive #####
+## manual: set destinaion folder
+dest_folder <- as_id("1lUhbbAF4Py6ReZPvCLEuYswxBTZX5AMh")
+
+drive_upload(
+  media = csv_path,
+  path  = dest_folder,
+  overwrite = TRUE
+)
+
+
+
+##### ***** NEW Version: 20251222-2 ***** #####
+##### load from Google Drive #####
+## manual: set version
+datasetversion <- '20251222-2'
+## manual: set base name
+filebasename <- 'OET_NA165_152637'
+filename <- paste(datasetversion, filebasename, sep = '_')
+
+## manual: set folder to be searched
+folder_id <- as_id("1w8il1Ti57xw3P8AXSvcD8eFI06_nVsti")
+
+zip_file <- drive_ls(
+  folder_id,
+  pattern = paste(datasetversion,"_", filebasename, sep = ''),
+  recursive = TRUE
+)
+
+
+local_zip <- tempfile(fileext = ".zip")
+drive_download(zip_file, local_zip, overwrite = TRUE)
+
+zip_contents <- unzip(local_zip, list = TRUE)
+csv_name <- zip_contents$Name[grepl("\\.csv$", zip_contents$Name)]
+
+unzip(local_zip, files = csv_name, exdir = tempdir())
+sub <- read.csv(file.path(tempdir(), csv_name))
+
+##### run QA report #####
+## manual change version of dashboard version number is required
+rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(datasetversion,"_",filebasename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+##### load to google drive #####
+## MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand
+folderurl <- "https://drive.google.com/drive/folders/1lUhbbAF4Py6ReZPvCLEuYswxBTZX5AMh"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".docx", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".docx", sep=''),
+             overwrite = T)
+
+##### check #####
+sub %>% pull(Phylum) %>% table()
+sub %>% filter(Flag == 1) %>% pull(Longitude) %>% table()
+
 

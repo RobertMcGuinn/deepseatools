@@ -16,7 +16,7 @@ github_link <- paste(github_path, filename, '.R', sep = '')
 browseURL(github_link)
 
 ##### parameters #####
-person <- 'Etnoyer'
+person <- 'Hourigan'
 
 ##### authentication #####
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
