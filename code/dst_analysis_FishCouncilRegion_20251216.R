@@ -17,12 +17,19 @@ redmine_link <- paste(redmine_path, issuenumber, sep = '')
 # browseURL(redmine_link)
 
 ##### packages #####
+library(dplyr)
+library(sf)
+library(ggplot2)
+library(rnaturalearth)
+library(ggspatial)
 library(tidyverse)
 
 ##### load database #####
-source('code/load_current_ndb.r')
+# source('code/load_current_ndb.r')
 
-##### FishCouncilRegion Summary #####
+##### table of records added #####
+## FishCouncilRegion within a specified period
+
 # sumtable <- filt %>%
 #   filter(as.Date(EntryDate) > as.Date('2021-10-01') &
 #            as.Date(EntryDate) < as.Date('2025-10-01')) %>%
@@ -39,18 +46,12 @@ source('code/load_current_ndb.r')
 y <- setdiff(ls(), "filt")
 rm(y)
 
-##### ***** making a map *****  #####
-library(dplyr)
-library(sf)
-library(ggplot2)
-library(rnaturalearth)
-library(ggspatial)
-
+##### static map generation ####
 # 1. Prepare Data and Remove NAs
 map_data <- filt %>%
   mutate(
     EntryDate = as.Date(EntryDate),
-    period = ifelse(EntryDate >= as.Date("2021-10-01"), "FY2022+", "Before FY2022")
+    period = ifelse(EntryDate >= as.Date("2021-10-01"), "Added between 2022-25", "Added before 2022")
   ) %>%
   # Filter out any rows where period ended up as NA
   filter(!is.na(period)) %>%
@@ -92,7 +93,7 @@ map_plot <- ggplot() +
 
   # Visual Styling & Legend Cleanup
   scale_color_manual(
-    values = c("Before FY2022" = "#1f78b4", "FY2022+" = "#e31a1c"),
+    values = c("Added before 2022" = "#1f78b4", "Added between 2022-25" = "#e31a1c"),
     na.translate = FALSE # Explicitly prevents NA from appearing in legend
   ) +
   theme_bw() +
@@ -106,7 +107,7 @@ map_plot <- ggplot() +
 
 # 5. Export
 ggsave(
-  filename = "images/20251222-1_FY2022_and_beyond_map.png",
+  filename = "images/20251222-2_FY2022_and_beyond_map.png",
   plot = map_plot,
   width = 10,
   height = 7,
