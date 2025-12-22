@@ -20,7 +20,7 @@ library(worrms)
 cnidaria_key <- name_backbone(name = "Cnidaria", rank = "phylum")$usageKey
 porifera_key <- name_backbone(name = "Porifera", rank = "phylum")$usageKey
 
-## set datasetID
+## set datasetID (NMNH)
 dataset_id <- "821cc27a-e3bb-4bc5-ac34-89ada245069d"
 
 ##### search GBIF #####
@@ -37,7 +37,6 @@ porifera <- occ_search(
   country = "US",
   limit = 100
 )
-
 
 ##### check #####
 # setdiff(names(porifera$data), names(cnidaria$data))
@@ -71,3 +70,5 @@ combined <- bind_rows(
 
 
 
+
+##### experiment with download #####
