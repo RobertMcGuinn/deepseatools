@@ -1,5 +1,5 @@
 ##### Header #####
-## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
+## author: Robert P McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate: 20251216
 ## purpose: FishCouncilRegion summary for Heather Coleman.
 
