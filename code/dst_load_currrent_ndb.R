@@ -5,6 +5,12 @@
 ## input: csv of current database
 ## output: 'filt'
 
+##### linkage #####
+filename <- 'dst_load_current_ndb'
+github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
+github_link <- paste(github_path, filename, '.R', sep = '')
+browseURL(github_link)
+
 ##### packages #####
 library(tidyverse)
 
