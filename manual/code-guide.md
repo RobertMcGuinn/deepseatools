@@ -33,8 +33,8 @@ The scripts stored and described here are not fully modular and they are meant t
 
 ## Description of Each Script
 
-- ### [load_current_ndb.R](../code/load_current_ndb.R)  
-  - **Purpose:** Load the current National Database for Deep Sea Corals and Sponges (NDB) CSV file and filter out flagged records.  
+- ### [dst_load_current_ndb.R](../code/dst_load_current_ndb.R)  
+  - **Purpose:** Load the current National Database for Deep Sea Corals and Sponges (NDB) CSV file and filter out flagged records. Includes proper handling of encoding. 
   - **Input:** 1. Local CSV file of the current NDB. The file should be named with the following format:`DSCRTP_NatDB_YYYYMMDD-X.csv`.  The current National Database is located at within the project's shared Google Drive [at this location](https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8?usp=drive_link).  
   - **Output:** `filt` — filtered dataset containing only valid, unflagged records.
 <br><br>

@@ -1,4 +1,4 @@
-##### mod_load_current #####
+##### dst_load_current_ndb #####
 ##### header #####
 ## author: Robert P. McGuinn | rpm@alumni.duke.edu
 ## purpose: modular: load current NDB file and filter out flagged

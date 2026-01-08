@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'gbif'
+x <- 'load'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -20,6 +20,23 @@ file.edit(this)
 
 ##### source chosen file #####
 source(this)
+
+##### delete a file #####
+
+delete_file <- function(pattern, path) {
+  files <- list.files(path, pattern = pattern, full.names = TRUE)
+  if (!length(files)) return(invisible(NULL))
+
+  i <- menu(files, title = "Pick file to delete")
+  if (i == 0) return(invisible(NULL))
+
+  file.remove(files[i])
+}
+
+
+delete_file(x, path)
+
+
 
 ##### find out the time files were edited #####
 ## Get file information
