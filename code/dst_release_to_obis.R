@@ -2,8 +2,7 @@
 # author: Robert McGuinn | robert.mcguinn@noaa.gov | rpm@alumni.duke.edu
 # date started: 20241023
 # purpose: create a Darwin Core compliant Minimum Viable Product (MVP) for export from the
-#       NOAA National Database for Deep Sea Corals and Sponges
-#     \ingest to OBIS / GBIF
+#  NOAA National Database for Deep Sea Corals and Sponge ingest to OBIS / GBIF
 
 ##### packages #####
 library(tidyverse)
@@ -19,10 +18,9 @@ library(RColorBrewer)
 library(naniar)
 
 ##### linkage #####
-filename <- '20251001-0_release_to_obis' ## manual: for this code file name, match to redmine
+filename <- 'dst_release_to_obis' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
-usethis::proj_sitrep()
 # browseURL(github_link)
 
 ##### load the current version of the National Database from local file #####
@@ -209,7 +207,7 @@ filt %>%  filter(CatalogNumber %in% x) %>%
 
 filt %>% filter(SampleID == 'USNM 75656') %>% pull(Vessel)
 
-##### DarwinCore crosswalk for other fields we might use later on #####
+##### NOTES: DarwinCore crosswalk for other fields we might use later on #####
 # recordNumber = "TrackingID",
 # associatedMedia = "ImageURL",
 # associatedReferences = "Citation",
@@ -287,32 +285,30 @@ filt %>% filter(SampleID == 'USNM 75656') %>% pull(Vessel)
 # # add sampleSizeUnit column and populate all non-NA sampleSizeValue rows with "Square Meters"
 # obis$sampleSizeUnit <- ifelse(is.na(obis$sampleSizeValue) == FALSE, "Square Meters", NA)
 
-##### later we will work on emof "extended measurement or fact" variables #####
+##### OPTIONAL: EMOF "extended measurement or fact" variables #####
 
-# # create a list of emof fields and occurenceID
-# emof_fields <- emof %>% select(measurementType) %>% pull()
-# emof_fields_o <- append(emof_fields[[1]], "occurrenceID", after = 0)
-#
-# # select from emof dataframe Type, Unit and Method
-# emof_tum <- select(emof, measurementType, measurementUnit, measurementMethod)
-#
-# # pull emof_fields from the main DSC dataset
-# # stretch columns into a tall dataframe using gather
-# # remove rows with NA values
-# # join tall dataframe with emof type, unit method
-# # add uuid for each record
-# DB_emof_subset <- DB_subset2  %>%
-#   select(emof_fields_o) %>%
-#   gather(key = "measurementType", value = "measurementValue", -occurrenceID) %>%
-#   drop_na() %>%
-#   inner_join(emof_tum, by = "measurementType") %>%
-#   mutate(measurementID=uuid())
-#
-# # remove emof fields from DSC Dataset
-# DSCRTP_Occurrences <- DB_subset2 %>% select(-one_of(emof_fields))
-#
-# write_csv(DB_emof_subset, paste("DSCRTP_EMOF_Subset_", Sys.Date(), ".csv"))
-#
-# write_csv(DSCRTP_Occurrences, paste("DSCRTP_Occurrences_", Sys.Date(), ".csv"))
-#
-# print("Script Finished")
+## create a list of emof fields and occurenceID
+emof_fields <- emof %>% select(measurementType) %>% pull()
+emof_fields_o <- append(emof_fields[[1]], "occurrenceID", after = 0)
+
+## select from emof dataframe Type, Unit and Method
+emof_tum <- select(emof, measurementType, measurementUnit, measurementMethod)
+
+## pull emof_fields from the main DSC dataset
+## stretch columns into a tall dataframe using gather
+## remove rows with NA values
+## join tall dataframe with emof type unit method _tum
+## add uuid for each record
+
+DB_emof_subset <- DB_subset2  %>%
+  select(emof_fields_o) %>%
+  gather(key = "measurementType", value = "measurementValue", -occurrenceID) %>%
+  drop_na() %>%
+  inner_join(emof_tum, by = "measurementType") %>%
+  mutate(measurementID=uuid())
+
+## remove emof fields from DSC Dataset
+DSCRTP_Occurrences <- DB_subset2 %>% select(-one_of(emof_fields))
+write_csv(DB_emof_subset, paste("DSCRTP_EMOF_Subset_", Sys.Date(), ".csv"))
+write_csv(DSCRTP_Occurrences, paste("DSCRTP_Occurrences_", Sys.Date(), ".csv"))
+print("Script Finished")
