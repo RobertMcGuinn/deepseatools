@@ -25,7 +25,8 @@ github_link <- paste(github_path, filename, '.R', sep = '')
 
 ##### load the current version of the National Database from local file #####
 ## creates object called 'filt'
-source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
+## when your
+source('C:/rworking/deepseatools/code/dst_load_current_ndb.R')
 
 ##### check the version #####
 unique(filt$DatabaseVersion)
