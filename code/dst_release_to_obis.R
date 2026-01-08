@@ -1,9 +1,9 @@
 ##### Header #####
-# author: Robert McGuinn
-# date started: 20190121
-# purpose: create a Minimum Viable Product (MVP) for export from the
+# author: Robert McGuinn | robert.mcguinn@noaa.gov | rpm@alumni.duke.edu
+# date started: 20241023
+# purpose: create a Darwin Core compliant Minimum Viable Product (MVP) for export from the
 #       NOAA National Database for Deep Sea Corals and Sponges
-#       to Abby Benson for ingest to OBIS / GBIF
+#     \ingest to OBIS / GBIF
 
 ##### packages #####
 library(tidyverse)
@@ -12,47 +12,65 @@ library(rmarkdown)
 library(knitr)
 library(flextable)
 library(googlesheets4)
-library(googlesheets)
 library(googledrive)
 library(openxlsx)
 library(scales)
-library(extrafont)
-#loadfonts()
 library(RColorBrewer)
+library(naniar)
 
-##### load NDB #####
-## [manual]
-setwd("C:/rworking/deepseatools/indata")
-filename <- "DSCRTP_NatDB_20210803-0.csv"
-indata<-read_csv(filename,
-                 col_types = cols(.default = "c"),
-                 locale = locale(encoding = 'ISO-8859-1'),
-                 na = c("-999", "NA"))
+##### linkage #####
+filename <- '20251001-0_release_to_obis' ## manual: for this code file name, match to redmine
+github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
+github_link <- paste(github_path, filename, '.R', sep = '')
+usethis::proj_sitrep()
+# browseURL(github_link)
 
-##### filter the NDB (look closely at how this is done. #####
-## this deserves inspection.
-filt <- indata %>%
-  filter(Flag == "0") %>% # filter out flagged records
-  filter(is.na(AphiaID) == F) # filter out missing AphiaID
-  # filter(AccessionID != 'NMNH_Smithsonian_update_Q2-2020_THourigan' |
-  #          CatalogNumber != '878942') %>%
-  # filter(AccessionID != 'NMNH_Smithsonian_update_Q2-2020_THourigan' |
-  #          CatalogNumber != '878945')
+##### load the current version of the National Database from local file #####
+## creates object called 'filt'
+source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
 
-## cleanup
-# rm(indata)
+##### check the version #####
+unique(filt$DatabaseVersion)
 
-##### creating errdap_link field #####
+##### creating errdap_link field called 'references' #####
+## this creates a single atomized link to erddap per CatalogNumber
 filt$references <- paste('https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatasetID%2CCatalogNumber%2CSampleID%2CCitation%2CRepository%2CScientificName%2CVernacularNameCategory%2CTaxonRank%2CIdentificationQualifier%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CObservationDate%2CSurveyID%2CStation%2CEventID%2CSamplingEquipment%2CLocationAccuracy%2CRecordType%2CDataProvider&CatalogNumber=',
                           filt$CatalogNumber, sep = '')
 
 ##### fix Depth issues #####
-filt$MinimumDepthInMeters <- ifelse(test = is.na(filt$MinimumDepthInMeters) == T, yes = filt$DepthInMeters, no = filt$MinimumDepthInMeters)
-filt$MaximumDepthInMeters <- ifelse(test = is.na(filt$MaximumDepthInMeters) == T, yes = filt$DepthInMeters, no = filt$MaximumDepthInMeters)
+filt$MinimumDepthInMeters <- ifelse(test = is.na(filt$MinimumDepthInMeters) == T,
+                                    yes = filt$DepthInMeters,
+                                    no = filt$MinimumDepthInMeters)
+filt$MaximumDepthInMeters <- ifelse(test = is.na(filt$MaximumDepthInMeters) == T,
+                                    yes = filt$DepthInMeters,
+                                    no = filt$MaximumDepthInMeters)
 
-##### fix species issues #####
-# filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932164', yes = "Narella", no = filt$ScientificName)
-# filt$ScientificName <- ifelse(test = filt$CatalogNumber == '932389', yes = "Narella", no = filt$ScientificName)
+##### OPTIONAL: fix species issues #####
+# filt$AphiaID <- ifelse(test = filt$AphiaID == '602367', yes = "125286", no = filt$AphiaID)
+# filt$AphiaID <- ifelse(test = filt$AphiaID == '1287836', yes = "1287835", no = filt$AphiaID)
+# filt$AphiaID <- ifelse(test = filt$AphiaID == '169028', yes = "133874", no = filt$AphiaID)
+# filt$AphiaID <- ifelse(test = filt$AphiaID == '288491', yes = "209983", no = filt$AphiaID)
+
+##### check #####
+# oldaphiaid <- '602367'
+# newaphiaid <- '125286'
+#
+# oldaphiaid <- '1287836'
+# newaphiaid <- '1287835'
+#
+# oldaphiaid <- '169028'
+# newaphiaid <- '133874'
+#
+# oldaphiaid <- '288491'
+# newaphiaid <- '209983'
+
+# yo <- filt %>% filter(AphiaID == oldaphiaid) %>% pull(ScientificName)
+# length(yo)
+# unique(yo)
+#
+# yo <- filt %>% filter(AphiaID == newaphiaid) %>% pull(ScientificName)
+# length(yo)
+# unique(yo)
 
 ##### get rid of records with missing ObservationDate #####
 filt <- filt %>% filter(is.na(ObservationDate) == F)
@@ -72,6 +90,8 @@ obis_fields <- c('DatabaseVersion',
                  'MaximumDepthInMeters',
                  'RecordType',
                  'ImageURL',
+                 'Locality',
+                 'Citation',
                  'references'
                  )
 
@@ -91,7 +111,9 @@ obis <- filt %>%
     maximumDepthInMeters = 'MaximumDepthInMeters', # verbatim
     basisOfRecord = 'RecordType', # requires modification
     associatedMedia = 'ImageURL', # verbatim
-    datasetID = 'DatasetID'
+    locality = 'Locality', # verbatim
+    datasetID = 'DatasetID', # verbatim
+    associatedReferences = 'Citation' # verbatim
     )
 
 obis$occurrenceStatus <- 'Present'
@@ -127,66 +149,65 @@ obis$basisOfRecord <- recode(obis$basisOfRecord, !!!recode_list)
 ##### work on coordinateUncertaintyInMeters to take out non-numericals  #####
 obis$coordinateUncertaintyInMeters <- gsub("[^[:digit:]., ]", "", obis$coordinateUncertaintyInMeters)
 
-## check
+##### check #####
+# obis %>% pull(coordinateUncertaintyInMeters) %>% table(useNA = 'always')
 
-obis %>% pull(coordinateUncertaintyInMeters) %>% table(useNA = 'always')
+##### add and delete variables for dwca #####
+obis$id <- obis$occurrenceID
+obis$kingdom <- 'Animalia'
+obis$geodeticDatum <- 'WGS84'
+obis <- obis %>%  select(-DatabaseVersion)
 
-##### write out file for submission #####
-today <- '20210902-0'
+##### transform CoordinateUncertaintyInMeters #####
+obis$coordinateUncertaintyInMeters <- as.numeric(obis$coordinateUncertaintyInMeters)
+
+##### check #####
+table(obis$basisOfRecord, useNA = 'always')
+obis %>% filter(is.na(basisOfRecord) == T) %>% View()
+filt %>% filter(CatalogNumber == 1606484) %>% pull(AccessionID)
+
+##### OPTIONAL: fix where basisOfRecord is null #####
+obis <- obis %>%
+  mutate(basisOfRecord = case_when(
+    is.na(basisOfRecord) ~ "MachineObservation",
+    TRUE ~ basisOfRecord
+  ))
+
+##### write out file for submission (manual) #####
+today <- '20251001-0'
 version <- unique(filt$DatabaseVersion)
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
-  write.csv(paste(today,'_export_to_OBIS_DSCRTP_NDB_', version , '_RPMcGuinn', '.csv', sep = ''),
-            row.names = FALSE)
+  write.csv(paste('dwc_noaa_dsc_rtp_version', '_', version , '_', today, '.txt', sep = ''),
+            row.names = FALSE, na = '')
 
-##### checking #####
-library(dplyr)
-
-# this checks for records with duplicate CatalogNumbers.
-# There should be none. If you find any, alert the entire team immediately.
-
-x <- indata %>%
-  group_by(CatalogNumber) %>%
-  filter(n()>1) %>% pull(CatalogNumber) %>% length()
-
-write.csv(x, "c:/rworking/deepseatools/indata/dups.csv")
-
-# names(obis)
+##### check #####
+# length(unique(filt$ScientificName))
 #
-# x <- filt %>% pull(CatalogNumber) %>% length()
-# y <- obis %>% pull(occurrenceID) %>% length()
-# x-y
-#
-#
-# obis %>% pull(DatabaseVersion) %>% table(useNA = 'always')
-# obis %>% pull(datasetID) %>% table(useNA = 'always')
-# obis %>%
-#   filter(is.na(scientificName) == T) %>%
-#   pull(scientificName) %>%
-#   table(useNA = 'always')
-# obis %>% pull(individualCount) %>% table(useNA = 'always')
-# head(obis$individualCount)
-# plot(obis$individualCount)
-# filt %>%
-#   filter(IndividualCount == '21895') %>%
-#   pull(ScientificName)
-# obis %>%
-#   filter(is.na(scientificNameID) == F) %>%
-#   pull(scientificNameID) %>%
-#   table(useNA = 'always')
-# head(obis$scientificName)
-# head(obis$occurrenceID)
-# head(obis$eventDate)
-# head(obis$minimumDepthInMeters)
-# head(obis$maximumDepthInMeters)
-# table(obis$basisOfRecord)
-# obis %>%
-#   filter(is.na(associatedMedia) == T) %>%
-#   pull(associatedMedia) %>%
-#   table(useNA = 'always')
-# head(obis$references)
-# table(obis$occurrenceStatus)
+# filt %>% filter(TaxonRank == 'species') %>%
+#   pull(AphiaID) %>%
+#   unique() %>%
+#   length()
 
+##### Use read.delim() to read the file back in for testing #####
+data <- read.delim(
+  'c:/rworking/deepseatools/indata/dwc_noaa_dsc_rtp_version_20251001-0_20251001-0.txt',
+  header = TRUE,
+  sep = ",",
+  stringsAsFactors = FALSE)
+
+##### check #####
+# data %>%  filter(occurrenceID == "NOAA_DSCRTP:1557739") %>% pull(associatedMedia)
+# obis %>%  filter(occurrenceID == "NOAA_DSCRTP:1557739") %>% pull(scientificName)
+
+
+set <- as.numeric(gsub(".*:", "", data$occurrenceID))
+`%notin%` <- Negate(`%in%`)
+x <- filt %>% filter(CatalogNumber %notin% set) %>% pull(CatalogNumber)
+filt %>%  filter(CatalogNumber %in% x) %>%
+  pull(SampleID)
+
+filt %>% filter(SampleID == 'USNM 75656') %>% pull(Vessel)
 
 ##### DarwinCore crosswalk for other fields we might use later on #####
 # recordNumber = "TrackingID",

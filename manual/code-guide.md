@@ -39,7 +39,7 @@ The scripts stored and described here are not fully modular and they are meant t
   - **Output:** `filt` — filtered dataset containing only valid, unflagged records.
 <br><br>
 
-- ### [release_to_obis.R](../code/release_to_obis.R)  
+- ### [dst_release_to_obis.R](../code/dst_release_to_obis.R)  
   - **Purpose:** Prepare and transform the National Database into a minimally viable Darwin Core compliant dataset for submission to the Ocean Biogeographic Information System (OBIS) and the Global Biodiversity Information Facility (GBIF) through the [GBIF Integrated Publishing Toolkit](https://ipt-obis.gbif.us/) (IPT).  
   - **Input:** 1. A filtered version of the National Database. Use `load_current_ndb.R`
   - **Output:** Darwin Core compliant occurrence dataset.
