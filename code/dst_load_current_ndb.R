@@ -18,12 +18,13 @@ library(tidyverse)
 digits = 121
 
 ##### parameter #####
-filename <- 'DSCRTP_NatDB_20251001-0.csv'
+filename <- 'DSCRTP_NatDB_20251223-0.csv'
 
 ##### load national database (manual) #####
 path <- paste0("C:/rworking/deepseatools/indata/", filename)
 
 ## Version History
+# "DSCRTP_NatDB_20251223-0.csv" # 'unnamed': DRAFT working file
 # "DSCRTP_NatDB_20251001-0.csv" # 'Julie Andrews'
 # "DSCRTP_NatDB_20250930-0.csv" # 'unnamed': DRAFT working file
 # "DSCRTP_NatDB_20250926-0.csv" # 'unnamed': DRAFT working file
@@ -54,7 +55,7 @@ rm(indata)
 ## which encoding is in the incoming file.
 
 ##### clean up everything except core objects ######
-rm(list=setdiff(ls(), c("filt")))
+# rm(list=setdiff(ls(), c("filt")))
 
 ##### write version to console #####
 print(unique(filt$DatabaseVersion))
