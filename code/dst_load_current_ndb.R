@@ -1,6 +1,6 @@
 ##### dst_load_current_ndb #####
 ##### header #####
-## author: Robert P. McGuinn | rpm@alumni.duke.edu
+## author: Robert P. McGuinn | rpm@alumni.duke.edu | robert.mcguinn@noaa.gov
 ## purpose: modular: load current NDB file and filter out flagged
 ## input: csv of current database
 ## output: 'filt'
