@@ -1,7 +1,7 @@
 # Code Guide
 This guide describes the R scripts within the [`code/`](code/) directory of this repo. 
 
-## Explaining the Prefixes
+## Explaining the File Name Prefixes
 
 - ### dst_analysis....R
   - **Purpose:** The file prefix `dst_analysis` indicates a custom, one-off, analysis for a specific task. These scripts all have a date at the end of the file name along with a corresponding Redmine number (example filename: `dst_analysis_conservation_areas_20251205-0_152589` has the Redmine link: [https://vlab.noaa.gov/redmine/issues/152589](https://vlab.noaa.gov/redmine/issues/152589). Also, see the 'linkage' section within the code.  
