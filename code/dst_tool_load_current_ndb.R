@@ -9,7 +9,7 @@
 filename <- 'dst_load_current_ndb'
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
-browseURL(github_link)
+# browseURL(github_link)
 
 ##### packages #####
 library(tidyverse)
@@ -18,12 +18,15 @@ library(tidyverse)
 digits = 121
 
 ##### parameter #####
-filename <- 'DSCRTP_NatDB_20251223-0.csv'
+filename <- 'DSCRTP_NatDB_20260121-0.csv'
 
 ##### load national database (manual) #####
 path <- paste0("C:/rworking/deepseatools/indata/", filename)
 
 ## Version History
+
+# "DSCRTP_NatDB_20260121-0.csv" # 'unnamed': published on portal
+# "DSCRTP_NatDB_20260109-1.csv" # 'unnamed': DRAFT working file
 # "DSCRTP_NatDB_20251223-0.csv" # 'unnamed': DRAFT working file
 # "DSCRTP_NatDB_20251001-0.csv" # 'Julie Andrews'
 # "DSCRTP_NatDB_20250930-0.csv" # 'unnamed': DRAFT working file
@@ -60,5 +63,13 @@ rm(indata)
 ##### write version to console #####
 print(unique(filt$DatabaseVersion))
 print(dim(filt))
+
+##### check #####
+## check for any missing VernacularNameCategory
+# filt %>% filter(is.na(VernacularNameCategory) == T) %>%
+#   group_by(DatasetID, AphiaID, ScientificName, VernacularNameCategory) %>%
+#   summarize(n=n())
+
+
 
 

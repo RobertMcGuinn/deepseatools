@@ -18,7 +18,7 @@ library(RColorBrewer)
 library(naniar)
 
 ##### linkage #####
-filename <- 'dst_release_to_obis' ## manual: for this code file name, match to redmine
+filename <- 'dst_tool_release_to_obis' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
