@@ -5,7 +5,7 @@
 ## info: gbif dataset with dataset_id <- "821cc27a-e3bb-4bc5-ac34-89ada245069d"
 
 ##### github_link #####
-filename <- 'dst_gbif_smithsonian' ## manual: for this code file name, match to redmine
+filename <- 'dst_tool_gbif_smithsonian' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 
