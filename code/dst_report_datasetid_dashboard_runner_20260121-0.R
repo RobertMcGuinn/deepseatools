@@ -33,10 +33,10 @@ drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 options(lifecycle_disable_warnings = TRUE)
 
 ##### load current database from disk #####
-# source("c:/rworking/deepseatools/code/dst_tool_load_current_ndb.R")
+source("c:/rworking/deepseatools/code/dst_tool_load_current_ndb.R")
 ##### parameters: manual input required #####
 ## Indicate the sheetid that points tot he most updated DatasetID key
-sheetid <- '1HGckzyHhQPLuirLCkBD5mxJ-t0G1imr49E4yuBRza34'
+sheetid <- '1QXxe8ilBfN3wyP5prj0x8DLwCmJAQduo5AWYAj8V8G0'
 
 version <- as.character(unique(filt$DatabaseVersion))
 
@@ -48,7 +48,6 @@ version <- as.character(unique(filt$DatabaseVersion))
 ##### load the most current DatasetID key from Google Drive -- OR -- #####
 key <- read_sheet(sheetid)
 
-##### load
 ##### write the citation information into the database #####
 
 filt$CitationMaker <- paste(filt$DataProvider,'. ',
@@ -106,8 +105,8 @@ filt$CitationMaker <- paste(filt$DataProvider,'. ',
 ##### set 'filt' to 'd' (as a means to add filter conditions) #####
 ## comment out the filter if needed, but the object 'd' must be created regardless
 ## as it following steps expect it
-d <- filt # %>%
-  # filter(DatasetID == 'OET_NA154')
+d <- filt %>%
+   filter(DatasetID == 'OET_NA165')
 
 ##### ***** important!! merge database with key ***** #####
 d <- merge(d, key, all.x = TRUE)

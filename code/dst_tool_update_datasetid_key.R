@@ -21,7 +21,7 @@ gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ##### load current database from disk #####
-source("c:/rworking/deepseatools/code/dst_tool_load_current_ndb.R")
+# source("c:/rworking/deepseatools/code/dst_tool_load_current_ndb.R")
 
 ##### parameters: manual input #####
 ## get the current database version
@@ -101,7 +101,34 @@ for (dataset in added) {
   ## Filter once
   subset_filt <- filt %>% filter(DatasetID == dataset)
 
-  ## ... [Keep title and method_link code as is] ...
+  ## 1. Create new title
+  new_title <- subset_filt %>%
+    summarise(
+      title_text = paste(
+        unique(DataProvider), ' | ',
+        unique(Vessel), ' | ',
+        unique(SurveyID), ' | ',
+        unique(SamplingEquipment), ' | ',
+        'Observation Dates: ',
+        min(ObservationDate), ' to ',
+        max(ObservationDate),
+        sep = ""
+      )
+    ) %>%
+    pull(title_text)
+
+  key2 <- key2 %>%
+    mutate(title = ifelse(DatasetID == dataset, new_title, title))
+
+  ## 2. Create new method_link
+  new_web <- subset_filt %>%
+    summarise(
+      weblinks = paste(unique(WebSite), collapse = ' | ')
+    ) %>%
+    pull(weblinks)
+
+  key2 <- key2 %>%
+    mutate(method_link = ifelse(DatasetID == dataset, new_web, method_link))
 
   ## Create new abstract
   base_abstract <- subset_filt %>%
@@ -225,7 +252,7 @@ drive_mv(
 message("File '", new_sheet_name, "' has been created and moved to the specified folder.")
 
 ##### check #####
-key %>% filter(DatasetID == "OET_NA165") %>% group_by(DatasetID, abstract) %>%
+key %>% filter(DatasetID == "OET_NA165") %>% group_by(DatasetID, title, method_link, method_text) %>%
   summarize(s=n()) %>% View()
 
 
