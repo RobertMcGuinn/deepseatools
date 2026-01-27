@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'rmd_datasetid_cruise_no_leaflet'
+x <- 'dst_'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -14,7 +14,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(1)
+y <- c(4)
 this <- files[y]
 file.edit(this)
 

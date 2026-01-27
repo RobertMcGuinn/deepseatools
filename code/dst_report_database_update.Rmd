@@ -9,7 +9,7 @@ output:
 editor_options: 
   chunk_output_type: console
 
-## no need to change these here, they will get overwritten parameters listed in the runner
+## no need to change these here, they will get overwritten by the  parameters listed in the runner
 params:
   quarter: "Q4, FY-2025"
   version: "DSCRTP_NatDB_20251001-0"

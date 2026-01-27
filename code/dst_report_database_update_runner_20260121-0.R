@@ -4,8 +4,29 @@
 ## purpose: runner plus parameters for the RMarkdown file called
 ## dst_report_for_database_update.RMD
 
+##### packages #####
+library(tidyverse)
+library(curl)
+library(rmarkdown)
+library(googledrive)
+
+##### load NDB ####
+##### load the current version of the National Database #####
+## creates object called 'filt'
+# source('C:/rworking/deepseatools/code/dst_load_current_ndb.R')
+
+##### parameters #####
+quarter     <- "Q1, FY-2026"
+version     <- as.character(unique(filt$DatabaseVersion))
+releasedate <- "2026-01-27"
+corrections <- 0
+filename <- paste0("dst_report_database_update_", version)
+last_db <- 'DSCRTP_NatDB_20251001-0.csv'
+this_db <- 'DSCRTP_NatDB_20260121-0.csv'
+newdatasetIDs <- c("OET_NA165")
+folderurl <- "https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8"
+
 ##### linkage #####
-filename <- 'dst_report_database_update_runner_20251001-0' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
@@ -14,27 +35,9 @@ github_link <- paste(github_path, filename, '.R', sep = '')
 # redmine_link <- paste(redmine_path, issuenumber, sep = '')
 # browseURL(redmine_link)
 
-##### packages #####
-library(tidyverse)
-library(curl)
-library(rmarkdown)
-library(googledrive)
-
-##### define parameters and render #####
-## parameters
-quarter     <- "Q4, FY-2025"
-version     <- "DSCRTP_NatDB_20251001-0"
-releasedate <- "2025-10-15"
-corrections <- 383158
-filename <- paste(version, "_dst_report_for_database_update", sep="")
-last_db <- 'DSCRTP_NatDB_20250714-0.csv'
-this_db <- 'DSCRTP_NatDB_20251001-0.csv'
-newdatasetIDs <- c("OET_NA168", "OET_NA156")
-folderurl <- "https://drive.google.com/drive/folders/1KPK1YI-n7EHNuOIKfZJM_EsaDCAUQOl8"
-
-## render
+##### render #####
 rmarkdown::render(
-  "code/dst_report_for_database_update.rmd",
+  "code/dst_report_database_update.rmd",
   params = list(
     quarter     = quarter,
     version     = version,
