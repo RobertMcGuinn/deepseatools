@@ -10,10 +10,9 @@ library(curl)
 library(rmarkdown)
 library(googledrive)
 
-##### load NDB ####
 ##### load the current version of the National Database #####
 ## creates object called 'filt'
-# source('C:/rworking/deepseatools/code/dst_load_current_ndb.R')
+# source('C:/rworking/deepseatools/code/dst_tool_load_current_ndb.R')
 
 ##### parameters #####
 quarter     <- "Q1, FY-2026"
@@ -59,10 +58,10 @@ rmarkdown::render(
 ## manual: SAVE to PDF.
 ## manual: then Develop Redmine Checklist
 ## upload the PDF to Google Drive
-# drive_upload(paste("reports/", filename,".PDF", sep=''),
-#              path = as_id(folderurl),
-#              name = paste(filename,".PDF", sep=''),
-#              overwrite = T)
+drive_upload(paste("reports/", filename,".PDF", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".PDF", sep=''),
+             overwrite = T)
 
 ##### checking #####
 # yo <- filt %>% filter(AphiaID == -999)

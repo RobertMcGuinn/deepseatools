@@ -6,28 +6,20 @@
 ##### packages #####
 library(tidyverse)
 
-##### data load #####
-##### load national database (manual) #####
-path <- "C:/rworking/deepseatools/indata"
-csv <- "DSCRTP_NatDB_20240325-0.csv" # 'Aretha Franklin'
-setwd(path)
-indata <- read.csv(csv, header = T, encoding = 'latin1')
-## encoding choice is either latin1 or UTF-8. Depends on incoming.
-## this does not define encoding, it simply tells the importer
-## which encoding is in the incoming file.
-filt <- indata %>%
-  filter(Flag == "0", is.na(Phylum) == F)
+##### load current version of national database #####
+source('code/dst_tool_load_current_ndb.R')
 
 ##### query #####
 z <- filt %>% filter(
+  DatasetID == 'OET_NA165',
   is.na(ImageURL) == F,
   # IndividualCount != -999,
-  # IndividualCount > 20,
-  CategoricalAbundance == '2-10',
+  # IndividualCount > 2,
+  # CategoricalAbundance == '2-10',
   # FishCouncilRegion == 'New England',
-   ScientificName == "Primnoa resedaeformis",
+  # ScientificName == "Neoacis",
   # CatalogNumber == 1188314
-  grepl('NOAA_HB-19-03', DatasetID)
+  # grepl('NOAA_HB-19-03', DatasetID)
 )
 
 ##### check #####
@@ -40,8 +32,12 @@ table(z$CategoricalAbundance)
 hist(z$IndividualCount)
 unique(z$ImageURL)
 
+##### select specific images, like highlight #####
+highlights <- c(1786150, 1787058, 1790403, 1788439, 1785173, 1786851, 1788231, 1790478, 1791305, 1791237)
+z <- z %>% filter(CatalogNumber %in% highlights)
+
 ##### load images to folder #####
-path <- 'C:/rworking/deepseatools/images/gardens'
+path <- 'C:/rworking/deepseatools/images/OET_165_Neoacis'
 #unlink(path, recursive = T)
 dir.create(path)
 setwd(path)
@@ -64,4 +60,29 @@ setwd("C:/rworking/deepseatools/indata")
 write.xlsx(z,
            'yo.xlsx',
            rowNames = FALSE)
+
+
+##### create a caption #####
+z$caption <- paste0(z$ScientificName,
+                    ' a ',
+                    z$VernacularNameCategory,
+                    ' collected on a cruise aboard the ',
+                    z$Vessel,
+                    ' using the ',
+                    z$VehicleName,
+                    ' ',
+                    z$SamplingEquipment,
+                    ' at ',
+                    z$DepthInMeters,
+                    ' in the ',
+                    z$Locality,
+                    ' on ',
+                    z$ObservationDate)
+
+##### print caption #####
+z %>% filter(CatalogNumber  == '1787058') %>% pull(caption)
+
+
+
+
 

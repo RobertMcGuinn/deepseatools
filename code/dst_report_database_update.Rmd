@@ -82,6 +82,9 @@ x <- x %>%  mutate(IndividualCount = ifelse(IndividualCount == -999,
 
 new_records <- length(x$CatalogNumber)
 
+min_obs_date <- min(as.Date(x$ObservationDate))
+max_obs_date <- max(as.Date(x$ObservationDate))
+
 ```
 
 ```{r load_functions, warning = FALSE, message=FALSE, echo=FALSE}
@@ -97,32 +100,30 @@ TrimAll <- function(x){
 ```
 
 # Quarterly update for: `r params$quarter`
-## Database Version: `r params$version`
+## New Database Version: `r params$version`
 
-The Deep Sea Coral Research and Technology Program is proud to announce that the latest quarterly update of the National Database for Deep Sea Corals and Sponges is available. **`r prettyNum(a, big.mark = ',')`** new datasets were either added or augmented with a total of **`r prettyNum(new_records, big.mark = ',')`** updated and improved records. There is now a grand total of **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** records in the database. We have also made corrections and improvements to **`r prettyNum(as.numeric(params$corrections), big.mark = ',')`** records. We would love to have your feedback for future data improvements. 
+The Deep Sea Coral Research and Technology Program is proud to announce that the latest version of NOAA's National Database for Deep Sea Corals and Sponges is now [live](https://www.ncei.noaa.gov/maps/deep-sea-corals-portal/). **`r prettyNum(length(x$CatalogNumber), big.mark = ',')`** new records were added this round, for a total **`r prettyNum(length(filt$CatalogNumber), big.mark = ',')`** occurrence records in the database. Please see the following tables and figures for additional detail regarding this update.  
 
-Go here to view and download custom data subsets of your choosing:
+Visit our portal to view and download custom data subsets of your choosing:
 https://www.ncei.noaa.gov/maps/deep-sea-corals-portal/
 
 *A big thank you to all of our data providers! This database is a key resource for data-driven deep sea coral and sponge habitat conservation and management. We welcome your questions and feedback.*
 
-Please see the following tables and figures for additional detail regarding this update.  
+
 
 # This Update by the Numbers
 
-* Total number of records now in database: **`r  prettyNum(length(filt$CatalogNumber), big.mark=",")`**
+* Datasets added: **`r a`**
 
-* Number of new database records added this quarter: **`r  prettyNum(length(x$CatalogNumber), big.mark=",")`**
+* Number of new database records added: **`r  prettyNum(length(x$CatalogNumber), big.mark=",")`**
 
 * Individual coral and sponge observations added: **`r prettyNum(sum(x$IndividualCount[x$IndividualCount != "-999"]), big.mark = ',')`**
 
-* Number of EventID(s) (number of dives/trawls/transects): **`r prettyNum(length(unique(x$EventID)), ',')`**
+* Number of EventID(s) (number of dives/trawls/transects) added: **`r prettyNum(length(unique(x$EventID)), ',')`**
 
-* Observation Time Frame: **`r min(as.numeric(x$ObservationYear[x$ObservationYear != "-999"]), na.rm=TRUE)` to `r max(x$ObservationYear, na.rm=TRUE)`**
+* Observation time frame of added records: **`r min_obs_date` to `r max_obs_date`**
 
-* Latest database version name: **`r as.character(params$version)`**
-
-* Date live on map portal: **`r paste("posted on", params$releasedate, sep = " ")`**
+* Publication date on map portal: **`r params$releasedate`**
 
 # Overview map
 
@@ -323,8 +324,6 @@ sum_tbl
 # Expedition Details
 
 ``` {r Vessel, echo=FALSE}
-
-
 
 sum_tbl <-
   x %>%

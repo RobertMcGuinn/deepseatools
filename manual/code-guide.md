@@ -1,24 +1,25 @@
 # Code Guide
 This guide describes the R scripts within the [`code/`](code/) directory of this repo. 
 
-## Explaining the File Name Prefixes
+## File naming prefixes. 
+
+- ### dst_data....R
+  - **Purpose:** The file prefix `dst_data` indicates code designed to QA a specific dataset that is submitted to the National Database. This code tracks all of the actions performed as a dataset passes from receipt to publication. 
+  - **Input:** A specific version of a submitted dataset. Each new datset version incoming to this script is clearly marked in the comments. All datasets are stored on Google Drive and the work on them is tracked in [Redmine](https://vlab.noaa.gov/redmine/projects/qa/issues?query_id=685).  All datasets are stored in this [Google Drive folder](https://drive.google.com/drive/folders/0B9c2c_XdhpFBfkFiQkxxZGlTeEEya3g3QkpsVTVqeGRPSjZqVEZDVkI0M1ZteU43eC1tN1E?resourcekey=0-KsNjeYbGwZNUg3L2_-wKIg&usp=drive_link).
+  - **Output:** Multiple outputs along the data stewardship and QA pipeline (e.g. patch files for adding the full taxonomic string.)
+<br><br>
 
 - ### dst_analysis....R
-  - **Purpose:** The file prefix `dst_analysis` indicates a custom, one-off, analysis for a specific task. These scripts all have a date at the end of the file name along with a corresponding Redmine number (example filename: `dst_analysis_conservation_areas_20251205-0_152589` has the Redmine link: [https://vlab.noaa.gov/redmine/issues/152589](https://vlab.noaa.gov/redmine/issues/152589). Also, see the 'linkage' section within the code.  
+  - **Purpose:** The file prefix `dst_analysis` indicates a custom, analysis for a specific task. These scripts all have a date at the end of the file name (formatted as) YYYYMMDD-X, along with a corresponding Redmine number (example filename: `dst_analysis_conservation_areas_20251205-0_152589` has the Redmine link: [https://vlab.noaa.gov/redmine/issues/152589](https://vlab.noaa.gov/redmine/issues/152589). Also, see the 'linkage' section within the code.  
   - **Input:** Varies by project.  All data will be accessed via Google Drive where possible.
   - **Output:** Varies by project. 
 <br><br>
 
-- ### dst_data....R
-  - **Purpose:** The file prefix `dst_data` indicates all of the QA work done on a specific dataset that is submitted to the National Database. This code tracks all of the actions performed in R as a dataset passes from receipt to publication. 
-  - **Input:** A specific version of a submitted dataset. Each new version incoming to this script is clearly marked in the comments. All datasets are stored on Google Drive and the work on them is tracked in [Redmine](https://vlab.noaa.gov/redmine/projects/qa/issues?query_id=685).  All datasets are stored in this [Google Drive folder](https://drive.google.com/drive/folders/0B9c2c_XdhpFBfkFiQkxxZGlTeEEya3g3QkpsVTVqeGRPSjZqVEZDVkI0M1ZteU43eC1tN1E?resourcekey=0-KsNjeYbGwZNUg3L2_-wKIg&usp=drive_link).
-  - **Output:** Multiple outputs along the pipeline (e.g. patch files for adding the full taxonomic string.)
-<br><br>
 
 ## Style Notes for Scripts
-- Comments describing code function are marked by '## '
-- Commented-out code is marked by '# '
-- Sections are marked by '##### section #####'
+- Comments describing code function are marked by '##'
+- Commented-out code is marked by '#'
+- Sections are marked by '##### section #####' (these are handy for navigating code in RStudio)
 - Sometimes you will find hard coded local paths like 'c:/rworking/...'. You should change these manually to suit your folder paths.
 - The text string 'manual' or 'Manual' anywhere in the code indicates a place where specific text needs input or where a manual step, outside of R, need to be taken.. These should be checked over using 'crtl-F' before using the code. 
 - Sections marked '##### check #####' are for testing and checking script progress and interim outputs. 
