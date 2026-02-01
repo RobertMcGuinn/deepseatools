@@ -12,15 +12,39 @@ library(tidyverse)
 library(googledrive)
 library(googlesheets4)
 
-##### load national database #####
-source('C:/rworking/deepseatools/code/mod_load_current_ndb.R')
 ##### authorizations #####
 drive_auth(email = "robert.mcguinn@noaa.gov")
 gs4_auth(email = "robert.mcguinn@noaa.gov")
 
-##### read in master data inventory using googlesheets4 #####
+##### load national database #####
+source('C:/rworking/deepseatools/code/dst_tool_load_current_ndb.R')
+##### load master data inventory using googlesheets4 #####
 sheetid <- "1g2KDl0KGKjDcjdzsLHf_YGkHSiaGL5UNmge3l21h73s"
 di <- read_sheet(sheetid)
+
+## write csv
+write_csv(di, "indata/20260129-0_data_inventory.csv")
+
+##### load DatasetID Key #####
+
+##### load in initial matches #####
+matches <- read.csv('indata/20260129_mapping_between_ProjectID_and_DatasetID.csv')
+
+##### join #####
+filt_summary <- filt %>%
+  group_by(DatasetID) %>%
+  summarise(
+    SurveyID = first(SurveyID),
+    Vessel = first(Vessel),
+    PI = paste(unique(PI), collapse = ' | '),
+    Min_ObservationDate = min(ObservationDate, na.rm = TRUE),
+    Max_ObservationDate = max(ObservationDate, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# 2. Join the summary back to your 'matches' data frame
+final_data <- matches %>%
+  left_join(filt_summary, by = "DatasetID")
 
 ##### create dashlink #####
 filt$dashlink <- paste('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/',

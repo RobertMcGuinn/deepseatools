@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'image'
+x <- 'taxonomy'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -14,7 +14,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(3)
+y <- c(4)
 this <- files[y]
 file.edit(this)
 
@@ -48,6 +48,9 @@ file_info_df <- file_info_df %>% arrange(Modification_Time)
 
 ## Print the result
 print(file_info_df) ## files having a larger Modification_Time were created later in time.
+
+##### tool: paste to get the file name of the currently open file on the clipboard #####
+writeLines(rstudioapi::getSourceEditorContext()$path, "clipboard")
 
 ##### clean up everything except filt ######
 # rm(list=setdiff(ls(), c("filt")))
