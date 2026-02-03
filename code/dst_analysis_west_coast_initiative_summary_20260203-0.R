@@ -33,17 +33,17 @@ library(forcats)
 ##### load NDB #####
 source("C:/rworking/deepseatools/code/dst_tool_load_current_ndb.R")
 
-##### create histogram #####
+##### create histogram with EntryDate ####
 pacific_data <- filt %>%
   filter(FishCouncilRegion == "Pacific") %>%
   mutate(
-    EntryDate = as.Date(EntryDate),
+    ObservationDate = as.Date(ObservationDate),
     # Drop levels to ensure the legend only shows what's in the Pacific
     SamplingEquipment = fct_drop(as.factor(SamplingEquipment))
   ) %>%
-  filter(!is.na(EntryDate), !is.na(SamplingEquipment))
+  filter(!is.na(ObservationDate), !is.na(SamplingEquipment))
 
-ggplot(pacific_data, aes(x = EntryDate, fill = SamplingEquipment)) +
+ggplot(pacific_data, aes(x = ObservationDate, fill = SamplingEquipment)) +
   geom_histogram(
     color = "white",
     linewidth = 0.1,
@@ -79,6 +79,64 @@ ggplot(pacific_data, aes(x = EntryDate, fill = SamplingEquipment)) +
     axis.text.x = element_text(angle = 0, hjust = 0.5)
   ) +
   guides(fill = guide_legend(ncol = 3)) # Wraps legend for better fit
+
+##### create histogram with ObservationDate #####
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(forcats)
+
+# 1. Prepare Data with 1985 Temporal Mask
+pacific_data_modern <- filt %>%
+  filter(FishCouncilRegion == "Pacific") %>%
+  mutate(
+    ObservationDate = as.Date(ObservationDate),
+    SamplingEquipment = fct_drop(as.factor(SamplingEquipment))
+  ) %>%
+  # Limit to the Modern Era (1985 to present)
+  filter(
+    ObservationDate >= as.Date("1985-01-01"),
+    !is.na(ObservationDate),
+    !is.na(SamplingEquipment)
+  )
+
+# 2. Build the Categorical Histogram
+ggplot(pacific_data_modern, aes(x = ObservationDate, fill = SamplingEquipment)) +
+  geom_histogram(
+    color = "white",
+    linewidth = 0.1,
+    bins = 45
+  ) +
+  # Qualitative Scale for distinct gear identities
+  scale_fill_brewer(
+    palette = "Paired",
+    name = "Sampling Method",
+    drop = TRUE
+  ) +
+  # Year-only X-axis
+  scale_x_date(
+    limits = c(as.Date("1985-01-01"), as.Date("2026-12-31")),
+    date_breaks = "2 years",
+    date_labels = "%Y",
+    expand = expansion(mult = c(0.02, 0.02))
+  ) +
+  labs(
+    title = "Pacific FMC: # of Records by 'ObservationDate' (1985-Present)",
+    subtitle = paste0("Database Version: 20260121-0 | Modern Records: ", nrow(pacific_data_modern)),
+    x = "Year of Observation (from 'ObservationDate')",
+    y = "Number Records",
+    caption = "NMFS/DSCRTP"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "bottom",
+    legend.text = element_text(size = 9),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    plot.title = element_text(face = "bold", color = "#1a1a1a"),
+    axis.text.x = element_text(angle = 0, hjust = 0.5)
+  ) +
+  guides(fill = guide_legend(ncol = 3))
 
 
 
