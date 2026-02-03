@@ -1,7 +1,7 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate:
-## purpose:
+## startdate:20260203-0
+## purpose:look at wwhen records were added to the database.
 
 ##### parameters: manual input #####
 ## add filename, should be the same name as this file
