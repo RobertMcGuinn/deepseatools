@@ -1,7 +1,7 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate:20260203-0
-## purpose:look at wwhen records were added to the database.
+## purpose:look at when records were added to the database.
 
 ##### parameters: manual input #####
 ## add filename, should be the same name as this file
@@ -21,20 +21,17 @@ library(tidyverse)
 library(sf)
 library(remotes)
 library(terra)
-library(ggplot2)
+
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(googlesheets4)
 library(robis)
+library(ggplot2)
+library(lubridate)
+library(forcats)
 
 ##### load NDB #####
 source("C:/rworking/deepseatools/code/dst_tool_load_current_ndb.R")
-
-##### summary #####
-library(ggplot2)
-library(dplyr)
-library(lubridate)
-library(forcats)
 
 ##### create histogram #####
 pacific_data <- filt %>%
