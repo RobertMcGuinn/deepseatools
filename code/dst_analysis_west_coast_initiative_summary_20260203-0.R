@@ -124,7 +124,7 @@ ggplot(pacific_data_modern, aes(x = ObservationDate, fill = SamplingEquipment)) 
     title = "Pacific FMC: # of Records by 'ObservationDate' (1985-Present)",
     subtitle = paste0("Database Version: 20260121-0 | Modern Records: ", nrow(pacific_data_modern)),
     x = "Year of Observation (from 'ObservationDate')",
-    y = "Number Records",
+    y = "Number of Records",
     caption = "NMFS/DSCRTP"
   ) +
   theme_minimal(base_size = 14) +

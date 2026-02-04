@@ -2,6 +2,7 @@
 # Ensure these are installed: install.packages(c("arcgislayers", "sf"))
 library(arcgislayers)
 library(sf)
+library(tidyverse)
 
 ##### SECTION 2: DEFINE SERVICE URL #####
 # Based on the discovery that H6 resides at ID 16 in this service
@@ -59,4 +60,61 @@ h3_mesh_reloaded <- readRDS("indata/OCIS_H6_MasterMesh_Jan2026.rds")
 message(paste("Reloaded object count:", nrow(h3_mesh_reloaded)))
 ##### check #####
 names(h3_mesh)
+library(dplyr)
+library(tidyr)
+
+##### pick through the variables #####
+
+library(dplyr)
+library(tidyr)
+library(sf)
+
+# 1. Strip geometry for the audit
+df_flat <- h3_mesh_reloaded %>% st_drop_geometry()
+
+# 2. Calculate NA Percentage
+na_audit <- df_flat %>%
+  summarise(across(everything(), ~sum(is.na(.)) / n() * 100)) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "na_pct")
+
+# 3. Calculate Unique Value Count
+val_audit <- df_flat %>%
+  summarise(across(everything(), ~n_distinct(., na.rm = TRUE))) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "unique_vals")
+
+# 4. Join them into the final "Hit List"
+audit_results <- left_join(na_audit, val_audit, by = "variable") %>%
+  arrange(desc(na_pct))
+
+# 5. Identify the Culls
+cut_list <- audit_results %>%
+  filter(na_pct > 80 | unique_vals <= 1) %>%
+  pull(variable)
+
+# 6. Create the Lean Mesh
+h3_mesh_lean <- h3_mesh_reloaded %>%
+  select(-all_of(cut_list))
+
+# VERIFY
+## View(audit_results)
+print(paste("Original count:", ncol(h3_mesh_reloaded)))
+print(paste("Marked for deletion:", length(cut_list)))
+names(h3_mesh_lean)
+
+##### go further #####
+# A surgical strike to remove intermediate water column depths
+# Keeping only Surface and Bottom for Temp and Salinity
+h3_mesh_final_portal <- h3_mesh_lean %>%
+  select(
+    -matches("_(30|50|100|200|500)m")
+  )
+
+print(paste("Final Portal-Ready Variable Count:", ncol(h3_mesh_final_portal)))
+
+
+
+
+names(h3_mesh_final_portal)
+
+
 

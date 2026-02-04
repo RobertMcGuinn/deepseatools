@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'dst_tool'
+x <- 'dst_'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -14,7 +14,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(5)
+y <- c(11)
 this <- files[y]
 file.edit(this)
 
