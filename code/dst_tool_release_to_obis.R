@@ -28,8 +28,11 @@ github_link <- paste(github_path, filename, '.R', sep = '')
 ## when your
 source('C:/rworking/deepseatools/code/dst_load_current_ndb.R')
 
-##### check the version #####
-unique(filt$DatabaseVersion)
+##### parameters #####
+today <- '20251001-0'
+dbversion <- unique(filt$DatabaseVersion)
+##### check #####
+dbversion
 
 ##### creating errdap_link field called 'references' #####
 ## this creates a single atomized link to erddap per CatalogNumber
@@ -172,12 +175,11 @@ obis <- obis %>%
     TRUE ~ basisOfRecord
   ))
 
-##### write out file for submission (manual) #####
-today <- '20251001-0'
-version <- unique(filt$DatabaseVersion)
+##### write out file for submission#####
+
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
-  write.csv(paste('dwc_noaa_dsc_rtp_version', '_', version , '_', today, '.txt', sep = ''),
+  write.csv(paste('dwc_noaa_dsc_rtp_version', '_', dbversion , '_', today, '.txt', sep = ''),
             row.names = FALSE, na = '')
 
 ##### check #####
@@ -187,6 +189,42 @@ obis %>%
 #   pull(AphiaID) %>%
 #   unique() %>%
 #   length()
+
+##### copy the file to the google folder #####
+library(googledrive)
+library(zip)
+
+# 1. Variables and Folder ID
+folder_id <- "1p0bxv6680DrDxFrL3AvM_2Cf9xVi51Ds"
+
+# 2. Define the local file paths
+source_txt <- paste('C:/rworking/deepseatools/indata/dwc_noaa_dsc_rtp_version',
+                    '_', dbversion, '_', today, '.txt', sep = '')
+
+source_zip <- gsub(".txt$", ".zip", source_txt)
+
+# 3. Zip the file using the zip package
+# mode = "cherry-pick" prevents the zip from containing the whole C:/rworking/... folder structure
+if (file.exists(source_txt)) {
+  zip::zip(
+    zipfile = source_zip,
+    files = source_txt,
+    mode = "cherry-pick"
+  )
+} else {
+  stop("The source .txt file was not found!")
+}
+
+# 4. Upload the Zip file to Google Drive
+if (file.exists(source_zip)) {
+  drive_put(
+    media = source_zip,
+    path = as_id(folder_id)
+  )
+  message("Success! Compressed zip file uploaded.")
+} else {
+  stop("The .zip file was not created. Check permissions in the indata folder.")
+}
 
 ##### Use read.delim() to read the file back in for testing #####
 data <- read.delim(

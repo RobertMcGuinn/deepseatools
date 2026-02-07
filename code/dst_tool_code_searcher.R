@@ -14,7 +14,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(11)
+y <- c(15)
 this <- files[y]
 file.edit(this)
 
@@ -53,27 +53,19 @@ print(file_info_df) ## files having a larger Modification_Time were created late
 writeLines(rstudioapi::getSourceEditorContext()$path, "clipboard")
 
 ##### clean up everything except filt ######
-# rm(list=setdiff(ls(), c("filt")))
 
-### Function to clear environment except for specific objects
-keep_only <- function(keep_list) {
-  # 1. Get all objects in the Global Environment
-  all_vars <- ls(envir = .GlobalEnv)
+##### section: clean up selectively  #####
+## list of all objects
+all_objects <- ls()
 
-  # 2. Identify which ones are NOT in our keep list
-  # We also make sure the function itself doesn't try to delete itself while running
-  to_delete <- setdiff(all_vars, c(keep_list, "keep_only"))
+## set what you want to keep
+to_keep <- "filt"
 
-  # 3. Remove them explicitly from the Global Environment
-  rm(list = to_delete, envir = .GlobalEnv)
+## remove unwanted objects
+rm(list = setdiff(all_objects, to_keep))
 
-  message(paste("Environment cleared. Kept:", paste(keep_list, collapse = ", ")))
-}
-
-### How to use it:
-keep_only("filt")
-# keep_only(c("filt", "my_data", "model_results"))
-
+## garbage collection
+gc()
 
 
 
