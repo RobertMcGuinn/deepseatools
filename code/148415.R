@@ -155,7 +155,7 @@ crosswalk <- result %>% filter(TatorElementalId %in% x) %>%
   )
 
 ##### write crosswalk #####
-write.csv(crosswalk, 'indata/20250826-1_crosswalk_for_ImageFilePath_RPMcGuinn.csv')
+# write.csv(crosswalk, 'indata/20250826-1_crosswalk_for_ImageFilePath_RPMcGuinn.csv')
 
 ##### create crosswalk with annotation frames #####
 crosswalk_frames <- result %>% filter(TatorElementalId %in% x) %>%
@@ -271,7 +271,7 @@ plot_and_save_sample_bbox(
 id <- "d7e06c23-d15f-441b-bad7-6afc78cb700d"
 filt %>% filter(SampleID == id) %>% select(ScientificName, VerbatimScientificName, AphiaID, IdentificationComments)
 
-##### download images at a specific location #####
+##### download images at a specific google drive location #####
 ## drive_auth()
 ## Ensure local folder exists
 dir.create("images/annotation", recursive = TRUE, showWarnings = FALSE)

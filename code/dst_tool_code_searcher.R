@@ -67,9 +67,42 @@ rm(list = setdiff(all_objects, to_keep))
 ## garbage collection
 gc()
 
+##### search within code #####
+x <- 'feature service'
+find_in_files <- function(search_term, dir_path = "code/", file_pattern = "\\.(R|Rmd)$", ignore_case = FALSE) {
 
+  # 1. Get a list of all files in the directory (and subdirectories) matching the pattern
+  files <- list.files(path = dir_path, pattern = file_pattern, recursive = TRUE, full.names = TRUE)
 
+  results_list <- list()
 
+  # 2. Loop through each file and search for the string
+  for (file in files) {
+    # Read the file contents (warn=FALSE suppresses warnings about missing end-of-line characters)
+    lines <- readLines(file, warn = FALSE)
 
+    # Find the line numbers that contain the search term
+    matches <- grep(search_term, lines, ignore.case = ignore_case)
 
+    # 3. If there's a match, save the details
+    if (length(matches) > 0) {
+      results_list[[file]] <- data.frame(
+        File = file,
+        LineNumber = matches,
+        CodeSnippet = trimws(lines[matches]), # trimws() removes extra leading/trailing spaces
+        stringsAsFactors = FALSE
+      )
+    }
+  }
 
+  # 4. Bind it all into one clean data frame
+  if (length(results_list) > 0) {
+    final_results <- do.call(rbind, results_list)
+    rownames(final_results) <- NULL
+    return(final_results)
+  } else {
+    message("No matches found.")
+    return(invisible(NULL))
+  }
+}
+View(find_in_files(x))

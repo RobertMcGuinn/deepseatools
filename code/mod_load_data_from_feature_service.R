@@ -28,7 +28,11 @@ layer <- get_layer(fs, id = 0)
 ##### get service as an sf file (WARNING: this takes a while) #####
 fs_table <- arc_select(layer, out_fields = "*", n_max = Inf)
 
-
+##### check #####
+# min(as.numeric(fs_table$Latitude))
+# max(as.numeric(fs_table$Latitude))
+# min(as.numeric(fs_table$Longitude))
+# max(as.numeric(fs_table$Longitude))
 
 
 
