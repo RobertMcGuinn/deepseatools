@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'dst_'
+x <- 'dst_tool_get_OCIS_H3_from_ArcGIS_service'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -14,7 +14,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(15)
+y <- c(1)
 this <- files[y]
 file.edit(this)
 
@@ -65,10 +65,12 @@ to_keep <- "filt"
 rm(list = setdiff(all_objects, to_keep))
 
 ## garbage collection
+rm(all_objects)
+rm(to_keep)
 gc()
 
 ##### search within code #####
-x <- 'feature service'
+x <- 'H3'
 find_in_files <- function(search_term, dir_path = "code/", file_pattern = "\\.(R|Rmd)$", ignore_case = FALSE) {
 
   # 1. Get a list of all files in the directory (and subdirectories) matching the pattern

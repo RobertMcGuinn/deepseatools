@@ -25,7 +25,7 @@ path <- paste0("C:/rworking/deepseatools/indata/", filename)
 
 ## Version History
 
-# "DSCRTP_NatDB_20260121-0.csv" # 'unnamed': published on portal
+# "DSCRTP_NatDB_20260121-0.csv" # 'Billy Ocean': published on portal
 # "DSCRTP_NatDB_20260109-1.csv" # 'unnamed': DRAFT working file
 # "DSCRTP_NatDB_20251223-0.csv" # 'unnamed': DRAFT working file
 # "DSCRTP_NatDB_20251001-0.csv" # 'Julie Andrews'
@@ -70,6 +70,18 @@ print(dim(filt))
 #   group_by(DatasetID, AphiaID, ScientificName, VernacularNameCategory) %>%
 #   summarize(n=n())
 
-
-
-
+# filt %>% filter(CatalogNumber == 1019374) %>% pull(ImageURL)
+#
+# filt %>% filter(grepl('http:', ImageURL)) %>% pull(ImageURL) %>% length()
+#
+# filtered_df <- filt %>% filter(!grepl("https://www.ncei.noaa.gov/waf/dsc-data", ImageURL, fixed = TRUE),
+#                 is.na(ImageURL) == F) %>% pull(ImageURL)
+#
+#
+# filtered_df <- filt[!grepl("https://www.ncei.noaa.gov/waf/dsc-data", filt$ImageURL, fixed = TRUE), ]
+#
+# filt %>% filter(grepl('mp4', ImageURL)) %>% pull(CatalogNumber)
+#
+#
+# filt %>% filter(ImageURL == 'https://data.nodc.noaa.gov/oer/video/EX1102/Video/EX1102_DIVE07_20110427/Compressed/EX1102_VID_20110427T164020Z_ROVHD_CORAL_FAN_LOW.mp4') %>% pull(CatalogNumber)
+#
