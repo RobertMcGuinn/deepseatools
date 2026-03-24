@@ -10,17 +10,17 @@ library(tidyverse)
 source('code/dst_tool_load_current_ndb.R')
 
 ##### query #####
-z <- filt %>% filter(
-  DatasetID == 'OET_NA165',
-  is.na(ImageURL) == F,
+z <- filt #%>% filter(
+  # DatasetID == 'OET_NA165',
+  # is.na(ImageURL) == F,
   # IndividualCount != -999,
   # IndividualCount > 2,
   # CategoricalAbundance == '2-10',
   # FishCouncilRegion == 'New England',
   # ScientificName == "Neoacis",
-  # CatalogNumber == 1188314
+  # CatalogNumber == 1204882
   # grepl('NOAA_HB-19-03', DatasetID)
-)
+#)
 
 ##### check #####
 length(z$CatalogNumber)
@@ -33,11 +33,11 @@ hist(z$IndividualCount)
 unique(z$ImageURL)
 
 ##### select specific images, like highlight #####
-highlights <- c(1786150, 1787058, 1790403, 1788439, 1785173, 1786851, 1788231, 1790478, 1791305, 1791237)
+highlights <- c(1744954,1752562, 1769248)
 z <- z %>% filter(CatalogNumber %in% highlights)
 
 ##### load images to folder #####
-path <- 'C:/rworking/deepseatools/images/OET_165_Neoacis'
+path <- 'C:/rworking/deepseatools/images/'
 #unlink(path, recursive = T)
 dir.create(path)
 setwd(path)
@@ -64,9 +64,9 @@ write.xlsx(z,
 
 ##### create a caption #####
 z$caption <- paste0(z$ScientificName,
-                    ' a ',
+                    ', a ',
                     z$VernacularNameCategory,
-                    ' collected on a cruise aboard the ',
+                    ', collected on a cruise aboard the ',
                     z$Vessel,
                     ' using the ',
                     z$VehicleName,
@@ -77,12 +77,26 @@ z$caption <- paste0(z$ScientificName,
                     ' in the ',
                     z$Locality,
                     ' on ',
-                    z$ObservationDate)
+                    z$ObservationDate,
+                    '[DSCRTP CatalogNumber: ',
+                    z$CatalogNumber,
+                    '] ',
+                    'Associated Taxa: ',
+                    z$AssociatedTaxa,
+                    ' ',
+                    z$ImageURL)
 
 ##### print caption #####
-z %>% filter(CatalogNumber  == '1787058') %>% pull(caption)
+z %>% pull(caption)
 
 
+##### image notes #####
+x<- c('https://www.ncei.noaa.gov/waf/dsc-data/images/001744/1744954.jpg',
+'https://www.ncei.noaa.gov/waf/dsc-data/images/001752/1752562.png',
+'https://www.ncei.noaa.gov/waf/dsc-data/images/001769/1769248.png')
+
+
+filt %>% filter(ImageURL %in% x) %>% pull(CatalogNumber)
 
 
 
