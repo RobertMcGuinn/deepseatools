@@ -105,7 +105,7 @@ m <- addCircleMarkers(m, data=gbif,
 m
 
 
-##### _____ Working with the Coastal Relief Model and ETOPO####
+##### ***** Working with the Coastal Relief Model and ETOPO ***** ####
 ##### setting bounding box coordinates #####
 minLon <- -87
 maxLon <- -83

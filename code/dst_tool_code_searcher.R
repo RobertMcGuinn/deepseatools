@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'load_DB_images_to_folder'
+x <- 'ERDDAP'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -70,7 +70,7 @@ rm(to_keep)
 gc()
 
 ##### search within code #####
-x <- 'caption'
+x <- 'erddap'
 find_in_files <- function(search_term, dir_path = "code/", file_pattern = "\\.(R|Rmd)$", ignore_case = FALSE) {
 
   # 1. Get a list of all files in the directory (and subdirectories) matching the pattern
