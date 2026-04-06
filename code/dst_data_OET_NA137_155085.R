@@ -3,7 +3,7 @@
 ## startdate:20251208
 ## purpose: data submission, see Redmine
 ##### linkage #####
-filename <- 'dst_data_OET_NA_165_152637' ## manual: for this code file name, match to redmine
+filename <- 'dst_data_OET_NA_137_155085' ## manual: for this code file name, match to redmine
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, '.R', sep = '')
 # browseURL(github_link)
@@ -610,4 +610,25 @@ drive_upload(
   path  = dest_folder,
   overwrite = TRUE
 )
+
+
+##### ***** New Version: 20260313-3 ***** #####
+##### load from Google Drive #####
+folder_id <- as_id("1paE-p2fcYWaS0FVM74lO_io15b5an-yW")
+
+zip_file <- drive_ls(
+  folder_id,
+  pattern = "20260313-3_OET_NA137_155085\\.zip",
+  recursive = TRUE
+)
+
+local_zip <- tempfile(fileext = ".zip")
+drive_download(zip_file, local_zip, overwrite = TRUE)
+
+zip_contents <- unzip(local_zip, list = TRUE)
+csv_name <- zip_contents$Name[grepl("\\.csv$", zip_contents$Name)]
+
+unzip(local_zip, files = csv_name, exdir = tempdir())
+sub <- read.csv(file.path(tempdir(), csv_name))
+
 
