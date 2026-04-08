@@ -612,13 +612,14 @@ drive_upload(
 )
 
 
-##### ***** New Version: 20260313-3 ***** #####
-##### load from Google Drive #####
+##### ***** New Version: 20260326-2 ***** #####
+##### load from Google Drive (manual - chang file) #####
+filename <- '20260326-2_OET_NA137_155085'
 folder_id <- as_id("1paE-p2fcYWaS0FVM74lO_io15b5an-yW")
 
 zip_file <- drive_ls(
   folder_id,
-  pattern = "20260313-3_OET_NA137_155085\\.zip",
+  pattern = paste(filename, "\\.zip", sep = ''),
   recursive = TRUE
 )
 
@@ -630,5 +631,59 @@ csv_name <- zip_contents$Name[grepl("\\.csv$", zip_contents$Name)]
 
 unzip(local_zip, files = csv_name, exdir = tempdir())
 sub <- read.csv(file.path(tempdir(), csv_name))
+
+##### run QA report #####
+rmarkdown::render("C:/rworking/deepseatools/code/20250401-0_rmd_accession_qa_dashboard.Rmd",
+                  output_file =  paste(filename,".docx", sep=''),
+                  output_dir = 'C:/rworking/deepseatools/reports')
+
+##### Upload to Google Drive: MANUAL CHANGE: folderurl to the current drive folder ID for the accession at hand #####
+folderurl <- "https://drive.google.com/drive/folders/1paE-p2fcYWaS0FVM74lO_io15b5an-yW"
+setwd("C:/rworking/deepseatools/reports")
+drive_upload(paste(filename,".docx", sep=''),
+             path = as_id(folderurl),
+             name = paste(filename,".docx", sep=''),
+             overwrite = T)
+
+##### check #####
+sub %>% pull(Phylum) %>% table()
+sub %>% filter(Flag == 1) %>% pull(Longitude) %>% table()
+sub %>% pull(VernacularNameCategory)%>% table(useNA = 'always')
+
+
+##### manual map check #####
+x <- sub %>% filter(
+  Flag ==  0) %>%
+  group_by(CatalogNumber, Latitude, Longitude, FlagReason) %>%
+  summarize(n=n())
+points <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+st_write(points, "C:/rworking/deepseatools/indata/sub_geo.shp", delete_dsn = T)
+
+library(leaflet)
+library(sf)
+
+# Create a Leaflet map with an ocean relief background
+leaflet(data = points) %>%
+  addProviderTiles("Esri.OceanBasemap") %>%  # Ocean relief tiles
+  addCircleMarkers(
+    radius = 4,
+    color = "blue",
+    stroke = FALSE,
+    fillOpacity = 0.7,
+    popup = ~CatalogNumber  # Shows CatalogNumber on click
+  )
+
+##### check #####
+sub %>% filter(is.na(IndividualCount) == F) %>%  pull(CatalogNumber) %>% length()
+sub %>% filter(is.na(IdentificationQualifier) == T) %>%  pull(CatalogNumber) %>% length()
+
+
+
+
+
+
+
+
+
 
 
