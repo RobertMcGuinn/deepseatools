@@ -1,11 +1,11 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate:
-## purpose:
+## startdate:20260409
+## purpose:Annotation data ingest for NWFSC Bottom Trawl Survey, Curt Whitmire
 
 ##### parameters: manual input #####
 ## add filename, should be the same name as this file
-filename <- ''
+filename <- 'dst_data_NOAA_NWFSC_Bottom_Trawl_Survey_155196'
 
 ##### linkage #####
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'

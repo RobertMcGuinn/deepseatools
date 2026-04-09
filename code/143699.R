@@ -62,7 +62,6 @@ geology <- read.xlsx(paste('c:/rworking/deepseatools/indata/', tatorexport, sep 
 
 ##### load data from SQL files #####
 ## version 20250516
-
 filename <- 'SAMPLEMETADATA.xlsx'
 samplemetadata <- read.xlsx(paste('c:/rworking/deepseatools/indata/mdbc/Season1_2021_2022/', filename, sep = ''),
                      sheet = 'BiologicalSamples')
@@ -3362,6 +3361,89 @@ dim(sub)
 unique(sub$VehicleName)
 sub %>% pull(Phylum) %>% table()
 sub %>% filter(Flag == 1) %>% pull(Longitude) %>% table()
+
+
+
+
+
+##### ***** NEW Version: 20260408-0 ***** #####
+##### load from Google Drive (manual - change filename and folder id) #####
+filename <- '20260408-0_NOAA_PC2202L1_MDBC_143699'
+folder_id <- as_id("1kIqyM_KmWRbBXiBbF9dpxHmfp7HOBkSY")
+
+zip_file <- drive_ls(
+  folder_id,
+  pattern = paste(filename, "\\.zip", sep = ''),
+  recursive = TRUE
+)
+
+local_zip <- tempfile(fileext = ".zip")
+drive_download(zip_file, local_zip, overwrite = TRUE)
+
+zip_contents <- unzip(local_zip, list = TRUE)
+csv_name <- zip_contents$Name[grepl("\\.csv$", zip_contents$Name)]
+
+unzip(local_zip, files = csv_name, exdir = tempdir())
+sub <- read.csv(file.path(tempdir(), csv_name))
+
+##### check #####
+dim(sub)
+
+sub %>% pull(VernacularNameCategory) %>% table(useNA = 'always')
+
+##### get a random sample of images for checking #####
+x <- sub %>% filter(is.na(ImageURL) == F) %>%
+  pull(ImageURL)
+
+sample(x, size = 20)
+
+##### spot checking in Tator #####
+z <- c("https://www.ncei.noaa.gov/waf/dsc-data/images/001644/1644299.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001669/1669084.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001664/1664655.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001667/1667748.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001668/1668870.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001679/1679480.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001679/1679402.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001673/1673641.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001640/1640698.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001639/1639615.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001657/1657490.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001647/1647741.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001665/1665461.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001675/1675455.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001651/1651645.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001672/1672020.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001676/1676229.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001673/1673344.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001634/1634305.png",
+"https://www.ncei.noaa.gov/waf/dsc-data/images/001678/1678746.png")
+
+sub %>% filter(ImageURL %in% z) %>% group_by(ImageURL, SampleID, ScientificName) %>%
+  summarize(n=n(), count = IndividualCount) %>% View()
+
+## this is the filter to create in Tator: Localization$elemental_id == de17d6f6-b487-42da-922d-ddb45162f164
+
+sub %>% filter(SampleID == '1d426ca9-1b77-4eb1-ab4d-b8d2f35118af') %>%
+  pull(ScientificName)
+
+sub %>% filter(IndividualCount != -999) %>% pull(IndividualCount) %>% table()
+
+sub %>% filter(grepl('1669084.png', ImageURL)) %>% pull(ImageURL)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'H3'
+x <- 'dst_tool_load'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -53,7 +53,6 @@ print(file_info_df) ## files having a larger Modification_Time were created late
 writeLines(rstudioapi::getSourceEditorContext()$path, "clipboard")
 
 ##### clean up everything except filt ######
-
 ##### section: clean up selectively  #####
 ## list of all objects
 all_objects <- ls()
