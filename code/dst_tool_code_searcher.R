@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'dst_tool_global'
+x <- 'load_current'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,

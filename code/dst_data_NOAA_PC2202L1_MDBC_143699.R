@@ -32,7 +32,7 @@ gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ##### load database #####
-source('code/dst_data_OET_NA_165_152637.R.R')
+source('code/dst_tool_load_current_ndb.R')
 
 ##### ***** ORIGINAL ***** #####
 ##### load schema from google drive #####

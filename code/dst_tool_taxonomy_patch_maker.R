@@ -1,7 +1,8 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate: 20260414
-## purpose: taxonomy patch maker
+## purpose: taxonomy patch maker. It makes a taxonomy patch for an incoming dataset that has already been conformed.
+##          The incoming must have AphiaID populated.  This code does not handle "ScientificNames" without AphiaID.
 
 ##### linkage #####
 ## manual input here
