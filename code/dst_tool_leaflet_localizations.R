@@ -1,6 +1,23 @@
-# Install required packages if needed:
-# install.packages(c("leaflet", "htmltools", "glue"))
+##### Header #####
+## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
+## startdate: YYYYMMDD
+## purpose:
 
+##### parameters #####
+##### linkage #####
+current_file <- rstudioapi::getSourceEditorContext()$path
+filename <- basename(current_file)
+print(file_name)
+github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
+github_link <- paste(github_path, filename, sep = '')
+# browseURL(github_link)
+# redmine_path <- 'https://vlab.noaa.gov/redmine/issues/'
+# issuenumber <- filename
+# redmine_link <- paste(redmine_path, issuenumber, sep = '')
+# browseURL(redmine_link)
+
+##### packages #####
+library(tidyverse)
 library(leaflet)
 library(htmltools)
 library(glue)
@@ -33,17 +50,14 @@ draw_dynamic_box <- function(img_url, x, y, w, h) {
   )))
 }
 
-##### create a query result #####
+##### create a query result with a list a CatalogNumbers #####
 z <- filt %>% filter()
-
-##### query ERDDAP for list of CatalogNumbers #####
-## get the list of CatalogNumbers from the query into an variable
 catlist <- z$CatalogNumber
 
-# Your list of catalog numbers from your original script
+##### make the list of CatalogNumbers ready for ERDDAP #####
 catlist_q <- paste0("(", paste(catlist, collapse = "|"), ")")
 
-# Fetch the data
+##### fetch the data ######
 z_data <- tabledap(
   datasetid = "deep_sea_corals",
   url = ncei_url,
@@ -53,11 +67,11 @@ z_data <- tabledap(
   fields = c("ScientificName", "CatalogNumber", "latitude", "longitude", "ObservationDate")
 )
 
-# Convert to a standard data frame/tibble
+##### Convert to a standard data frame/tibble #####
 z_df <- as_tibble(z_data) %>%
-  mutate(across(c(latitude, longitude), as.numeric)) # Ensure coords are numbers
+  mutate(across(c(latitude, longitude), as.numeric))
 
-# 3. Apply the HTML function to every row in your dataframe
+##### apply the HTML function to every row in your dataframe ######
 erddap_data$popup_content <- mapply(
   FUN = draw_dynamic_box,
   img_url = erddap_data$image_url,
@@ -68,7 +82,7 @@ erddap_data$popup_content <- mapply(
   SIMPLIFY = TRUE
 )
 
-# 4. Build the Leaflet Map
+###### build the leaflet map with the picture in the popup content ######
 leaflet(data = erddap_data) %>%
   addProviderTiles(providers$Esri.OceanBasemap) %>% # Good basemap for marine data
   addCircleMarkers(

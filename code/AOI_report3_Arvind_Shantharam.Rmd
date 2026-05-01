@@ -1,0 +1,302 @@
+---
+title: "NOAA National Database for Deep-sea Corals and Sponges"
+subtitle: "Area of Interest / Query Summary"
+author: "NOAA-NFMS-OHC-DSCRTP"
+date: "arvind.shantharam@noaa.gov; 443-852-5566. Report last ran: `r Sys.Date()`"
+output:
+  html_document:
+    theme: flatly
+    toc: yes
+    toc_float: yes
+    code_folding: hide
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+# Global chunk options for clean, high-res outputs
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  warning = FALSE, 
+  message = FALSE, 
+  fig.retina = 3, 
+  fig.align = 'center',
+  dpi = 300
+)
+```
+
+## System Setup and Data Loading
+
+```{r packages_and_data}
+# Load required libraries (consolidated and updated for modern R spatial workflows)
+library(tidyverse)
+library(sf)
+library(raster)
+library(marmap)
+library(leaflet)
+library(RColorBrewer)
+library(rmarkdown)
+library(knitr)
+library(maps)
+library(httr)
+library(jsonlite)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(openxlsx)
+
+##### input: latest version of NDB #####
+# source('dst_tool_load_current_ndb.R')
+
+```
+
+## Spatial Filtering and Query
+
+```{r geographic_filter}
+## set bounding box variables
+# minlat <- -59.71025889938083
+# maxlat <- 40.847615578069906
+# minlon <- 97.74199852494911
+# maxlon <- 234.74848447622378
+
+## subset data by coordinates
+# x <- filt %>%
+#   filter(
+#     as.numeric(Latitude) > minlat,
+#     as.numeric(Latitude) < maxlat,
+#     as.numeric(Longitude) > minlon,
+#     as.numeric(Longitude) < maxlon
+#   )
+
+##------ OR ------##
+# Council Region Filter
+x <- filt %>% 
+  filter(FishCouncilRegion %in% c('Western Pacific')) 
+
+## dynamically reset bounding box variables with query results.
+minlat <- min(x$Latitude, na.rm = TRUE)
+maxlat <- max(x$Latitude, na.rm = TRUE)
+minlon <- min(x$Longitude, na.rm = TRUE)
+maxlon <- max(x$Longitude, na.rm = TRUE)
+```
+
+```{r erddap_link, include=FALSE}
+# Generate ERDDAP Link (Hidden from final render for neatness)
+x$erddap <- paste0("[https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatabaseVersion%2CDatasetID%2CCatalogNumber%2CSampleID%2CTrackingID%2CImageURL%2CHighlightImageURL%2CCitation%2CRepository%2CScientificName%2CVerbatimScientificName%2CVernacularNameCategory%2CVernacularName%2CTaxonRank%2CAphiaID%2CLifeScienceIdentifier%2CPhylum%2CClass%2CSubclass%2COrder%2CSuborder%2CFamily%2CSubfamily%2CGenus%2CSubgenus%2CSpecies%2CSubspecies%2CScientificNameAuthorship%2CTypeStatus%2COperationalTaxonomicUnit%2CMorphospecies%2CCombinedNameID%2CSynonyms%2CIdentificationComments%2CIdentifiedBy%2CIdentificationDate%2CIdentificationQualifier%2CIdentificationVerificationStatus%2CAssociatedSequences%2COcean%2CLargeMarineEcosystem%2CCountry%2CFishCouncilRegion%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CMinimumDepthInMeters%2CMaximumDepthInMeters%2CLocationComments%2CObservationDate%2CObservationYear%2CObservationTime%2CSurveyID%2CVessel%2CPI%2CPIAffiliation%2CPurpose%2CSurveyComments%2CStation%2CEventID%2CSamplingEquipment%2CVehicleName%2CSampleAreaInSquareMeters%2CfootprintWKT%2CfootprintSRS%2CIndividualCount%2CCategoricalAbundance%2CDensity%2CCover%2CVerbatimSize%2CMinimumSize%2CMaximumSize%2CWeightInKg%2CCondition%2CAssociatedTaxa%2COccurrenceComments%2CStartLatitude%2CStartLongitude%2CEndLatitude%2CEndLongitude%2CVerbatimLatitude%2CVerbatimLongitude%2CLocationAccuracy%2CNavType%2COtherData%2CHabitat%2CSubstrate%2CCMECSGeoForm%2CCMECSSubstrate%2CCMECSBiotic%2CTemperature%2CSalinity%2COxygen%2CpH%2CpHscale%2CpCO2%2CTA%2CDIC%2CRecordType%2CDataProvider%2CDataContact%2CModified%2CWebSite%2CEntryDate%2CReporter%2CReporterEmail%2CReporterComments%2CgisCRMDepth%2CgisGEBCODepth%2CgisEtopoDepth%2CgisMEOW%2CSynonymSearchProxy](https://www.ncei.noaa.gov/erddap/tabledap/deep_sea_corals.csv?ShallowFlag%2CDatabaseVersion%2CDatasetID%2CCatalogNumber%2CSampleID%2CTrackingID%2CImageURL%2CHighlightImageURL%2CCitation%2CRepository%2CScientificName%2CVerbatimScientificName%2CVernacularNameCategory%2CVernacularName%2CTaxonRank%2CAphiaID%2CLifeScienceIdentifier%2CPhylum%2CClass%2CSubclass%2COrder%2CSuborder%2CFamily%2CSubfamily%2CGenus%2CSubgenus%2CSpecies%2CSubspecies%2CScientificNameAuthorship%2CTypeStatus%2COperationalTaxonomicUnit%2CMorphospecies%2CCombinedNameID%2CSynonyms%2CIdentificationComments%2CIdentifiedBy%2CIdentificationDate%2CIdentificationQualifier%2CIdentificationVerificationStatus%2CAssociatedSequences%2COcean%2CLargeMarineEcosystem%2CCountry%2CFishCouncilRegion%2CLocality%2Clatitude%2Clongitude%2CDepthInMeters%2CDepthMethod%2CMinimumDepthInMeters%2CMaximumDepthInMeters%2CLocationComments%2CObservationDate%2CObservationYear%2CObservationTime%2CSurveyID%2CVessel%2CPI%2CPIAffiliation%2CPurpose%2CSurveyComments%2CStation%2CEventID%2CSamplingEquipment%2CVehicleName%2CSampleAreaInSquareMeters%2CfootprintWKT%2CfootprintSRS%2CIndividualCount%2CCategoricalAbundance%2CDensity%2CCover%2CVerbatimSize%2CMinimumSize%2CMaximumSize%2CWeightInKg%2CCondition%2CAssociatedTaxa%2COccurrenceComments%2CStartLatitude%2CStartLongitude%2CEndLatitude%2CEndLongitude%2CVerbatimLatitude%2CVerbatimLongitude%2CLocationAccuracy%2CNavType%2COtherData%2CHabitat%2CSubstrate%2CCMECSGeoForm%2CCMECSSubstrate%2CCMECSBiotic%2CTemperature%2CSalinity%2COxygen%2CpH%2CpHscale%2CpCO2%2CTA%2CDIC%2CRecordType%2CDataProvider%2CDataContact%2CModified%2CWebSite%2CEntryDate%2CReporter%2CReporterEmail%2CReporterComments%2CgisCRMDepth%2CgisGEBCODepth%2CgisEtopoDepth%2CgisMEOW%2CSynonymSearchProxy)", 
+                   "&latitude%3E=", minlat, 
+                   "&latitude%3C=", maxlat, 
+                   "&longitude%3E=", minlon, 
+                   "&longitude%3C=", maxlon)
+y <- unique(x$erddap)[1]
+```
+
+## Data Access
+
+* **ERDDAP CSV Download:** [Download File](`r y`)
+* **Data Dictionary:** [Download CSV File](https://www.ncei.noaa.gov/waf/dsc-data/metadata/20221213-0_NOAA_NDB_corals_sponges_data_dictionary.csv)
+* **Database Version:** `r paste0('DSCRTP_NatDB_', x$DatabaseVersion[1])`
+
+> **Note:** When importing CSV files into Excel, use the data import wizard (under the 'data' tab) and set all column types to 'text' to avoid data transformation issues. This step will prevent the automated alteration of dates in Excel.
+
+---
+
+## Area of Interest (AOI) Map
+
+```{r map, fig.width=8, fig.height=5}
+# Modern sf approach instead of sp/rgdal
+world <- ne_countries(scale = "medium", returnclass = "sf")
+zoom <- 5
+
+ggplot(world) +
+  geom_sf(fill = "antiquewhite", color = "gray50") +
+  coord_sf(xlim = c(minlon - zoom, maxlon + zoom), ylim = c(minlat - zoom, maxlat + zoom), expand = FALSE) +
+  geom_point(data = x, aes(x = Longitude, y = Latitude), alpha = 0.5, color = 'red', size = 2) +
+  theme_minimal(base_size = 14) +
+  theme(panel.background = element_rect(fill = "aliceblue"))
+```
+
+### 3D Bounding Box
+
+```{r bounding_box}
+options(digits = 5)
+
+# Modern approach using sf to get a bounding box
+sf_obj <- st_as_sf(x, coords = c("Longitude", "Latitude"), crs = 4326)
+bbox <- st_bbox(sf_obj)
+print(bbox)
+```
+
+---
+
+## Summary of this Selection by the Numbers
+
+*Note: The numbers below only reflect published records. Additional records may be retained by the Program for further review.*
+
+* **Number of records:** `r prettyNum(nrow(x), big.mark = ",")`
+* **Number of coral records:** `r prettyNum(sum(x$Phylum == "Cnidaria", na.rm=TRUE), big.mark = ",")` 
+* **Number of sponge records:** `r prettyNum(sum(x$Phylum == "Porifera", na.rm=TRUE), big.mark = ",")`
+* **Records with images:** `r prettyNum(sum(!is.na(x$ImageURL)), big.mark = ",")`
+* **Record type(s):** `r toString(unique(x$RecordType))`
+* **Minimum depth (meters):** `r prettyNum(min(as.numeric(x$DepthInMeters[x$DepthInMeters != "-999"]), na.rm=TRUE), big.mark = ",")`
+* **Maximum depth (meters):** `r prettyNum(max(as.numeric(x$DepthInMeters[x$DepthInMeters != "-999"]), na.rm=TRUE), big.mark = ",")`
+* **Time frame:** `r min(as.numeric(x$ObservationYear[x$ObservationYear != "-999"]), na.rm=TRUE)` to `r max(as.numeric(x$ObservationYear[x$ObservationYear != "-999"]), na.rm=TRUE)`
+
+---
+
+## Location Summary (Where?)
+
+```{r where_table}
+sum_tbl <- x %>%
+  mutate(Country = ifelse(is.na(Country) | Country == "", 'International Waters', as.character(Country))) %>%
+  group_by(Country) %>%
+  summarize(
+    Ocean = toString(unique(Ocean)), 
+    FishCouncilRegion = toString(unique(FishCouncilRegion)),
+    n = n()
+  ) %>%
+  arrange(desc(n))
+
+kable(sum_tbl, format.args = list(big.mark = ","))
+```
+
+---
+
+## Taxonomy Breakdown
+
+### Corals vs. Sponges
+
+```{r corals_vs_sponges, fig.width=8, fig.height=4}
+x %>%
+  filter(Phylum %in% c("Cnidaria", "Porifera")) %>%
+  ggplot(aes(Phylum, fill = Phylum)) +
+  geom_bar() + 
+  ylab("Number of Records") + 
+  theme_bw(base_size = 15) + 
+  scale_fill_manual(values = c("Cnidaria" = brewer.pal(12, "Paired")[8], 
+                               "Porifera" = brewer.pal(12, "Paired")[7])) +
+  theme(text = element_text(size=16), legend.position = "none")
+```
+
+### Distribution of Taxa by Order
+
+```{r taxa_by_order, fig.width=10, fig.height=6}
+##### building big palette #####
+palette1 <- brewer.pal(9,"Set1")
+palette2 <- brewer.pal(8,"Set2")
+palette3 <- brewer.pal(9,"Set3")
+palette4 <- brewer.pal(8,"Dark2")
+palette5 <- brewer.pal(8,"Accent")
+big_palette <- c(palette1, palette2, palette3, palette4, palette5)
+
+x <- x %>%
+  mutate(Order = factor(Order, levels = names(sort(table(Order), decreasing = TRUE))))
+
+##### graphing the orders #####
+set.seed(7)
+
+# Ensure we have exactly enough colors even if there are more than 42 Orders
+num_orders <- length(levels(x$Order))
+dynamic_palette <- colorRampPalette(big_palette)(num_orders)
+
+ggplot(x, aes(Order, fill = Order)) +
+  geom_bar() + 
+  ylab("Number of Records") + 
+  facet_wrap(~Phylum, scales="free") +
+  theme_bw(base_size = 14) +
+  scale_fill_manual(values = sample(dynamic_palette)) + 
+  theme(
+    axis.text.x = element_text(angle=45, hjust=1, vjust=1),
+    legend.position = "none" 
+  )
+```
+
+---
+
+## Contributors and Expeditions
+
+### Who Contributed to this Selection?
+
+```{r contributors_table}
+# Note: If 'Reporter' is missing from your dataset, simply delete the Reporter line below.
+sum_tbl_contributors <- x %>%
+  mutate(
+    url = paste0('https://www.ncei.noaa.gov/waf/dsc-data/dashboards/', DatasetID, '.html'),
+    # Use raw HTML tags instead of Markdown brackets
+    DashBoard = paste0('<a href="', url, '" target="_blank">', DatasetID, '</a>')
+  ) %>%
+  group_by(DataProvider) %>%
+  summarize(
+    DatasetID = toString(unique(DashBoard)), 
+    PI = toString(unique(unlist(strsplit(as.character(PI), '; ')))),
+    DataContact = toString(unique(DataContact)),
+    Reporter = toString(unique(Reporter)), 
+    n = n()
+  ) %>%
+  arrange(desc(DatasetID))
+
+# Add 'escape = FALSE' so R renders the HTML links correctly
+kable(sum_tbl_contributors, escape = FALSE, format.args = list(big.mark = ","))
+```
+
+### Expedition Details
+
+```{r expedition_table}
+sum_tbl_expeditions <- x %>%
+  group_by(DatasetID) %>%
+  summarize(
+    Vessel = toString(unique(Vessel)),
+    SamplingEquipment = toString(unique(SamplingEquipment)),
+    RecordType = toString(unique(RecordType)),
+    EndYear = max(as.numeric(ObservationYear), na.rm = TRUE),
+    n = n()
+  ) %>% 
+  arrange(desc(EndYear)) %>%
+  mutate(
+    url = paste0('https://deepseacoraldata.noaa.gov/Dataset%20Summaries/', DatasetID, '.html'),
+    # Use raw HTML tags instead of Markdown brackets
+    DashBoard = paste0('<a href="', url, '" target="_blank">Dashboard Link</a>')
+  ) %>%
+  dplyr::select(-url)
+
+# Add 'escape = FALSE' so R renders the HTML links correctly
+kable(sum_tbl_expeditions, escape = FALSE, format.args = list(big.mark = ","))
+```
+
+---
+
+## Growth of Database Through Time in this Area
+
+```{r database_growth, fig.width=9, fig.height=6}
+## set options to remove scientific notation
+options(scipen=10000)
+
+subx <- x %>% 
+  filter(Phylum == "Cnidaria") %>%
+  mutate(EntryDate = as.Date(replace_na(as.character(EntryDate), '2019-12-18')))
+
+suby <- x %>% 
+  filter(Phylum == "Porifera") %>%
+  mutate(EntryDate = as.Date(replace_na(as.character(EntryDate), '2019-12-18')))
+
+ggplot() +
+  stat_bin(data = subx,
+           aes(x = EntryDate, y = after_stat(count), color = "Cnidaria"), 
+           geom = "line", 
+           binwidth = 2, 
+           linewidth = 1) +
+  stat_bin(data = suby,
+           aes(x = EntryDate, y = after_stat(count), color = "Porifera"), 
+           geom = "line", 
+           binwidth = 2, 
+           linewidth = 1) +
+  ylab("Cumulative Number of Records") + 
+  xlab("Year Record Added") + 
+  xlim(as.Date('2012-01-01'), Sys.Date()) +
+  theme_bw(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.title = element_blank(),
+    plot.margin = unit(c(1,1,1,1), "cm")
+  ) +
+  scale_color_manual(values = c("Cnidaria" = brewer.pal(12, "Paired")[10],
+                                "Porifera" = brewer.pal(12, "Paired")[9])) +
+  ggtitle(paste("Database Version:", unique(filt$DatabaseVersion)[1]))
+```

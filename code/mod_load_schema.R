@@ -17,6 +17,8 @@ github_link <- paste(github_path, filename, '.R', sep = '')
 
 ##### packages #####
 library(tidyverse)
+library(googlesheets4)
+library(googledrive)
 
 ##### authorizations #####
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
@@ -31,8 +33,12 @@ s <- read_sheet(sheetid)
 # browseURL(url)
 
 ##### check #####
-s %>% filter(FieldName == 'VernacularNameCategory') %>%
+field <- 'Condition'
+s %>% filter(FieldName == field) %>%
+  pull(FieldDescription)
+s %>% filter(FieldName == field) %>%
   pull(ValidValues)
+
 
 
 

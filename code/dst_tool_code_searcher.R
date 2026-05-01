@@ -2,7 +2,7 @@
 library(tidyverse)
 ##### find file #####
 ## manual: edit string for x
-x <- 'load_current'
+x <- 'Arvind'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -14,7 +14,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(1)
+y <- c(2)
 this <- files[y]
 file.edit(this)
 
@@ -69,7 +69,7 @@ rm(to_keep)
 gc()
 
 ##### search within code #####
-x <- 'erddap'
+x <- 'map'
 find_in_files <- function(search_term, dir_path = "code/", file_pattern = "\\.(R|Rmd)$", ignore_case = FALSE) {
 
   # 1. Get a list of all files in the directory (and subdirectories) matching the pattern
@@ -89,6 +89,7 @@ find_in_files <- function(search_term, dir_path = "code/", file_pattern = "\\.(R
     if (length(matches) > 0) {
       results_list[[file]] <- data.frame(
         File = file,
+        LastModified = file.info(file)$mtime, # Extract the last modification time
         LineNumber = matches,
         CodeSnippet = trimws(lines[matches]), # trimws() removes extra leading/trailing spaces
         stringsAsFactors = FALSE
@@ -99,6 +100,10 @@ find_in_files <- function(search_term, dir_path = "code/", file_pattern = "\\.(R
   # 4. Bind it all into one clean data frame
   if (length(results_list) > 0) {
     final_results <- do.call(rbind, results_list)
+
+    # Sort the dataframe by LastModified descending (newest first)
+    final_results <- final_results[order(final_results$LastModified, decreasing = TRUE), ]
+
     rownames(final_results) <- NULL
     return(final_results)
   } else {
@@ -106,4 +111,5 @@ find_in_files <- function(search_term, dir_path = "code/", file_pattern = "\\.(R
     return(invisible(NULL))
   }
 }
+
 View(find_in_files(x))

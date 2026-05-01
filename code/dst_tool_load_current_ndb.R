@@ -5,6 +5,8 @@
 ## input: csv of current database
 ## output: 'filt'
 
+##### location of the latest database #####
+
 ##### linkage #####
 filename <- 'dst_load_current_ndb'
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
@@ -18,13 +20,13 @@ library(tidyverse)
 digits = 121
 
 ##### parameter #####
-filename <- 'DSCRTP_NatDB_20260121-0.csv'
+filename <- 'DSCRTP_NatDB_20260416-1.csv'
 
 ##### load national database (manual) #####
 path <- paste0("C:/rworking/deepseatools/indata/", filename)
 
 ## Version History
-
+# "DSCRTP_NatDB_20260416-1.csv" # 'unnamed': DRAFT working file
 # "DSCRTP_NatDB_20260121-0.csv" # 'Billy Ocean': published on portal
 # "DSCRTP_NatDB_20260109-1.csv" # 'unnamed': DRAFT working file
 # "DSCRTP_NatDB_20251223-0.csv" # 'unnamed': DRAFT working file
@@ -44,7 +46,7 @@ path <- paste0("C:/rworking/deepseatools/indata/", filename)
 # "DSCRTP_NatDB_20230620-0.csv"
 # "DSCRTP_NatDB_20230620-0_published.csv"
 # "DSCRTP_NatDB_20230428-0_FeatureLayer.csv"
-## Link to master change log: https://docs.google.com/spreadsheets/d/1psUlMQS1d2rRgsiKWJsCTPleJ7TMKYNV/edit#gid=121019363
+# Link to master change log: https://docs.google.com/spreadsheets/d/1psUlMQS1d2rRgsiKWJsCTPleJ7TMKYNV/edit#gid=121019363
 
 indata <- read.csv(path, header = T, encoding = 'latin1')
 

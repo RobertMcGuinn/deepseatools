@@ -21,7 +21,7 @@ gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
 ##### load current database from disk #####
-# source("c:/rworking/deepseatools/code/dst_tool_load_current_ndb.R")
+source("c:/rworking/deepseatools/code/dst_tool_load_current_ndb.R")
 
 ##### parameters: manual input #####
 ## get the current database version
@@ -32,7 +32,7 @@ version <- as.character(version)
 filename <- 'dst_tool_update_datasetid_key'
 
 ## indicate the Google Drive ID of the current DatasetID Key (points to a Google Sheet)
-sheetid <- '1J3aYaox0bmyR_lI03_s7pmnKctdOSNXi-SQWmtzzcUo'
+sheetid <- '13eejDcwOzYWJUBeMVsnqaRT13D-50sqgZRTmJQpwEPU'
 
 ## get the title of the current DatasetID Key
 ss <- gs4_get(sheetid)
@@ -91,7 +91,8 @@ rm(added_df)
 key2 <- key1 %>%
   mutate(
     class = case_when(
-      DatasetID == "OET_NA165" ~ 'Cruise',
+      DatasetID == "OET_NA137" ~ 'Cruise',
+      DatasetID == "NOAA_PC2202L1_MDBC" ~ 'Cruise',
       TRUE ~ class
     )
   )
@@ -222,12 +223,12 @@ z <- left_join(y,x)
 key <- z
 
 ##### write out new DatasetID key to a local folder -- OR -- #####
-write.xlsx(key,
-           paste("C:/rworking/deepseatools/indata/",
-                 key_version_new,
-                 "_DatasetID_Key_DSCRTP.xlsx",
-                 sep=''),
-           overwrite = TRUE)
+# write.xlsx(key,
+#            paste("C:/rworking/deepseatools/indata/",
+#                  key_version_new,
+#                  "_DatasetID_Key_DSCRTP.xlsx",
+#                  sep=''),
+#            overwrite = TRUE)
 
 ##### write out new DatasetID key to Google Drive #####
 

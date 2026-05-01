@@ -29,7 +29,7 @@ github_link <- paste(github_path, filename, '.R', sep = '')
 source('C:/rworking/deepseatools/code/dst_load_current_ndb.R')
 
 ##### parameters #####
-today <- '20251001-0'
+today <- '20260422-0'
 dbversion <- unique(filt$DatabaseVersion)
 ##### check #####
 dbversion
@@ -176,7 +176,6 @@ obis <- obis %>%
   ))
 
 ##### write out file for submission#####
-
 setwd('C:/rworking/deepseatools/indata')
 obis %>%
   write.csv(paste('dwc_noaa_dsc_rtp_version', '_', dbversion , '_', today, '.txt', sep = ''),
@@ -237,14 +236,13 @@ data <- read.delim(
 # data %>%  filter(occurrenceID == "NOAA_DSCRTP:1557739") %>% pull(associatedMedia)
 # obis %>%  filter(occurrenceID == "NOAA_DSCRTP:1557739") %>% pull(scientificName)
 
-
-set <- as.numeric(gsub(".*:", "", data$occurrenceID))
-`%notin%` <- Negate(`%in%`)
-x <- filt %>% filter(CatalogNumber %notin% set) %>% pull(CatalogNumber)
-filt %>%  filter(CatalogNumber %in% x) %>%
-  pull(SampleID)
-
-filt %>% filter(SampleID == 'USNM 75656') %>% pull(Vessel)
+# set <- as.numeric(gsub(".*:", "", data$occurrenceID))
+# `%notin%` <- Negate(`%in%`)
+# x <- filt %>% filter(CatalogNumber %notin% set) %>% pull(CatalogNumber)
+# filt %>%  filter(CatalogNumber %in% x) %>%
+#   pull(SampleID)
+#
+# filt %>% filter(SampleID == 'USNM 75656') %>% pull(Vessel)
 
 ##### NOTES: DarwinCore crosswalk for other fields we might use later on #####
 # recordNumber = "TrackingID",
