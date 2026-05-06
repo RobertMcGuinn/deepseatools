@@ -69,7 +69,7 @@ library(openxlsx)
 ##------ OR ------##
 # Council Region Filter
 x <- filt %>% 
-  filter(FishCouncilRegion %in% c('Western Pacific')) 
+  filter(FishCouncilRegion %in% c('Caribbean')) 
 
 ## dynamically reset bounding box variables with query results.
 minlat <- min(x$Latitude, na.rm = TRUE)
