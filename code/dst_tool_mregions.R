@@ -7,7 +7,7 @@
 ##### linkage #####
 current_file <- rstudioapi::getSourceEditorContext()$path
 filename <- basename(current_file)
-print(file_name)
+print(filename)
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
 # browseURL(github_link)
@@ -23,57 +23,54 @@ library(sf)
 library(mregions2)
 library(leaflet)
 
-##### Load NOAA NDB occurrence data #####
+##### load NOAA NDB occurrence data #####
 source('code/dst_tool_load_current_ndb.R')
 
-##### Fetch Specific MEOW Realm Boundaries via Gazetteer #####
-# The Gazetteer requires exact string matches to the Spalding et al. (2007) ontology.
-
-# 1. Search for the exact MEOW Realm names
-realm_np <- gaz_search("Temperate Northern Pacific")
-realm_cip <- gaz_search("Central Indo-Pacific")
-
-# 2. Combine the records and strictly filter for the 'Marine Realm' placeType
-# Note the camelCase 'placeType' to match the mregions2 schema.
-realm_records <- bind_rows(realm_np, realm_cip) %>%
-  filter(placeType == "Realm")
-
-# 3. Retrieve the sf multipolygon geometries using the verified search results
-realm_polys <- gaz_geometry(realm_records)
-
-# 4. Join the text names back to the geometries for mapping and filtering
-realm_polys <- realm_polys %>%
-  left_join(realm_records %>% select(MRGID, preferredGazetteerName), by = "MRGID")
-
-##### Efficient Spatial Subsetting & Joining #####
-# Disable s2 temporarily to bypass realm polygon micro-topology errors
+##### Deactivate the strict s2 spherical geometry engine to bypass IHO topology bugs #####
 sf_use_s2(FALSE)
 
-# 1. Spatially Subset FIRST (Maximum Efficiency)
-# This uses spatial indexing to instantly drop all global NDB records
-# that do not fall within our two designated MEOW Realms.
-ndb_subset <- ndb_sf[realm_polys, ]
+##### Fetch IHO Ocean Boundaries Natively via mregions2 #####
+# By using a server-side cql_filter, the Geoserver isolates the shapes BEFORE downloading.
+pacific_iho <- mrp_get(
+  layer = "iho",
+  cql_filter = "name IN ('North Pacific Ocean', 'South Pacific Ocean')"
+) %>%
+  mutate(TargetRegion = case_when(
+    name == "North Pacific Ocean" ~ "Western North Pacific",
+    name == "South Pacific Ocean" ~ "Western South Pacific"
+  )) %>%
+  # Programmatically repair any invalid geometries or self-intersections in the shapes
+  st_make_valid()
 
-# 2. Perform the Attribute Join
-# Now we run st_join() ONLY on the few thousand points that actually
-# exist in the Temperate Northern Pacific and Central Indo-Pacific.
-target_occurrences <- st_join(ndb_subset, realm_polys, join = st_intersects)
+##### Convert NOAA DSCRTP Data to Spatial Object #####
+# Utilizing exact DSCRTP schema column names: Longitude, Latitude
+dscrtp_sf <- filt %>%
+  filter(!is.na(Longitude) & !is.na(Latitude)) %>%
+  # Filter for the Eastern Hemisphere / Western Pacific (typically between 100°E and 180°E)
+  filter(Longitude > 100 & Longitude <= 180) %>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
 
-# Re-enable s2 for future geometric operations
-sf_use_s2(TRUE)
+##### Spatial Join and Top 50 Tally #####
+# Intersect points with IHO polygons and calculate total abundance per species
+# Utilizing exact DSCRTP schema column names: ScientificName, IndividualCount
+species_by_basin <- st_join(dscrtp_sf, pacific_iho, join = st_intersects) %>%
+  filter(!is.na(TargetRegion)) %>%
+  filter(!is.na(ScientificName) & ScientificName != "") %>%
 
-##### Interactive Biogeographic Visualization #####
-# Render only the spatially subsetted occurrences.
-leaflet(target_occurrences) %>%
-  addProviderTiles(providers$Esri.OceanBasemap) %>%
-  addCircleMarkers(
-    radius = 4,
-    color = ~ifelse(preferredGazetteerName.x == "Temperate Northern Pacific", "#56B4E9", "#E69F00"),
-    stroke = FALSE,
-    fillOpacity = 0.7,
-    popup = ~paste0(
-      "<b>Taxon:</b> ", ScientificName, "<br>",
-      "<b>Realm:</b> ", preferredGazetteerName.x, "<br>",
-      "<b>Depth:</b> ", DepthInMeters, " m"
-    )
-  )
+  # Standardize IndividualCount: presence-only markers (-999) become 1
+  mutate(AdjustedCount = if_else(IndividualCount == -999, 1, as.numeric(IndividualCount))) %>%
+
+  # Group by region and species, then calculate total abundance
+  group_by(TargetRegion, ScientificName) %>%
+  summarise(TotalAbundance = sum(AdjustedCount, na.rm = TRUE), .groups = "drop") %>%
+  st_drop_geometry() %>% # Convert back to a standard data frame for cleaner display
+
+  # Sort and extract the top 50 for each side of the equator
+  arrange(TargetRegion, desc(TotalAbundance)) %>%
+  group_by(TargetRegion) %>%
+  slice_head(n = 50)
+
+print(species_by_basin, n=100)
+
+##### write resulting table #####
+write_csv2(species_by_basin, 'indata/20260601_DSCRTP_NatDB_20260416-1_top_50_species_by_basin.csv')

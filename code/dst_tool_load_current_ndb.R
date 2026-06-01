@@ -5,7 +5,6 @@
 ## input: csv of current database
 ## output: 'filt'
 
-##### location of the latest database #####
 
 ##### linkage #####
 filename <- 'dst_load_current_ndb'
@@ -73,5 +72,6 @@ filt %>% filter(is.na(VernacularNameCategory) == T) %>%
   summarize(n=n())
 
 # check for missing VernacularNameCategory --------------------------------
+
 
 
