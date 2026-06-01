@@ -76,19 +76,19 @@ h3_mesh_reloaded <- readRDS("indata/OCIS_H6_MasterMesh_Jan2026.rds")
 message(paste("Reloaded object count:", nrow(h3_mesh_reloaded)))
 
 ##### check #####
-names(h3_mesh)
-library(dplyr)
-library(tidyr)
+# names(h3_mesh)
+# library(dplyr)
+# library(tidyr)
 
 
 ##### bringing in data dictionary # Install and load the package
 # Since this is a public sheet, you can disable authentication
-gs4_deauth()
+# gs4_deauth()
 
 # Define the URL
-url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOF1LDFyQr-2KXt_WjvVDtMsnpSWNR5NmK-b4xcK3QeHipJ-sEDR8-KitBTmQV_TPPJ-t8gMFj-Jmf/pubhtml?gid=1160602972&single=true"
+# url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOF1LDFyQr-2KXt_WjvVDtMsnpSWNR5NmK-b4xcK3QeHipJ-sEDR8-KitBTmQV_TPPJ-t8gMFj-Jmf/pubhtml?gid=1160602972&single=true"
 
 # Read the sheet
 # Note: read_sheet often works better with the direct /edit URL,
 # but for published sheets, Option 2 is often more reliable.
-df <- read_sheet(url)#####
+# df <- read_sheet(url)#####

@@ -15,15 +15,19 @@ library(googlesheets4)
 gs4_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 drive_auth(cache = ".secrets", email = "robert.mcguinn@noaa.gov")
 
-##### check: take a look at schema: browse to schema (manual: must put in correct ID) #####
+##### parameters #####
+## define the schema location in google drive
 ## Google Drive location: https://drive.google.com/drive/folders/0B8lqJ4X0l6pTajJsa2t6bWRNRWc?resourcekey=0-QVD6rdiSnKeGQ4r7MSvwjQ&usp=drive_link
 ## see 'current' folder and 'archive' folder within that for earlier versions.
-## manual: now is the time to edit the sehema as needed and give the file a new version number
-# id <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
+## manual: now is the time to edit the schema as needed and give the file a new version number
+id <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
 # gs4_browse(id)
 
-##### load schema from Google Drive(manual: must put in correct ID) #####
-id <- '1jZa-b18cWxCVwnKsQcREPdaRQXTzLszBrtWEciViDFw'
+## submission template
+sheet_id <- "1xSfnbTRT4Lcrbbx-1_TPuvCqS4AVQEowVbLYYvoFM_s"
+gs4_browse(sheet_id)
+
+##### load schema from Google Drive (make sure you have set the right 'id') #####
 s <- read_sheet(id)
 
 ##### load current submission template from Google Drive #####
