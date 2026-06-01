@@ -1,8 +1,7 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate: YYYYMMDD
-## purpose:
-
+## startdate: 20260601
+## purpose: Top 50 analysis of species in the Western South Pacific vs. the Western North Pacific
 ##### parameters #####
 ##### linkage #####
 current_file <- rstudioapi::getSourceEditorContext()$path
@@ -42,7 +41,7 @@ pacific_iho <- mrp_get(
   # Programmatically repair any invalid geometries or self-intersections in the shapes
   st_make_valid()
 
-##### Convert NOAA DSCRTP Data to Spatial Object #####
+##### Convert NOAA DSCRTP Data to Spatial Object and filter for Western Pacific #####
 # Utilizing exact DSCRTP schema column names: Longitude, Latitude
 dscrtp_sf <- filt %>%
   filter(!is.na(Longitude) & !is.na(Latitude)) %>%
