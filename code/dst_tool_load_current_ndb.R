@@ -65,13 +65,9 @@ rm(indata)
 print(unique(filt$DatabaseVersion))
 print(dim(filt))
 
-##### check for #####
-## check for any missing VernacularNameCategory
+##### check for any missing VernacularNameCategory #####
 filt %>% filter(is.na(VernacularNameCategory) == T) %>%
   group_by(DatasetID, AphiaID, ScientificName, VernacularNameCategory) %>%
   summarize(n=n())
-
-# check for missing VernacularNameCategory --------------------------------
-
 
 
