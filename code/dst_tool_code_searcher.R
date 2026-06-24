@@ -3,7 +3,7 @@ library(tidyverse)
 
 ##### find file #####
 ## manual: edit string for x
-x <- 'submission'
+x <- 'dst_report'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -15,7 +15,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(4)
+y <- c(1)
 this <- files[y]
 file.edit(this)
 
@@ -114,3 +114,7 @@ find_in_files <- function(search_term, dir_path = "code/", file_pattern = "\\.(R
 }
 
 View(find_in_files(x))
+
+##### load current version of NDB #####
+source('code/dst_tool_load_current_ndb.R')
+]

@@ -1,0 +1,279 @@
+---
+title: "Area of Interest (AOI) Occurrences Analysis"
+author: "Generated Report"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+# Set global chunk options
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+# Load required modern packages
+library(sf)           # For spatial data manipulation
+library(dplyr)        # For data wrangling
+library(googledrive)  # For fetching from Google Drive
+library(knitr)# For simple HTML tables
+```
+
+```{r}
+##### authenticate #####
+# Replace with the email tied to your Google Drive
+drive_auth(email = "robert.mcguinn@noaa.gov")
+
+```
+
+```{r}
+# 1. Fetch AOI Geodatabase from Google Drive
+drive_id <- "10jN0aiw2l8gks7JGmcwqd2w6CXNOT8oA"
+
+# Download the zip file to a temporary location
+temp_zip <- tempfile(fileext = ".zip")
+drive_download(as_id(drive_id), path = temp_zip, overwrite = TRUE)
+
+# Unzip to a temporary directory
+temp_dir <- tempdir()
+unzip(temp_zip, exdir = temp_dir)
+
+# 2. Find the .gdb folder
+# We use list.dirs() because a .gdb is a directory, not a standalone file
+all_dirs <- list.dirs(temp_dir, recursive = TRUE)
+gdb_path <- all_dirs[grepl("\\.gdb$", all_dirs)][1]
+
+# Quick safety check
+if (is.na(gdb_path)) {
+  stop("No .gdb folder was found in the downloaded zip. Please check the zip contents.")
+}
+
+# 3. Read the geodatabase into an sf object
+aoi_polygon <- st_read(gdb_path, quiet = TRUE)
+```
+
+```{r}
+# Convert 'filt' to a spatial 'sf' object 
+# (Adjust coords to match your actual longitude/latitude column names)
+filt_sf <- st_as_sf(filt, 
+                    coords = c("Longitude", "Latitude"), 
+                    crs = 4326,  # WGS84 standard coordinate system
+                    remove = FALSE)
+
+# Ensure the coordinate reference systems (CRS) match before intersection
+aoi_polygon <- st_transform(aoi_polygon, crs = st_crs(filt_sf))
+
+# Perform the AOI analysis (keep only occurrences inside the AOI)
+filt_aoi <- st_intersection(filt_sf, aoi_polygon)
+```
+
+```{r}
+expedition_summary <- filt_aoi %>%
+  st_drop_geometry() %>%
+  group_by(SurveyID, Vessel, VehicleName, ObservationYear) %>%
+  summarize(
+    TotalOccurrences = n(),
+    UniqueSpeciesCount = n_distinct(ScientificName),
+    .groups = "drop"
+  ) %>%
+  arrange(ObservationYear, SurveyID)
+
+kable(expedition_summary, caption = "Expedition Summary within the AOI")
+```
+
+```{r}
+depth_summary <- filt_aoi %>%
+  st_drop_geometry() %>% # Drop spatial features for standard dataframe manipulation
+  group_by(ScientificName, VernacularNameCategory) %>%
+  summarize(
+    TotalOccurrences = n(),
+    MinDepth_m = min(DepthInMeters, na.rm = TRUE),
+    MaxDepth_m = max(DepthInMeters, na.rm = TRUE),
+    MeanDepth_m = round(mean(DepthInMeters, na.rm = TRUE), 1),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(TotalOccurrences))
+
+kable(depth_summary, caption = "Summary of Depths per Species in the AOI")
+```
+
+```{r static-map, fig.width=8, fig.height=6}
+# Load mapping packages
+library(ggplot2)
+library(rnaturalearth)
+library(ggspatial) # Required for scale bar and north arrow
+
+# 1. Fetch the US border geometry
+us_border <- ne_countries(country = "United States of America", 
+                          returnclass = "sf", 
+                          scale = "medium")
+
+# Ensure the US border CRS matches our AOI
+us_border <- st_transform(us_border, crs = st_crs(aoi_polygon))
+
+# 2. Extract the bounding box of the AOI and set a wider buffer
+aoi_bbox <- st_bbox(aoi_polygon)
+zoom_buffer <- 2.0  
+
+# 3. Build the map using ggplot2
+ggplot() +
+  # Add the US Border
+  geom_sf(data = us_border, fill = "gray95", color = "gray50") +
+  
+  # Add ALL original occurrences
+  geom_sf(data = filt_sf, color = "gray70", size = 1.0, alpha = 0.5) +
+  
+  # Add the AOI Polygon
+  geom_sf(data = aoi_polygon, fill = NA, color = "red", linewidth = 1.2) +
+  
+  # Add the Intersected Occurrences
+  geom_sf(data = filt_aoi, color = "dodgerblue", size = 1.5, alpha = 0.7) +
+  
+  # Zoom the map using the bounding box
+  coord_sf(
+    xlim = c(aoi_bbox["xmin"] - zoom_buffer, aoi_bbox["xmax"] + zoom_buffer), 
+    ylim = c(aoi_bbox["ymin"] - zoom_buffer, aoi_bbox["ymax"] + zoom_buffer),
+    expand = FALSE
+  ) +
+  
+  # Add North Arrow (Top Right)
+  annotation_north_arrow(
+    location = "tr", 
+    which_north = "true", 
+    pad_x = unit(0.2, "in"), 
+    pad_y = unit(0.2, "in"),
+    style = north_arrow_fancy_orienteering
+  ) +
+  
+  # Add Scale Bar (Bottom Left)
+  annotation_scale(
+    location = "bl", 
+    width_hint = 0.3,
+    text_cex = 0.9
+  ) +
+  
+  # Clean, modern theme
+  theme_minimal() +
+  labs(
+    title = "Biological Occurrences: Inside vs. Outside AOI",
+    subtitle = "Red border indicates the AOI; Blue points are valid occurrences; Gray are excluded",
+    x = "Longitude",
+    y = "Latitude"
+  ) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.major = element_line(color = "gray90", linetype = "dashed")
+  )
+
+```
+
+```{r gbif-analysis, fig.width=8, fig.height=6}
+# Load GBIF package
+library(rgbif)
+
+# 1. Create a WKT (Well-Known Text) bounding box to query the GBIF API
+# GBIF requires spatial searches to be formatted this way
+aoi_bbox <- st_bbox(aoi_polygon)
+wkt_geom <- sprintf("POLYGON((%f %f, %f %f, %f %f, %f %f, %f %f))",
+                    aoi_bbox["xmin"], aoi_bbox["ymin"],
+                    aoi_bbox["xmax"], aoi_bbox["ymin"],
+                    aoi_bbox["xmax"], aoi_bbox["ymax"],
+                    aoi_bbox["xmin"], aoi_bbox["ymax"],
+                    aoi_bbox["xmin"], aoi_bbox["ymin"])
+
+# 2. Download GBIF data within the bounding box
+# Limit set to 1000 for speed; increase if you need a massive dataset
+gbif_res <- occ_search(
+  geometry = wkt_geom, 
+  hasCoordinate = TRUE,
+  # datasetKey = "df8e3fb8-3da7-4104-a866-748f6da20a3c", # Forces GBIF to only return this dataset
+  limit = 10000
+)
+gbif_df <- gbif_res$data
+
+# Safety check in case the query returns zero results
+if (is.null(gbif_df) || nrow(gbif_df) == 0) {
+  stop("No GBIF occurrences found in this AOI bounding box.")
+}
+
+# 4. Convert to sf and intersect with the EXACT polygon
+# (The API queries a bounding box, so we trim off the corners here)
+gbif_sf <- st_as_sf(gbif_df, 
+                    coords = c("decimalLongitude", "decimalLatitude"), 
+                    crs = 4326, 
+                    remove = FALSE)
+
+gbif_sf <- st_transform(gbif_sf, crs = st_crs(aoi_polygon))
+gbif_aoi <- st_intersection(gbif_sf, aoi_polygon)
+
+# ---------------------------------------------------------
+# 5. Output: Depth Summary by Species (GBIF)
+# ---------------------------------------------------------
+gbif_depth_summary <- gbif_aoi %>%
+  st_drop_geometry() %>%
+  group_by(scientificName) %>%
+  summarize(
+    TotalOccurrences = n(),
+    Count = sum(individualCount, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(Count))
+
+kable(gbif_depth_summary, caption = "GBIF Data: Summary of Depths per Species in the AOI")
+
+# ---------------------------------------------------------
+# 6. Output: Expedition Summary (GBIF)
+# ---------------------------------------------------------
+gbif_expedition_summary <- gbif_aoi %>%
+  st_drop_geometry() %>%
+  group_by(hostingOrganizationKey, year) %>%
+  summarize(
+    TotalOccurrences = n(),
+    UniqueSpeciesCount = n_distinct(scientificName),
+    .groups = "drop"
+  ) %>%
+  arrange(year)
+
+kable(gbif_expedition_summary, caption = "GBIF Data: Expedition Summary within the AOI")
+
+# ---------------------------------------------------------
+# 7. Output: Static Map (GBIF)
+# ---------------------------------------------------------
+# Using green to distinguish GBIF data from your previous blue dataset
+ggplot() +
+  geom_sf(data = us_border, fill = "gray95", color = "gray50") +
+  
+  # All GBIF points fetched (inside the bounding box)
+  geom_sf(data = gbif_sf, color = "gray70", size = 1.0, alpha = 0.5) +
+  
+  geom_sf(data = aoi_polygon, fill = NA, color = "red", linewidth = 1.2) +
+  
+  # GBIF points confirmed inside the polygon (highlighted green)
+  geom_sf(data = gbif_aoi, color = "forestgreen", size = 1.5, alpha = 0.7) +
+  
+  coord_sf(
+    xlim = c(aoi_bbox["xmin"] - zoom_buffer, aoi_bbox["xmax"] + zoom_buffer), 
+    ylim = c(aoi_bbox["ymin"] - zoom_buffer, aoi_bbox["ymax"] + zoom_buffer),
+    expand = FALSE
+  ) +
+  annotation_north_arrow(
+    location = "tr", which_north = "true", 
+    pad_x = unit(0.2, "in"), pad_y = unit(0.2, "in"),
+    style = north_arrow_fancy_orienteering
+  ) +
+  annotation_scale(
+    location = "bl", width_hint = 0.3, text_cex = 0.9
+  ) +
+  theme_minimal() +
+  labs(
+    title = "GBIF Occurrences: Inside vs. Outside AOI",
+    subtitle = "Red border indicates the AOI; Green points intersect the AOI, Gray points are outside the AOI",
+    x = "Longitude",
+    y = "Latitude"
+  ) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.major = element_line(color = "gray90", linetype = "dashed")
+  )
+```
