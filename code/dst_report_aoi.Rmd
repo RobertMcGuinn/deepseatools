@@ -1,11 +1,11 @@
 ---
-title: "Area of Interest (AOI) Analysis for NOAA's National Database for Deep Sea Corals and Sponges"
-author: "Database Version: 20260416-1"
+title: "Area of Interest (AOI) Analysis for the BOEM Virginia Minerals Areas RFI"
+author: "NMFS: Deep Sea Coral Research and Technology Program"
 date: "`r Sys.Date()`"
 output: 
   html_document:
     theme: flatly
-    toc: false
+    toc: true
     toc_float: true
 ---
 
@@ -31,7 +31,7 @@ drive_auth(email = "robert.mcguinn@noaa.gov")
 
 ```
 
-```{r}
+```{r load_aoi}
 ## fetch AOI Geodatabase from Google Drive
 drive_id <- "10jN0aiw2l8gks7JGmcwqd2w6CXNOT8oA"
 
@@ -70,20 +70,37 @@ aoi_polygon <- st_transform(aoi_polygon, crs = st_crs(filt_sf))
 ## Perform the AOI intersection (keep only occurrences inside the AOI)
 filt_aoi <- st_intersection(filt_sf, aoi_polygon)
 ```
+**Point(s) of contact:**     
+- Robert McGuinn (robert.mcguinn@noaa.gov)     
+- Savannah Goode (goodesavannah@gmail.com)     
+- Arvind Shantharam (arvind.shantharam@noaa.gov)     
 
+# Introduction
+This analysis was performed by the NMFS Deep-sea Coral Research and Technology Program (DSCRTP) referencing the BOEM critical mineral area off the coast of Virginia. See the following link for more information on the Request for Information (RFI): https://www.boem.gov/marine-minerals/critical-minerals/virginia-mineral-activities. 
+
+# Biological occurrence data summary (presence only)
+Summary of presence-only biological occurrences from NOAA's National Database for Deep-sea Corals and Sponges. For more information on the database see: https://deepseacoraldata.noaa.gov/data. **Note: Absence of biological occurrences in this database does not indicate actual absence in the real world.**
+
+**Cite the database as follows:**  
+National Oceanic and Atmospheric Administration (NOAA), Deep Sea Coral Research and Technology Program (DSCRTP), 2026. Observations of Deep-Sea Coral and Sponge Occurrences from NOAA's National Database for Deep-sea Corals and Sponges, 1842-Present, version `r unique(filt$DatabaseVersion)`. (NCEI Accession 0145037). NOAA National Centers for Environmental Information. Archived data: https://www.ncei.noaa.gov/archive/accession/0145037. Access portal: https://www.ncei.noaa.gov/maps/deep-sea-corals-portal/.  Accessed [date as YYYY-MM-DD].
+
+Note: Character strings in [bold brackets] should be overwritten with appropriate values and leave out the brackets.  
+
+## Survey summary table (within the AOI)
 ```{r expedition_summary}
 expedition_summary <- filt_aoi %>%
   st_drop_geometry() %>%
-  group_by(SurveyID, Vessel, VehicleName, DatasetID, ObservationYear) %>%
+  group_by(SurveyID, Vessel, SamplingEquipment, DatasetID, ObservationYear) %>%
   summarize(
     TotalOccurrences = n(),
     .groups = "drop"
   ) %>%
   arrange(ObservationYear, SurveyID)
 
-kable(expedition_summary, caption = "Expedition Summary within the AOI")
+kable(expedition_summary)
 ```
 
+## Taxonomic summary table (within the AOI)
 ```{r taxonomic_summary}
 depth_summary <- filt_aoi %>%
   st_drop_geometry() %>% 
@@ -97,9 +114,10 @@ depth_summary <- filt_aoi %>%
   ) %>%
   arrange(desc(TotalOccurrences))
 
-kable(depth_summary, caption = "Summary of Depths per Species in the AOI")
+kable(depth_summary)
 ```
 
+## Map of occurrences (within the AOI)
 ```{r static-map, fig.width=8, fig.height=6}
 ##  the US border geometry
 us_border <- ne_countries(country = "United States of America", 
@@ -163,6 +181,8 @@ st_write(
 )
 ```
 
+# Habitat suitability model summary 
+
 ```{r import-models}
 # 1. Define the local path to your zip file
 zip_path <- "../indata/DSC_PredictiveModeling_US_Northeast_MidAtlantic.zip"
@@ -198,6 +218,62 @@ predictive_models <- lapply(shp_files, function(file) {
 names(predictive_models) <- tools::file_path_sans_ext(basename(shp_files))
 ```
 
+The data used in the following section are based on the habitat suitability models created in 2013 by Matt Poti and Arliss Winship. You can find more documentation about these models at: https://www.ncei.noaa.gov/archive/accession/014592 
+
+**Cite the data as:**
+Cite as: Kinlan, Brian; Poti, Matthew; Dorfman, Dan; Caldow, Chris; Drohan, Amy; Packer, David B.; Nizinski, Martha S. (2016). Model output for deep-sea coral habitat suitability in the U.S. North and Mid-Atlantic from 2013 (NCEI Accession 0145923). [indicate subset used]. NOAA National Centers for Environmental Information. Dataset. https://www.ncei.noaa.gov/archive/accession/0145923. Accessed [date].
+
+**The following codes are used to designate the different taxa specific model runs:**
+```{r taxon-code-table, echo=FALSE}
+# Create the table as a dataframe
+taxon_codes <- data.frame(
+  Group = c("1", "1a", "1b", "2", "2a", "2b", "3", "3a", "3b"),
+  Description = c(
+    "Order Alcyonacea",
+    "Gorgonian Alcyonacea (Suborders Calcaxonia, Holaxonia, Scleraxonia)",
+    "Non-Gorgonian Alcyonacea (Suborders Alcyoniina, Stolonifera)",
+    "Order Scleractinia",
+    "Family Caryophylliidae",
+    "Family Flabellidae",
+    "Order Pennatulacea",
+    "Suborder Sessiliflorae",
+    "Suborder Subsessiliflorae"
+  ),
+  `Code name` = c(
+    "ALCY", "ALCY-GORG", "ALCY-NONGORG", 
+    "SCLER", "SCLER-CARYO", "SCLER-FLAB", 
+    "PENN", "PENN-SESS", "PENN-SUBSESS"
+  ),
+  check.names = FALSE # This allows the space in 'Code name'
+)
+
+# Print the formatted table using kable
+kable(taxon_codes)
+```
+
+**Habitat suitability class definitions (GRIDCODE):**
+```{r suitability-table, echo=FALSE}
+# Create the table as a dataframe
+suitability_table <- data.frame(
+  `Suitability (GRIDCODE)` = c(0, 1, 2, 5, 10),
+  Description = c(
+    "Low Suitability", 
+    "Medium-Low Suitability", 
+    "Medium Suitability", 
+    "High Suitability", 
+    "Very High Suitability"
+  ),
+  check.names = FALSE
+)
+
+# Print the formatted table with centered numbers
+kable(
+  suitability_table, 
+  align = c("c", "l") # 'c' centers the first column, 'l' left-aligns the second
+)
+```
+
+## Tabulation of the area of each suitability class within the AOI (in hectares)
 ```{r calculate-area-intersected}
 # Load the units package for easy area conversions
 library(units)
@@ -246,10 +322,11 @@ master_area_summary_aoi <- master_area_summary_aoi %>%
   select(Model_Name, GRIDCODE, Total_Area_Hectares)
 
 # Output a clean HTML table
-kable(master_area_summary_aoi, caption = "Total Area (Hectares) by GRIDCODE Overlapping the AOI")
+kable(master_area_summary_aoi)
 
 ```
 
+## Plot of the area of each suitability class within the AOI (in hectares)
 ```{r plot-area-grid, fig.width=10, fig.height=8}
 library(ggplot2)
 
@@ -266,8 +343,6 @@ ggplot(master_area_summary_aoi, aes(x = as.factor(GRIDCODE), y = Total_Area_Hect
   # Clean, modern theme
   theme_minimal() +
   labs(
-    title = "Total Area by Suitability Class within AOI",
-    subtitle = "Area in hectares, separated by predictive model",
     x = "Suitability Class (GRIDCODE)",
     y = "Area (Hectares)"
   ) +
@@ -285,6 +360,8 @@ ggplot(master_area_summary_aoi, aes(x = as.factor(GRIDCODE), y = Total_Area_Hect
 
 ```
 
+## Plot of the area of each suitability class as a percentage of the total AOI area
+Total AOI Area = `r round(aoi_total_area_ha, 0)`
 ```{r plot-area-grid-percent, fig.width=10, fig.height=8}
 library(ggplot2)
 library(units)
@@ -309,8 +386,6 @@ ggplot(master_area_summary_aoi, aes(x = as.factor(GRIDCODE), y = Percent_of_AOI,
   
   theme_minimal() +
   labs(
-    title = "Suitability Class Coverage within the AOI",
-    subtitle = paste0("Percentage of total AOI area (Total AOI = ", round(aoi_total_area_ha, 0), " ha)"),
     x = "Suitability Class (GRIDCODE)",
     y = "Percent of AOI (%)"
   ) +
@@ -325,3 +400,74 @@ ggplot(master_area_summary_aoi, aes(x = as.factor(GRIDCODE), y = Percent_of_AOI,
     panel.grid.minor = element_blank()
   )
 ```
+
+## Maps of the suitability classes for each taxa group 
+```{r plot-model-maps, fig.width=8, fig.height=6}
+# Ensure ggplot2 and viridis are loaded (viridis is great for discrete mapping)
+library(ggplot2)
+# install.packages('viridis')
+library(viridis) 
+
+
+# Re-establish bounding box and zoom buffer in case they were cleared
+aoi_bbox <- st_bbox(aoi_polygon)
+zoom_buffer <- 2.0  
+
+# Loop through every model and print a map
+for (model_name in names(predictive_models)) {
+  
+  # Extract the individual model sf object
+  model_sf <- predictive_models[[model_name]]
+  
+  # Build the map
+  p <- ggplot() +
+    # Add the US Border background
+    geom_sf(data = us_border, fill = "gray95", color = "gray50") +
+    
+    # Add the Model Output (colored by GRIDCODE, borders hidden)
+    geom_sf(data = model_sf, aes(fill = as.factor(GRIDCODE)), color = NA, alpha = 0.8) +
+    
+    # Add the AOI Polygon on top (thick red border, no fill)
+    geom_sf(data = aoi_polygon, fill = NA, color = "red", linewidth = 1.2) +
+    
+    # Zoom the map using the AOI bounding box
+    coord_sf(
+      xlim = c(aoi_bbox["xmin"] - zoom_buffer, aoi_bbox["xmax"] + zoom_buffer), 
+      ylim = c(aoi_bbox["ymin"] - zoom_buffer, aoi_bbox["ymax"] + zoom_buffer),
+      expand = FALSE
+    ) +
+    
+    # Apply a modern, colorblind-friendly palette to the suitability classes
+    scale_fill_viridis_d(option = "mako", direction = -1, name = "Suitability\n(GRIDCODE)") +
+    
+    # Add North Arrow
+    annotation_north_arrow(
+      location = "tr", which_north = "true", 
+      pad_x = unit(0.2, "in"), pad_y = unit(0.2, "in"),
+      style = north_arrow_fancy_orienteering
+    ) +
+    
+    # Add Scale Bar
+    annotation_scale(
+      location = "bl", width_hint = 0.3, text_cex = 0.9
+    ) +
+    
+    # Clean theme and dynamic labels
+    theme_minimal() +
+    labs(
+      title = paste("Predictive Model:", model_name),
+      subtitle = "Red border indicates the AOI; Colors indicate suitability class",
+      x = "Longitude",
+      y = "Latitude"
+    ) +
+    theme(
+      plot.title = element_text(face = "bold"),
+      panel.grid.major = element_line(color = "gray90", linetype = "dashed"),
+      legend.position = "right"
+    )
+  
+  # EXPLICITLY print the plot so it renders in the HTML loop
+  print(p)
+}
+```
+
