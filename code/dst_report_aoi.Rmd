@@ -24,7 +24,7 @@ library(ggspatial)
 
 ```
 
-```{r}
+```{r authenicate}
 ##### authenticate #####
 # Replace with the email tied to your Google Drive
 drive_auth(email = "robert.mcguinn@noaa.gov")
@@ -57,7 +57,7 @@ if (is.na(gdb_path)) {
 aoi_polygon <- st_read(gdb_path, quiet = TRUE)
 ```
 
-```{r}
+```{r sf}
 ## convert 'filt' to a spatial 'sf' object 
 filt_sf <- st_as_sf(filt, 
                     coords = c("Longitude", "Latitude"), 
@@ -71,7 +71,7 @@ aoi_polygon <- st_transform(aoi_polygon, crs = st_crs(filt_sf))
 filt_aoi <- st_intersection(filt_sf, aoi_polygon)
 ```
 
-```{r}
+```{r expedition_summary}
 expedition_summary <- filt_aoi %>%
   st_drop_geometry() %>%
   group_by(SurveyID, Vessel, VehicleName, DatasetID, ObservationYear) %>%
@@ -84,7 +84,7 @@ expedition_summary <- filt_aoi %>%
 kable(expedition_summary, caption = "Expedition Summary within the AOI")
 ```
 
-```{r}
+```{r taxonomic_summary}
 depth_summary <- filt_aoi %>%
   st_drop_geometry() %>% 
   group_by(ScientificName, VernacularNameCategory) %>%
@@ -151,4 +151,177 @@ ggplot() +
 
 ```
 
+```{r export_AOI_GeoJSON}
 
+# Export the AOI polygon to a GeoJSON file
+st_write(
+  obj = aoi_polygon, 
+  dsn = "aoi_boundary.geojson", 
+  driver = "GeoJSON", 
+  delete_dsn = TRUE, # Safely overwrites the file if you run the script again
+  quiet = TRUE       # Prevents console messages from printing in your HTML report
+)
+```
+
+```{r import-models}
+# 1. Define the local path to your zip file
+zip_path <- "../indata/DSC_PredictiveModeling_US_Northeast_MidAtlantic.zip"
+
+# Safety check: ensure the file exists before trying to unzip
+if (!file.exists(zip_path)) {
+  stop("The zip file was not found. Please check the 'indata' folder and path.")
+}
+
+# 2. Unzip to a temporary directory
+temp_dir <- tempdir()
+unzip(zip_path, exdir = temp_dir)
+
+# 3. Find all .shp files inside the extracted folder (including subfolders)
+shp_files <- list.files(temp_dir, pattern = "\\.shp$", full.names = TRUE, recursive = TRUE)
+
+if (length(shp_files) == 0) {
+  stop("No shapefiles (.shp) were found inside the zip file.")
+}
+
+# 4. Read each shapefile, transform its CRS to match the AOI, and store in a list
+predictive_models <- lapply(shp_files, function(file) {
+  # Read the shapefile
+  temp_sf <- st_read(file, quiet = TRUE)
+  
+  # Transform CRS to match aoi_polygon
+  temp_sf <- st_transform(temp_sf, crs = st_crs(aoi_polygon))
+  
+  return(temp_sf)
+})
+
+# 5. Name the items in the list based on their original filenames
+names(predictive_models) <- tools::file_path_sans_ext(basename(shp_files))
+```
+
+```{r calculate-area-intersected}
+# Load the units package for easy area conversions
+library(units)
+
+# Turn off strict spherical geometry
+sf_use_s2(FALSE)
+
+# Loop through each model in the list, intersect with AOI, calculate area, and summarize
+area_summaries_aoi <- lapply(names(predictive_models), function(model_name) {
+  
+  # Extract the individual sf object
+  sf_obj <- predictive_models[[model_name]]
+  
+  # 1. Cookie-cutter the model to the AOI boundaries
+  # suppressWarnings prevents console spam about spatial attributes
+  sf_intersected <- suppressWarnings(st_intersection(sf_obj, aoi_polygon))
+  
+  # 2. Safety check: If this specific model doesn't overlap the AOI at all, skip it
+  if (nrow(sf_intersected) == 0) {
+    return(NULL)
+  }
+  
+  # 3. Calculate the area in hectares for ONLY the intersected geometries
+  sf_intersected <- sf_intersected %>%
+    mutate(Area_ha = as.numeric(set_units(st_area(geometry), "hectares")))
+  
+  # 4. Group by the suitability class (GRIDCODE) and sum the areas
+  summary_table <- sf_intersected %>%
+    st_drop_geometry() %>%
+    group_by(GRIDCODE) %>% 
+    summarize(
+      Total_Area_Hectares = round(sum(Area_ha, na.rm = TRUE), 2),
+      .groups = "drop"
+    ) %>%
+    mutate(Model_Name = model_name) # Add the model name back in
+  
+  return(summary_table)
+})
+
+# Combine the list of summaries into one master dataframe
+# bind_rows safely ignores the NULLs from any models that were skipped
+master_area_summary_aoi <- bind_rows(area_summaries_aoi)
+
+# Reorder columns logically
+master_area_summary_aoi <- master_area_summary_aoi %>%
+  select(Model_Name, GRIDCODE, Total_Area_Hectares)
+
+# Output a clean HTML table
+kable(master_area_summary_aoi, caption = "Total Area (Hectares) by GRIDCODE Overlapping the AOI")
+
+```
+
+```{r plot-area-grid, fig.width=10, fig.height=8}
+library(ggplot2)
+
+# Create the faceted bar chart
+ggplot(master_area_summary_aoi, aes(x = as.factor(GRIDCODE), y = Total_Area_Hectares, fill = as.factor(GRIDCODE))) +
+  # Use geom_col for pre-summarized data (it plots exactly the Y values given)
+  geom_col(color = "black", alpha = 0.8) +
+  
+  # Split into a grid based on Model_Name
+  # scales = "free_y" allows each plot to have its own Y-axis range. 
+  # If you want them all to share the exact same scale for direct visual comparison, remove that argument!
+  facet_wrap(~ Model_Name, scales = "free_y") +
+  
+  # Clean, modern theme
+  theme_minimal() +
+  labs(
+    title = "Total Area by Suitability Class within AOI",
+    subtitle = "Area in hectares, separated by predictive model",
+    x = "Suitability Class (GRIDCODE)",
+    y = "Area (Hectares)"
+  ) +
+  
+  # Format the Y-axis to use commas instead of scientific notation
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE, big.mark = ",")) +
+  
+  # Customize text elements
+  theme(
+    legend.position = "none", # Hide the legend since the x-axis already shows the GRIDCODE
+    strip.text = element_text(face = "bold", size = 10), # Makes the model names bold
+    axis.text.x = element_text(angle = 0, hjust = 0.5),
+    panel.grid.minor = element_blank()
+  )
+
+```
+
+```{r plot-area-grid-percent, fig.width=10, fig.height=8}
+library(ggplot2)
+library(units)
+library(dplyr)
+
+# 1. Calculate the total area of the AOI in hectares
+# We use sum() just in case your AOI polygon is made of multiple smaller multipolygon pieces
+aoi_total_area_ha <- sum(as.numeric(set_units(st_area(st_make_valid(aoi_polygon)), "hectares")))
+
+# 2. Add the percentage column to your summary dataframe
+master_area_summary_aoi <- master_area_summary_aoi %>%
+  mutate(Percent_of_AOI = (Total_Area_Hectares / aoi_total_area_ha) * 100)
+
+# 3. Create the faceted bar chart using Percent_of_AOI
+ggplot(master_area_summary_aoi, aes(x = as.factor(GRIDCODE), y = Percent_of_AOI, fill = as.factor(GRIDCODE))) +
+  
+  geom_col(color = "black", alpha = 0.8) +
+  
+  # facet_wrap splits the charts by Model_Name
+  # keeping scales="free_y" so small models are visible, but you can remove it to standardize axes
+  facet_wrap(~ Model_Name, scales = "free_y") +
+  
+  theme_minimal() +
+  labs(
+    title = "Suitability Class Coverage within the AOI",
+    subtitle = paste0("Percentage of total AOI area (Total AOI = ", round(aoi_total_area_ha, 0), " ha)"),
+    x = "Suitability Class (GRIDCODE)",
+    y = "Percent of AOI (%)"
+  ) +
+  
+  # Format the Y-axis to dynamically show the % sign and round to 1 decimal
+  scale_y_continuous(labels = function(x) paste0(round(x, 1), "%")) +
+  
+  theme(
+    legend.position = "none", 
+    strip.text = element_text(face = "bold", size = 10), 
+    axis.text.x = element_text(angle = 0, hjust = 0.5),
+    panel.grid.minor = element_blank()
+  )
+```

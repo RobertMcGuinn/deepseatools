@@ -117,4 +117,3 @@ View(find_in_files(x))
 
 ##### load current version of NDB #####
 source('code/dst_tool_load_current_ndb.R')
-]
