@@ -41,12 +41,21 @@ pacific_iho <- mrp_get(
   # Programmatically repair any invalid geometries or self-intersections in the shapes
   st_make_valid()
 
-##### Convert NOAA DSCRTP Data to Spatial Object and filter for Western Pacific #####
+##### Convert NOAA DSCRTP Data to Spatial Object and filter for Western/Central Pacific #####
 # Utilizing exact DSCRTP schema column names: Longitude, Latitude
 dscrtp_sf <- filt %>%
   filter(!is.na(Longitude) & !is.na(Latitude)) %>%
-  # Filter for the Eastern Hemisphere / Western Pacific (typically between 100°E and 180°E)
-  filter(Longitude > 100 & Longitude <= 180) %>%
+
+  # Filter for Longitude: 100°E to 180° AND -180° to -150°W
+  filter(
+    (Longitude > 100 & Longitude <= 180) |
+      (Longitude >= -180 & Longitude <= -150)
+  ) %>%
+
+  # Filter for Latitude: Restrict your north/south bounds here
+  # (Example: Restricting to between 50°S and 50°N)
+  filter(Latitude >= -30 & Latitude <= 30) %>%
+
   st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
 
 ##### Spatial Join and Top 50 Tally #####
@@ -74,35 +83,42 @@ print(species_by_basin, n=100)
 ##### write resulting table #####
 write_csv2(species_by_basin, 'indata/20260601_DSCRTP_NatDB_20260416-1_top_50_species_by_basin.csv')
 
-##### Visualize Top 50 Species with Leaflet #####
-# Re-join the top 50 tally back to the original spatial points to get their coordinates
-top_50_points <- dscrtp_sf %>%
-  # inner_join ensures we ONLY keep the points belonging to the top 50 species
-  inner_join(species_by_basin, by = c("ScientificName"))
+##### Create the missing top_50_points object #####
 
-# Create a simple color palette distinguishing the two basins
-basin_palette <- colorFactor(
-  palette = c("#1f78b4", "#e31a1c"), # Blue for North, Red for South
-  domain = top_50_points$TargetRegion
-)
+# 1. Re-create the base spatial points with their AdjustedCount
+points_with_regions <- st_join(dscrtp_sf, pacific_iho, join = st_intersects) %>%
+  filter(!is.na(TargetRegion)) %>%
+  filter(!is.na(ScientificName) & ScientificName != "") %>%
+  mutate(AdjustedCount = if_else(IndividualCount == -999, 1, as.numeric(IndividualCount)))
 
-# Build the interactive map
-leaflet() %>%
-  # Add a clean, muted basemap so the points stand out
+# 2. Inner join with your summary table.
+# This filters the map points down to JUST the top 50 species per region,
+# while preserving the geometry and pulling in the 'TotalAbundance' column for the popup.
+top_50_points <- points_with_regions %>%
+  inner_join(species_by_basin, by = c("TargetRegion", "ScientificName"))
+##### Shift the IHO polygons for mapping #####
+pacific_iho_shifted <- st_shift_longitude(pacific_iho)
+
+##### Shift the occurrence points for mapping #####
+top_50_points_shifted <- st_shift_longitude(top_50_points)
+
+##### Visualize Top 50 Species with Leaflet (Pacific-Centric) #####
+# Build the interactive map using the shifted data
+leaflet(options = leafletOptions(worldCopyJump = TRUE)) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
 
-  # Add the IHO Ocean boundaries for visual reference
+  # Add the shifted IHO Ocean boundaries
   addPolygons(
-    data = pacific_iho,
+    data = pacific_iho_shifted,
     color = "#444444",
     weight = 2,
     fillOpacity = 0.05,
     popup = ~name
   ) %>%
 
-  # Add the occurrence points for the top 50 species
+  # Add the shifted occurrence points
   addCircleMarkers(
-    data = top_50_points,
+    data = top_50_points_shifted,
     radius = 4,
     color = ~basin_palette(TargetRegion),
     stroke = FALSE,
@@ -110,13 +126,14 @@ leaflet() %>%
     popup = ~paste0(
       "<strong>Species:</strong> ", ScientificName, "<br>",
       "<strong>Region:</strong> ", TargetRegion, "<br>",
-      "<strong>Adjusted Count:</strong> ", AdjustedCount
+      "<strong>Observation Count:</strong> ", AdjustedCount, "<br>",
+      "<strong>Basin Total Abundance:</strong> ", TotalAbundance
     )
   ) %>%
 
-  # Add a legend for the basins
+  # Add the legend
   addLegend(
-    data = top_50_points,
+    data = top_50_points_shifted,
     position = "bottomright",
     pal = basin_palette,
     values = ~TargetRegion,
