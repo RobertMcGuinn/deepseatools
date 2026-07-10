@@ -56,6 +56,9 @@ dscrtp_sf <- filt %>%
   # (Example: Restricting to between 50°S and 50°N)
   filter(Latitude >= -30 & Latitude <= 30) %>%
 
+  # Filter for TaxonRank
+  filter(TaxonRank == 'species')
+
   st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
 
 ##### Spatial Join and Top 50 Tally #####
@@ -140,3 +143,15 @@ leaflet(options = leafletOptions(worldCopyJump = TRUE)) %>%
     title = "Top 50 Occurrences by Basin",
     opacity = 1
   )
+
+##### Take a look at the metadata for IHO layer #####
+library(mregions2)
+library(dplyr)
+
+# mrp_list is a built-in data frame containing metadata for all available layers
+iho_metadata <- mrp_list %>%
+  filter(layer == "iho")
+
+# View the abstract and layer details
+print(iho_metadata$abstract)
+glimpse(iho_metadata)
