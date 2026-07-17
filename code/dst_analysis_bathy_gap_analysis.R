@@ -2,8 +2,8 @@ library(terra)
 
 ##### Setup and Download #####
 
-# Create the 'indata' directory to keep the root tidy
-download_dir <- "indata"
+# Create the 'bathygap' directory to keep the root tidy
+download_dir <- "indata/bathygap"
 if (!dir.exists(download_dir)) {
   dir.create(download_dir)
 }
