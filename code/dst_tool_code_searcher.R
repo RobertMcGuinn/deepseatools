@@ -3,7 +3,7 @@ library(tidyverse)
 
 ##### find file #####
 ## manual: edit string for x
-x <- 'dst_analysis'
+x <- 'dst_analysis_20260710-0_western_pacific_top_50_mregions.R'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
@@ -15,7 +15,7 @@ files
 ##### choose and open #####
 ## manual input required: pick the number
 ## or number you want from the list presented
-y <- c(2)
+y <- c(1)
 this <- files[y]
 file.edit(this)
 

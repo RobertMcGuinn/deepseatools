@@ -100,3 +100,41 @@ calculate_geodesic_area <- function(input_dir) {
 
 # Run the function on the 'indata' directory
 calculate_geodesic_area(download_dir)
+
+
+##### Calculate Spatial Overlap #####
+
+file_layer0 <- file.path(download_dir, "bathy_gap_layer0.tif")
+file_layer7 <- file.path(download_dir, "bathy_gap_layer7.tif")
+
+if (file.exists(file_layer0) && file.exists(file_layer7)) {
+
+  # Load the rasters, suppressing the initial extent warnings
+  r0 <- suppressWarnings(rast(file_layer0)[[1]])
+  r7 <- suppressWarnings(rast(file_layer7)[[1]])
+
+  # 1. Manually assign extent and CRS to Layer 0, then flip it
+  ext(r0) <- c(-90, -75, 24, 35)
+  crs(r0) <- "EPSG:4326"
+  r0 <- flip(r0, direction = "vertical")
+
+  # 2. Manually assign extent and CRS to Layer 7, then flip it
+  ext(r7) <- c(-90, -75, 24, 35)
+  crs(r7) <- "EPSG:4326"
+  r7 <- flip(r7, direction = "vertical")
+
+  # 3. Create an overlap mask
+  overlap_raster <- ifel(r0 != 0 & r7 != 0, 1, NA)
+
+  # 4. Calculate the geodesic area (no warnings this time!)
+  overlap_calc <- expanse(overlap_raster, unit = "km")
+  overlap_area_km2 <- sum(overlap_calc$area, na.rm = TRUE)
+
+  cat("--------------------------------------\n")
+  cat("Overlap Area between Layer 0 and Layer 7 (km2):", overlap_area_km2, "\n")
+
+  plot(overlap_raster, main = "Spatial Overlap (Layer 0 & Layer 7)", col = "red", legend = FALSE)
+
+} else {
+  cat("Cannot calculate overlap: One or both raster files are missing.\n")
+}

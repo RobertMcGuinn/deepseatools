@@ -122,7 +122,7 @@ new_sheet <- gs4_create(
   )
 )
 
-# Move it to your specific folder
+# Move it to your specific folder2
 drive_mv(file = new_sheet, path = folder_id)
 
 # Write local CSV backups if needed
