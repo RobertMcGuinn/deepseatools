@@ -61,7 +61,7 @@ dscrtp_sf <- filt %>%
   # ) %>%
   # filter(Latitude >= -30 & Latitude <= 30) %>%
 
-  ## filter(TaxonRank == 'species') %>%
+  filter(TaxonRank == 'species') %>%
   filter(Phylum != 'Chordata') %>%
 
   # Standardize counts globally before spatial conversion
