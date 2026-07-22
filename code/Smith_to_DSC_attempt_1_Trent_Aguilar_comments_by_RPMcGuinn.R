@@ -50,7 +50,8 @@ combined <- bind_rows(
 # Derived from the obis mapping and NOTE section in dst_tool_release_to_obis.R
 dscrtp_crosswalk <- c(
   # Core Occurrence & Taxonomy
-  CatalogNumber = "occurrenceID", ## Robert: we will need to record 'occurrenceID' in SampleID (but also we are looking for USNM #)
+  CatalogNumber = "occurrenceID", ## Robert: we will need to record 'occurrenceID' in DSCRTP:'SampleID' (but also we are looking for USNM #)
+  ## Let's put ArkID into DSCRTP:'WebSite' and then put USNM number in SampleID.
   ScientificName = "scientificName", ## Robert: The combined$scientificName is definitely the best match, but it also includes ScientificNameAuthorship.  Do nothing here.  I can handle.
   AphiaID = "scientificNameID", ## Robert: I could not find 'scientificNameID' in 'combined'.  It would be really good to get this if possible.
   TrackingID = "recordNumber", ## Robert: 'recordNumber' is interesting.  It seems to have notation like the DSCRTP "SurveyID" and "EventID".
@@ -169,6 +170,7 @@ message(paste("Successfully exported to", output_filename))
 install.packages("rgbif")
 install.packages("worrms")
 
+##### mapping to AphiaID #####
 ## R Function to Map Keys
 ## Here is a clean, reusable function that takes a GBIF acceptedTaxonKey and returns the corresponding valid AphiaID:
 library(rgbif)
@@ -180,9 +182,9 @@ gbif_to_aphia <- function(gbif_key) {
   gbif_record <- rgbif::name_usage(key = gbif_key)
 
   # Extract canonical name (or scientific name if canonical is absent)
-  sci_name <- gbif_record$data$canonicalName
+  sci_name <- combined$canonicalName
   if (is.null(sci_name)) {
-    sci_name <- gbif_record$data$scientificName
+    sci_name <- combined$scientificName
   }
 
   if (is.null(sci_name)) {
@@ -216,7 +218,7 @@ print(aphia_id)
 ## Vectorized Usage for Multiple Keys
 ## If you have a vector or dataset of GBIF keys, you can map them in bulk using sapply() or purrr::map_int():
 
-gbif_keys <- c(2435098, 2481914, 5219223)
+gbif_keys <- combined$taxonKey
 
-aphia_ids <- sapply(gbif_keys, gbif_to_aphia)
+combined$aphiaID <- sapply(gbif_keys, gbif_to_aphia)
 print(aphia_ids)
