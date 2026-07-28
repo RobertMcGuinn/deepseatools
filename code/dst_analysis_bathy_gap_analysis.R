@@ -1,140 +1,138 @@
+##### Header #####
+## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
+## startdate: YYYYMMDD
+## purpose:
+
+##### parameters #####
+##### linkage #####
+current_file <- rstudioapi::getSourceEditorContext()$path
+filename <- basename(current_file)
+print(current_file)
+github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
+github_link <- paste(github_path, filename, sep = '')
+
+##### packages #####
 library(terra)
 
-##### Setup and Download #####
+##### Global Parameters & Setup #####
 
-# Create the 'bathygap' directory to keep the root tidy
-download_dir <- "indata/bathygap"
-if (!dir.exists(download_dir)) {
-  dir.create(download_dir)
-}
-
-# Base export URL for the MapServer
-base_url <- "https://gis.ngdc.noaa.gov/arcgis/rest/services/bathy_gap_analysis/MapServer/export"
-
-# Define Area of Interest (AOI) bounding box (xmin, ymin, xmax, ymax)
-bbox_coords <- "-90,24,-75,35"
+# Define paths to your local data
+boundary_file <- "indata/resafmcboundary/SAFMC_jursdction_bndry_po.shp"
+raster_dir <- "indata/coverage_package"
 epsg_code <- "4326"
 
-# Define the specific layers we want to download
-target_layers <- c(0, 7)
+##### 1. Load and Prep the Clipping Boundary #####
 
-# Loop through our target layers to download and plot each one
-for (layer_id in target_layers) {
-
-  query_url <- paste0(
-    base_url,
-    "?bbox=", bbox_coords,
-    "&bboxSR=", epsg_code,
-    "&layers=show:", layer_id,
-    "&size=1500,1500",
-    "&imageSR=", epsg_code,
-    "&format=tiff",
-    "&f=image"
-  )
-
-  dest_file <- file.path(download_dir, paste0("bathy_gap_layer", layer_id, ".tif"))
-
-  cat("Downloading Layer", layer_id, "to", dest_file, "...\n")
-  download.file(query_url, destfile = dest_file, mode = "wb", quiet = TRUE)
-
-  # Load the raster and suppress the initial metadata warning
-  bathy_raster <- suppressWarnings(rast(dest_file))
-
-  # Apply spatial metadata
-  ext(bathy_raster) <- c(-90, -75, 24, 35) # xmin, xmax, ymin, ymax
-  crs(bathy_raster) <- "EPSG:4326"
-
-  # FIX: Flip the image vertically to correct the top-left vs bottom-left drawing origin
-  bathy_raster <- flip(bathy_raster, direction = "vertical")
-
-  plot(bathy_raster, main = paste("Downloaded Bathy Gap Layer", layer_id))
+if (!file.exists(boundary_file)) {
+  stop(paste("Cannot find the boundary file:", boundary_file))
 }
 
+cat("Loading SAFMC boundary shapefile...\n")
+clip_poly <- vect(boundary_file)
 
-##### The Calculation Function #####
+# Safely handle missing .prj files or reproject if necessary
+if (crs(clip_poly) == "") {
+  cat("Notice: Shapefile is missing a .prj file. Manually assigning WGS84...\n")
+  crs(clip_poly) <- paste0("EPSG:", epsg_code)
+} else if (crs(clip_poly, describe = TRUE)$code != epsg_code) {
+  cat("Projecting shapefile to WGS84...\n")
+  clip_poly <- project(clip_poly, paste0("EPSG:", epsg_code))
+}
 
-calculate_geodesic_area <- function(input_dir) {
-  tif_files <- list.files(path = input_dir, pattern = "\\.tif$", full.names = TRUE, recursive = TRUE)
+##### 2. The Processing Function #####
+
+# Added 'target_value' to allow filtering for specific classes (like 63 for lidar)
+process_local_footprint <- function(raster_folder, boundary_polygon, target_value = NULL) {
+
+  tif_files <- list.files(path = raster_folder, pattern = "\\.tif$", full.names = TRUE, recursive = TRUE)
 
   if (length(tif_files) == 0) {
-    cat("No .tif files found in the specified directory.\n")
-    return(0)
+    cat("No .tif files found in", raster_folder, "\n")
+    return(NULL)
   }
 
-  total_area_km2 <- 0
+  label_text <- ifelse(is.null(target_value), "ALL valid data", paste("Class", target_value))
+  cat("\n======================================\n")
+  cat("Processing for:", label_text, "\n")
+  cat("Found", length(tif_files), "raster files.\n")
+
+  processed_rasters <- list()
 
   for (file in tif_files) {
-    cat("Processing", file, "...\n")
 
-    # Load the raster and suppress the initial metadata warning
-    r <- suppressWarnings(rast(file))
+    r <- rast(file)
 
-    # The REST API strips spatial info, so we manually assign it here
-    ext(r) <- c(-90, -75, 24, 35)
-    crs(r) <- "EPSG:4326"
+    # Ensure raster matches the WGS84 boundary
+    if (crs(r, describe = TRUE)$code != epsg_code) {
+      r <- project(r, paste0("EPSG:", epsg_code))
+    }
 
-    # FIX: Flip the image vertically so the ellipsoidal math matches the correct latitudes
-    r <- flip(r, direction = "vertical")
+    # Crop and mask to the boundary (Skip if it falls outside)
+    r_clipped <- tryCatch({
+      crop(r, boundary_polygon, mask = TRUE)
+    }, error = function(e) {
+      return(NULL)
+    })
 
-    # If the server returned a multi-band image (like RGB), we only need the first band to check for valid data
-    r <- r[[1]]
+    if (is.null(r_clipped)) {
+      next
+    }
 
-    # Filter out the zeros (change to NA)
-    r_valid <- ifel(r == 0, NA, r)
+    # FILTER LOGIC
+    if (is.null(target_value)) {
+      # Keep anything greater than 0 (Standard total footprint)
+      r_footprint <- ifel(r_clipped > 0, 1, NA)
+    } else {
+      # Strict filter: ONLY keep pixels that match the target_value exactly
+      r_footprint <- ifel(r_clipped == target_value, 1, NA)
+    }
 
-    # Calculate the total geodesic area directly
-    area_calc <- expanse(r_valid, unit = "km")
-
-    # Extract the 'area' column and sum it up (in case expanse returns multiple categories)
-    raster_area_km2 <- sum(area_calc$area, na.rm = TRUE)
-    total_area_km2 <- total_area_km2 + raster_area_km2
+    # Only add to our list if the raster actually contains our target data
+    # (minmax will return Inf/-Inf if the raster is entirely NA)
+    mm <- minmax(r_footprint, compute = TRUE)
+    if (!is.infinite(mm[1])) {
+      processed_rasters[[file]] <- r_footprint
+    }
   }
 
-  cat("--------------------------------------\n")
-  cat("Total Area (km2):", total_area_km2, "\n")
-  return(total_area_km2)
-}
+  if (length(processed_rasters) == 0) {
+    cat("No matching data found inside the boundary for this criteria.\n")
+    return(NULL)
+  }
 
+  ##### 3. Merge and Calculate #####
+  cat("Merging footprint layers...\n")
+  r_collection <- sprc(processed_rasters)
 
-##### Execute the Calculation #####
+  # Merge flattens overlapping 1s into a single 1 (no double counting)
+  final_footprint <- merge(r_collection)
 
-# Run the function on the 'indata' directory
-calculate_geodesic_area(download_dir)
+  cat("Calculating Geodesic Area...\n")
+  footprint_calc <- expanse(final_footprint, unit = "km")
+  footprint_area_km2 <- sum(footprint_calc$area, na.rm = TRUE)
 
-
-##### Calculate Spatial Overlap #####
-
-file_layer0 <- file.path(download_dir, "bathy_gap_layer0.tif")
-file_layer7 <- file.path(download_dir, "bathy_gap_layer7.tif")
-
-if (file.exists(file_layer0) && file.exists(file_layer7)) {
-
-  # Load the rasters, suppressing the initial extent warnings
-  r0 <- suppressWarnings(rast(file_layer0)[[1]])
-  r7 <- suppressWarnings(rast(file_layer7)[[1]])
-
-  # 1. Manually assign extent and CRS to Layer 0, then flip it
-  ext(r0) <- c(-90, -75, 24, 35)
-  crs(r0) <- "EPSG:4326"
-  r0 <- flip(r0, direction = "vertical")
-
-  # 2. Manually assign extent and CRS to Layer 7, then flip it
-  ext(r7) <- c(-90, -75, 24, 35)
-  crs(r7) <- "EPSG:4326"
-  r7 <- flip(r7, direction = "vertical")
-
-  # 3. Create an overlap mask
-  overlap_raster <- ifel(r0 != 0 & r7 != 0, 1, NA)
-
-  # 4. Calculate the geodesic area (no warnings this time!)
-  overlap_calc <- expanse(overlap_raster, unit = "km")
-  overlap_area_km2 <- sum(overlap_calc$area, na.rm = TRUE)
+  poly_area_km2 <- sum(expanse(boundary_polygon, unit = "km"))
 
   cat("--------------------------------------\n")
-  cat("Overlap Area between Layer 0 and Layer 7 (km2):", overlap_area_km2, "\n")
+  cat("Total SAFMC Boundary Area (km2):", poly_area_km2, "\n")
+  cat("Total Mapped Footprint (km2):", footprint_area_km2, "\n")
+  cat("Percent Mapped:", round((footprint_area_km2 / poly_area_km2) * 100, 2), "%\n")
 
-  plot(overlap_raster, main = "Spatial Overlap (Layer 0 & Layer 7)", col = "red", legend = FALSE)
+  # Visual Verification
+  plot(boundary_polygon, main = paste("Footprint within SAFMC:", label_text), axes = FALSE)
+  plot(final_footprint, col = "red", add = TRUE, legend = FALSE)
 
-} else {
-  cat("Cannot calculate overlap: One or both raster files are missing.\n")
+  return(list(
+    footprint_area = footprint_area_km2,
+    boundary_area = poly_area_km2,
+    raster_mask = final_footprint
+  ))
 }
+
+##### 3. Execute the Calculations #####
+
+# Step 1: Calculate the footprint for ALL data
+results_all <- process_local_footprint(raster_dir, clip_poly, target_value = NULL)
+
+# Step 2: Calculate the footprint for ONLY LiDAR (Class 63)
+results_focused <- process_local_footprint(raster_dir, clip_poly, target_value = 43)
