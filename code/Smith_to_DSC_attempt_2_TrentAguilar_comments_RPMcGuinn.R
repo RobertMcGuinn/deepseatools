@@ -28,6 +28,7 @@ dataset_id <- "821cc27a-e3bb-4bc5-ac34-89ada245069d"
 
 ##### search GBIF #####
 # Pulling 100 limit for testing; increase limit or use occ_download() for production
+## RPMcGuinn: I'd like to test how occ_download works for production purposes. Does it produce a different set of variables?
 cnidaria <- occ_search(
   datasetKey = dataset_id,
   taxonKey = cnidaria_key,
@@ -86,13 +87,14 @@ gbif_to_aphia <- function(gbif_key) {
 # Apply the function to the GBIF keys to generate the new AphiaID column
 # Note: For large datasets, consider grabbing unique() keys first to limit API calls!
 combined$aphiaID <- sapply(combined$taxonKey, gbif_to_aphia)
+## RPMcGuinn: I like the idea proposed for the production code to grab the unique keys.
 
 
 ##### define DwC to DSCRTP crosswalk #####
 # A named vector matching DSCRTP columns (names) to DwC columns (values)
 dscrtp_crosswalk <- c(
   # Core Occurrence & Taxonomy
-  SampleID = "catalogNumber",  # Robert: using catalogNumber for USNM #
+  SampleID = "catalogNumber",  # Robert: using catalogNumber for USNM ## RPMcGuinn: this is perfect!
   WebSite = "occurrenceID",    # Robert: mapping ArkID (which lives in occurrenceID) to WebSite
   ScientificName = "scientificName", # Robert: Do nothing here. I can handle.
   AphiaID = "aphiaID",         # Pulled from the custom WoRMS function above
@@ -102,80 +104,82 @@ dscrtp_crosswalk <- c(
 
   # Event & Location
   ObservationDate = "eventDate",
-  ObservationTime = "eventTime",
+  ObservationTime = "eventTime", ## RPMcGuinn: 'eventTime' not available in 'combined'
   ObservationYear = "year",
   Latitude = "decimalLatitude",
   Longitude = "decimalLongitude",
-  LocationAccuracy = "coordinateUncertaintyInMeters",
-  MinimumDepthInMeters = "minimumDepthInMeters",
-  MaximumDepthInMeters = "maximumDepthInMeters",
-  StartLatitude = "startLatitude",
-  StartLongitude = "startLongitude",
-  EndLatitude = "endLatitude",
-  EndLongitude = "endLongitude",
-  VerbatimLatitude = "verbatimLatitude",
-  VerbatimLongitude = "verbatimLongitude",
-  Ocean = "waterBody",
+  LocationAccuracy = "coordinateUncertaintyInMeters", ## RPMcGuinn: This one seems to be unavailable but it is very important.
+  MinimumDepthInMeters = "minimumDepthInMeters", ## RPMcGuinn: use 'depth' from 'combined' here
+  MaximumDepthInMeters = "maximumDepthInMeters", ## RPMcGuinn: use 'depth' from 'combined' here
+  StartLatitude = "startLatitude", ## RPMcGuinn: not available in 'combined' (leave out)
+  StartLongitude = "startLongitude", ## RPMcGuinn: not available in 'combined' (leave out)
+  EndLatitude = "endLatitude", ## RPMcGuinn: not available in 'combined' (leave out)
+  EndLongitude = "endLongitude", ## RPMcGuinn: not available in 'combined' (leave out)
+  VerbatimLatitude = "verbatimLatitude", ## RPMcGuinn: not available in 'combined' (leave out)
+  VerbatimLongitude = "verbatimLongitude", ## RPMcGuinn: not available in 'combined' (leave out)
+  Ocean = "waterBody", ## RPMcGuinn: needs further transformation to match DSCRTP schema (see valid values)
   Country = "country",
-  Locality = "locality",
-  NavType = "georeferenceProtocol",
+  Locality = "locality", ## RPMcGuinn: a further transformation (paste higherGeogaphy and locality and leave in "locality", use " | " as a separator)
+  NavType = "georeferenceProtocol", ## RPMcGuinn: not available in 'combined' (leave out)
 
   # Identifications & Status
-  TypeStatus = "typeStatus",
-  IdentificationComments = "identificationRemarks",
+  TypeStatus = "typeStatus",## RPMcGuinn: not available in 'combined' (leave out)
+  IdentificationComments = "identificationRemarks",## RPMcGuinn: not available in 'combined' (leave out)
   IdentifiedBy = "identifiedBy",
-  IdentificationDate = "dateIdentified",
+  IdentificationDate = "dateIdentified", ## RPMcGuinn: not available in 'combined' (leave out)
   IdentificationQualifier = "identificationQualifier",
+  ## RPMcGuinn: "RecordType" will need further transformation to conform to DSCRTP schema."PRESERVED_SPECIMEN" to "specimen"
   RecordType = "basisOfRecord", # Note: using basisOfRecord instead of 'type' for GBIF standard compatibility
 
   # Survey & Sampling
-  SurveyID = "parentEventID",
-  EventID = "eventID",
-  Vessel = "sailingVessel",
-  SurveyComments = "eventRemarks",
-  SamplingEquipment = "samplingEquipment",
-  VehicleName = "vehicleName",
-  SampleAreaInSquareMeters = "sampleSizeValue",
-  footprintWKT = "footprintWKT",
-  footprintSRS = "footprintSRS",
+  SurveyID = "parentEventID", ## RPMcGuinn: not available in 'combined' (leave out)
+  EventID = "eventID", ## RPMcGuinn: not available in 'combined' (leave out)
+  Vessel = "sailingVessel", ## RPMcGuinn: not available in 'combined' (leave out)
+  SurveyComments = "eventRemarks",## RPMcGuinn: not available in 'combined' (leave out)
+  SamplingEquipment = "samplingEquipment",## RPMcGuinn: not available in 'combined' (leave out)
+  VehicleName = "vehicleName",## RPMcGuinn: not available in 'combined' (leave out)
+  SampleAreaInSquareMeters = "sampleSizeValue", ##RPMcGuinn: not available in 'combined' (leave out)
+  footprintWKT = "footprintWKT",## RPMcGuinn: not available in 'combined' (leave out)
+  footprintSRS = "footprintSRS",## RPMcGuinn: not available in 'combined' (leave out)
+  footprintSRS = "geodeticDatum", ## RPMcGuinn: I added this line.
 
   # Biological Data
   IndividualCount = "individualCount",
-  CategoricalAbundance = "categoricalAbundance",
-  Density = "organismDensity",
-  Cover = "cover",
-  VerbatimSize = "verbatimSize",
-  MinimumSize = "minimumSize",
-  MaximumSize = "maximumSize",
-  WeightInKg = "weight",
-  Condition = "condition",
-  AssociatedTaxa = "associatedTaxa",
+  CategoricalAbundance = "categoricalAbundance", ## RPMcGuinn: not available in 'combined' (leave out)
+  Density = "organismDensity",## RPMcGuinn: not available in 'combined' (leave out)
+  Cover = "cover",## RPMcGuinn: not available in 'combined' (leave out)
+  VerbatimSize = "verbatimSize", ## RPMcGuinn: not available in 'combined' (leave out)
+  MinimumSize = "minimumSize",## RPMcGuinn: not available in 'combined' (leave out)
+  MaximumSize = "maximumSize",## RPMcGuinn: not available in 'combined' (leave out)
+  WeightInKg = "weight",## RPMcGuinn: not available in 'combined' (leave out)
+  Condition = "condition",## RPMcGuinn: not available in 'combined' (leave out)
+  AssociatedTaxa = "associatedTaxa",## RPMcGuinn: not available in 'combined' (leave out)
 
   # Environment & Habitat
-  Habitat = "habitat",
-  Substrate = "substrate",
-  CMECSGeoForm = "geoformCMECS",
-  CMECSSubstrate = "substrateCMECS",
-  CMECSBiotic = "bioticCMECS",
-  Temperature = "temperature",
-  Salinity = "salinity",
-  Oxygen = "oxygen",
-  pH = "pH",
-  pHscale = "pHScale",
-  pCO2 = "pCO2",
-  TA = "totalAlkalinity",
-  DIC = "dissolvedInorganicCarbon",
+  Habitat = "habitat",## RPMcGuinn: not available in 'combined' (leave out)
+  Substrate = "substrate",## RPMcGuinn: not available in 'combined' (leave out)
+  CMECSGeoForm = "geoformCMECS",## RPMcGuinn: not available in 'combined' (leave out)
+  CMECSSubstrate = "substrateCMECS",## RPMcGuinn: not available in 'combined' (leave out)
+  CMECSBiotic = "bioticCMECS",## RPMcGuinn: not available in 'combined' (leave out)
+  Temperature = "temperature",## RPMcGuinn: not available in 'combined' (leave out)
+  Salinity = "salinity",## RPMcGuinn: not available in 'combined' (leave out)
+  Oxygen = "oxygen",## RPMcGuinn: not available in 'combined' (leave out)
+  pH = "pH",## RPMcGuinn: not available in 'combined' (leave out)
+  pHscale = "pHScale",## RPMcGuinn: not available in 'combined' (leave out)
+  pCO2 = "pCO2",## RPMcGuinn: not available in 'combined' (leave out)
+  TA = "totalAlkalinity",## RPMcGuinn: not available in 'combined' (leave out)
+  DIC = "dissolvedInorganicCarbon",## RPMcGuinn: not available in 'combined' (leave out)
 
   # Metadata & Media (WebSite removed from here as it is now mapped to occurrenceID above)
-  ImageURL = "associatedMedia",
-  Citation = "associatedReferences",
-  Repository = "institutionCode",
-  DataProvider = "ownerInstitutionCode",
+  ImageURL = "associatedMedia",## RPMcGuinn: not available in 'combined' (leave out)
+  Citation = "associatedReferences",## RPMcGuinn: not available in 'combined' (leave out)
+  Repository = "institutionCode",## RPMcGuinn: will require some transformation.
+  DataProvider = "ownerInstitutionCode",## RPMcGuinn: not available in 'combined'. (just assign the name "Smithsonian Institution, National Museum of Natural History" for all.
   AssociatedSequences = "associatedSequences",
   OccurrenceComments = "occurrenceRemarks",
   LocationComments = "locationRemarks",
-  Modified = "modified",
-  gisMEOW = "higherGeography"
+  Modified = "modified", ## RPMcGuinn: will require modification to match DSCRTP (we only have the date, not the time)
+  gisMEOW = "higherGeography" ##RPMcGuinn: not a good match for gisMEOW (leave out, we calculate this)
 )
 
 ##### convert DarwinCore to DSCRTP format #####
