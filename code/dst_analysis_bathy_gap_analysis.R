@@ -1,7 +1,7 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate: YYYYMMDD
-## purpose:
+## startdate: 20260727
+## purpose: Analysis of the 'Bathy Gap Analysis' product for different subsets.
 
 ##### parameters #####
 ##### linkage #####
@@ -14,10 +14,10 @@ github_link <- paste(github_path, filename, sep = '')
 ##### packages #####
 library(terra)
 
-##### Global Parameters & Setup #####
+##### parameters #####
 
 # Define paths to your local data
-boundary_file <- "indata/resafmcboundary/SAFMC_jursdction_bndry_po.shp"
+boundary_file <- "indata/resafmcboundary/SAFMC_jursdction_bndry_po.shp" ##### as shapefile
 raster_dir <- "indata/coverage_package"
 epsg_code <- "4326"
 
@@ -135,4 +135,4 @@ process_local_footprint <- function(raster_folder, boundary_polygon, target_valu
 results_all <- process_local_footprint(raster_dir, clip_poly, target_value = NULL)
 
 # Step 2: Calculate the footprint for ONLY LiDAR (Class 63)
-results_focused <- process_local_footprint(raster_dir, clip_poly, target_value = 43)
+results_focused <- process_local_footprint(raster_dir, clip_poly, target_value = 63)

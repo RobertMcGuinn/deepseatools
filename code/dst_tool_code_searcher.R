@@ -3,7 +3,7 @@ library(tidyverse)
 
 ##### find file #####
 ## manual: edit string for x
-x <- 'header'
+x <- 'dst_tool'
 path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
