@@ -10,6 +10,7 @@ filename <- basename(current_file)
 print(current_file)
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
+print(github_link)
 
 ##### packages #####
 # Ensure packages are installed if not already:
@@ -28,7 +29,7 @@ dataset_id <- "821cc27a-e3bb-4bc5-ac34-89ada245069d"
 
 ##### search GBIF #####
 # Pulling 100 limit for testing; increase limit or use occ_download() for production
-## RPMcGuinn: I'd like to test how occ_download works for production purposes. Does it produce a different set of variables?
+## RPMcGuinn: I'd like to test how occ_download works for production purposes. Does it produce a different set of variables than (occ_search)
 cnidaria <- occ_search(
   datasetKey = dataset_id,
   taxonKey = cnidaria_key,
@@ -36,12 +37,24 @@ cnidaria <- occ_search(
   limit = 100
 )
 
+
 porifera <- occ_search(
   datasetKey = dataset_id,
   taxonKey = porifera_key,
   country = "US",
   limit = 100
 )
+
+dl_request <- occ_download(
+  pred("datasetKey", dataset_id),
+  pred_in("taxonKey", c(cnidaria_key, porifera_key)), # Pulls both phyla in one query
+  pred("country", "US"),
+  pred_gte("coordinateUncertaintyInMeters", 0),
+  pred_lte("coordinateUncertaintyInMeters", 100),
+  # pred_gt("year", 1970), # Uncomment if you want to apply your post-1970 filter
+  format = "SIMPLE_CSV"
+)
+
 
 ##### bind rows into single dataframe #####
 combined <- bind_rows(
