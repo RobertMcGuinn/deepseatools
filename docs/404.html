@@ -4,18 +4,18 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>4 Creating a simple depth summary table | Deep Sea Code Book</title>
-  <meta name="description" content="4 Creating a simple depth summary table | Deep Sea Code Book" />
+  <title>Page not found | Deep Sea Code Book</title>
+  <meta name="description" content="Page not found | Deep Sea Code Book" />
   <meta name="generator" content="bookdown 0.47 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="4 Creating a simple depth summary table | Deep Sea Code Book" />
+  <meta property="og:title" content="Page not found | Deep Sea Code Book" />
   <meta property="og:type" content="book" />
   
   
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="4 Creating a simple depth summary table | Deep Sea Code Book" />
+  <meta name="twitter:title" content="Page not found | Deep Sea Code Book" />
   
   
   
@@ -29,8 +29,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="creating-interactive-maps-using-leaflet.html"/>
-<link rel="next" href="example-rmarkdown-reports.html"/>
+
+
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
@@ -181,108 +181,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="creating-a-simple-depth-summary-table" class="section level1 hasAnchor" number="4">
-<h1><span class="header-section-number">4</span> Creating a simple depth summary table<a href="creating-a-simple-depth-summary-table.html#creating-a-simple-depth-summary-table" class="anchor-section" aria-label="Anchor link to header"></a></h1>
-<p>Make a depth summary table and just take a look at the first 5 entries using the ‘head’ function.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="creating-a-simple-depth-summary-table.html#cb16-1" tabindex="-1"></a>sum_tbl <span class="ot">&lt;-</span></span>
-<span id="cb16-2"><a href="creating-a-simple-depth-summary-table.html#cb16-2" tabindex="-1"></a>  d <span class="sc">%&gt;%</span></span>
-<span id="cb16-3"><a href="creating-a-simple-depth-summary-table.html#cb16-3" tabindex="-1"></a>  <span class="fu">group_by</span>(Genus) <span class="sc">%&gt;%</span></span>
-<span id="cb16-4"><a href="creating-a-simple-depth-summary-table.html#cb16-4" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
-<span id="cb16-5"><a href="creating-a-simple-depth-summary-table.html#cb16-5" tabindex="-1"></a>    <span class="at">Phylum =</span> <span class="fu">paste</span>(<span class="fu">unique</span>(Phylum), <span class="at">collapse=</span> <span class="st">&quot; | &quot;</span>),</span>
-<span id="cb16-6"><a href="creating-a-simple-depth-summary-table.html#cb16-6" tabindex="-1"></a>    <span class="at">ScientificName =</span> <span class="fu">paste</span>(<span class="fu">unique</span>(ScientificName), <span class="at">collapse=</span> <span class="st">&quot; | &quot;</span>),</span>
-<span id="cb16-7"><a href="creating-a-simple-depth-summary-table.html#cb16-7" tabindex="-1"></a>    <span class="at">Records =</span> <span class="fu">n</span>(),</span>
-<span id="cb16-8"><a href="creating-a-simple-depth-summary-table.html#cb16-8" tabindex="-1"></a>    <span class="at">MinDepth =</span> <span class="fu">min</span>(<span class="fu">as.numeric</span>(DepthInMeters)),</span>
-<span id="cb16-9"><a href="creating-a-simple-depth-summary-table.html#cb16-9" tabindex="-1"></a>    <span class="at">MedianDepth =</span> <span class="fu">median</span>(<span class="fu">as.numeric</span>(DepthInMeters)),</span>
-<span id="cb16-10"><a href="creating-a-simple-depth-summary-table.html#cb16-10" tabindex="-1"></a>    <span class="at">MaxDepth =</span> <span class="fu">max</span>(<span class="fu">as.numeric</span>(DepthInMeters))) <span class="sc">%&gt;%</span></span>
-<span id="cb16-11"><a href="creating-a-simple-depth-summary-table.html#cb16-11" tabindex="-1"></a>  <span class="fu">arrange</span>(MedianDepth)</span>
-<span id="cb16-12"><a href="creating-a-simple-depth-summary-table.html#cb16-12" tabindex="-1"></a></span>
-<span id="cb16-13"><a href="creating-a-simple-depth-summary-table.html#cb16-13" tabindex="-1"></a><span class="fu">kable</span>(<span class="fu">head</span>(sum_tbl))</span></code></pre></div>
-<table>
-<colgroup>
-<col width="13%" />
-<col width="8%" />
-<col width="42%" />
-<col width="7%" />
-<col width="8%" />
-<col width="11%" />
-<col width="8%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th align="left">Genus</th>
-<th align="left">Phylum</th>
-<th align="left">ScientificName</th>
-<th align="right">Records</th>
-<th align="right">MinDepth</th>
-<th align="right">MedianDepth</th>
-<th align="right">MaxDepth</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">Antipathella</td>
-<td align="left">Cnidaria</td>
-<td align="left">Antipathella</td>
-<td align="right">67</td>
-<td align="right">296</td>
-<td align="right">318.0</td>
-<td align="right">387</td>
-</tr>
-<tr class="even">
-<td align="left">Telopathes</td>
-<td align="left">Cnidaria</td>
-<td align="left">Telopathes</td>
-<td align="right">38</td>
-<td align="right">315</td>
-<td align="right">324.5</td>
-<td align="right">2449</td>
-</tr>
-<tr class="odd">
-<td align="left">Eguchipsammia</td>
-<td align="left">Cnidaria</td>
-<td align="left">Eguchipsammia fistula</td>
-<td align="right">104</td>
-<td align="right">308</td>
-<td align="right">326.0</td>
-<td align="right">376</td>
-</tr>
-<tr class="even">
-<td align="left">Gymnorete</td>
-<td align="left">Porifera</td>
-<td align="left">Gymnorete</td>
-<td align="right">12</td>
-<td align="right">307</td>
-<td align="right">345.0</td>
-<td align="right">529</td>
-</tr>
-<tr class="odd">
-<td align="left">Aphanipathes</td>
-<td align="left">Cnidaria</td>
-<td align="left">Aphanipathes</td>
-<td align="right">59</td>
-<td align="right">315</td>
-<td align="right">354.0</td>
-<td align="right">416</td>
-</tr>
-<tr class="even">
-<td align="left">Dendropathes</td>
-<td align="left">Cnidaria</td>
-<td align="left">Dendropathes | Dendropathes bacotaylorae</td>
-<td align="right">17</td>
-<td align="right">316</td>
-<td align="right">364.0</td>
-<td align="right">441</td>
-</tr>
-</tbody>
-</table>
+<div id="page-not-found" class="section level1">
+<h1>Page not found</h1>
+<p>The page you requested cannot be found (perhaps it was moved or renamed).</p>
+<p>You may want to try searching to find the page's new location, or use
+the table of contents to find the page you are looking for.</p>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-<a href="creating-interactive-maps-using-leaflet.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
-<a href="example-rmarkdown-reports.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+
+
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>

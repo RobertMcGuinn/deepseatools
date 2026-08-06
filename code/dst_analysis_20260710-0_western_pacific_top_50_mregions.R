@@ -297,14 +297,7 @@ upload_subregion_map <- function(region_name) {
 # (This re-uses the 'subregions' vector created in the mapping step)
 purrr::walk(subregions, upload_subregion_map)
 
-
-
-##### --------------------------------------------------------------------- #####
-##### NEW SECTION: Static Sub-Region Maps with ESRI Ocean Basemap           #####
-##### Layout: Landscape (5.5 in wide x 3.5 in tall, 300 DPI PNG)            #####
-##### Features: ESRI Basemap, Hollow Dive Markers, Right-Aligned Cartography#####
-##### Fix: Explicit factor classification & scale_size_manual() for 1mm+ jumps#####
-##### --------------------------------------------------------------------- #####
+##### Static maps for each region (full DSCRTP database) #####
 
 # 0. Automatically check and install required dependencies
 if (!requireNamespace("prettymapr", quietly = TRUE)) {

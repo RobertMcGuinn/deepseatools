@@ -155,35 +155,41 @@ Map the downloaded and filtered data 'd' using the 'leaflet' package.
 
 ```{r, message=FALSE}
 
-# add a proper link to images for map popup in leaflet
-d$ImageURLPop <- paste(sep = "", "<b><a href=", as.character(d$ImageURL),">LINK</a></b>")
+library(leaflet)
 
-# build map
+# Fix HTML link formatting (added single quotes around href value and target='_blank')
+d$ImageURLPop <- paste0("<b><a href='", as.character(d$ImageURL), "' target='_blank'>LINK</a></b>")
+
+# Build map
 m <- leaflet() %>% 
-addProviderTiles("Esri.OceanBasemap") %>%  #Esri.OceanBasemap, "CartoDB.DarkMatter" 
-addProviderTiles(providers$Hydda.RoadsAndLabels, group = 'Place names') %>%
-addCircleMarkers(data=d,
-                      lat = as.numeric(d$latitude),
-                      lng = as.numeric(d$longitude),
-                      radius=5,
-                      weight=0,
-                      fillColor= "green",
-                      fillOpacity=1,
-                      popup = paste(
-                        "CatalogNumber:", d$CatalogNumber, "<br>",
-                        "ScientificName:", d$ScientificName, "<br>",
-                        "Image:", d$ImageURLPop, "<br>",
-                        "RecordType:", d$RecordType, "<br>",
-                        "Vessel:", d$Vessel, "<br>",
-                        "DatasetID:", d$DatasetID, "<br>",
-                        "SurveyID:", d$SurveyID, "<br>",
-                        "SampleID:", d$SampleID, "<br>",
-                        "TrackingID:", d$TrackingID, "<br>",
-                        "Station:", d$Station, "<br>",
-                        "Locality:", d$Locality, "<br>",
-                        "Latitude:", d$latitude, "<br>",
-                        "Longitude:", d$longitude, "<br>",
-                        "Observation Year:", d$ObservationYear))
+  addProviderTiles("Esri.OceanBasemap") %>% 
+  addProviderTiles(providers$CartoDB.PositronOnlyLabels, group = 'Place names') %>%
+  addCircleMarkers(
+    data = d,
+    lat = as.numeric(d$latitude),
+    lng = as.numeric(d$longitude),
+    radius = 5,
+    weight = 0,
+    fillColor = "green",
+    fillOpacity = 1,
+    popup = paste(
+      "CatalogNumber:", d$CatalogNumber, "<br>",
+      "ScientificName:", d$ScientificName, "<br>",
+      "Image:", d$ImageURLPop, "<br>",
+      "RecordType:", d$RecordType, "<br>",
+      "Vessel:", d$Vessel, "<br>",
+      "DatasetID:", d$DatasetID, "<br>",
+      "SurveyID:", d$SurveyID, "<br>",
+      "SampleID:", d$SampleID, "<br>",
+      "TrackingID:", d$TrackingID, "<br>",
+      "Station:", d$Station, "<br>",
+      "Locality:", d$Locality, "<br>",
+      "Latitude:", d$latitude, "<br>",
+      "Longitude:", d$longitude, "<br>",
+      "Observation Year:", d$ObservationYear
+    )
+  )
+
 m
 
 ```
