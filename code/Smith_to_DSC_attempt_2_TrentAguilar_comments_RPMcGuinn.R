@@ -51,7 +51,7 @@ dl_request <- occ_download(
   pred("country", "US"),
   pred_gte("coordinateUncertaintyInMeters", 0),
   pred_lte("coordinateUncertaintyInMeters", 100),
-  # pred_gt("year", 1970), # Uncomment if you want to apply your post-1970 filter
+  pred_gt("year", ), # Uncomment if you want to apply your post-1970 filter
   format = "SIMPLE_CSV"
 )
 
@@ -204,6 +204,6 @@ dscrtp_formatted <- combined %>%
 print(names(dscrtp_formatted))
 
 ##### export the file #####
-output_filename <- paste0("Smithsonian_DSCRTP_Converted_", Sys.Date(), ".csv")
+output_filename <- paste0("indata/","Smithsonian_DSCRTP_Converted_", Sys.Date(), ".csv")
 write_csv(dscrtp_formatted, output_filename)
 message(paste("Successfully exported to", output_filename))
