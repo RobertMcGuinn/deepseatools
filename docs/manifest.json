@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "locale": "en_US",
+  "platform": "4.6.1",
+  "metadata": {
+    "appmode": "static",
+    "primary_rmd": null,
+    "primary_html": "index.html",
+    "content_category": "site",
+    "has_parameters": false
+  },
+  "packages": null,
+  "files": {
+    ".nojekyll": {
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "404.html": {
+      "checksum": "8a682fbb3f8cc5b8ea4c3dbaff17ffc6"
+    },
+    "creating-a-simple-depth-summary-table.html": {
+      "checksum": "8ca03674788f0727f9b2b28d600c72ba"
+    },
+    "creating-interactive-maps-using-leaflet.html": {
+      "checksum": "d37e302c1abc69ae4ef6d2f3afbb5d87"
+    },
+    "downloading-the-data.html": {
+      "checksum": "4217e7e3e097503f3c77fea78e8c2444"
+    },
+    "example-rmarkdown-reports.html": {
+      "checksum": "27f9bcf4b1c17a9b10cab452b18801f2"
+    },
+    "index.html": {
+      "checksum": "6794da33d1cbfb51c23125484cb29cdf"
+    },
+    "libs/anchor-sections-1.1.0/anchor-sections-hash.css": {
+      "checksum": "cc71c646c089ba898bbfdc599c3b08a1"
+    },
+    "libs/anchor-sections-1.1.0/anchor-sections.css": {
+      "checksum": "fd81c56ce3a57e25675af031c4559784"
+    },
+    "libs/anchor-sections-1.1.0/anchor-sections.js": {
+      "checksum": "1884622a348633e8b7d5db59a84b5df9"
+    },
+    "libs/gitbook-2.6.7/css/fontawesome/fontawesome-webfont.ttf": {
+      "checksum": "b06871f281fee6b241d60582ae9369b9"
+    },
+    "libs/gitbook-2.6.7/css/plugin-bookdown.css": {
+      "checksum": "511b32706d0828b46237a7cdebf52126"
+    },
+    "libs/gitbook-2.6.7/css/plugin-clipboard.css": {
+      "checksum": "e4a3bdc1e3d5590f47cbac67976f3961"
+    },
+    "libs/gitbook-2.6.7/css/plugin-fontsettings.css": {
+      "checksum": "ddba6e8649d659db2ca0e963ee4b76fb"
+    },
+    "libs/gitbook-2.6.7/css/plugin-highlight.css": {
+      "checksum": "bd8308dfb2f6b1f91838d5c6186138e1"
+    },
+    "libs/gitbook-2.6.7/css/plugin-search.css": {
+      "checksum": "0d7a6bb6a50e00c7358cf61027f099f0"
+    },
+    "libs/gitbook-2.6.7/css/plugin-table.css": {
+      "checksum": "8cb82f94ce1446fa4bafe7a3933e6c65"
+    },
+    "libs/gitbook-2.6.7/css/style.css": {
+      "checksum": "b21a9c457dc7c4339b44416789033985"
+    },
+    "libs/gitbook-2.6.7/js/app.min.js": {
+      "checksum": "395a8093ce46450cabfaa545a0705a3b"
+    },
+    "libs/gitbook-2.6.7/js/clipboard.min.js": {
+      "checksum": "be72101c8c16ba95fd8b69760d5ebc56"
+    },
+    "libs/gitbook-2.6.7/js/jquery.highlight.js": {
+      "checksum": "999424d32e03b9857098d2c7f53928c2"
+    },
+    "libs/gitbook-2.6.7/js/plugin-bookdown.js": {
+      "checksum": "36b5487b9c1020c0de1352b8f26b8a8e"
+    },
+    "libs/gitbook-2.6.7/js/plugin-clipboard.js": {
+      "checksum": "1b9c02dda66377b4fe429c85b58efd6e"
+    },
+    "libs/gitbook-2.6.7/js/plugin-fontsettings.js": {
+      "checksum": "70f0867847e1a973320a799265debaf6"
+    },
+    "libs/gitbook-2.6.7/js/plugin-search.js": {
+      "checksum": "a906e04e1fc7aa9e057f3de4668f4a68"
+    },
+    "libs/gitbook-2.6.7/js/plugin-sharing.js": {
+      "checksum": "e2b65328457b1e2b16c46a0fd4f2852c"
+    },
+    "libs/htmltools-fill-0.5.9/fill.css": {
+      "checksum": "0c307b2ce7a3fa7f260a0451457c809f"
+    },
+    "libs/htmlwidgets-1.6.4/htmlwidgets.js": {
+      "checksum": "237f59bc086ccf24f39be55311023b91"
+    },
+    "libs/jquery-3.6.0/jquery-3.6.0.min.js": {
+      "checksum": "8fb8fee4fcc3cc86ff6c724154c49c42"
+    },
+    "libs/leaflet-1.3.1/images/layers-2x.png": {
+      "checksum": "4f0283c6ce28e888000e978e537a6a56"
+    },
+    "libs/leaflet-1.3.1/images/layers.png": {
+      "checksum": "a6137456ed160d7606981aa57c559898"
+    },
+    "libs/leaflet-1.3.1/images/marker-icon-2x.png": {
+      "checksum": "401d815dc206b8dc1b17cd0e37695975"
+    },
+    "libs/leaflet-1.3.1/images/marker-icon.png": {
+      "checksum": "2273e3d8ad9264b7daa5bdbf8e6b47f8"
+    },
+    "libs/leaflet-1.3.1/images/marker-shadow.png": {
+      "checksum": "44a526eed258222515aa21eaffd14a96"
+    },
+    "libs/leaflet-1.3.1/leaflet.css": {
+      "checksum": "58da535d4980b4c71b74a41bbee8a510"
+    },
+    "libs/leaflet-1.3.1/leaflet.js": {
+      "checksum": "af438f3b0ec09c81bc8fb9959de88155"
+    },
+    "libs/leaflet-binding-2.2.3/leaflet.js": {
+      "checksum": "7b0d68b050b79c5699a9f361b697b6ef"
+    },
+    "libs/leaflet-providers-3.0.0/leaflet-providers.js": {
+      "checksum": "e7f9d0928e9be4a2b45732d897850a39"
+    },
+    "libs/leaflet-providers-plugin-2.2.3/leaflet-providers-plugin.js": {
+      "checksum": "8fb426b3cfaa7d730f3b56a104012882"
+    },
+    "libs/leafletfix-1.0.0/leafletfix.css": {
+      "checksum": "6a38c873de948d8a1458ec0429aa0063"
+    },
+    "libs/proj4-2.6.2/proj4.min.js": {
+      "checksum": "4c6ef5a940694e1acc5c9ef66572fa79"
+    },
+    "libs/Proj4Leaflet-1.0.1/proj4leaflet.js": {
+      "checksum": "4c72a5a790e066510f9eb68541280646"
+    },
+    "libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css": {
+      "checksum": "49b23a276edf8677e7bb779525d2be7d"
+    },
+    "reference-keys.txt": {
+      "checksum": "cc68be70acfc279c144d4a0eed9d376f"
+    },
+    "search_index.json": {
+      "checksum": "686c6edb2956a40fc6422ba92a00ad82"
+    }
+  },
+  "users": null
+}
