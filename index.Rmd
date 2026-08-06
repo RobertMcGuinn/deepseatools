@@ -1,6 +1,6 @@
 ---
 title: "Deep Sea Code Book"
-author: "Robert P. McGuinn"
+author: "Robert P. McGuinn, robert.mcguinn@noaa.gov"
 site: bookdown::bookdown_site
 documentclass: book
 output:
