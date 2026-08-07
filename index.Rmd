@@ -217,28 +217,6 @@ kable(head(sum_tbl))
 ```
 
 
-# Example RMarkdown Reports
-## Example 1: R-Markdown for Word document output.
-
-Example R-Markdown document for data QA report generation.
-
-Click this link to download the R-Markdown source code: [LINK](https://raw.githubusercontent.com/RobertMcGuinn/deepseatools/master/code/rmd_accession_qa_dashboard.Rmd)
-
-View the source code of the same R-Markdown file on GitHub: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/rmd_accession_qa_dashboard.Rmd)
-
-View the Word document output. 
-[LINK](https://robertmcguinn.github.io/deepseatools/20190329-0_DatasetID_DWH_NRDA_WS-14-06_DSCRTP_NatDB_20190308-0.doc)
-
-## Example 2: R-Markdown for web page output.
-
-See links below for example R-Markdown based report for dataset dashboarding for web publication (html output) with Leaflet interactive mapping component.
-
-Click this link to download the R-Markdown source code: [LINK](../../deepseatools/code/rmd_datasetid_cruise.Rmd)
-
-View the source code of the same R-Markdown file on GitHub: [LINK](https://github.com/RobertMcGuinn/deepseatools/blob/master/code/rmd_datasetid_cruise.Rmd)
-
-View the web page output. 
-[LINK](https://robertmcguinn.github.io/deepseatools/BOEM_PSBF3.html)
 
 
 
