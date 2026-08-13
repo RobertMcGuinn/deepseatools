@@ -15,7 +15,7 @@ output:
 
 ***
 
-This set of instructions is designed help the R user begin to use the National Database for Deep Sea Corals and Sponges. This is a work in progress and we invite collaboration! Please help us evolve this code-base to be easier, faster, and do more things! If you would like to reach out directly please email robert.mcguinn@noaa.gov or call 843-460-9696. For further information about deep sea corals, please visit [DeepSeaCoralData.NOAA.gov](https://deepseacoraldata.noaa.gov/)
+This set of instructions is designed help the R user begin to use the National Database for Deep Sea Corals and Sponges. This is a work in progress and we invite collaboration! Please help us evolve this code-base to be easier, faster, and do more things! If you would like to reach out directly please email robert.mcguinn@noaa.gov. For further information about deep sea corals, please visit [DeepSeaCoralData.NOAA.gov](https://deepseacoraldata.noaa.gov/)
 
 Check out this [GitHub](https://github.com/RobertMcGuinn/deepseatools) repository to collaborate directly. All of the code used in the project is available in the 'code' folder at that repository. This tutorial will eventually expand to cover most of the functionality present in that code folder.
 

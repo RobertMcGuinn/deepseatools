@@ -19,13 +19,11 @@ redmine_link <- paste(redmine_path, issuenumber, sep = '')
 
 ##### packages #####
 library(tidyverse)
-
-##### section #####
-
 library(connectapi)
 library(bookdown)
 library(rsconnect)
 
+##### render book and publish to Posit Connect#####
 # 1. Render your book locally (outputs to docs/)
 bookdown::render_book("index.Rmd")
 
