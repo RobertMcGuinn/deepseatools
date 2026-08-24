@@ -76,13 +76,11 @@ head(info$variables)
 
 To list all variables in the NOAA, National Database for Deep Sea Corals and Sponges , then use the following: 
 
-
 ```{r, eval=F}
 
 info$variables
 
 ```
-
 
 When you have the variables (fields) that you want to download in mind after reviewing the data dictionary, you can download them using the following 'tabledap' function from the 'rerddap' package. In the code below, you can see an example of setting specific geographic bounding box constraints and selecting a particular Vessel.  You can set any numeric or character-based constraint on your downloads using this basic syntax. If you set no contraints, you will download all data. *Warning*: If you add no constraints, the data download will take more time, so be patient. 
 
