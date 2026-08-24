@@ -117,3 +117,6 @@ View(find_in_files(x))
 
 ##### load current version of NDB #####
 source('code/dst_tool_load_current_ndb.R')
+
+
+paste("DataProvider: ", x$DataProvider, "Depth: ", x$DepthInMeters, "Locality: ", x$Locality, "ObservationDate: ", x$ObservationDate, "SurveyID: ", x$SurveyID, "DatasetID: ",x$DatasetID, "ScientificName: ", x$ScientificName, "PI: ", x$PI, "PI Affliliation: ",x$PIAffiliation, sep = ' | ')

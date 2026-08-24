@@ -196,7 +196,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="using-erddap-to-download-data" class="section level2 hasAnchor" number="2.1">
 <h2><span class="header-section-number">2.1</span> Using ERDDAP to download data<a href="downloading-the-data.html#using-erddap-to-download-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>Getting data directly from ERDDAP (Environmental Resource Division Data Access Protocol) using ‘rerddap’ package in R.</p>
-<p>To see the meanings and valid values for all of the fields in National Database, download an Excel version of the full data dictionary following location: <a href="https://deepseacoraldata.noaa.gov/internal-documents/program-guidance/science-team-guidance-for-data-management/20170707.xlsx/at_download/file">LINK</a></p>
+<p>To see the meanings and valid values for all of the fields in National Database, download a CSV version of the full <a href="https://noaa.maps.arcgis.com/home/item.html?id=f465861aecac410980a7c601cfec7850#overview">data dictionary</a></p>
 <p>Use the ‘info’ function from the ‘rerddap’ package to get information about the variables (fields) in the database. Note that the ‘Latitude’ and ‘Longitude’ fields are in ERDDAP as ‘latitude’ and ‘longitude’, with no capital letters. These are the only field names that differ from what is in the data dictionary.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="downloading-the-data.html#cb2-1" tabindex="-1"></a>info <span class="ot">&lt;-</span> <span class="fu">info</span>(<span class="at">datasetid=</span><span class="st">&#39;deep_sea_corals&#39;</span>, </span>
 <span id="cb2-2"><a href="downloading-the-data.html#cb2-2" tabindex="-1"></a>              <span class="at">url =</span> <span class="st">&quot;https://www.ncei.noaa.gov/erddap/&quot;</span>)</span></code></pre></div>
@@ -228,29 +228,31 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>The dataframe that you downloaded contains 35801 rows (occurrences) by 19 fields.</p>
 <p>Now list the names of the fields to check that you downloaded the fields that you wanted.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="downloading-the-data.html#cb9-1" tabindex="-1"></a><span class="fu">names</span>(d)</span></code></pre></div>
-<pre><code>##  [1] &quot;DatabaseVersion&quot; &quot;CatalogNumber&quot;   &quot;latitude&quot;        &quot;longitude&quot;       &quot;ScientificName&quot; 
-##  [6] &quot;ImageURL&quot;        &quot;Vessel&quot;          &quot;RecordType&quot;      &quot;DatasetID&quot;       &quot;SurveyID&quot;       
-## [11] &quot;SampleID&quot;        &quot;TrackingID&quot;      &quot;Station&quot;         &quot;Locality&quot;        &quot;ObservationYear&quot;
-## [16] &quot;Genus&quot;           &quot;Phylum&quot;          &quot;TaxonRank&quot;       &quot;DepthInMeters&quot;</code></pre>
+<pre><code>##  [1] &quot;DatabaseVersion&quot; &quot;CatalogNumber&quot;   &quot;latitude&quot;        &quot;longitude&quot;      
+##  [5] &quot;ScientificName&quot;  &quot;ImageURL&quot;        &quot;Vessel&quot;          &quot;RecordType&quot;     
+##  [9] &quot;DatasetID&quot;       &quot;SurveyID&quot;        &quot;SampleID&quot;        &quot;TrackingID&quot;     
+## [13] &quot;Station&quot;         &quot;Locality&quot;        &quot;ObservationYear&quot; &quot;Genus&quot;          
+## [17] &quot;Phylum&quot;          &quot;TaxonRank&quot;       &quot;DepthInMeters&quot;</code></pre>
 <p>Now filter the downloaded data for only those records which have images and take a look at the ‘head’ of the dataframe.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="downloading-the-data.html#cb11-1" tabindex="-1"></a>d <span class="ot">&lt;-</span> d <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="fu">is.na</span>(d<span class="sc">$</span>ImageURL) <span class="sc">==</span> F)</span>
 <span id="cb11-2"><a href="downloading-the-data.html#cb11-2" tabindex="-1"></a><span class="fu">head</span>(d)</span></code></pre></div>
 <pre><code>## &lt;ERDDAP tabledap&gt; deep_sea_corals
-##    Path: [C:/Users/Robert.Mcguinn/AppData/Local/Temp/1/Rtmp2dg09J/R/rerddap/2f86982e23e0cc5e2ae70a1af066cd14.csv]
-##    Last updated: [2026-08-12 14:29:56.604883]
+##    Path: [C:\Users\Robert.Mcguinn\AppData\Local\Temp\1\RtmpaoHc6S\R\rerddap\2f86982e23e0cc5e2ae70a1af066cd14.csv]
+##    Last updated: [2026-08-24 09:22:33.831505]
 ##    File size:    [10.06 mb]
 ## # A tibble: 6 × 19
-##   DatabaseVersion CatalogNumber latitude longitude ScientificName ImageURL   Vessel RecordType
-##   &lt;chr&gt;                   &lt;int&gt;    &lt;dbl&gt;     &lt;dbl&gt; &lt;chr&gt;          &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;     
-## 1 20260416-1             419497     26.5     -84.8 Stylaster      https://w… Okean… still ima…
-## 2 20260416-1             419498     26.5     -84.8 Stylaster      https://w… Okean… still ima…
-## 3 20260416-1             419499     26.5     -84.8 Stylaster      https://w… Okean… still ima…
-## 4 20260416-1             419500     26.5     -84.8 Stylaster      https://w… Okean… still ima…
-## 5 20260416-1             419501     26.5     -84.8 Octocorallia   https://w… Okean… still ima…
-## 6 20260416-1             419502     26.5     -84.8 Stylaster      https://w… Okean… still ima…
-## # ℹ 11 more variables: DatasetID &lt;chr&gt;, SurveyID &lt;chr&gt;, SampleID &lt;chr&gt;, TrackingID &lt;chr&gt;,
-## #   Station &lt;chr&gt;, Locality &lt;chr&gt;, ObservationYear &lt;int&gt;, Genus &lt;chr&gt;, Phylum &lt;chr&gt;,
-## #   TaxonRank &lt;chr&gt;, DepthInMeters &lt;int&gt;</code></pre>
+##   DatabaseVersion CatalogNumber latitude longitude ScientificName ImageURL   Vessel
+##   &lt;chr&gt;                   &lt;int&gt;    &lt;dbl&gt;     &lt;dbl&gt; &lt;chr&gt;          &lt;chr&gt;      &lt;chr&gt; 
+## 1 20260416-1             419497     26.5     -84.8 Stylaster      https://w… Okean…
+## 2 20260416-1             419498     26.5     -84.8 Stylaster      https://w… Okean…
+## 3 20260416-1             419499     26.5     -84.8 Stylaster      https://w… Okean…
+## 4 20260416-1             419500     26.5     -84.8 Stylaster      https://w… Okean…
+## 5 20260416-1             419501     26.5     -84.8 Octocorallia   https://w… Okean…
+## 6 20260416-1             419502     26.5     -84.8 Stylaster      https://w… Okean…
+## # ℹ 12 more variables: RecordType &lt;chr&gt;, DatasetID &lt;chr&gt;, SurveyID &lt;chr&gt;,
+## #   SampleID &lt;chr&gt;, TrackingID &lt;chr&gt;, Station &lt;chr&gt;, Locality &lt;chr&gt;,
+## #   ObservationYear &lt;int&gt;, Genus &lt;chr&gt;, Phylum &lt;chr&gt;, TaxonRank &lt;chr&gt;,
+## #   DepthInMeters &lt;int&gt;</code></pre>
 <p>Use the following loop function to browse the first 5 images in the set. The ‘ImageURL’ variable contains the URL of the hosted images. The ‘browseURL’ function will open the images in your default image editing program. Warning: Careful when using this function in a loop as it will open as many URLs as you feed it, so it could crash your computer.</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="downloading-the-data.html#cb13-1" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">head</span>(d<span class="sc">$</span>ImageURL)){</span>
 <span id="cb13-2"><a href="downloading-the-data.html#cb13-2" tabindex="-1"></a>  <span class="fu">browseURL</span>(i)</span>
