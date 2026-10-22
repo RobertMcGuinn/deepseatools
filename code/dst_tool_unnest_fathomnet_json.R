@@ -1,7 +1,7 @@
 ##### Header #####
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
-## startdate: YYYYMMDD
-## purpose:
+## startdate: 20261022
+## purpose: working with JSON output from FathomNet
 
 ##### parameters #####
 ##### linkage #####
@@ -21,7 +21,7 @@ library(jsonlite)
 library(dplyr)
 library(tidyr)
 
-##### Read the JSON file from FathomNet into R #####
+##### read the JSON file from FathomNet into R #####
 raw_data <-  fromJSON("indata/download-worms.json", simplifyDataFrame = TRUE)
 
 ##### unnest bounding boxes into individual rows #####
