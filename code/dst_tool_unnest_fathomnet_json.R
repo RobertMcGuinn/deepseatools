@@ -7,7 +7,6 @@
 ##### linkage #####
 current_file <- rstudioapi::getSourceEditorContext()$path
 filename <- basename(current_file)
-print(file_name)
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
 # browseURL(github_link)
@@ -16,63 +15,40 @@ github_link <- paste(github_path, filename, sep = '')
 # redmine_link <- paste(redmine_path, issuenumber, sep = '')
 # browseURL(redmine_link)
 
-
 ##### packages #####
 library(tidyverse)
-
-##### section #####
-
-
-
-
-
-
-
-# Install packages if not already installed:
-# install.packages(c("jsonlite", "dplyr", "tidyr"))
-
 library(jsonlite)
 library(dplyr)
 library(tidyr)
 
-# 1. Read the JSON file into R
+##### Read the JSON file from FathomNet into R #####
 raw_data <-  fromJSON("indata/download-worms.json", simplifyDataFrame = TRUE)
 
-# 2. unnest bounding boxes into individual rows
+##### unnest bounding boxes into individual rows #####
 localizations_df <- raw_data %>%
   unnest(boundingBoxes, names_sep = "_")
 
-# 3. Review State Filtering & Quality Control
-# Check how many annotations are VERIFIED vs REJECTED or UNKNOWN
-review_summary <- localizations_df %>%
-  count(reviewState, name = "annotation_count")
+##### extract and list the ground truth taxa for each image from the 'tags' array #####
+ground_truth_df <- raw_data %>%
+  select(image_url = url, image_uuid = uuid, tags) %>%
+  unnest(tags, names_sep = "_") %>%
+  filter(grepl("ground_truth_taxon", tags_key)) %>%
+  group_by(image_uuid, image_url) %>%
+  summarise(ground_truth_taxa = paste(tags_value, collapse = " | "), .groups = 'drop')
 
-print(review_summary)
+## Extract and list the unique bounding box concepts for each image
+concepts_df <- raw_data %>%
+  select(image_uuid = uuid, boundingBoxes) %>%
+  unnest(boundingBoxes, names_sep = "_") %>%
+  filter(!is.na(boundingBoxes_concept)) %>%
+  group_by(image_uuid) %>%
+  ## Use unique() to avoid listing the same concept multiple times per image
+  summarise(image_concepts = paste(unique(boundingBoxes_concept), collapse = " | "), .groups = 'drop')
 
-# Filter dataset to only include high-quality annotations for training
-verified_df <- localizations_df %>%
-  filter(reviewState == "VERIFIED")
+## Join the concepts onto the ground truth dataframe
+combined_df <- ground_truth_df %>%
+  left_join(concepts_df, by = "image_uuid")
 
-# 4. Class Imbalance Analysis
-# Identify the frequency of each fauna concept in the verified data
-class_imbalance <- verified_df %>%
-  count(concept, sort = TRUE, name = "frequency")
+print(head(combined_df))
 
-print(class_imbalance, n=100)
 
-# 5. Bounding Box Spatial and Size Analytics
-# Calculate aspect ratios and area to configure anchor boxes
-bbox_analytics <- verified_df %>%
-  mutate(
-    bbox_area = width * height,
-    aspect_ratio = width / height
-  ) %>%
-  summarise(
-    mean_width = mean(width, na.rm = TRUE),
-    mean_height = mean(height, na.rm = TRUE),
-    median_aspect_ratio = median(aspect_ratio, na.rm = TRUE),
-    min_area = min(bbox_area, na.rm = TRUE),
-    max_area = max(bbox_area, na.rm = TRUE)
-  )
-
-print(bbox_analytics)
