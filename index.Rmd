@@ -54,7 +54,7 @@ library(knitr)
 
 ## Using ERDDAP to download data
 
-Getting data directly from ERDDAP (Environmental Resource Division Data Access Protocol) using 'rerddap' package in R.
+Getting data directly from ERDDAP (Environmental Resource Division Data Access Protocol) using ['rerddap'](https://cran.r-project.org/web/packages/rerddap/index.html) package in R.
 
 To see the meanings and valid values for all of the fields in National Database, download a CSV version of the full [data dictionary](https://noaa.maps.arcgis.com/home/item.html?id=f465861aecac410980a7c601cfec7850#overview) 
 
