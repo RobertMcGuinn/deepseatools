@@ -2,7 +2,6 @@
 ## author: Robert P. McGuinn, robert.mcguinn@noaa.gov, rpm@alumni.duke.edu
 ## startdate: 20261022
 ## purpose: working with JSON output from FathomNet
-
 ##### parameters #####
 ##### linkage #####
 current_file <- rstudioapi::getSourceEditorContext()$path
@@ -45,6 +44,7 @@ concepts_df <- raw_data %>%
   ## Use unique() to avoid listing the same concept multiple times per image
   summarise(image_concepts = paste(unique(boundingBoxes_concept), collapse = " | "), .groups = 'drop')
 
+concepts_df$fathomnet_url <- paste0('https://stage-database.fathomnet.org/fathomnet/#/imagedetails/', concepts_df$image_uuid)
 ## Join the concepts onto the ground truth dataframe
 combined_df <- ground_truth_df %>%
   left_join(concepts_df, by = "image_uuid")
