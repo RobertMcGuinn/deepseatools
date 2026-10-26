@@ -10,17 +10,9 @@ library(tidyverse)
 source('code/dst_tool_load_current_ndb.R')
 
 ##### query #####
-z <- filt #%>% filter(
-  # DatasetID == 'OET_NA165',
-  # is.na(ImageURL) == F,
-  # IndividualCount != -999,
-  # IndividualCount > 2,
-  # CategoricalAbundance == '2-10',
-  # FishCouncilRegion == 'New England',
-  # ScientificName == "Neoacis",
-  # CatalogNumber == 1204882
-  # grepl('NOAA_HB-19-03', DatasetID)
-#)
+z <- filt %>%
+  filter(FishCouncilRegion == "Western Pacific",
+         is.na(HighlightImageURL) == F)
 
 ##### check #####
 length(z$CatalogNumber)
@@ -32,12 +24,8 @@ table(z$CategoricalAbundance)
 hist(z$IndividualCount)
 unique(z$ImageURL)
 
-##### select specific images, like highlight #####
-highlights <- c(1744954,1752562, 1769248)
-z <- z %>% filter(CatalogNumber %in% highlights)
-
 ##### load images to folder #####
-path <- 'C:/rworking/deepseatools/images/'
+path <- 'C:/rworking/deepseatools/images/western_pacific'
 #unlink(path, recursive = T)
 dir.create(path)
 setwd(path)
@@ -53,13 +41,6 @@ for(i in 1:length(z$CatalogNumber)){
                                  sep = '_'),
                 mode = "wb")
 }
-
-##### export Excel file of data records to folder #####
-library(openxlsx)
-setwd("C:/rworking/deepseatools/indata")
-write.xlsx(z,
-           'yo.xlsx',
-           rowNames = FALSE)
 
 
 ##### create a caption #####
@@ -86,17 +67,17 @@ z$caption <- paste0(z$ScientificName,
                     ' ',
                     z$ImageURL)
 
-##### print caption #####
-z %>% pull(caption)
 
 
-##### image notes #####
-x<- c('https://www.ncei.noaa.gov/waf/dsc-data/images/001744/1744954.jpg',
-'https://www.ncei.noaa.gov/waf/dsc-data/images/001752/1752562.png',
-'https://www.ncei.noaa.gov/waf/dsc-data/images/001769/1769248.png')
+z_select <- z %>% select(ImageURL, caption)
 
+##### export Excel file of data records to folder #####
+library(openxlsx)
+setwd("C:/rworking/deepseatools/indata")
+write.xlsx(z_select,
+           '20261022-0_western_pacific_highlight_images.xlsx',
+           rowNames = FALSE)
 
-filt %>% filter(ImageURL %in% x) %>% pull(CatalogNumber)
 
 
 
