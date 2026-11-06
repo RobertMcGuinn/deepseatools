@@ -3,8 +3,8 @@ library(tidyverse)
 
 ##### find file #####
 ## manual: edit string for x
-x <- 'yml'
-# path <- 'C:/rworking/deepseatools/docs'
+x <- 'dst_header'
+path <- 'C:/rworking/deepseatools/code'
 files<-list.files(path,
                   pattern=x,
                   full.names=TRUE)

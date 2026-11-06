@@ -7,7 +7,7 @@
 ##### linkage #####
 current_file <- rstudioapi::getSourceEditorContext()$path
 filename <- basename(current_file)
-print(file_name)
+print(filename)
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
 github_link <- paste(github_path, filename, sep = '')
 # browseURL(github_link)
