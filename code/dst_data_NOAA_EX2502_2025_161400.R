@@ -95,6 +95,33 @@ m <- addCircleMarkers(m, data=sub2,
 
 m
 
+##### browse images #####
+library(magick)
+library(stringr)
+
+# 1. Extract and clean the list of image paths
+image_paths <- sub %>%
+  pull(ImageFilePath) %>%
+  na.omit() %>%
+  str_split(" \\| ") %>% # Split strings that have multiple URLs connected by " | "
+  unlist() %>%           # Flatten the resulting list back into a single long vector
+  trimws()               # Clean up any stray spaces
+
+# 2. Loop through and plot them
+for (path in head(image_paths, 10)) {
+
+  if (path == "") next
+
+  tryCatch({
+    img <- image_read(path)
+    plot(img)
+
+  }, error = function(e) {
+    message("Could not load image at: ", path)
+  })
+}
+
+
 
 ##### ***** New Version: 20251218-3 ***** #####
 ##### load from Google Drive #####
