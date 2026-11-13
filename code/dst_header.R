@@ -20,13 +20,4 @@ redmine_link <- paste(redmine_path, issuenumber, sep = '')
 ##### packages #####
 library(tidyverse)
 
-##### section #####
-
-
-
-
-
-
-
-
-
+##### section

@@ -3,7 +3,6 @@
 ## startdate:20251208
 ## purpose: data submission, see Redmine
 ##### linkage #####
-##### linkage #####
 current_file <- rstudioapi::getSourceEditorContext()$path
 filename <- basename(current_file)
 github_path <- 'https://github.com/RobertMcGuinn/deepseatools/blob/master/code/'
@@ -54,6 +53,7 @@ sub <- read_csv(tmp, col_types = cols(.default = "c"))
 names(sub)
 spec(sub)
 dim(sub)
+sub %>% pull(DataProvider) %>% unique()
 
 ##### map-it using leaflet #####
 ## optional create new 'sub' ##
